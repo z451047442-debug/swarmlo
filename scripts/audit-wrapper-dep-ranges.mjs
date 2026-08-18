@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Static guard for ruvnet/ruflo#2127 (and the family of #1147 / #2018).
+ * Static guard for z451047442-debug/swarmlo#2127 (and the family of #1147 / #2018).
  *
  * The reporter hit `TypeError: Invalid Version: (empty)` inside arborist's
- * `canDedupe` while installing `ruflo@3.8.0`. Two reviewers could not
- * reproduce, but the published `ruflo` wrapper still pinned
+ * `canDedupe` while installing `swarmlo@3.8.0`. Two reviewers could not
+ * reproduce, but the published `swarmlo` wrapper still pinned
  * `"@claude-flow/cli": "^3.7.0-alpha.11"` long after the project moved to
  * stable semver. That pre-release range widens the resolution space the
  * dedupe pass has to walk and gives more chances for an upstream
@@ -12,7 +12,7 @@
  *
  * This audit asserts:
  *
- *   1. The `ruflo` wrapper's `@claude-flow/cli` dep range INCLUDES the
+ *   1. The `swarmlo` wrapper's `@claude-flow/cli` dep range INCLUDES the
  *      version that `v3/@claude-flow/cli` currently publishes.
  *
  *   2. The root `claude-flow` umbrella's sibling deps that we maintain
@@ -21,7 +21,7 @@
  *      versions (best-effort — only when the corresponding workspace
  *      package.json is present locally).
  *
- *   3. The `ruflo` wrapper does NOT carry a pre-release range
+ *   3. The `swarmlo` wrapper does NOT carry a pre-release range
  *      (`-alpha.N` / `-beta.N`) for `@claude-flow/cli` once that package
  *      is publishing stable versions. Pre-release ranges on stable deps
  *      are the specific shape that caused #2127.
@@ -51,40 +51,40 @@ function readPkg(relPath) {
 const violations = [];
 const checks = [];
 
-// ── 1. ruflo wrapper's @claude-flow/cli dep range ────────────────────────────
+// ── 1. swarmlo wrapper's @claude-flow/cli dep range ────────────────────────────
 
-const rufloPkg = readPkg('ruflo/package.json');
+const swarmloPkg = readPkg('swarmlo/package.json');
 const cliPkg = readPkg('v3/@claude-flow/cli/package.json');
 
-if (!rufloPkg) {
-  violations.push('ruflo/package.json not found');
+if (!swarmloPkg) {
+  violations.push('swarmlo/package.json not found');
 } else if (!cliPkg) {
   violations.push('v3/@claude-flow/cli/package.json not found');
 } else {
   const cliVersion = cliPkg.version;
-  const rufloDepRange = rufloPkg.dependencies?.['@claude-flow/cli'];
+  const swarmloDepRange = swarmloPkg.dependencies?.['@claude-flow/cli'];
 
-  if (!rufloDepRange) {
+  if (!swarmloDepRange) {
     violations.push(
-      `ruflo/package.json does not declare @claude-flow/cli — wrapper must depend on the CLI it wraps`
+      `swarmlo/package.json does not declare @claude-flow/cli — wrapper must depend on the CLI it wraps`
     );
   } else {
-    checks.push(`ruflo wraps @claude-flow/cli with range "${rufloDepRange}" — cli published as ${cliVersion}`);
+    checks.push(`swarmlo wraps @claude-flow/cli with range "${swarmloDepRange}" — cli published as ${cliVersion}`);
 
     // 1a. Range must include the current cli version
-    if (!semver.satisfies(cliVersion, rufloDepRange, { includePrerelease: true })) {
+    if (!semver.satisfies(cliVersion, swarmloDepRange, { includePrerelease: true })) {
       violations.push(
-        `ruflo's "@claude-flow/cli": "${rufloDepRange}" does NOT include the cli's actual ` +
+        `swarmlo's "@claude-flow/cli": "${swarmloDepRange}" does NOT include the cli's actual ` +
         `version ${cliVersion}. Bump the range to "^${cliVersion}" or wider that covers it.`
       );
     }
 
     // 1b. If the cli is on stable semver (no pre-release), the dep must not be on a pre-release range
     const cliPrerelease = semver.prerelease(cliVersion);
-    const rangeUsesPrerelease = /-alpha\.|-beta\.|-rc\.|alpha\.\d+|beta\.\d+|rc\.\d+/.test(rufloDepRange);
+    const rangeUsesPrerelease = /-alpha\.|-beta\.|-rc\.|alpha\.\d+|beta\.\d+|rc\.\d+/.test(swarmloDepRange);
     if (!cliPrerelease && rangeUsesPrerelease) {
       violations.push(
-        `ruflo's "@claude-flow/cli": "${rufloDepRange}" carries a pre-release tag but cli ${cliVersion} ` +
+        `swarmlo's "@claude-flow/cli": "${swarmloDepRange}" carries a pre-release tag but cli ${cliVersion} ` +
         `is on stable semver. Pre-release ranges widen the dedupe walk and have caused real-world ` +
         `crashes (see #1147 / #2018 / #2127). Replace with a plain caret range like "^${cliVersion}".`
       );
@@ -131,5 +131,5 @@ if (violations.length === 0) {
 console.error('\nviolations:');
 for (const v of violations) console.error(`  ✗ ${v}`);
 console.error(`\n${violations.length} violation(s) — see remediation hints above.`);
-console.error('Reference: ruvnet/ruflo#2127 (Invalid Version dedupe crash).');
+console.error('Reference: z451047442-debug/swarmlo#2127 (Invalid Version dedupe crash).');
 process.exit(1);

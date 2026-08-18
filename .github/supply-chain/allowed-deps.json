@@ -1,7 +1,7 @@
 {
   "$schema": "./allowed-deps.schema.json",
   "version": 1,
-  "comment": "Top-level dependency allowlist for ruflo. Adding any new top-level (non-transitive) dependency to any package.json under plugins/* or v3/@claude-flow/* MUST be matched by an entry here. CI enforces. Transitive deps are out of scope. Maintained per ADR-123 supply-chain hardening.",
+  "comment": "Top-level dependency allowlist for swarmlo. Adding any new top-level (non-transitive) dependency to any package.json under plugins/* or v3/@claude-flow/* MUST be matched by an entry here. CI enforces. Transitive deps are out of scope. Maintained per ADR-123 supply-chain hardening.",
   "policies": {
     "rejectInRegistry": [
       "ruflo-graph-intellligence",

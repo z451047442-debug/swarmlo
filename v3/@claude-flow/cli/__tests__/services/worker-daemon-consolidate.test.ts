@@ -12,7 +12,7 @@
  *  - the worker actually increases reasoning_patterns row count
  *  - it writes non-zero, real metrics (not the old hardcoded zeros)
  *  - running it twice is idempotent (distill_state cursor drains once)
- *  - the RUFLO_DAEMON_NO_DISTILL opt-out skips distillation without crashing
+ *  - the SWARMLO_DAEMON_NO_DISTILL opt-out skips distillation without crashing
  *  - a corrupt/unusable DB is reported via metrics, never thrown
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -86,11 +86,11 @@ describe.skipIf(!haveNative)('WorkerDaemon consolidate worker — ADR-174 M3 wir
     mkdirSync(join(tempDir, '.swarm'), { recursive: true });
     dbPath = join(tempDir, '.swarm', 'memory.db');
     metricsFile = join(tempDir, '.claude-flow', 'metrics', 'consolidation.json');
-    delete process.env.RUFLO_DAEMON_NO_DISTILL;
+    delete process.env.SWARMLO_DAEMON_NO_DISTILL;
   });
 
   afterEach(() => {
-    delete process.env.RUFLO_DAEMON_NO_DISTILL;
+    delete process.env.SWARMLO_DAEMON_NO_DISTILL;
     rmSync(tempDir, { recursive: true, force: true });
   });
 
@@ -142,9 +142,9 @@ describe.skipIf(!haveNative)('WorkerDaemon consolidate worker — ADR-174 M3 wir
     expect(result.memoryCleaned).toBeLessThanOrEqual(1000);
   });
 
-  it('honors RUFLO_DAEMON_NO_DISTILL=1 and skips distillation entirely', async () => {
+  it('honors SWARMLO_DAEMON_NO_DISTILL=1 and skips distillation entirely', async () => {
     seedDb(dbPath);
-    process.env.RUFLO_DAEMON_NO_DISTILL = '1';
+    process.env.SWARMLO_DAEMON_NO_DISTILL = '1';
 
     const daemon = new WorkerDaemon(tempDir);
     const result = await (daemon as any).runConsolidateWorker() as any;

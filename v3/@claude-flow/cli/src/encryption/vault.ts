@@ -32,7 +32,7 @@ import {
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-/** ASCII "RFE1" — Ruflo File Encrypted v1. 4 bytes. */
+/** ASCII "RFE1" — Swarmlo File Encrypted v1. 4 bytes. */
 export const MAGIC = Buffer.from([0x52, 0x46, 0x45, 0x31]); // "RFE1"
 const MAGIC_LEN = MAGIC.length; // 4
 const IV_LEN = 12;              // GCM-recommended nonce size
@@ -161,7 +161,7 @@ export function decryptBuffer(blob: Buffer, key: Buffer): Buffer {
   // not strictly required (the magic isn't secret) but cheap and correct.
   if (!timingSafeEqual(magic, MAGIC)) {
     throw new Error(
-      'decryptBuffer: bad magic — blob is not Ruflo-encrypted (RFE1)',
+      'decryptBuffer: bad magic — blob is not Swarmlo-encrypted (RFE1)',
     );
   }
   const iv = blob.subarray(MAGIC_LEN, MAGIC_LEN + IV_LEN);

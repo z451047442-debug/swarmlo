@@ -1,8 +1,8 @@
 # @claude-flow/memory
 
 [![npm version](https://img.shields.io/npm/v/@claude-flow/memory.svg)](https://www.npmjs.com/package/@claude-flow/memory)
-[![Ecosystem downloads](https://img.shields.io/badge/ecosystem%20downloads-22.2M%2B-blue.svg)](https://github.com/ruvnet/ruflo/blob/main/data/clone-data.proof.json)
-[![Git clones (14d)](https://img.shields.io/badge/git%20clones%2014d-115k-blueviolet.svg)](https://github.com/ruvnet/ruflo/blob/main/data/clone-data.ledger.json)
+[![Ecosystem downloads](https://img.shields.io/badge/ecosystem%20downloads-22.2M%2B-blue.svg)](https://github.com/z451047442-debug/swarmlo/blob/main/data/clone-data.proof.json)
+[![Git clones (14d)](https://img.shields.io/badge/git%20clones%2014d-115k-blueviolet.svg)](https://github.com/z451047442-debug/swarmlo/blob/main/data/clone-data.ledger.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![HNSW search](https://img.shields.io/badge/HNSW-0.53ms%20%7C%201%2C889%20ops%2Fs-brightgreen.svg)](./benchmarks/results/)
@@ -19,7 +19,7 @@ This release closes out [ADR-125 — Memory Consolidation](../../../v3/docs/adr/
 - **`MemoryConsolidator`.** A background service that evicts expired entries from indexes *and* HNSW, deduplicates by content hash, and rebuilds the HNSW index when it gets fragmented. Auto-runs on a configurable timer (default 6 hours) so memory stays bounded.
 - **Graceful retrieval.** `service.search('query')` no longer throws when `@claude-flow/embeddings` is unavailable — it degrades to FTS5 keyword search and emits `health.embedder = 'degraded'`. The full hybrid path also adds real Reciprocal Rank Fusion + MMR diversity rerank.
 - **Reproducible benchmarks.** `npm run bench` now actually runs. The HNSW search baseline (single-threaded, 1k × 128-dim cosine vectors on Apple Silicon, Node 22): **0.53 ms / search · 1,889 ops/s · 533 ms to build 1k**. See [`benchmarks/results/baseline-20260519T212453Z.md`](./benchmarks/results/baseline-20260519T212453Z.md).
-- **Node 26 install support** ([#1867](https://github.com/ruvnet/ruflo/issues/1867)) — `better-sqlite3` is fully optional; installs succeed on Node 24/26 and the package falls back to sql.js when the native build isn't available.
+- **Node 26 install support** ([#1867](https://github.com/z451047442-debug/swarmlo/issues/1867)) — `better-sqlite3` is fully optional; installs succeed on Node 24/26 and the package falls back to sql.js when the native build isn't available.
 
 ## Features
 
@@ -46,10 +46,10 @@ This release closes out [ADR-125 — Memory Consolidation](../../../v3/docs/adr/
 npm install @claude-flow/memory
 ```
 
-## Standalone use (without the Ruflo CLI)
+## Standalone use (without the Swarmlo CLI)
 
 This package works on its own — you don't need `@claude-flow/cli` or the
-full Ruflo install. Use it any time you want HNSW vector search, an
+full Swarmlo install. Use it any time you want HNSW vector search, an
 AgentDB façade, or the v3 controller registry from your own app.
 
 Two recipes that exercise the most-installed surface:
@@ -843,7 +843,7 @@ import type {
 
 - `agentdb` `^3.0.0-alpha.14` — Vector database engine
 - `sql.js` — SQLite driver via WASM (always available; no native build required)
-- `better-sqlite3` — **Optional** native SQLite driver for higher throughput. The package works without it (sql.js fallback), so installs succeed on Node 24/26 even when the native build can't compile ([#1867](https://github.com/ruvnet/ruflo/issues/1867))
+- `better-sqlite3` — **Optional** native SQLite driver for higher throughput. The package works without it (sql.js fallback), so installs succeed on Node 24/26 even when the native build can't compile ([#1867](https://github.com/z451047442-debug/swarmlo/issues/1867))
 - `@claude-flow/embeddings` — **Optional** for semantic search. When absent or failing, `search()` automatically falls back to FTS5 keyword (see [Graceful retrieval](#graceful-retrieval-fts5-fallback))
 - `@claude-flow/neural` — **Optional** peer dependency for self-learning (graceful fallback when unavailable)
 

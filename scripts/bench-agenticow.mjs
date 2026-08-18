@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// bench-agenticow.mjs — verify agenticow's published perf claims against ruflo's
+// bench-agenticow.mjs — verify agenticow's published perf claims against swarmlo's
 // reality. Measures branch latency + size vs full-copy snapshot at N ∈ {1k, 10k, 100k}.
 //
 // Published claims (agenticow@0.2.3):

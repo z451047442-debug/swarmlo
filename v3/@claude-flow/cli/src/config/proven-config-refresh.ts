@@ -4,7 +4,7 @@
  * A SIBLING of the helper auto-refresh (ADR-174), deliberately independent so it
  * never touches the hook-code channel that older CLIs verify:
  *   - its own stamp file (`.proven-config-version`, the adopted champion id),
- *   - its own trust root (RUFLO_CONFIG_PUBKEY),
+ *   - its own trust root (SWARMLO_CONFIG_PUBKEY),
  *   - additive-only: a project with no shipped manifest is a no-op.
  *
  * On a CLI command, if the package ships a signed champion newer than the
@@ -74,7 +74,7 @@ export function loadShippedChampion(srcPath: string): SignedProvenConfig | null 
 export function currentInstallEnv(cwd: string = process.cwd()): InstallEnv {
   const env: InstallEnv = {
     platform: process.platform,
-    versions: { ruflo: getInstalledCliVersion() },
+    versions: { swarmlo: getInstalledCliVersion() },
   };
   // Layer, if the project declares one (ADR-176 hierarchy). Optional.
   try {
@@ -99,7 +99,7 @@ export function adoptSignedConfig(
 ): AdoptResult {
   try {
     const claudeDir = path.join(cwd, '.claude');
-    if (!fs.existsSync(claudeDir)) return { adopted: false }; // not a ruflo project
+    if (!fs.existsSync(claudeDir)) return { adopted: false }; // not a swarmlo project
     const championId = signed.manifest?.policy?.ref;
     if (!championId) return { adopted: false, skipped: 'manifest missing policy.ref' };
 

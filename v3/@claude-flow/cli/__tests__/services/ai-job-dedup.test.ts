@@ -26,11 +26,11 @@ describe('#2661 — AI job dedup registry', () => {
 
   beforeEach(() => {
     dir = mkdtempSync(join(tmpdir(), 'ai-jobs-test-'));
-    delete process.env.RUFLO_AI_DEDUP_DISABLE;
+    delete process.env.SWARMLO_AI_DEDUP_DISABLE;
   });
 
   afterEach(() => {
-    delete process.env.RUFLO_AI_DEDUP_DISABLE;
+    delete process.env.SWARMLO_AI_DEDUP_DISABLE;
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -86,11 +86,11 @@ describe('#2661 — AI job dedup registry', () => {
       expect(reg.isFresh(keyB, 60_000).fresh).toBe(false);
     });
 
-    it('RUFLO_AI_DEDUP_DISABLE=1 turns dedup off', () => {
+    it('SWARMLO_AI_DEDUP_DISABLE=1 turns dedup off', () => {
       const key = computeAiJobKey(PARTS);
       const reg = new AiJobDedupRegistry({ baseDir: dir });
       reg.recordSuccess(key, { workerType: 'audit', repositoryId: PARTS.repositoryId, workspace: '/tmp/wt' });
-      process.env.RUFLO_AI_DEDUP_DISABLE = '1';
+      process.env.SWARMLO_AI_DEDUP_DISABLE = '1';
       expect(reg.isFresh(key, 60_000).fresh).toBe(false);
     });
   });

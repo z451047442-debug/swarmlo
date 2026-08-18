@@ -13,8 +13,8 @@ const stripAnsi = (value: string) => value.replace(/\x1b\[[0-9;]*m/g, '');
 
 describe('statusline identity — issue #2682', () => {
   it('renders the project directory name by default without requiring git', () => {
-    const parent = mkdtempSync(path.join(tmpdir(), 'ruflo-identity-'));
-    const cwd = path.join(parent, 'my-ruflo-project');
+    const parent = mkdtempSync(path.join(tmpdir(), 'swarmlo-identity-'));
+    const cwd = path.join(parent, 'my-swarmlo-project');
     const script = path.join(parent, 'statusline.cjs');
     mkdirSync(cwd);
     writeFileSync(script, SCRIPT, 'utf8');
@@ -26,14 +26,14 @@ describe('statusline identity — issue #2682', () => {
         env: { PATH: '/nonexistent', HOME: parent },
         timeout: 15_000,
       });
-      expect(stripAnsi(output).split('\n')[0]).toContain('my-ruflo-project');
+      expect(stripAnsi(output).split('\n')[0]).toContain('my-swarmlo-project');
     } finally {
       rmSync(parent, { recursive: true, force: true });
     }
   });
 
   it('documents and implements the author compatibility opt-in', () => {
-    expect(SCRIPT).toContain('RUFLO_STATUSLINE_IDENTITY');
+    expect(SCRIPT).toContain('SWARMLO_STATUSLINE_IDENTITY');
     expect(SCRIPT).toContain("CONFIG.identityMode === 'author'");
     expect(SCRIPT).toContain("git config user.name");
   });

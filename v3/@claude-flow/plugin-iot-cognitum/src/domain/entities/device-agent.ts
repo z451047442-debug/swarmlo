@@ -43,7 +43,7 @@ export interface VectorStoreStats {
 }
 
 /**
- * Core entity: a Cognitum Seed device modelled as a Ruflo agent.
+ * Core entity: a Cognitum Seed device modelled as a Swarmlo agent.
  */
 export interface DeviceAgent {
   /** Unique device identifier from SeedIdentity.device_id. */

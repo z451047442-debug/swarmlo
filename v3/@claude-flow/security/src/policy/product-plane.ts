@@ -54,8 +54,8 @@ export const PRODUCT_AUTHORITIES = [
   'comms',
   'agentbbs',
   'ruview.edge',
-  'ruflo.policy',
-  'ruflo.memory',
+  'swarmlo.policy',
+  'swarmlo.memory',
 ] as const;
 
 export type ProductAuthority = (typeof PRODUCT_AUTHORITIES)[number];
@@ -66,7 +66,7 @@ export const IDENTITY_NAMESPACES = [
   'meta-llm-account',
   'agentbbs-public-key',
   'workload',
-  'ruflo-agent',
+  'swarmlo-agent',
   'legacy-principal',
 ] as const;
 
@@ -298,7 +298,7 @@ export const ACTION_AUTHORITIES: Readonly<Record<ProductAction, readonly Product
     'comms',
     'agentbbs',
     'ruview.edge',
-    'ruflo.policy',
+    'swarmlo.policy',
   ],
   'inference.invoke': ['meta-llm'],
   'inference.stream': ['meta-llm'],
@@ -329,12 +329,12 @@ export const ACTION_AUTHORITIES: Readonly<Record<ProductAction, readonly Product
   'ruview.automation.propose': ['ruview.edge'],
   'ruview.automation.approve': ['ruview.edge'],
   'ruview.device.command': ['ruview.edge'],
-  'cognition.route': ['ruflo.policy'],
-  'cognition.critique': ['ruflo.policy'],
-  'memory.recall': ['ruflo.memory'],
-  'memory.propose': ['ruflo.memory'],
-  'evidence.read': ['ruflo.memory'],
-  'memory.commit-validated': ['ruflo.memory'],
+  'cognition.route': ['swarmlo.policy'],
+  'cognition.critique': ['swarmlo.policy'],
+  'memory.recall': ['swarmlo.memory'],
+  'memory.propose': ['swarmlo.memory'],
+  'evidence.read': ['swarmlo.memory'],
+  'memory.commit-validated': ['swarmlo.memory'],
 };
 
 const NO_SIDE_EFFECT_REQUIREMENTS: ProductActionRequirements = {

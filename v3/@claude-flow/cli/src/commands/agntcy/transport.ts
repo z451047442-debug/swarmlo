@@ -1,5 +1,5 @@
 /**
- * V3 CLI `ruflo transport use slim` — ADR-380 §2.
+ * V3 CLI `swarmlo transport use slim` — ADR-380 §2.
  *
  * Switches the active swarm/hive-mind coordination transport from today's
  * in-process/local-hooks routing to SLIM (secure messaging for MCP/A2A,
@@ -36,13 +36,13 @@ const useCommand: Command = {
   name: 'use',
   description: 'Switch the active swarm/hive-mind transport (e.g. slim) — ADR-380 §2',
   examples: [
-    { command: 'ruflo transport use slim', description: 'Switch coordination transport to SLIM (opt-in, degrades to local)' },
+    { command: 'swarmlo transport use slim', description: 'Switch coordination transport to SLIM (opt-in, degrades to local)' },
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     const requested = (ctx.args[0] || (ctx.flags.transport as string) || '').trim().toLowerCase();
 
     if (!requested) {
-      output.printError('Transport name required. Usage: ruflo transport use <name> (e.g. slim)');
+      output.printError('Transport name required. Usage: swarmlo transport use <name> (e.g. slim)');
       return { success: false, exitCode: 1 };
     }
 
@@ -89,7 +89,7 @@ export const transportCommand: Command = {
   description: 'Manage the active swarm/hive-mind coordination transport (ADR-380 §2)',
   subcommands: [useCommand],
   examples: [
-    { command: 'ruflo transport use slim', description: 'Switch coordination transport to SLIM' },
+    { command: 'swarmlo transport use slim', description: 'Switch coordination transport to SLIM' },
   ],
   action: async (): Promise<CommandResult> => {
     output.writeln();

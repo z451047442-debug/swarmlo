@@ -163,7 +163,7 @@ function callMcpInternal(
  */
 export async function callMcp(method: string, params?: unknown): Promise<JsonRpcResponse> {
 	// Off-main-thread path (opt-in via ?worker=1 or
-	// localStorage.setItem("ruflo:wasm-worker","true")) — see workerClient.ts.
+	// localStorage.setItem("swarmlo:wasm-worker","true")) — see workerClient.ts.
 	if (isWorkerEnabled()) {
 		try {
 			return (await callMcpInWorker(method, params)) as JsonRpcResponse;

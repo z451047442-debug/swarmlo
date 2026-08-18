@@ -103,7 +103,7 @@ async function runAll(): Promise<void> {
   console.log('\nADR-135 Track I — causal failure-avoidance edges (smoke)\n');
 
   // We use a fresh temp dir per test group to isolate state.
-  const tmpBase = path.join(os.tmpdir(), 'ruflo-causal-smoke-' + process.pid);
+  const tmpBase = path.join(os.tmpdir(), 'swarmlo-causal-smoke-' + process.pid);
 
   // -------------------------------------------------------------------------
   // Test 1: Record one failure → retrieve same-signature question → hint returned

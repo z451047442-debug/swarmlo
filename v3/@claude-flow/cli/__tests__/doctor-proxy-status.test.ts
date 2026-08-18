@@ -23,7 +23,7 @@ let fetchSpy: ReturnType<typeof vi.spyOn> | null = null;
 beforeEach(() => {
   stateDir = fs.mkdtempSync(path.join(os.tmpdir(), 'doctor-proxy-status-test-'));
   savedEnv = { ...process.env };
-  process.env.RUFLO_STATE_DIR = stateDir;
+  process.env.SWARMLO_STATE_DIR = stateDir;
 });
 
 afterEach(() => {

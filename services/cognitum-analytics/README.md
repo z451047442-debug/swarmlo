@@ -1,8 +1,8 @@
 # cognitum-analytics — moved out
 
-The RuFlo funnel analytics endpoint now lives in its own repo:
+The Swarmlo funnel analytics endpoint now lives in its own repo:
 
-**https://github.com/cognitum-one/ruflo-funnel-api**
+**https://github.com/cognitum-one/swarmlo-funnel-api**
 
 per ADR-311 (server-side split from OSS CLI lifecycle).
 
@@ -13,5 +13,5 @@ deploy scripts are all in the dedicated repo.
 
 Client transport (this repo) points at `https://funnel.ruv.io/v1/events`
 by default — the Cloud Run domain mapping onto the deployed function.
-Override with the `RUFLO_FUNNEL_EVENTS_ENDPOINT` env var for staging or
+Override with the `SWARMLO_FUNNEL_EVENTS_ENDPOINT` env var for staging or
 self-hosted deployments.

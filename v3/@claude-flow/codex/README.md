@@ -8,7 +8,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/@claude-flow/codex"><img src="https://img.shields.io/npm/v/@claude-flow/codex?label=npm&color=blue" alt="npm version"></a>
   <a href="https://www.npmjs.com/package/@claude-flow/codex"><img src="https://img.shields.io/npm/dm/@claude-flow/codex?label=downloads&color=cb3837" alt="npm downloads"></a>
-  <a href="https://github.com/ruvnet/ruflo"><img src="https://img.shields.io/badge/license-MIT-green" alt="license"></a>
+  <a href="https://github.com/z451047442-debug/swarmlo"><img src="https://img.shields.io/badge/license-MIT-green" alt="license"></a>
   <a href="https://agentics.org"><img src="https://img.shields.io/badge/standard-Agentics-purple" alt="Agentics Standard"></a>
 </p>
 
@@ -65,13 +65,13 @@ Transform OpenAI Codex CLI into a **self-improving AI development system**. Whil
 
 ```bash
 # Initialize for Codex (recommended)
-npx ruflo@latest init --codex
+npx swarmlo@latest init --codex
 
 # Full setup with all 137+ skills
-npx ruflo@latest init --codex --full
+npx swarmlo@latest init --codex --full
 
 # Dual mode (both Claude Code and Codex)
-npx ruflo@latest init --dual
+npx swarmlo@latest init --dual
 ```
 
 **That's it!** The MCP server is auto-registered, skills are installed, and your project is ready for self-learning development.
@@ -276,13 +276,13 @@ project/
 
 ```bash
 # Minimal (fastest init)
-npx ruflo@latest init --codex --minimal
+npx swarmlo@latest init --codex --minimal
 
 # Default
-npx ruflo@latest init --codex
+npx swarmlo@latest init --codex
 
 # Full (all skills)
-npx ruflo@latest init --codex --full
+npx swarmlo@latest init --codex --full
 ```
 
 ### Template Contents
@@ -326,7 +326,7 @@ npx ruflo@latest init --codex --full
 Run `init --dual` to set up both platforms:
 
 ```bash
-npx ruflo@latest init --dual
+npx swarmlo@latest init --dual
 ```
 
 This creates:
@@ -550,7 +550,7 @@ Run Claude Code for interactive development and spawn headless Codex workers for
 
 ```bash
 # Initialize dual-mode
-npx ruflo@latest init --dual
+npx swarmlo@latest init --dual
 
 # Creates both:
 # - CLAUDE.md (Claude Code configuration)
@@ -662,7 +662,7 @@ Codex does not expose Claude Code's `ScheduleWakeup`, so `@claude-flow/codex` pr
 # Run Codex repeatedly until it creates .codex/loop/default.complete or reaches 10 iterations
 npx claude-flow-codex loop run "Fix failing tests and create the completion marker when done"
 
-# Use command mode for recurring Ruflo workers or custom scripts
+# Use command mode for recurring Swarmlo workers or custom scripts
 npx claude-flow-codex loop run --name testgaps --interval 270 --max-iterations 0 \
   --command "npx claude-flow hooks worker dispatch --trigger testgaps"
 
@@ -959,7 +959,7 @@ console.log(`Skills generated: ${result.skillsGenerated.length}`);
 Instead of migrating, use dual mode to support both:
 
 ```bash
-npx ruflo@latest init --dual
+npx swarmlo@latest init --dual
 ```
 
 This keeps both `CLAUDE.md` and `AGENTS.md` in sync.
@@ -1008,7 +1008,7 @@ ls -la .agents/skills/
 cat .agents/config.toml | grep skills
 
 # Rebuild skills
-npx ruflo@latest init --codex --force
+npx swarmlo@latest init --codex --force
 ```
 
 ### Vector Search Slow
@@ -1040,5 +1040,5 @@ MIT
 
 ## Support
 
-- Documentation: https://github.com/ruvnet/ruflo
-- Issues: https://github.com/ruvnet/ruflo/issues
+- Documentation: https://github.com/z451047442-debug/swarmlo
+- Issues: https://github.com/z451047442-debug/swarmlo/issues

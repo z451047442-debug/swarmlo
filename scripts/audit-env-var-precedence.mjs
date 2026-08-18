@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Static guard for ruvnet/ruflo ADR-125 / ADR-130 env-var precedence pattern.
+ * Static guard for z451047442-debug/swarmlo ADR-125 / ADR-130 env-var precedence pattern.
  *
  * Context
  * -------
@@ -53,35 +53,35 @@ const REPO_ROOT = resolve(__dirname, '..');
 const KNOWN_ESCAPE_HATCHES = new Set([
   // ── CI / test escape hatches ────────────────────────────────────────────────
   'CLAUDE_FLOW_DISABLE_BRIDGE',   // CI/test: force raw sql.js path — intentionally no CLI flag
-  'RUFLO_HOOK_SKIP_NPX',          // CI: suppress cold-install latency in smoke tests
-  'RUFLO_HOOK_CLI_OVERRIDE',      // #2721 test-only: point plugins/ruflo-core/scripts/ruflo-hook.cjs at a local CLI build instead of the ruflo/claude-flow/npx PATH probe. Hook scripts have no CLI-flag surface (invoked by hooks.json, never a user-typed command)
-  'RUFLO_HOOK_DEBUG_STDOUT',      // #2721 test-only: surface the invoked CLI's stdout/stderr from ruflo-hook.cjs instead of swallowing it, so test-hooks.mjs can assert on recorded values. Same no-CLI-surface reasoning as RUFLO_HOOK_CLI_OVERRIDE above — production never sets this
-  'RUFLO_SUBLINEAR_NATIVE',       // Manual override for native vs WASM sublinear — CI/perf knob
-  'RUFLO_METAHARNESS_CACHE_BASE', // CI/test seam: relocates the ~/.ruflo pinned-cache root in metaharness smoke tests — intentionally env-only, plugin scripts have no CLI-flag surface
-  'RUFLO_FUNNEL',                 // Read inside the generated hook-handler.cjs (ADR-312/313 rate-limit nudge), not a typed CLI invocation — no command surface to attach a flag to
-  'RUFLO_STATUSLINE_HYPERLINKS',  // Terminal-capability opt-out for OSC 8 hyperlinks in the statusline hook, same pattern as NO_COLOR — the statusline runs as a hook script, never a user-typed CLI command
-  'RUFLO_STATUSLINE_HYPERLINKS_TMUX', // Opt-in override of the tmux OSC 8 mangling workaround above — same hook-script context, no CLI surface
-  'RUFLO_STATUSLINE_IDENTITY',    // Hook-only display mode (`project` default, `author` compatibility); statusline has no interactive CLI surface
-  'RUFLO_ADVISOR_MAX_BUDGET_USD', // Advisor-tip spend cap read from generated hook code (funnel/advisor-tip.ts) — background nudge, no CLI invocation to attach a flag to
-  'RUFLO_FUNNEL_CLICK_ENDPOINT',    // Staging/self-hosted override for the funnel click-redirect endpoint — deployment config, not a per-invocation CLI flag
-  'RUFLO_FUNNEL_EVENTS_ENDPOINT',   // Staging/self-hosted override for the funnel events endpoint — same deployment-config pattern as CLICK_ENDPOINT above
-  'RUFLO_FUNNEL_MESSAGES_ENDPOINT', // Staging/self-hosted override for the funnel messages endpoint — same deployment-config pattern as CLICK_ENDPOINT above
-  'RUFLO_STATE_DIR',                // Test/CI isolation seam for the funnel state directory (defaults to ~/.ruflo) — background hook state, no CLI command reads it
-  'RUFLO_AI_DEDUP_DISABLE',         // #2661 — background daemon tuning knob (cross-worktree AI job dedup), no CLI command reads a running daemon's config
-  'RUFLO_AI_DEDUP_WINDOW_SECS',     // #2661 — same background daemon tuning context as RUFLO_AI_DEDUP_DISABLE above
-  'RUFLO_DAEMON_AI_WORKERS',        // #2661 — DOES have CLI-flag precedence (`daemon start --headless`), but it's wired via constructor-injected config in commands/daemon.ts, not a local check the audit's same-file heuristic can see from worker-daemon.ts where this read lives
-  'RUFLO_AI_BUDGET_DIR',            // #2663 — repo-supervisor state directory relocation (services/global-ai-budget.ts, services/repo-supervisor.ts, services/workspace-lease.ts). Test/CI isolation seam analogous to RUFLO_STATE_DIR above; the supervisor is a background service, not a user-invoked CLI command with a `--budget-dir` flag surface
-  'RUFLO_AI_BUDGET_DISABLE',        // #2663 — hard kill switch for the repository-supervisor AI-cost fuse (services/global-ai-budget.ts). Ops-level "disable this whole subsystem" toggle, same pattern as RUFLO_AI_DEDUP_DISABLE above
-  'RUFLO_METAHARNESS_SKIP_LOCAL',   // plugins/ruflo-metaharness/scripts/_invoke.mjs — CI seam that forces the invoke shim off the local vendored metaharness and onto the pinned-cache resolver. Plugin script has no CLI-flag surface (invoked internally by MCP tools)
-  'RUFLO_HELPERS_LOCKED',           // v3.30.0 — env-level opt-out for the .claude/helpers/ auto-refresh (init/helper-refresh.ts). Sibling to the `.LOCKED` marker file; helper-refresh runs from a hook, not a user-typed CLI command — no per-invocation flag surface. See CLAUDE.md "Concurrent-session helper corruption" for rationale
+  'SWARMLO_HOOK_SKIP_NPX',          // CI: suppress cold-install latency in smoke tests
+  'SWARMLO_HOOK_CLI_OVERRIDE',      // #2721 test-only: point plugins/swarmlo-core/scripts/swarmlo-hook.cjs at a local CLI build instead of the swarmlo/claude-flow/npx PATH probe. Hook scripts have no CLI-flag surface (invoked by hooks.json, never a user-typed command)
+  'SWARMLO_HOOK_DEBUG_STDOUT',      // #2721 test-only: surface the invoked CLI's stdout/stderr from swarmlo-hook.cjs instead of swallowing it, so test-hooks.mjs can assert on recorded values. Same no-CLI-surface reasoning as SWARMLO_HOOK_CLI_OVERRIDE above — production never sets this
+  'SWARMLO_SUBLINEAR_NATIVE',       // Manual override for native vs WASM sublinear — CI/perf knob
+  'SWARMLO_METAHARNESS_CACHE_BASE', // CI/test seam: relocates the ~/.swarmlo pinned-cache root in metaharness smoke tests — intentionally env-only, plugin scripts have no CLI-flag surface
+  'SWARMLO_FUNNEL',                 // Read inside the generated hook-handler.cjs (ADR-312/313 rate-limit nudge), not a typed CLI invocation — no command surface to attach a flag to
+  'SWARMLO_STATUSLINE_HYPERLINKS',  // Terminal-capability opt-out for OSC 8 hyperlinks in the statusline hook, same pattern as NO_COLOR — the statusline runs as a hook script, never a user-typed CLI command
+  'SWARMLO_STATUSLINE_HYPERLINKS_TMUX', // Opt-in override of the tmux OSC 8 mangling workaround above — same hook-script context, no CLI surface
+  'SWARMLO_STATUSLINE_IDENTITY',    // Hook-only display mode (`project` default, `author` compatibility); statusline has no interactive CLI surface
+  'SWARMLO_ADVISOR_MAX_BUDGET_USD', // Advisor-tip spend cap read from generated hook code (funnel/advisor-tip.ts) — background nudge, no CLI invocation to attach a flag to
+  'SWARMLO_FUNNEL_CLICK_ENDPOINT',    // Staging/self-hosted override for the funnel click-redirect endpoint — deployment config, not a per-invocation CLI flag
+  'SWARMLO_FUNNEL_EVENTS_ENDPOINT',   // Staging/self-hosted override for the funnel events endpoint — same deployment-config pattern as CLICK_ENDPOINT above
+  'SWARMLO_FUNNEL_MESSAGES_ENDPOINT', // Staging/self-hosted override for the funnel messages endpoint — same deployment-config pattern as CLICK_ENDPOINT above
+  'SWARMLO_STATE_DIR',                // Test/CI isolation seam for the funnel state directory (defaults to ~/.swarmlo) — background hook state, no CLI command reads it
+  'SWARMLO_AI_DEDUP_DISABLE',         // #2661 — background daemon tuning knob (cross-worktree AI job dedup), no CLI command reads a running daemon's config
+  'SWARMLO_AI_DEDUP_WINDOW_SECS',     // #2661 — same background daemon tuning context as SWARMLO_AI_DEDUP_DISABLE above
+  'SWARMLO_DAEMON_AI_WORKERS',        // #2661 — DOES have CLI-flag precedence (`daemon start --headless`), but it's wired via constructor-injected config in commands/daemon.ts, not a local check the audit's same-file heuristic can see from worker-daemon.ts where this read lives
+  'SWARMLO_AI_BUDGET_DIR',            // #2663 — repo-supervisor state directory relocation (services/global-ai-budget.ts, services/repo-supervisor.ts, services/workspace-lease.ts). Test/CI isolation seam analogous to SWARMLO_STATE_DIR above; the supervisor is a background service, not a user-invoked CLI command with a `--budget-dir` flag surface
+  'SWARMLO_AI_BUDGET_DISABLE',        // #2663 — hard kill switch for the repository-supervisor AI-cost fuse (services/global-ai-budget.ts). Ops-level "disable this whole subsystem" toggle, same pattern as SWARMLO_AI_DEDUP_DISABLE above
+  'SWARMLO_METAHARNESS_SKIP_LOCAL',   // plugins/swarmlo-metaharness/scripts/_invoke.mjs — CI seam that forces the invoke shim off the local vendored metaharness and onto the pinned-cache resolver. Plugin script has no CLI-flag surface (invoked internally by MCP tools)
+  'SWARMLO_HELPERS_LOCKED',           // v3.30.0 — env-level opt-out for the .claude/helpers/ auto-refresh (init/helper-refresh.ts). Sibling to the `.LOCKED` marker file; helper-refresh runs from a hook, not a user-typed CLI command — no per-invocation flag surface. See CLAUDE.md "Concurrent-session helper corruption" for rationale
   'CLAUDE_FLOW_DISABLE_NATIVE_ROUTER', // Test/lock-constrained MCP escape hatch: forces hooks routing onto the deterministic pure-JS backend. The router is process-lifetime state, not owned by one CLI invocation.
-  'RUFLO_FLYWHEEL_ALLOW_BUILTIN_ANCHOR', // Explicit compatibility escape hatch for pre-ADR-331 downstream behavior. Intentionally env-only and visibly unsafe-by-choice; normal CLI/MCP use supplies a project anchor path + hash.
+  'SWARMLO_FLYWHEEL_ALLOW_BUILTIN_ANCHOR', // Explicit compatibility escape hatch for pre-ADR-331 downstream behavior. Intentionally env-only and visibly unsafe-by-choice; normal CLI/MCP use supplies a project anchor path + hash.
 
   // ── Embedding substrate toggles (3.25.x — opt-in tier + fail-closed ops flag) ─
-  'RUFLO_REQUIRE_REAL_EMBEDDINGS', // Fail-closed "no stubs" strict mode — deploy/CI ops toggle, not a per-invocation CLI flag (ADR-176)
-  'RUFLO_EMBED_WASM_PKG',          // Opt-in specifier for the optional WASM embedder tier — env-only deployment config, inert by default
-  'RUFLO_LATTICE_WASM_PKG',        // Back-compat alias of RUFLO_EMBED_WASM_PKG
-  'RUFLO_EMBED_MODEL',             // Model name for the optional WASM embedder — substrate config, env-only
+  'SWARMLO_REQUIRE_REAL_EMBEDDINGS', // Fail-closed "no stubs" strict mode — deploy/CI ops toggle, not a per-invocation CLI flag (ADR-176)
+  'SWARMLO_EMBED_WASM_PKG',          // Opt-in specifier for the optional WASM embedder tier — env-only deployment config, inert by default
+  'SWARMLO_LATTICE_WASM_PKG',        // Back-compat alias of SWARMLO_EMBED_WASM_PKG
+  'SWARMLO_EMBED_MODEL',             // Model name for the optional WASM embedder — substrate config, env-only
 
   // ── ADR-320 MCP Composition Inspector + ChannelGuard (this ADR) ─────────────
   // Read inside @claude-flow/security/src/mcp-composition-inspector.ts and
@@ -113,8 +113,8 @@ const KNOWN_ESCAPE_HATCHES = new Set([
   'OPENAI_API_KEY',
   'GOOGLE_API_KEY',
   'CLAUDE_FLOW_ENCRYPTION_KEY',   // Encryption key — credential, never a CLI flag
-  'RUFLO_GRAPH_INTELLIGENCE_WITNESS_KEY', // Ed25519 witness signing key — credential
-  'RUFLO_PROVIDER',               // Provider selection in headless agent context
+  'SWARMLO_GRAPH_INTELLIGENCE_WITNESS_KEY', // Ed25519 witness signing key — credential
+  'SWARMLO_PROVIDER',               // Provider selection in headless agent context
   'PINATA_API_KEY',
   'PINATA_API_SECRET',
   'PINATA_API_JWT',
@@ -138,11 +138,11 @@ const KNOWN_ESCAPE_HATCHES = new Set([
 
   // ── Statusline cosmetics (no CLI on the statusline; init-time settings.json) ─
   // Added 2026-06-02: statusline is invoked by Claude Code via hook config,
-  // not by an interactive `ruflo statusline …` command line. There is no CLI
+  // not by an interactive `swarmlo statusline …` command line. There is no CLI
   // surface to attach a flag to; the env reads in statusline-generator.ts
   // are the documented configuration channel.
-  'RUFLO_STATUSLINE_COST_SYMBOL',
-  'RUFLO_STATUSLINE_HIDE_COST',
+  'SWARMLO_STATUSLINE_COST_SYMBOL',
+  'SWARMLO_STATUSLINE_HIDE_COST',
 
   // ── Tunables for routing/learning thresholds (operator knob, not user CLI) ───
   // Added 2026-06-02: model-router uses this as a runtime escalation threshold
@@ -178,13 +178,13 @@ const KNOWN_ESCAPE_HATCHES = new Set([
   'TOOL_INPUT_command',
 
   // ── Router (ADR-130/148/149) operator knobs ─────────────────────────────────
-  // These configure ruflo's neural-router/bandit/trajectory subsystems and
+  // These configure swarmlo's neural-router/bandit/trajectory subsystems and
   // are intentionally env-only:
   //   - Most are CI/benchmark knobs (KNN_K, LATENCY_BUDGET_MS, COST_CEILING),
   //     not user-typed inputs.
   //   - Several are feature flags (NEURAL=1, BANDIT_PER_MODEL=1, TRAJECTORY=1)
   //     that, like CLAUDE_FLOW_V3_ENABLED above, get baked into settings
-  //     by `ruflo init` rather than passed on the command line.
+  //     by `swarmlo init` rather than passed on the command line.
   //   - SEED_CORPUS / CALIBRATOR_PATH / MODEL_PATH are file-path inputs to
   //     long-running daemons, not transient CLI flags.
   // If a router knob graduates to user-facing surface, add a CLI flag override
@@ -224,18 +224,18 @@ const KNOWN_ESCAPE_HATCHES = new Set([
   'CLAUDE_FLOW_RUN_TRANSCRIPTS_PATH',
   'CLAUDE_FLOW_RUN_TRANSCRIPTS_MAXROTATIONS',
   'CLAUDE_FLOW_RUN_TRANSCRIPTS_MAXSIZE',
-  'CLAUDE_FLOW_SWARM_DIR',  // Set by ruflo init / inter-process — not user-typed
+  'CLAUDE_FLOW_SWARM_DIR',  // Set by swarmlo init / inter-process — not user-typed
   // Nightly backup daemon-worker config (ADR-174 follow-up). The interactive
   // `memory backup` command exposes --keep / --gcs / --dir flags with proper
   // precedence; these env vars only configure the headless daemon worker path.
-  'RUFLO_BACKUP_KEEP',
-  'RUFLO_BACKUP_GCS',
+  'SWARMLO_BACKUP_KEEP',
+  'SWARMLO_BACKUP_GCS',
   // Self-running daemon opt-out (auto-start on CLI use). A pure on/off toggle
   // for a background behavior — no CLI flag equivalent; escape-hatch by design.
-  'RUFLO_DAEMON_AUTOSTART',
+  'SWARMLO_DAEMON_AUTOSTART',
   // Self-optimizing harness loop opt-IN (ADR-176). Background daemon-worker
   // toggle; $0-default even when on. Escape-hatch by design.
-  'RUFLO_HARNESS_LOOP',
+  'SWARMLO_HARNESS_LOOP',
 ]);
 
 // ── Source directories to scan ────────────────────────────────────────────────
@@ -303,7 +303,7 @@ for (const root of SCAN_ROOTS) {
     while ((match = ENV_READ_RE.exec(text)) !== null) {
       const varName = match[1] || match[2];
       if (!varName) continue;
-      if (!varName.startsWith('CLAUDE_FLOW_') && !varName.startsWith('RUFLO_')) continue;
+      if (!varName.startsWith('CLAUDE_FLOW_') && !varName.startsWith('SWARMLO_')) continue;
       if (KNOWN_ESCAPE_HATCHES.has(varName)) continue;
 
       // Find the line number
@@ -354,7 +354,7 @@ if (warnings.length > 0) {
 }
 
 if (violations.length === 0) {
-  console.log('\n  ok: all CLAUDE_FLOW_* / RUFLO_* env var reads have documented CLI-flag precedence');
+  console.log('\n  ok: all CLAUDE_FLOW_* / SWARMLO_* env var reads have documented CLI-flag precedence');
   console.log('  ok: or are registered as known escape-hatch env vars (CI/test/credential use)');
   process.exit(0);
 }

@@ -1,7 +1,7 @@
 /**
  * Testgen MCP Tools — Test-Driven Repair surface.
  *
- * Exposes `ruflo-testgen` plugin scripts as first-class MCP tools so
+ * Exposes `swarmlo-testgen` plugin scripts as first-class MCP tools so
  * agents (Claude Code, Codex, etc.) can invoke them programmatically.
  *
  * Current surface (one tool, narrow on purpose — Conformant mode follows
@@ -13,7 +13,7 @@
  * Inspired by agent-harness-generator/packages/darwin-mode ADR-175.
  *
  * ARCHITECTURAL CONSTRAINT (mirrors metaharness-tools.ts)
- * Zero static `ruflo-testgen/*` imports. All script invocation stays
+ * Zero static `swarmlo-testgen/*` imports. All script invocation stays
  * behind a subprocess bridge. When the plugin isn't reachable at
  * runtime, the tool returns `{success: true, degraded: true,
  * reason: 'plugin-not-found'}` and exits 0 — same posture as
@@ -33,7 +33,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 /**
- * Locate the ruflo-testgen plugin's scripts directory.
+ * Locate the swarmlo-testgen plugin's scripts directory.
  *
  * Mirrors `metaharness-tools.ts::locatePluginScripts()` strategy but
  * targets the testgen plugin. Walks up from this module's own location
@@ -45,13 +45,13 @@ function locateTestgenScripts(): string | null {
   const candidates: string[] = [];
   let p = resolve(__dirname);
   for (let i = 0; i < 8; i++) {
-    candidates.push(join(p, 'plugins', 'ruflo-testgen', 'scripts'));
-    candidates.push(join(p, '..', 'plugins', 'ruflo-testgen', 'scripts'));
+    candidates.push(join(p, 'plugins', 'swarmlo-testgen', 'scripts'));
+    candidates.push(join(p, '..', 'plugins', 'swarmlo-testgen', 'scripts'));
     p = dirname(p);
   }
   const cwd = getProjectCwd();
-  candidates.push(join(cwd, 'plugins', 'ruflo-testgen', 'scripts'));
-  candidates.push(join(cwd, 'node_modules', '@claude-flow', 'cli', 'plugins', 'ruflo-testgen', 'scripts'));
+  candidates.push(join(cwd, 'plugins', 'swarmlo-testgen', 'scripts'));
+  candidates.push(join(cwd, 'node_modules', '@claude-flow', 'cli', 'plugins', 'swarmlo-testgen', 'scripts'));
   for (const c of candidates) {
     if (existsSync(join(c, 'tdd-repair', 'tdd-repair.mjs'))) return c;
   }
@@ -136,7 +136,7 @@ export const testgenTools: MCPTool[] = [
         repo: { type: 'string', description: 'Absolute path to the repo root (default: cwd)', default: '.' },
         test: { type: 'string', description: 'Relative path (from repo root) to the failing test file. REQUIRED.' },
         testCommand: { type: 'string', description: 'Shell command to run the test (e.g. `npx vitest run tests/auth.test.ts`). REQUIRED.' },
-        maxAttempts: { type: 'number', description: '1..5 (ruflo cap). Each attempt gets budgetUsd/maxAttempts of the total budget.', default: 1 },
+        maxAttempts: { type: 'number', description: '1..5 (swarmlo cap). Each attempt gets budgetUsd/maxAttempts of the total budget.', default: 1 },
         budgetUsd: { type: 'number', description: 'Total cost ceiling across all attempts. Hard cap — claude exits when reached.', default: 5.0 },
         model: { type: 'string', enum: ['haiku', 'sonnet', 'opus'], description: 'Claude model tier. Haiku for simple bugs (default); Sonnet for multi-file; Opus rarely worth it.', default: 'haiku' },
         confirm: { type: 'boolean', description: 'REQUIRED to actually run. Without it returns a dry-run plan.', default: false },

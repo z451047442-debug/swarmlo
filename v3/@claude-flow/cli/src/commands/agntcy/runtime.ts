@@ -1,7 +1,7 @@
 /**
  * V3 CLI AGNTCY/SLIM Runtime Presence Check — ADR-380 §1.
  *
- * ADR-380 introduces three new `ruflo` CLI verbs (`transport use slim`,
+ * ADR-380 introduces three new `swarmlo` CLI verbs (`transport use slim`,
  * `agent publish`, `swarm join <namespace>`) that talk to Cisco Outshift's
  * AGNTCY ecosystem (SLIM transport, Directory publish, group membership).
  *
@@ -48,8 +48,8 @@
  *                            is exercised by __tests__/agntcy-commands.test.ts.
  */
 
-/** Env var an operator sets to point ruflo at a SLIM endpoint. */
-export const AGNTCY_ENDPOINT_ENV = 'RUFLO_AGNTCY_SLIM_ENDPOINT';
+/** Env var an operator sets to point swarmlo at a SLIM endpoint. */
+export const AGNTCY_ENDPOINT_ENV = 'SWARMLO_AGNTCY_SLIM_ENDPOINT';
 
 /**
  * The real SLIM Node.js bindings package (npm, published, real). Kept as a

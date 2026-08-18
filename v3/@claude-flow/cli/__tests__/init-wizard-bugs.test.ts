@@ -2,11 +2,11 @@
  * Init wizard regression tests for #2206, #2207, #2208.
  *
  * #2206 — mcp-generator must register the server under the 'claude-flow' key
- *          (not 'ruflo') so all plugins resolve as mcp__claude-flow__*.
- * #2207 — detectExistingRufloMCP must accept both 'claude-flow' and 'ruflo' keys;
+ *          (not 'swarmlo') so all plugins resolve as mcp__claude-flow__*.
+ * #2207 — detectExistingSwarmloMCP must accept both 'claude-flow' and 'swarmlo' keys;
  *          a bare .claude/settings.json must NOT be a false positive.
  * #2208 — writeClaudeMd (--force) must back up an existing CLAUDE.md to
- *          CLAUDE.md.pre-ruflo before overwriting it.
+ *          CLAUDE.md.pre-swarmlo before overwriting it.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -42,20 +42,20 @@ function makeMCPOptions(overrides: Partial<InitOptions> = {}): InitOptions {
 }
 
 describe('#2206 — mcp-generator server key', () => {
-  it('registers the ruflo MCP server under the claude-flow key', () => {
+  it('registers the swarmlo MCP server under the claude-flow key', () => {
     const config = generateMCPConfig(makeMCPOptions()) as { mcpServers: Record<string, unknown> };
     expect(config.mcpServers).toHaveProperty('claude-flow');
   });
 
-  it('does NOT register the server under the bare ruflo key', () => {
+  it('does NOT register the server under the bare swarmlo key', () => {
     const config = generateMCPConfig(makeMCPOptions()) as { mcpServers: Record<string, unknown> };
-    expect(config.mcpServers).not.toHaveProperty('ruflo');
+    expect(config.mcpServers).not.toHaveProperty('swarmlo');
   });
 
-  it('still invokes ruflo@latest mcp start as the command args', () => {
+  it('still invokes swarmlo@latest mcp start as the command args', () => {
     const config = generateMCPConfig(makeMCPOptions()) as { mcpServers: Record<string, unknown> };
     const entry = config.mcpServers['claude-flow'] as { command: string; args: string[] };
-    expect(entry.args).toContain('ruflo@latest');
+    expect(entry.args).toContain('swarmlo@latest');
     expect(entry.args).toContain('mcp');
     expect(entry.args).toContain('start');
   });
@@ -63,18 +63,18 @@ describe('#2206 — mcp-generator server key', () => {
   it('generateMCPCommands uses claude-flow as the registration name', () => {
     const cmds = generateMCPCommands(makeMCPOptions());
     expect(cmds.length).toBeGreaterThan(0);
-    // Every command that adds the main server must use 'claude-flow', not 'ruflo'
-    const mainCmd = cmds.find(c => c.includes('ruflo@latest'));
+    // Every command that adds the main server must use 'claude-flow', not 'swarmlo'
+    const mainCmd = cmds.find(c => c.includes('swarmlo@latest'));
     expect(mainCmd).toBeDefined();
     expect(mainCmd).toMatch(/claude mcp add claude-flow/);
-    expect(mainCmd).not.toMatch(/claude mcp add ruflo\b/);
+    expect(mainCmd).not.toMatch(/claude mcp add swarmlo\b/);
   });
 });
 
-// ─── #2207: detectExistingRufloMCP — both keys + no false positive ───────────
+// ─── #2207: detectExistingSwarmloMCP — both keys + no false positive ───────────
 // We test the function indirectly via its effect on writeMCPConfig behaviour.
 // Direct export is not available, so we exercise it through executeInit which
-// calls writeMCPConfig → detectExistingRufloMCP.
+// calls writeMCPConfig → detectExistingSwarmloMCP.
 
 // Mock heavy I/O that executeInit performs (skills/agents/helpers copy) so the
 // test only exercises the MCP-detection branch we care about.
@@ -97,7 +97,7 @@ describe('#2207 — init detector accepts both server keys', () => {
     try {
       writeFileSync(
         path.join(parentDir, '.mcp.json'),
-        JSON.stringify({ mcpServers: { 'claude-flow': { command: 'npx', args: ['-y', 'ruflo@latest', 'mcp', 'start'] } } }),
+        JSON.stringify({ mcpServers: { 'claude-flow': { command: 'npx', args: ['-y', 'swarmlo@latest', 'mcp', 'start'] } } }),
       );
       // Target is a sub-directory so the parent .mcp.json is in the walk path
       const subDir = path.join(parentDir, 'sub');
@@ -133,12 +133,12 @@ describe('#2207 — init detector accepts both server keys', () => {
     }
   });
 
-  it('detects a prior install registered under the legacy ruflo key', async () => {
+  it('detects a prior install registered under the legacy swarmlo key', async () => {
     const parentDir = mkdtempSync(path.join(tmpdir(), 'wizard-2207-legacy-'));
     try {
       writeFileSync(
         path.join(parentDir, '.mcp.json'),
-        JSON.stringify({ mcpServers: { ruflo: { command: 'npx', args: ['-y', 'ruflo@latest', 'mcp', 'start'] } } }),
+        JSON.stringify({ mcpServers: { swarmlo: { command: 'npx', args: ['-y', 'swarmlo@latest', 'mcp', 'start'] } } }),
       );
       const subDir = path.join(parentDir, 'sub');
       mkdirSync(subDir, { recursive: true });
@@ -204,7 +204,7 @@ describe('#2207 — init detector accepts both server keys', () => {
       process.env.HOME = projectDir;
       try {
         const result = await executeInit(opts);
-        // No pre-existing ruflo/claude-flow key → init must NOT skip .mcp.json
+        // No pre-existing swarmlo/claude-flow key → init must NOT skip .mcp.json
         const mcpSkipped = result.skipped.find(s => s.startsWith('.mcp.json') && !s.includes('existing'));
         expect(mcpSkipped).toBeUndefined();
       } finally {
@@ -229,7 +229,7 @@ describe('#2208 — CLAUDE.md backup before overwrite', () => {
     rmSync(tmp, { recursive: true, force: true });
   });
 
-  it('backs up existing CLAUDE.md to CLAUDE.md.pre-ruflo when --force is used', async () => {
+  it('backs up existing CLAUDE.md to CLAUDE.md.pre-swarmlo when --force is used', async () => {
     const sentinel = '# Sentinel Project Content\nDo not lose this.\n';
     writeFileSync(path.join(tmp, 'CLAUDE.md'), sentinel, 'utf-8');
 
@@ -255,14 +255,14 @@ describe('#2208 — CLAUDE.md backup before overwrite', () => {
 
     await executeInit(opts);
 
-    const backupPath = path.join(tmp, 'CLAUDE.md.pre-ruflo');
+    const backupPath = path.join(tmp, 'CLAUDE.md.pre-swarmlo');
     expect(existsSync(backupPath)).toBe(true);
     expect(readFileSync(backupPath, 'utf-8')).toBe(sentinel);
   });
 
-  it('uses a timestamped backup name when CLAUDE.md.pre-ruflo already exists', async () => {
+  it('uses a timestamped backup name when CLAUDE.md.pre-swarmlo already exists', async () => {
     writeFileSync(path.join(tmp, 'CLAUDE.md'), '# First content\n', 'utf-8');
-    writeFileSync(path.join(tmp, 'CLAUDE.md.pre-ruflo'), '# Previous backup\n', 'utf-8');
+    writeFileSync(path.join(tmp, 'CLAUDE.md.pre-swarmlo'), '# Previous backup\n', 'utf-8');
 
     const { executeInit } = await import('../src/init/executor.js');
     const opts: InitOptions = {
@@ -286,11 +286,11 @@ describe('#2208 — CLAUDE.md backup before overwrite', () => {
 
     await executeInit(opts);
 
-    // The original .pre-ruflo must still have its old content
-    expect(readFileSync(path.join(tmp, 'CLAUDE.md.pre-ruflo'), 'utf-8')).toBe('# Previous backup\n');
+    // The original .pre-swarmlo must still have its old content
+    expect(readFileSync(path.join(tmp, 'CLAUDE.md.pre-swarmlo'), 'utf-8')).toBe('# Previous backup\n');
     // A timestamped backup must have been created
     const entries = readdirSync(tmp);
-    const timestamped = entries.find(e => e.startsWith('CLAUDE.md.pre-ruflo.') && e !== 'CLAUDE.md.pre-ruflo');
+    const timestamped = entries.find(e => e.startsWith('CLAUDE.md.pre-swarmlo.') && e !== 'CLAUDE.md.pre-swarmlo');
     expect(timestamped).toBeDefined();
   });
 
@@ -317,7 +317,7 @@ describe('#2208 — CLAUDE.md backup before overwrite', () => {
 
     await executeInit(opts);
 
-    expect(existsSync(path.join(tmp, 'CLAUDE.md.pre-ruflo'))).toBe(false);
+    expect(existsSync(path.join(tmp, 'CLAUDE.md.pre-swarmlo'))).toBe(false);
     expect(existsSync(path.join(tmp, 'CLAUDE.md'))).toBe(true);
   });
 
@@ -351,7 +351,7 @@ describe('#2208 — CLAUDE.md backup before overwrite', () => {
     expect(result.skipped).toContain('CLAUDE.md');
     // Original must be untouched
     expect(readFileSync(path.join(tmp, 'CLAUDE.md'), 'utf-8')).toBe(sentinel);
-    expect(existsSync(path.join(tmp, 'CLAUDE.md.pre-ruflo'))).toBe(false);
+    expect(existsSync(path.join(tmp, 'CLAUDE.md.pre-swarmlo'))).toBe(false);
   });
 });
 

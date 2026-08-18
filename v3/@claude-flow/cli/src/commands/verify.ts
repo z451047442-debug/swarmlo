@@ -6,7 +6,7 @@
  * artifact, re-derives the Ed25519 public key from the manifest's git
  * commit, and verifies the signature.
  *
- * Run via: ruflo verify [--branch <branch>] [--manifest <local-path>]
+ * Run via: swarmlo verify [--branch <branch>] [--manifest <local-path>]
  *
  * If everything checks, the user has byte-for-byte the same fix
  * footprint as the manifest claims. If anything mismatches, the
@@ -52,7 +52,7 @@ interface Witness {
   };
 }
 
-const DEFAULT_MANIFEST_URL = 'https://raw.githubusercontent.com/ruvnet/ruflo/{branch}/verification.md.json';
+const DEFAULT_MANIFEST_URL = 'https://raw.githubusercontent.com/z451047442-debug/swarmlo/{branch}/verification.md.json';
 
 async function fetchWitness(branch: string): Promise<Witness> {
   const url = DEFAULT_MANIFEST_URL.replace('{branch}', branch);
@@ -160,7 +160,7 @@ async function verifySignature(witness: Witness): Promise<{
   const recomputedHash = createHash('sha256').update(manifestCanonical).digest('hex');
   const manifestHashOk = recomputedHash === witness.integrity.manifestHash;
 
-  const seed = createHash('sha256').update(witness.manifest.gitCommit + ':ruflo-witness/v1').digest();
+  const seed = createHash('sha256').update(witness.manifest.gitCommit + ':swarmlo-witness/v1').digest();
   const reKey = ed.getPublicKey(seed);
   const publicKeyReproducible = Buffer.from(reKey).toString('hex') === witness.integrity.publicKey;
 
@@ -198,10 +198,10 @@ export const verifyCommand: Command = {
     },
   ],
   examples: [
-    { command: 'ruflo verify', description: 'Fetch latest manifest from main branch + verify' },
-    { command: 'ruflo verify --branch main', description: 'Verify against a specific branch' },
-    { command: 'ruflo verify --manifest ./verification.md.json', description: 'Use a local manifest copy' },
-    { command: 'ruflo verify --json', description: 'Machine-readable output for CI' },
+    { command: 'swarmlo verify', description: 'Fetch latest manifest from main branch + verify' },
+    { command: 'swarmlo verify --branch main', description: 'Verify against a specific branch' },
+    { command: 'swarmlo verify --manifest ./verification.md.json', description: 'Use a local manifest copy' },
+    { command: 'swarmlo verify --json', description: 'Machine-readable output for CI' },
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     const branch = (ctx.flags.branch as string) || 'fix/issues-may-1-3';
@@ -210,7 +210,7 @@ export const verifyCommand: Command = {
 
     if (!asJson) {
       output.writeln();
-      output.writeln(output.bold('Ruflo Verification'));
+      output.writeln(output.bold('Swarmlo Verification'));
       output.writeln(output.dim('─'.repeat(50)));
     }
 

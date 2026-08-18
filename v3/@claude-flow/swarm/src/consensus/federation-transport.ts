@@ -60,7 +60,7 @@ export interface FederationTransportOptions {
   readonly addressOf: (nodeId: string) => string | undefined;
   /** Currently-known peer consensus node ids (excludes self — or includes; we filter). */
   readonly peerIds: () => readonly string[];
-  /** Stream id for consensus traffic (ADR-104 stream-mux). Defaults to 'ruflo-consensus'. */
+  /** Stream id for consensus traffic (ADR-104 stream-mux). Defaults to 'swarmlo-consensus'. */
   readonly streamId?: string;
   /** Default per-`send` timeout in ms. Defaults to 5000. */
   readonly defaultTimeoutMs?: number;
@@ -90,7 +90,7 @@ export class FederationTransport implements ConsensusTransport {
     this.nodeId = opts.nodeId;
     this.addressOf = opts.addressOf;
     this.peerIdsFn = opts.peerIds;
-    this.streamId = opts.streamId ?? 'ruflo-consensus';
+    this.streamId = opts.streamId ?? 'swarmlo-consensus';
     this.defaultTimeoutMs = opts.defaultTimeoutMs ?? 5_000;
     this.keyPair = opts.keyPair;
     this.resolvePeerPublicKey = opts.resolvePeerPublicKey;

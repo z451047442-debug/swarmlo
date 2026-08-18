@@ -32,7 +32,7 @@ export interface AttributionInput {
   campaign: string;
   /** UTM `content` — the specific message id ('promo-meta-llm-routing' etc.). */
   content: string;
-  /** Static UTM `source` — always 'ruflo' but overridable for tests. */
+  /** Static UTM `source` — always 'swarmlo' but overridable for tests. */
   source?: string;
   /** Injectable for deterministic tests. Defaults to the live clock. */
   now?: Date;
@@ -45,7 +45,7 @@ export interface AttributionInput {
  * real cognitum.one / agentics.org / etc. target.
  */
 const CLICK_ENDPOINT_BASE =
-  process.env.RUFLO_FUNNEL_CLICK_ENDPOINT ?? 'https://funnel.ruv.io/v1/click';
+  process.env.SWARMLO_FUNNEL_CLICK_ENDPOINT ?? 'https://funnel.ruv.io/v1/click';
 
 /**
  * Return `url` with UTM parameters appended, and — when telemetry consent is
@@ -66,7 +66,7 @@ export function attributionUrl(url: string, input: AttributionInput): string {
   if (parsed.protocol !== 'https:') return url;
 
   const params = parsed.searchParams;
-  params.set('utm_source', input.source ?? 'ruflo');
+  params.set('utm_source', input.source ?? 'swarmlo');
   params.set('utm_medium', input.medium);
   params.set('utm_campaign', input.campaign);
   params.set('utm_content', input.content);

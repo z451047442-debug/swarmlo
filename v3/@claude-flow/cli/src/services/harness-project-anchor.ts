@@ -2,7 +2,7 @@
  * Project-local, hash-pinned flywheel anchors (#2840).
  *
  * Downstream repositories must be evaluated against their own labelled
- * retrieval tasks. Silently using Ruflo's development-history benchmark makes
+ * retrieval tasks. Silently using Swarmlo's development-history benchmark makes
  * the objective flat and indistinguishable from "already optimal", so foreign
  * projects fail closed unless they supply a pinned anchor manifest.
  */
@@ -27,8 +27,8 @@ import {
 } from './harness-frozen-eval.js';
 import type { AnchorTask } from './harness-flywheel.js';
 
-export const PROJECT_ANCHOR_SCHEMA = 'ruflo.flywheel-anchor/v1';
-export const PROJECT_ANCHOR_MANIFEST_SCHEMA = 'ruflo.flywheel-anchor-manifest/v1';
+export const PROJECT_ANCHOR_SCHEMA = 'swarmlo.flywheel-anchor/v1';
+export const PROJECT_ANCHOR_MANIFEST_SCHEMA = 'swarmlo.flywheel-anchor-manifest/v1';
 export const DEFAULT_PROJECT_ANCHOR_MANIFEST = join('.claude', 'eval', 'flywheel-anchor.manifest.json');
 
 export interface ProjectAnchorManifest {
@@ -41,7 +41,7 @@ export interface FlywheelAnchorSelection {
   version: string;
   anchorRef: string;
   tasks: AnchorTask[];
-  source: 'project' | 'ruflo-built-in';
+  source: 'project' | 'swarmlo-built-in';
   path?: string;
 }
 
@@ -122,15 +122,15 @@ function toSelection(
   };
 }
 
-function isRufloRepository(projectRoot: string): boolean {
+function isSwarmloRepository(projectRoot: string): boolean {
   try {
     const pkg = JSON.parse(readFileSync(join(projectRoot, 'package.json'), 'utf8')) as {
       name?: string;
       repository?: string | { url?: string };
     };
     const repository = typeof pkg.repository === 'string' ? pkg.repository : pkg.repository?.url;
-    return ['claude-flow', 'ruflo', '@claude-flow/cli'].includes(pkg.name ?? '')
-      && /github\.com[/:]ruvnet\/(?:ruflo|claude-flow)(?:\.git)?$/i.test(repository ?? '');
+    return ['claude-flow', 'swarmlo', '@claude-flow/cli'].includes(pkg.name ?? '')
+      && /github\.com[/:]ruvnet\/(?:swarmlo|claude-flow)(?:\.git)?$/i.test(repository ?? '');
   } catch {
     return false;
   }
@@ -168,12 +168,12 @@ export function loadEffectiveFlywheelAnchor(
     return toSelection(containedPath(root, requested), manifest.sha256);
   }
 
-  if (isRufloRepository(root) || process.env.RUFLO_FLYWHEEL_ALLOW_BUILTIN_ANCHOR === '1') {
+  if (isSwarmloRepository(root) || process.env.SWARMLO_FLYWHEEL_ALLOW_BUILTIN_ANCHOR === '1') {
     const frozen = loadFrozenHumanEval();
     return {
       version: frozen.version,
       anchorRef: FROZEN_HUMAN_EVAL_HASH,
-      source: 'ruflo-built-in',
+      source: 'swarmlo-built-in',
       tasks: frozen.tasks.map((task) => ({
         id: task.id,
         input: { id: task.id, q: task.q },

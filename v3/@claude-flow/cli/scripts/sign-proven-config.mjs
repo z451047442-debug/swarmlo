@@ -5,10 +5,10 @@
  * The champion emitted by the self-optimizing loop (ADR-176) is signed here at
  * publish time with the CONFIG key (distinct from the helper-signing key).
  * Private-key resolution mirrors sign-helpers.mjs:
- *   1. GCP Secret Manager  — RUFLO_CONFIG_SIGNING_SECRET (default: ruflo-config-signing-key)
- *                            + optional RUFLO_CONFIG_SIGNING_PROJECT
- *   2. RUFLO_CONFIG_SIGNING_KEY  — a local PEM path (air-gapped)
- *   3. ~/.ruflo/config-signing.key  — dev default
+ *   1. GCP Secret Manager  — SWARMLO_CONFIG_SIGNING_SECRET (default: swarmlo-config-signing-key)
+ *                            + optional SWARMLO_CONFIG_SIGNING_PROJECT
+ *   2. SWARMLO_CONFIG_SIGNING_KEY  — a local PEM path (air-gapped)
+ *   3. ~/.swarmlo/config-signing.key  — dev default
  *
  * Usage:  node scripts/sign-proven-config.mjs <manifest.json>
  *         (defaults to .claude/proven-config.manifest.json if omitted)
@@ -24,10 +24,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PKG_ROOT = join(__dirname, '..');
 
 function loadPrivateKey() {
-  const secret = process.env.RUFLO_CONFIG_SIGNING_SECRET || 'ruflo-config-signing-key';
-  if (process.env.RUFLO_CONFIG_SIGNING_SECRET || (!process.env.RUFLO_CONFIG_SIGNING_KEY && !existsSync(join(homedir(), '.ruflo', 'config-signing.key')))) {
+  const secret = process.env.SWARMLO_CONFIG_SIGNING_SECRET || 'swarmlo-config-signing-key';
+  if (process.env.SWARMLO_CONFIG_SIGNING_SECRET || (!process.env.SWARMLO_CONFIG_SIGNING_KEY && !existsSync(join(homedir(), '.swarmlo', 'config-signing.key')))) {
     const args = ['secrets', 'versions', 'access', 'latest', '--secret', secret];
-    const project = process.env.RUFLO_CONFIG_SIGNING_PROJECT || 'ruv-dev';
+    const project = process.env.SWARMLO_CONFIG_SIGNING_PROJECT || 'ruv-dev';
     if (project) args.push('--project', project);
     try {
       // stderr captured, not inherited — see sign-helpers.mjs::loadPrivateKey
@@ -39,7 +39,7 @@ function loadPrivateKey() {
       process.exit(1);
     }
   }
-  const keyPath = process.env.RUFLO_CONFIG_SIGNING_KEY || join(homedir(), '.ruflo', 'config-signing.key');
+  const keyPath = process.env.SWARMLO_CONFIG_SIGNING_KEY || join(homedir(), '.swarmlo', 'config-signing.key');
   if (!existsSync(keyPath)) { console.error(`[sign-proven-config] no key at ${keyPath}`); process.exit(1); }
   return readFileSync(keyPath, 'utf-8');
 }

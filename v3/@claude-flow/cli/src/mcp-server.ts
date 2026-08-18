@@ -380,7 +380,7 @@ export class MCPServerManager extends EventEmitter {
    * Handles stdin/stdout directly like V2 implementation
    */
   private async startStdioServer(): Promise<void> {
-    // ruflo#1910 — protect the JSON-RPC stdout from any stray
+    // swarmlo#1910 — protect the JSON-RPC stdout from any stray
     // console.log/info/debug emitted by lazily-loaded modules
     // (@ruvector/router, @claude-flow/neural, transformers.js, ONNX,
     // semantic-router init, etc.). Codex closes the MCP transport
@@ -500,7 +500,7 @@ export class MCPServerManager extends EventEmitter {
       method: 'server.initialized',
       params: {
         serverInfo: {
-          name: 'ruflo',
+          name: 'swarmlo',
           version: VERSION,
           capabilities: {
             tools: { listChanged: true },
@@ -604,7 +604,7 @@ export class MCPServerManager extends EventEmitter {
             id: message.id,
             result: {
               protocolVersion: '2024-11-05',
-              serverInfo: { name: 'ruflo', version: '3.0.0' },
+              serverInfo: { name: 'swarmlo', version: '3.0.0' },
               capabilities: {
                 tools: { listChanged: true },
                 resources: { subscribe: true, listChanged: true },

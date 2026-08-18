@@ -8,13 +8,13 @@
 import type { AgentsMdOptions, AgentsMdTemplate } from '../types.js';
 import { BUILT_IN_SKILLS } from '../templates/index.js';
 
-function concurrentRufloWorkflow(): string {
-  return `## Ruflo + Codex Automated Workflow
+function concurrentSwarmloWorkflow(): string {
+  return `## Swarmlo + Codex Automated Workflow
 
-Ruflo is the coordination ledger and policy decision point; Codex workers execute code, tests, and commands. A Ruflo coordination call records work but never replaces implementation.
+Swarmlo is the coordination ledger and policy decision point; Codex workers execute code, tests, and commands. A Swarmlo coordination call records work but never replaces implementation.
 
 Use \`guidance_brain({ mode: "recommend", task: "..." })\` when the task can
-benefit from Ruflo-specific capabilities. Its live registry is authoritative
+benefit from Swarmlo-specific capabilities. Its live registry is authoritative
 for tool presence; registration alone does not prove configuration,
 reachability, health, or authorization. If it is not registered, use compatible
 \`guidance_recommend\`, CLI discovery, and repository instructions.
@@ -23,7 +23,7 @@ reachability, health, or authorization. If it is not registered, use compatible
 2. **Inspect** — read source, runtime, dependency, policy, and health state.
 3. **Route** — choose the smallest capable topology, agents, skills, and tools.
 4. **Plan** — define acceptance criteria, safety envelope, ownership, and validation.
-5. **Execute** — Codex workers implement in isolated scopes; Ruflo records coordination.
+5. **Execute** — Codex workers implement in isolated scopes; Swarmlo records coordination.
 6. **Test** — run focused tests, regression tests, and failure-path checks.
 7. **Validate** — check types, security, policy, compatibility, and artifact integrity.
 8. **Benchmark** — compare a source-bound candidate with a source-bound baseline.
@@ -141,11 +141,11 @@ ${testCommand}
 - Use parameterized queries for databases
 - Sanitize output to prevent XSS
 
-${concurrentRufloWorkflow()}
+${concurrentSwarmloWorkflow()}
 
 ## Links
 
-- Documentation: https://github.com/ruvnet/ruflo
+- Documentation: https://github.com/z451047442-debug/swarmlo
 `;
 }
 
@@ -259,7 +259,7 @@ ${skillsTable}
 
 **Critical rule:** DON'T STOP after calling claude-flow commands. Coordination commands return instantly — continue immediately with the next implementation step.
 
-${concurrentRufloWorkflow()}
+${concurrentSwarmloWorkflow()}
 
 ## MCP Integration
 
@@ -342,8 +342,8 @@ npx @claude-flow/cli hooks pre-task --description "task summary"
 
 ## Links
 
-- Documentation: https://github.com/ruvnet/ruflo
-- Issues: https://github.com/ruvnet/ruflo/issues
+- Documentation: https://github.com/z451047442-debug/swarmlo
+- Issues: https://github.com/z451047442-debug/swarmlo/issues
 `;
 }
 
@@ -399,10 +399,10 @@ Claude Flow exposes tools via Model Context Protocol:
 
 \`\`\`bash
 # Start MCP server
-npx ruflo mcp start
+npx swarmlo mcp start
 
 # List available tools
-npx ruflo mcp tools
+npx swarmlo mcp tools
 \`\`\`
 
 ### Available Tools

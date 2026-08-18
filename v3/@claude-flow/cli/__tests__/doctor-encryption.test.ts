@@ -1,5 +1,5 @@
 /**
- * Test for `ruflo doctor` encryption-at-rest check (ADR-096 Phase 5).
+ * Test for `swarmlo doctor` encryption-at-rest check (ADR-096 Phase 5).
  *
  * The check has four states pinned here:
  *   1. gate off → status:warn with the env-var fix-it
@@ -47,7 +47,7 @@ async function runEncryptionCheck() {
   return ctx;
 }
 
-describe('ruflo doctor encryption-at-rest check (ADR-096 Phase 5)', () => {
+describe('swarmlo doctor encryption-at-rest check (ADR-096 Phase 5)', () => {
   let workdir: string;
   let cwdSpy: ReturnType<typeof vi.spyOn> | null = null;
 

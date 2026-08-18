@@ -23,7 +23,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
 const REPO_ROOT = process.cwd();
-const VERIFY = resolve(REPO_ROOT, 'plugins/ruflo-core/scripts/witness/verify.mjs');
+const VERIFY = resolve(REPO_ROOT, 'plugins/swarmlo-core/scripts/witness/verify.mjs');
 const REAL_MANIFEST = resolve(REPO_ROOT, 'verification/macos/manifest.md.json');
 const failures = [];
 
@@ -115,7 +115,7 @@ try {
   } else {
     const markerPath = resolve(tmp, markerFix.file);
     const source = readFileSync(markerPath, 'utf8');
-    writeFileSync(markerPath, source.replace(markerFix.marker, 'ruflo-regressed-marker'));
+    writeFileSync(markerPath, source.replace(markerFix.marker, 'swarmlo-regressed-marker'));
     const regression = run(tmp, REAL_MANIFEST, '--source-only');
     const result = parseOutput(regression);
     record(

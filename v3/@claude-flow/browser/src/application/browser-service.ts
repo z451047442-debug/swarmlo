@@ -46,7 +46,7 @@ export interface BrowserServiceConfig extends Partial<BrowserAgentConfig> {
   allowedDomains?: string[];
   /** ADR-122 Phase 1: sign every completed trajectory with Ed25519 witness. */
   signTrajectories?: boolean;
-  /** Override the witness key (else resolved from RUFLO_BROWSER_WITNESS_KEY or generated). */
+  /** Override the witness key (else resolved from SWARMLO_BROWSER_WITNESS_KEY or generated). */
   witnessKey?: WitnessKey;
   /** Project ID embedded in signed envelopes (federation trust boundary). */
   projectId?: string;

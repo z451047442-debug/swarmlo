@@ -81,7 +81,7 @@ const storeCommand: Command = {
     {
       // #2752 dream-cycle — MemPoison gate. Run ChannelGuard's scanner
       // on the value BEFORE persistence and refuse the write if a
-      // finding is present. Opt-in per-call; RUFLO_MEMORY_SCAN_ON_WRITE=1
+      // finding is present. Opt-in per-call; SWARMLO_MEMORY_SCAN_ON_WRITE=1
       // enables it globally.
       // NOTE: no `default:` here — needed so the ADR-125 CLI-flag-wins
       // precedence (`ctx.flags.scanContent ?? envVar`) can distinguish
@@ -153,10 +153,10 @@ const storeCommand: Command = {
     }
 
     // #2752 MemPoison gate — scan before persist when opted in.
-    // CLI flag ctx.flags.scanContent takes precedence over RUFLO_MEMORY_SCAN_ON_WRITE env var
+    // CLI flag ctx.flags.scanContent takes precedence over SWARMLO_MEMORY_SCAN_ON_WRITE env var
     // (ADR-125 §"CLI flag wins" / ADR-130 §env-var-config-precedence — fix for #2794).
     const scanContent = (ctx.flags.scanContent as boolean | undefined)
-      ?? /^(1|true|yes|on)$/i.test(String(process.env.RUFLO_MEMORY_SCAN_ON_WRITE ?? ''));
+      ?? /^(1|true|yes|on)$/i.test(String(process.env.SWARMLO_MEMORY_SCAN_ON_WRITE ?? ''));
     if (scanContent) {
       try {
         const { scanChannelMessage } = await import('../security/channel-guard.js');
@@ -166,7 +166,7 @@ const storeCommand: Command = {
             `MemPoison gate refused write (#2752): ${scan.findings.length} injection signature(s) in value. ` +
             `Top: ${scan.findings[0].kind}/${scan.findings[0].severity} — ${scan.findings[0].reason}.`
           );
-          output.writeln(output.dim('Bypass: drop --scan-content or unset RUFLO_MEMORY_SCAN_ON_WRITE to persist anyway (not recommended).'));
+          output.writeln(output.dim('Bypass: drop --scan-content or unset SWARMLO_MEMORY_SCAN_ON_WRITE to persist anyway (not recommended).'));
           return { success: false, exitCode: 2, data: scan };
         }
       } catch (err) {
@@ -1128,7 +1128,7 @@ const statsCommand: Command = {
             },
             {
               metric: 'HNSW Index',
-              // ruflo#1989 / #1987: `hnsw.entryCount` is in-process JS state
+              // swarmlo#1989 / #1987: `hnsw.entryCount` is in-process JS state
               // (the live HNSW index of the current Node process). A fresh
               // `memory stats` invocation has never indexed anything, so it
               // reports 0 even when the persistent DB has thousands of

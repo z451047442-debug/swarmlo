@@ -108,9 +108,9 @@ describe('ADR-111 Phase 5 — WgWitnessService.attestWgCommand', () => {
     const { signer } = makeSigner();
     const w = new WgWitnessService('local', signer);
     const cmds: WgCommand[] = [
-      { verb: 'remove-allowed-ips', peerPublicKey: 'pk1', cmd: 'wg set ruflo-fed peer pk1 allowed-ips ""', rationale: 'r' },
-      { verb: 'set-allowed-ips', peerPublicKey: 'pk1', cmd: 'wg set ruflo-fed peer pk1 allowed-ips 10.50.1.2/32', rationale: 'r' },
-      { verb: 'remove-peer', peerPublicKey: 'pk1', cmd: 'wg set ruflo-fed peer pk1 remove', rationale: 'r' },
+      { verb: 'remove-allowed-ips', peerPublicKey: 'pk1', cmd: 'wg set swarmlo-fed peer pk1 allowed-ips ""', rationale: 'r' },
+      { verb: 'set-allowed-ips', peerPublicKey: 'pk1', cmd: 'wg set swarmlo-fed peer pk1 allowed-ips 10.50.1.2/32', rationale: 'r' },
+      { verb: 'remove-peer', peerPublicKey: 'pk1', cmd: 'wg set swarmlo-fed peer pk1 remove', rationale: 'r' },
     ];
     const expected = ['peer-removed-suspended', 'peer-restored', 'peer-evicted'];
     for (let i = 0; i < cmds.length; i++) {

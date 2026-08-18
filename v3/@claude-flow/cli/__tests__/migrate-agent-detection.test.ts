@@ -1,5 +1,5 @@
 /**
- * ADR-382 Part B — removed-agent detection for `ruflo migrate status`.
+ * ADR-382 Part B — removed-agent detection for `swarmlo migrate status`.
  *
  * Tests target detectRemovedAgentGaps() directly (not the full statusCommand
  * action) because the production call path defaults to the REAL
@@ -15,15 +15,15 @@ import { tmpdir } from 'node:os';
 import { detectRemovedAgentGaps, type RemovedAgentMapping } from '../src/commands/migrate-agent-detection.js';
 
 const REMOVED_AGENTS: RemovedAgentMapping[] = [
-  { basename: 'coder.md', plugin: 'ruflo-core' },
-  { basename: 'researcher.md', plugin: 'ruflo-core' },
-  { basename: 'reviewer.md', plugin: 'ruflo-core' },
-  { basename: 'tester.md', plugin: 'ruflo-testgen' },
-  { basename: 'memory-specialist.md', plugin: 'ruflo-rag-memory' },
-  { basename: 'security-auditor.md', plugin: 'ruflo-security-audit' },
-  { basename: 'sparc-orchestrator.md', plugin: 'ruflo-sparc' },
-  { basename: 'goal-planner.md', plugin: 'ruflo-goals' },
-  { basename: 'adr-architect.md', plugin: 'ruflo-adr' },
+  { basename: 'coder.md', plugin: 'swarmlo-core' },
+  { basename: 'researcher.md', plugin: 'swarmlo-core' },
+  { basename: 'reviewer.md', plugin: 'swarmlo-core' },
+  { basename: 'tester.md', plugin: 'swarmlo-testgen' },
+  { basename: 'memory-specialist.md', plugin: 'swarmlo-rag-memory' },
+  { basename: 'security-auditor.md', plugin: 'swarmlo-security-audit' },
+  { basename: 'sparc-orchestrator.md', plugin: 'swarmlo-sparc' },
+  { basename: 'goal-planner.md', plugin: 'swarmlo-goals' },
+  { basename: 'adr-architect.md', plugin: 'swarmlo-adr' },
 ];
 
 function project(): string {
@@ -57,17 +57,17 @@ describe('detectRemovedAgentGaps', () => {
       [...REMOVED_AGENTS.map(a => a.basename)].sort()
     );
     for (const gap of gaps) {
-      // #2985: must be the Claude Code marketplace command — `ruflo plugins
+      // #2985: must be the Claude Code marketplace command — `swarmlo plugins
       // install` targets the npm-package plugin system and cannot install
       // these marketplace plugins.
-      expect(gap.installCommand).toBe(`/plugin install ${gap.plugin}@ruflo`);
+      expect(gap.installCommand).toBe(`/plugin install ${gap.plugin}@swarmlo`);
     }
   });
 
   it('does not flag agents whose owning plugin is installed (user scope)', () => {
     const cwd = project();
     const homeDir = homeWithInstalledPlugins({
-      'ruflo-core@ruflo': [{ scope: 'user' }],
+      'swarmlo-core@swarmlo': [{ scope: 'user' }],
     });
 
     const gaps = detectRemovedAgentGaps(cwd, REMOVED_AGENTS, { homeDir });
@@ -84,7 +84,7 @@ describe('detectRemovedAgentGaps', () => {
     const cwd = project();
     const otherProject = project();
     const homeDir = homeWithInstalledPlugins({
-      'ruflo-testgen@ruflo': [{ scope: 'project', projectPath: otherProject }],
+      'swarmlo-testgen@swarmlo': [{ scope: 'project', projectPath: otherProject }],
     });
 
     const gaps = detectRemovedAgentGaps(cwd, REMOVED_AGENTS, { homeDir });
@@ -115,13 +115,13 @@ describe('detectRemovedAgentGaps', () => {
   it('reports no gaps for a project with no .claude/agents directory at all once plugins cover everything', () => {
     const cwd = project();
     const homeDir = homeWithInstalledPlugins({
-      'ruflo-core@ruflo': [{ scope: 'user' }],
-      'ruflo-testgen@ruflo': [{ scope: 'user' }],
-      'ruflo-rag-memory@ruflo': [{ scope: 'user' }],
-      'ruflo-security-audit@ruflo': [{ scope: 'user' }],
-      'ruflo-sparc@ruflo': [{ scope: 'user' }],
-      'ruflo-goals@ruflo': [{ scope: 'user' }],
-      'ruflo-adr@ruflo': [{ scope: 'user' }],
+      'swarmlo-core@swarmlo': [{ scope: 'user' }],
+      'swarmlo-testgen@swarmlo': [{ scope: 'user' }],
+      'swarmlo-rag-memory@swarmlo': [{ scope: 'user' }],
+      'swarmlo-security-audit@swarmlo': [{ scope: 'user' }],
+      'swarmlo-sparc@swarmlo': [{ scope: 'user' }],
+      'swarmlo-goals@swarmlo': [{ scope: 'user' }],
+      'swarmlo-adr@swarmlo': [{ scope: 'user' }],
     });
 
     const gaps = detectRemovedAgentGaps(cwd, REMOVED_AGENTS, { homeDir });

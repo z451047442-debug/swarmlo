@@ -1,13 +1,13 @@
 # MetaHarness integration gates — ADR-150 Phase 1 MVP.
 #
 # Three jobs, all fast (subprocess invocations of `npx metaharness`):
-#   1. score              — fail if ruflo's own harnessFit drops below 70
-#   2. mcp-scan           — fail on any HIGH-severity MCP finding in ruflo
+#   1. score              — fail if swarmlo's own harnessFit drops below 70
+#   2. mcp-scan           — fail on any HIGH-severity MCP finding in swarmlo
 #   3. router-compat      — exercise `@metaharness/router.Router` constructor;
 #                            catches breaking API changes before publish
 #
 # Triggers on changes that could move any of these signals:
-#   - the ruflo-metaharness plugin
+#   - the swarmlo-metaharness plugin
 #   - the @metaharness/router optional dep version in v3/@claude-flow/cli
 #   - the v3 ruvector router-trajectory + neural-router source
 #   - this workflow file
@@ -17,7 +17,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'plugins/ruflo-metaharness/**'
+      - 'plugins/swarmlo-metaharness/**'
       - 'v3/@claude-flow/cli/package.json'
       - 'v3/@claude-flow/cli/src/ruvector/neural-router.ts'
       - 'v3/@claude-flow/cli/src/ruvector/router-trajectory.ts'
@@ -27,7 +27,7 @@ on:
       - '.github/workflows/metaharness-ci.yml'
   pull_request:
     paths:
-      - 'plugins/ruflo-metaharness/**'
+      - 'plugins/swarmlo-metaharness/**'
       - 'v3/@claude-flow/cli/package.json'
       - 'v3/@claude-flow/cli/src/ruvector/neural-router.ts'
       - 'v3/@claude-flow/cli/src/ruvector/router-trajectory.ts'
@@ -48,14 +48,14 @@ jobs:
           node-version: '20'
 
       - name: Plugin structural smoke
-        run: bash plugins/ruflo-metaharness/scripts/smoke.sh
+        run: bash plugins/swarmlo-metaharness/scripts/smoke.sh
 
       - name: Genome preserves blocked verdict payloads (#2626)
         shell: bash
         run: |
           fixture="$(mktemp -d)"
           output="$RUNNER_TEMP/metaharness-genome-blocked.json"
-          node plugins/ruflo-metaharness/scripts/genome.mjs \
+          node plugins/swarmlo-metaharness/scripts/genome.mjs \
             --path "$fixture" \
             --format json > "$output"
           GENOME_OUTPUT="$output" node - <<'NODE'
@@ -68,9 +68,9 @@ jobs:
           }
           NODE
 
-      - name: harness-score against ruflo (alert on harnessFit < 70)
+      - name: harness-score against swarmlo (alert on harnessFit < 70)
         run: |
-          node plugins/ruflo-metaharness/scripts/score.mjs \
+          node plugins/swarmlo-metaharness/scripts/score.mjs \
             --path . \
             --alert-on-fit-below 70 \
             --format json > /tmp/metaharness-score.json
@@ -84,9 +84,9 @@ jobs:
           path: /tmp/metaharness-score.json
           retention-days: 30
 
-      - name: harness-genome against ruflo (alert on risk_score > 0.5)
+      - name: harness-genome against swarmlo (alert on risk_score > 0.5)
         run: |
-          node plugins/ruflo-metaharness/scripts/genome.mjs \
+          node plugins/swarmlo-metaharness/scripts/genome.mjs \
             --path . \
             --alert-on-risk-above 0.5 \
             --format json > /tmp/metaharness-genome.json
@@ -102,7 +102,7 @@ jobs:
 
   # MANDATORY dependency-contract gate: the declared installable pins must
   # actually install from a pristine directory and export their advertised
-  # symbols. This is the failure the optional-peer era shipped: a clean ruflo
+  # symbols. This is the failure the optional-peer era shipped: a clean swarmlo
   # install with zero MetaHarness packages on disk while every advertised
   # surface assumed they might be present. No continue-on-error — a red run
   # here means an advertised integration degrades on a fresh install.
@@ -130,12 +130,12 @@ jobs:
         with:
           node-version: '20'
 
-      - name: harness mcp-scan against ruflo (fail on HIGH findings)
+      - name: harness mcp-scan against swarmlo (fail on HIGH findings)
         run: |
           # Exit 0 on no/low-severity findings; exit 1 on HIGH.
           # Exit 0 also when metaharness is unavailable — ADR-150
-          # graceful-degradation rule #3 lets ruflo continue without it.
-          node plugins/ruflo-metaharness/scripts/mcp-scan.mjs \
+          # graceful-degradation rule #3 lets swarmlo continue without it.
+          node plugins/swarmlo-metaharness/scripts/mcp-scan.mjs \
             --path . \
             --fail-on high \
             --format json > /tmp/metaharness-mcp-scan.json
@@ -164,7 +164,7 @@ jobs:
       - name: Compat check against current @metaharness/router pin
         # Exercises the Router constructor, fromExamples factory, and
         # routedBy field shape. If any of these change in @metaharness/
-        # router@0.4.x, this fails BEFORE we publish a ruflo release
+        # router@0.4.x, this fails BEFORE we publish a swarmlo release
         # that would break neural-router.ts at runtime.
         run: node scripts/check-metaharness-compat.mjs
 
@@ -173,7 +173,7 @@ jobs:
         # 25 assertions including the exact 3 thresholds from
         # ADR-150 review-round-1, plus --strict semantics for both
         # promotable and non-promotable paths.
-        run: node plugins/ruflo-metaharness/scripts/test-parallel-pipeline.mjs
+        run: node plugins/swarmlo-metaharness/scripts/test-parallel-pipeline.mjs
 
       - name: MCP tool runtime contract test (ADR-150 iter 23)
         # Builds the CLI dist, imports metaharnessTools, invokes every
@@ -227,7 +227,7 @@ jobs:
             || { echo "::error::cli build did not produce dist/src/index.js"; exit 1; }
           cd @claude-flow/cli
           cd ../../..
-          node plugins/ruflo-metaharness/scripts/test-mcp-tools.mjs
+          node plugins/swarmlo-metaharness/scripts/test-mcp-tools.mjs
 
       - name: Regression gate — iter-12 dispatch overhead < 500ns (iter 24/25)
         # Micro-benchmark proving the iter-12 "zero default-path overhead"
@@ -236,7 +236,7 @@ jobs:
         # /Node 22. Fails the PR if someone accidentally inflates the
         # route() hot path on the default path.
         run: |
-          node plugins/ruflo-metaharness/scripts/bench-recordpair-overhead.mjs \
+          node plugins/swarmlo-metaharness/scripts/bench-recordpair-overhead.mjs \
             --max-overhead-ns 500 --format json > /tmp/bench-overhead.json
           # Pretty-print the verdict
           node -e "
@@ -257,8 +257,8 @@ jobs:
           retention-days: 90
 
   eject-dryrun:
-    # ADR-150 Phase 2 — verify `ruflo eject` dry-run produces a valid
-    # plan against the ruflo repo itself, AND that the safety gate
+    # ADR-150 Phase 2 — verify `swarmlo eject` dry-run produces a valid
+    # plan against the swarmlo repo itself, AND that the safety gate
     # rejects --target paths inside the repo. The actual eject is
     # never executed in CI; only the dry-run path + safety gates.
     runs-on: ubuntu-latest
@@ -353,10 +353,10 @@ jobs:
           node-version: '20'
 
       - name: Unit tests — _similarity.mjs (iter 39, 53 assertions)
-        run: node plugins/ruflo-metaharness/scripts/test-similarity.mjs
+        run: node plugins/swarmlo-metaharness/scripts/test-similarity.mjs
 
       - name: Spike invariants still hold (iter 35 regression anchor)
-        run: node plugins/ruflo-metaharness/scripts/_spike-similarity.mjs
+        run: node plugins/swarmlo-metaharness/scripts/_spike-similarity.mjs
 
       - name: CLI skill — file-input round-trip
         run: |
@@ -367,7 +367,7 @@ jobs:
           cat > /tmp/b.json <<'JSON'
           {"score":{"harnessFit":75,"compileConfidence":90,"taskCoverage":70,"toolSafety":90,"memoryUsefulness":72,"estCostPerRunUsd":0.05,"recommendedMode":"CLI + MCP","archetype":"compliance-harness","template":"vertical:support"},"genome":{"repo_type":"node_mcp_ci","agent_topology":["b1","b2","b3","a3","a4"],"risk_score":0.40,"test_confidence":0.75,"publish_readiness":0.65}}
           JSON
-          OUT=$(node plugins/ruflo-metaharness/scripts/similarity.mjs --a /tmp/a.json --b /tmp/b.json --format json)
+          OUT=$(node plugins/swarmlo-metaharness/scripts/similarity.mjs --a /tmp/a.json --b /tmp/b.json --format json)
           echo "$OUT"
           echo "$OUT" | grep -q '"overall"' || { echo "FAIL: no overall field"; exit 1; }
           echo "✓ similarity skill emits valid JSON"
@@ -381,7 +381,7 @@ jobs:
           cat > /tmp/audit-current.json <<'JSON'
           {"startedAt":"2026-06-16T00:00:00Z","composite":{"worst":"low"},"components":{"oiaManifest":{},"threatModel":{},"mcpScan":{"json":{"findings":[]}}},"fingerprint":{"score":{"harnessFit":75,"recommendedMode":"CLI + MCP","archetype":"typescript-sdk-harness","template":"vertical:coding"},"genome":{"repo_type":"node_mcp_ci","agent_topology":["maintainer","tester","security","release","experimental"],"risk_score":0.35,"test_confidence":0.78,"publish_readiness":0.85}}}
           JSON
-          OUT=$(node plugins/ruflo-metaharness/scripts/audit-trend.mjs --baseline /tmp/audit-baseline.json --current /tmp/audit-current.json --format json)
+          OUT=$(node plugins/swarmlo-metaharness/scripts/audit-trend.mjs --baseline /tmp/audit-baseline.json --current /tmp/audit-current.json --format json)
           echo "$OUT" | python3 -c "import json,sys; d=json.load(sys.stdin); sd=d['delta']['structuralDistance']; assert sd['verdict'] in ('near-identical','minor-drift'), sd; assert 0 < sd['distance'] < 0.2, sd; print('✓ structural-distance:', sd['verdict'], 'distance=' + str(sd['distance']))"
 
       - name: Graceful fallback when fingerprint missing
@@ -393,7 +393,7 @@ jobs:
           cat > /tmp/audit-new.json <<'JSON'
           {"startedAt":"2026-06-16T00:00:00Z","composite":{"worst":"clean"},"components":{"oiaManifest":{},"threatModel":{},"mcpScan":{"json":{"findings":[]}}},"fingerprint":{"score":{"harnessFit":82},"genome":{"repo_type":"node_mcp_ci","agent_topology":["x"]}}}
           JSON
-          OUT=$(node plugins/ruflo-metaharness/scripts/audit-trend.mjs --baseline /tmp/audit-old.json --current /tmp/audit-new.json --format json)
+          OUT=$(node plugins/swarmlo-metaharness/scripts/audit-trend.mjs --baseline /tmp/audit-old.json --current /tmp/audit-new.json --format json)
           echo "$OUT" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d['delta']['structuralDistance']['verdict']=='unavailable', d['delta']['structuralDistance']; print('✓ graceful fallback when fingerprint absent')"
 
       - name: Distance alert gate exits 1 below threshold
@@ -401,7 +401,7 @@ jobs:
           set -e
           # The fixtures from the previous step produce overall ~0.97;
           # threshold 0.99 must trigger exit 1.
-          if node plugins/ruflo-metaharness/scripts/audit-trend.mjs \
+          if node plugins/swarmlo-metaharness/scripts/audit-trend.mjs \
             --baseline /tmp/audit-baseline.json \
             --current /tmp/audit-current.json \
             --alert-on-distance-below 0.99 > /tmp/trend-alert.txt 2>&1; then
@@ -420,7 +420,7 @@ jobs:
         # data accumulates. Future regression analysis can diff across runs
         # without re-running the bench.
         run: |
-          node plugins/ruflo-metaharness/scripts/bench-similarity.mjs \
+          node plugins/swarmlo-metaharness/scripts/bench-similarity.mjs \
             --iters 100000 \
             --max-mean-us 10 \
             --format json > /tmp/bench-similarity.json
@@ -445,7 +445,7 @@ jobs:
         # CI runners are slower; 5μs ceiling gives ~3× headroom while
         # still catching ~10× regressions. 100k iters keeps the job fast.
         run: |
-          node plugins/ruflo-metaharness/scripts/bench-parse-mcp-scan.mjs \
+          node plugins/swarmlo-metaharness/scripts/bench-parse-mcp-scan.mjs \
             --iters 100000 \
             --max-mean-us 5 \
             --format json > /tmp/bench-parse-mcp-scan.json
@@ -586,7 +586,7 @@ jobs:
         # roundtrip's load-bearing self-match invariant (overall===1)
         # failed — that's the schema-shape regression iter 47 fixed.
         run: |
-          node plugins/ruflo-metaharness/scripts/test-pipeline-roundtrip.mjs
+          node plugins/swarmlo-metaharness/scripts/test-pipeline-roundtrip.mjs
           echo "✓ full ADR-152 §3.1 pipeline works with real metaharness output"
 
       - name: Cross-check — same path also produces valid score JSON via dispatcher
@@ -655,7 +655,7 @@ jobs:
         run: |
           set -e
           # Generate a fresh audit as baseline-file input
-          node plugins/ruflo-metaharness/scripts/oia-audit.mjs \
+          node plugins/swarmlo-metaharness/scripts/oia-audit.mjs \
             --dry-run --format json > /tmp/drift-baseline.json
           # Dispatch through the CLI — exercises iter-42 flag round-trip
           OUT=$(node v3/@claude-flow/cli/bin/cli.js metaharness drift-from-history \

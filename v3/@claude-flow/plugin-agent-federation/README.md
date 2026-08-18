@@ -9,23 +9,23 @@ Cross-installation agent federation with zero-trust security, PII-gated data flo
 ## Install + run
 
 ```bash
-npx -y -p @claude-flow/plugin-agent-federation@latest ruflo-federation --help
+npx -y -p @claude-flow/plugin-agent-federation@latest swarmlo-federation --help
 ```
 
 ## Subcommands
 
 | Command | Description |
 |---|---|
-| `ruflo-federation init` | Initialize federation on this node (generates keypair) |
-| `ruflo-federation join <peer-url>` | Join a federation by connecting to a peer |
-| `ruflo-federation leave` | Leave the current federation |
-| `ruflo-federation peers` | List known peers and their trust levels |
-| `ruflo-federation peers add <node-id>` | Add a peer to the federation |
-| `ruflo-federation peers remove <node-id>` | Remove a peer |
-| `ruflo-federation status` | Show federation health, sessions, trust levels |
-| `ruflo-federation audit` | Query compliance-grade audit logs |
-| `ruflo-federation trust` | Manage trust scores and tiers |
-| `ruflo-federation config` | Show/update federation config |
+| `swarmlo-federation init` | Initialize federation on this node (generates keypair) |
+| `swarmlo-federation join <peer-url>` | Join a federation by connecting to a peer |
+| `swarmlo-federation leave` | Leave the current federation |
+| `swarmlo-federation peers` | List known peers and their trust levels |
+| `swarmlo-federation peers add <node-id>` | Add a peer to the federation |
+| `swarmlo-federation peers remove <node-id>` | Remove a peer |
+| `swarmlo-federation status` | Show federation health, sessions, trust levels |
+| `swarmlo-federation audit` | Query compliance-grade audit logs |
+| `swarmlo-federation trust` | Manage trust scores and tiers |
+| `swarmlo-federation config` | Show/update federation config |
 
 ## Configuration via `.env`
 

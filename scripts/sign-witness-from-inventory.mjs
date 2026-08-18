@@ -5,14 +5,14 @@
  *
  * Today the manifest carries 27 *fix* witnesses (regression-flavored).
  * This script adds *capability* witnesses — one entry per source file
- * that defines MCP tools — so `ruflo verify` can confirm the entire
+ * that defines MCP tools — so `swarmlo verify` can confirm the entire
  * 300-tool surface byte-for-byte against its dist counterpart.
  *
  * ID convention: `CAP-MCP-<src-basename-without-ext>`. Stable across
  * regens so runs are idempotent.
  *
  * Marker: the first tool name (alphabetical) defined in that source
- * file. If `ruflo verify` finds the marker missing in the cited dist
+ * file. If `swarmlo verify` finds the marker missing in the cited dist
  * file, that tool was renamed/removed — a real regression signal.
  *
  * Run order:

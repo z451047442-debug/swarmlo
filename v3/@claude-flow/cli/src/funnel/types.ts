@@ -1,7 +1,7 @@
 /**
  * Funnel type definitions — ADR-301..310.
  *
- * The funnel is the ruflo → Cognitum lifecycle system: promotional status
+ * The funnel is the swarmlo → Cognitum lifecycle system: promotional status
  * surface (ADR-301), post-init enrollment (ADR-302), credit-exhaustion
  * recovery (ADR-303), governed by consent receipts (ADR-302), control
  * precedence (ADR-305), and the governance/privacy rules of ADR-309.
@@ -91,18 +91,18 @@ export type ConsentDomain =
   // user's install. Never bundled with the funnel-on/off decision itself
   // (a user can see rotating messages without earning; that's the default).
   // Consent alone is a precondition — actual enrollment requires KYC +
-  // Stripe Connect via the browser flow started by `ruflo funnel enroll`,
+  // Stripe Connect via the browser flow started by `swarmlo funnel enroll`,
   // which can fail after consent for reasons outside the user's control.
   | 'rev-share-payout'
   // ADR-318: separate again — writing to ~/.claude/settings.json's
-  // spinnerVerbs.verbs[] to inject a curated ruflo verb pool into Claude
+  // spinnerVerbs.verbs[] to inject a curated swarmlo verb pool into Claude
   // Code's "✽ Channeling…" rotation. Distinct from the promo row surface
   // (which we already own via the statusline hook) because this touches
   // a Claude Code config file directly. Append-only, backup-first,
   // ZWJ-marker-tagged for clean removal.
   | 'spinner-verbs'
   // ADR-319: separate again — writing to ~/.claude/settings.json's
-  // companyAnnouncements[] to add ruflo's curated startup announcements.
+  // companyAnnouncements[] to add swarmlo's curated startup announcements.
   // Higher-attention, lower-frequency counterpart to spinner-verbs
   // (once per Claude Code launch vs. every processing pause). Independent
   // consent because a user might reasonably want spinner-verbs without
@@ -141,7 +141,7 @@ export interface PayoutEnrollment {
 // ─── ADR-305: control precedence ────────────────────────────────────────────
 
 export type FunnelDecisionSource =
-  | 'env'                // RUFLO_FUNNEL=0
+  | 'env'                // SWARMLO_FUNNEL=0
   | 'enterprise-policy'
   | 'user-config'
   | 'project-config'

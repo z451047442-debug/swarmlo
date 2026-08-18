@@ -153,16 +153,16 @@ describe('runFlywheelTick', () => {
 
   it('retains implicit mutation for one compatibility cycle only behind an explicit flag', async () => {
     const cwd = mkdtempSync(join(tmpdir(), 'fw-'));
-    const prior = process.env.RUFLO_FLYWHEEL_LEGACY_APPLY;
-    process.env.RUFLO_FLYWHEEL_LEGACY_APPLY = '1';
+    const prior = process.env.SWARMLO_FLYWHEEL_LEGACY_APPLY;
+    process.env.SWARMLO_FLYWHEEL_LEGACY_APPLY = '1';
     try {
       const r = await runFlywheelTick(cwd, makeDeps(1000));
       expect(r.applied).toBe(true);
       expect(r.legacyDeprecation).toBe(true);
       expect((activeChampion(cwd)?.params as { alpha: number }).alpha).toBeLessThanOrEqual(0.4);
     } finally {
-      if (prior === undefined) delete process.env.RUFLO_FLYWHEEL_LEGACY_APPLY;
-      else process.env.RUFLO_FLYWHEEL_LEGACY_APPLY = prior;
+      if (prior === undefined) delete process.env.SWARMLO_FLYWHEEL_LEGACY_APPLY;
+      else process.env.SWARMLO_FLYWHEEL_LEGACY_APPLY = prior;
     }
   });
 

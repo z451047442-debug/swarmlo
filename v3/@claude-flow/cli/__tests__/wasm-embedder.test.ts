@@ -1,6 +1,6 @@
 /**
  * Optional WASM embedder tier — opt-in + fail-closed degradation.
- * Not configured (no RUFLO_EMBED_WASM_PKG) ⇒ inert; callers fall through to
+ * Not configured (no SWARMLO_EMBED_WASM_PKG) ⇒ inert; callers fall through to
  * ruvector ONNX → hash with zero regression.
  */
 import { describe, it, expect } from 'vitest';
@@ -17,6 +17,6 @@ describe('optional wasm embedder (opt-in, fail-closed)', () => {
   });
 
   it('exposes a default model + is env-configurable', () => {
-    expect(DEFAULT_EMBED_MODEL).toBeTruthy();          // via RUFLO_EMBED_MODEL
+    expect(DEFAULT_EMBED_MODEL).toBeTruthy();          // via SWARMLO_EMBED_MODEL
   });
 });

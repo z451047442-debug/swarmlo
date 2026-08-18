@@ -131,7 +131,7 @@ describe('ADR-111 Phase 2 — WgMeshService breaker hooks', () => {
     const pubkey = peer.metadata.wgPublicKey as string;
     const cmd = svc.removeAllowedIPs(peer, pubkey, 'FAILURE_RATIO_EXCEEDED');
     expect(cmd.verb).toBe('remove-allowed-ips');
-    expect(cmd.cmd).toMatch(/^wg set ruflo-fed peer .* allowed-ips ""$/);
+    expect(cmd.cmd).toMatch(/^wg set swarmlo-fed peer .* allowed-ips ""$/);
     expect(cmd.rationale).toContain('SUSPEND');
     expect(cmd.rationale).toContain('FAILURE_RATIO_EXCEEDED');
   });
@@ -141,7 +141,7 @@ describe('ADR-111 Phase 2 — WgMeshService breaker hooks', () => {
     const pubkey = peer.metadata.wgPublicKey as string;
     const cmd = svc.removePeer(peer, pubkey, 'MANUAL_EVICT');
     expect(cmd.verb).toBe('remove-peer');
-    expect(cmd.cmd).toMatch(/^wg set ruflo-fed peer .* remove$/);
+    expect(cmd.cmd).toMatch(/^wg set swarmlo-fed peer .* remove$/);
     expect(cmd.rationale).toContain('EVICT');
   });
 

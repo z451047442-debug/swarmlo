@@ -14,15 +14,15 @@ const kp = generateKeyPairSync('ed25519', { publicKeyEncoding: { type: 'spki', f
 
 function manifest(over: Partial<ProvenConfigManifest> = {}): ProvenConfigManifest {
   return {
-    schema: 'ruflo.proven-config/v1',
+    schema: 'swarmlo.proven-config/v1',
     policy: { ref: 'sha256:' + 'a'.repeat(64) },
     platform: ['linux', 'macOS'],
-    compatibility: { ruflo: '>=3.24.0' },
+    compatibility: { swarmlo: '>=3.24.0' },
     rollback: { previousManifest: 'sha256:' + 'z'.repeat(64) },
     ...over,
   };
 }
-const env: InstallEnv = { platform: 'darwin', versions: { ruflo: '3.24.0' } };
+const env: InstallEnv = { platform: 'darwin', versions: { swarmlo: '3.24.0' } };
 
 function project(): string {
   const cwd = mkdtempSync(join(tmpdir(), 'pcfg-'));
@@ -52,7 +52,7 @@ describe('adoptSignedConfig (ADR-177 propagation)', () => {
 
   it('SAFE-SKIPS a signed-but-unsuitable champion (backwards-compat version gate)', () => {
     const cwd = project();
-    const signed = signProvenConfig(manifest({ compatibility: { ruflo: '>=9.9.9' } }), kp.privateKey);
+    const signed = signProvenConfig(manifest({ compatibility: { swarmlo: '>=9.9.9' } }), kp.privateKey);
     const r = adoptSignedConfig(cwd, signed, env, { pubkeyPem: kp.publicKey });
     expect(r.adopted).toBe(false);
     expect(r.skipped).toMatch(/not suitable/);
@@ -68,8 +68,8 @@ describe('adoptSignedConfig (ADR-177 propagation)', () => {
     expect(r.skipped).toBeUndefined();
   });
 
-  it('is a no-op outside a ruflo project (no .claude)', () => {
-    const cwd = mkdtempSync(join(tmpdir(), 'not-ruflo-'));
+  it('is a no-op outside a swarmlo project (no .claude)', () => {
+    const cwd = mkdtempSync(join(tmpdir(), 'not-swarmlo-'));
     const r = adoptSignedConfig(cwd, signProvenConfig(manifest(), kp.privateKey), env, { pubkeyPem: kp.publicKey });
     expect(r.adopted).toBe(false);
   });

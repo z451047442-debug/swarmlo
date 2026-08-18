@@ -1,10 +1,10 @@
 /**
- * ADR-382 Part B — the `ruflo migrate` mitigation ADR-128 promised and never
+ * ADR-382 Part B — the `swarmlo migrate` mitigation ADR-128 promised and never
  * shipped: detect the 9 forked agents ADR-128 Phase 2 deleted from the init
  * template (each plugin is now canonical) and, when a project is missing one
  * AND the owning plugin isn't installed, surface an install suggestion.
  * See v3/docs/adr/ADR-382-init-scaffold-content-drift-remediation.md and
- * https://github.com/ruvnet/ruflo/issues/2971.
+ * https://github.com/z451047442-debug/swarmlo/issues/2971.
  *
  * Kept in a sibling module (not migrate.ts) because migrate.ts is already
  * near/over the 500-line budget — see CLAUDE.md file-size rule.
@@ -47,7 +47,7 @@ type InstalledPluginsRegistry = Record<string, InstalledPluginEntry[]>;
  * "project") in a single global file — ~/.claude/plugins/installed_plugins.json,
  * keyed "<plugin>@<marketplace>". This is the only real on-disk signal for
  * "is the owning plugin installed"; there is no per-project marker and no
- * ruflo-side tracking for marketplace plugins (ruflo's own PluginManager
+ * swarmlo-side tracking for marketplace plugins (swarmlo's own PluginManager
  * manifest at .claude-flow/plugins/installed.json tracks a different,
  * npm-package-based plugin system).
  */
@@ -133,11 +133,11 @@ export function detectRemovedAgentGaps(
     gaps.push({
       agent: basename,
       plugin,
-      // #2985: these are Claude Code *marketplace* plugins. `ruflo plugins
+      // #2985: these are Claude Code *marketplace* plugins. `swarmlo plugins
       // install` targets a different system (the npm-package PluginManager —
       // see the module header) and cannot install them; the marketplace
       // command below is the one that satisfies the registry check above.
-      installCommand: `/plugin install ${plugin}@ruflo`,
+      installCommand: `/plugin install ${plugin}@swarmlo`,
     });
   }
 

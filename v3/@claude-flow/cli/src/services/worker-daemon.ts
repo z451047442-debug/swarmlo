@@ -7,7 +7,7 @@
  * - audit: Security analysis (10 min interval)
  * - optimize: Performance optimization (15 min interval)
  * - consolidate: Memory distillation — memory_entries -> episodes/reasoning_patterns/
- *   causal_edges (30 min interval, ADR-174; RUFLO_DAEMON_NO_DISTILL=1 / --no-distill to skip)
+ *   causal_edges (30 min interval, ADR-174; SWARMLO_DAEMON_NO_DISTILL=1 / --no-distill to skip)
  * - testgaps: Test coverage analysis (20 min interval)
  */
 
@@ -112,7 +112,7 @@ export interface DaemonConfig {
     maxCpuLoad: number;
     minFreeMemoryPercent: number;
   };
-  // #2356 (carry-forward from pacphi/ruflo-machine-ref token-leak findings):
+  // #2356 (carry-forward from pacphi/swarmlo-machine-ref token-leak findings):
   // self-terminating lifecycle so a forgotten daemon cannot run for days
   // dispatching headless `claude --print` sweeps. ttlMs = graceful shutdown
   // once daemon age exceeds this (0 disables). idleShutdownMs = graceful
@@ -125,7 +125,7 @@ export interface DaemonConfig {
   // finding `claude` must not authorize recurring model calls: a default
   // install produces zero autonomous Claude launches. Enable via
   // `daemon start --headless`, `daemon.aiWorkers.enabled: true` in
-  // .claude-flow/config.json, or RUFLO_DAEMON_AI_WORKERS=1.
+  // .claude-flow/config.json, or SWARMLO_DAEMON_AI_WORKERS=1.
   aiWorkersEnabled: boolean;
   workers: WorkerConfig[];
 }
@@ -143,7 +143,7 @@ const DEFAULT_WORKERS: WorkerConfigInternal[] = [
   { type: 'consolidate', intervalMs: 30 * 60 * 1000, offsetMs: 6 * 60 * 1000, priority: 'low', description: 'Memory distillation (ADR-174)', enabled: true },
   { type: 'testgaps', intervalMs: 20 * 60 * 1000, offsetMs: 8 * 60 * 1000, priority: 'normal', description: 'Test coverage analysis', enabled: true },
   { type: 'backup', intervalMs: 24 * 60 * 60 * 1000, offsetMs: 10 * 60 * 1000, priority: 'low', description: 'Nightly memory DB backup (WAL-safe, rotated)', enabled: true },
-  { type: 'harness', intervalMs: 6 * 60 * 60 * 1000, offsetMs: 12 * 60 * 1000, priority: 'low', description: 'Self-optimizing harness loop (opt-in RUFLO_HARNESS_LOOP, $0-default)', enabled: true },
+  { type: 'harness', intervalMs: 6 * 60 * 60 * 1000, offsetMs: 12 * 60 * 1000, priority: 'low', description: 'Self-optimizing harness loop (opt-in SWARMLO_HARNESS_LOOP, $0-default)', enabled: true },
   { type: 'predict', intervalMs: 10 * 60 * 1000, offsetMs: 0, priority: 'low', description: 'Predictive preloading', enabled: false },
   { type: 'document', intervalMs: 60 * 60 * 1000, offsetMs: 0, priority: 'low', description: 'Auto-documentation', enabled: false },
 ];
@@ -173,14 +173,14 @@ const CONSOLIDATE_DEDUP_DISTANCE = 0.2;
 // not this one without touching persisted worker-enabled state). Mirrors the
 // `--no-distill` flag on `daemon start` (see commands/daemon.ts), which sets
 // this env var on the forked/foreground daemon process.
-const NO_DISTILL_ENV = 'RUFLO_DAEMON_NO_DISTILL';
+const NO_DISTILL_ENV = 'SWARMLO_DAEMON_NO_DISTILL';
 
 // #2356 — Self-terminating lifecycle defaults. A background daemon with no
 // upper bound on its lifetime runs until the box reboots; in the field this
 // leaked tens of thousands of headless `claude --print` sweeps over many days
 // (one observed daemon ran 19 days). A 12h default age cap (matching the
-// pacphi/ruflo-machine-ref kit's proven value) heals a forgotten daemon within
-// half a day; set RUFLO_DAEMON_TTL_SECS=0 (or `--ttl 0`) to opt out. Idle
+// pacphi/swarmlo-machine-ref kit's proven value) heals a forgotten daemon within
+// half a day; set SWARMLO_DAEMON_TTL_SECS=0 (or `--ttl 0`) to opt out. Idle
 // shutdown is opt-in (0 = disabled) since a legitimately quiet daemon is not a leak.
 const DEFAULT_DAEMON_TTL_MS = 12 * 60 * 60 * 1000;
 // #2834 — an auto-started daemon must not remain alive for the full 12h TTL
@@ -227,7 +227,7 @@ export class WorkerDaemon extends EventEmitter {
   // #2251 — Promise that resolves once initHeadlessExecutor() has finished
   // probing `claude --version` and constructed the executor. The constructor
   // kicks off init fire-and-forget; without awaiting this on the trigger
-  // path, `ruflo daemon trigger -w <worker>` runs before headlessAvailable
+  // path, `swarmlo daemon trigger -w <worker>` runs before headlessAvailable
   // is set and falls through to the local stub in ~2ms.
   private headlessInitPromise: Promise<void> = Promise.resolve();
 
@@ -301,16 +301,16 @@ export class WorkerDaemon extends EventEmitter {
         minFreeMemoryPercent: config?.resourceThresholds?.minFreeMemoryPercent ?? fileConfig.minFreeMemoryPercent ?? defaultMinFreeMemory,
       },
       // #2356 — precedence: constructor arg > config.json (daemon.ttlSecs) >
-      // env (RUFLO_DAEMON_TTL_SECS) > built-in default. readEnvSecsAsMs folds
+      // env (SWARMLO_DAEMON_TTL_SECS) > built-in default. readEnvSecsAsMs folds
       // env-or-default and honors an explicit 0 (disable).
-      ttlMs: config?.ttlMs ?? fileConfig.ttlMs ?? readEnvSecsAsMs('RUFLO_DAEMON_TTL_SECS', DEFAULT_DAEMON_TTL_MS),
-      idleShutdownMs: config?.idleShutdownMs ?? fileConfig.idleShutdownMs ?? readEnvSecsAsMs('RUFLO_DAEMON_IDLE_SECS', DEFAULT_DAEMON_IDLE_SHUTDOWN_MS),
+      ttlMs: config?.ttlMs ?? fileConfig.ttlMs ?? readEnvSecsAsMs('SWARMLO_DAEMON_TTL_SECS', DEFAULT_DAEMON_TTL_MS),
+      idleShutdownMs: config?.idleShutdownMs ?? fileConfig.idleShutdownMs ?? readEnvSecsAsMs('SWARMLO_DAEMON_IDLE_SECS', DEFAULT_DAEMON_IDLE_SHUTDOWN_MS),
       // #2661 — AI workers are opt-in: flag > config.json > env > OFF.
       // Deliberately NOT restored from daemon-state.json (initializeWorkerStates
       // whitelist) so a stale state file can never resurrect consent.
       aiWorkersEnabled: config?.aiWorkersEnabled
         ?? fileConfig.aiWorkersEnabled
-        ?? (process.env.RUFLO_DAEMON_AI_WORKERS === '1'),
+        ?? (process.env.SWARMLO_DAEMON_AI_WORKERS === '1'),
       workers: config?.workers ?? DEFAULT_WORKERS,
     };
 
@@ -363,7 +363,7 @@ export class WorkerDaemon extends EventEmitter {
     if (!this.config.aiWorkersEnabled) {
       this.log(
         'info',
-        'AI workers disabled (default) - all workers run local-only. Enable with `daemon start --headless`, daemon.aiWorkers.enabled=true, or RUFLO_DAEMON_AI_WORKERS=1 (#2661)'
+        'AI workers disabled (default) - all workers run local-only. Enable with `daemon start --headless`, daemon.aiWorkers.enabled=true, or SWARMLO_DAEMON_AI_WORKERS=1 (#2661)'
       );
       return;
     }
@@ -615,7 +615,7 @@ export class WorkerDaemon extends EventEmitter {
 
   /**
    * Append a structured crash record to .claude-flow/logs/crash.log.
-   * Inspectable by hand or via `ruflo daemon status` follow-ups.
+   * Inspectable by hand or via `swarmlo daemon status` follow-ups.
    */
   private writeCrashRecord(kind: string, err: unknown): void {
     const logDir = this.config.logDir;
@@ -1565,7 +1565,7 @@ export class WorkerDaemon extends EventEmitter {
    * local fallback writes to. Without this, AI-mode workers produced rich
    * structured output (audit findings, perf signals, test-gap analysis)
    * that lived only in `.claude-flow/logs/headless/*_result.log` and was
-   * invisible to `npx ruflo memory stats` or the metrics consumers.
+   * invisible to `npx swarmlo memory stats` or the metrics consumers.
    *
    * The mapping mirrors the `*Local` worker implementations below so a
    * single consumer path works regardless of execution mode.
@@ -1725,7 +1725,7 @@ export class WorkerDaemon extends EventEmitter {
       mkdirSync(metricsDir, { recursive: true });
     }
 
-    // Opt-out: RUFLO_DAEMON_NO_DISTILL=1 (or `daemon start --no-distill`)
+    // Opt-out: SWARMLO_DAEMON_NO_DISTILL=1 (or `daemon start --no-distill`)
     // skips the real distillation pass entirely without touching persisted
     // worker-enabled state (see also: `daemon enable -w consolidate --disable`,
     // which disables the worker's schedule altogether).
@@ -1807,7 +1807,7 @@ export class WorkerDaemon extends EventEmitter {
    * snapshot of .swarm/memory.db with rotation (keep last N). Never throws — a
    * worker must not crash the daemon; a skip/error is written to the metrics
    * file. Opt-out by omitting `backup` from `-w`; offsite GCS is opt-in via
-   * RUFLO_BACKUP_GCS (a gs:// prefix), retention via RUFLO_BACKUP_KEEP.
+   * SWARMLO_BACKUP_GCS (a gs:// prefix), retention via SWARMLO_BACKUP_KEEP.
    */
   private async runBackupWorker(): Promise<unknown> {
     const metricsDir = join(this.projectRoot, '.claude-flow', 'metrics');
@@ -1816,11 +1816,11 @@ export class WorkerDaemon extends EventEmitter {
 
     let result: Record<string, unknown>;
     try {
-      const keepEnv = Number(process.env.RUFLO_BACKUP_KEEP);
+      const keepEnv = Number(process.env.SWARMLO_BACKUP_KEEP);
       const r = await backupMemoryDb({
         dbPath: defaultMemoryDbPath(this.projectRoot),
         keep: Number.isFinite(keepEnv) && keepEnv > 0 ? keepEnv : 7,
-        gcs: process.env.RUFLO_BACKUP_GCS || undefined,
+        gcs: process.env.SWARMLO_BACKUP_GCS || undefined,
       });
       result = {
         timestamp: new Date().toISOString(),
@@ -1843,7 +1843,7 @@ export class WorkerDaemon extends EventEmitter {
 
   /**
    * Self-optimizing harness loop worker (ADR-176 phase 8). Strictly bounded:
-   * OPT-IN (RUFLO_HARNESS_LOOP), $0-default (no optimizer/verifier wired => no
+   * OPT-IN (SWARMLO_HARNESS_LOOP), $0-default (no optimizer/verifier wired => no
    * promotion), trajectory-capped, single-flight via the daemon, never throws.
    * On acceptance the (unsigned) champion is staged for the separate sign step.
    */
@@ -1859,7 +1859,7 @@ export class WorkerDaemon extends EventEmitter {
       // gate a constrained candidate on the frozen self-supervised held-out with
       // the human-anchor guard + separate canary, and on a verified promotion
       // advance the champion so the NEXT tick compounds. Shadow-first (serve lags
-      // one tick). Opt-in ($0 no-op without RUFLO_HARNESS_LOOP).
+      // one tick). Opt-in ($0 no-op without SWARMLO_HARNESS_LOOP).
       const { runFlywheelGenerationWorker } = await import('./harness-flywheel-runtime.js');
       const gen = await runFlywheelGenerationWorker(this.projectRoot, { sample: 120 });
       let status: unknown = null;
@@ -2075,7 +2075,7 @@ export class WorkerDaemon extends EventEmitter {
     };
 
     try {
-      // ruvnet/ruflo#2782: use writeFileAtomic — its temp file is uniquified with
+      // z451047442-debug/swarmlo#2782: use writeFileAtomic — its temp file is uniquified with
       // pid + timestamp + random suffix, so two concurrent in-process saveState()
       // calls can no longer collide on a shared `.tmp` basename and race one
       // another's renameSync into ENOENT. Related to but distinct from #1637.

@@ -1,6 +1,6 @@
 # ADR-164 architectural constraint enforcement.
 #
-#   "Ruflo remains operational if the agentbbs package is removed."
+#   "Swarmlo remains operational if the agentbbs package is removed."
 #
 # This workflow asserts three architectural rules from ADR-164 §5.1.1:
 #   1. agentbbs is lazy/optional and NEVER lives in `dependencies`
@@ -19,7 +19,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'plugins/ruflo-bbs-federation/**'
+      - 'plugins/swarmlo-bbs-federation/**'
       - 'v3/@claude-flow/cli/src/mcp-tools/agentbbs-tools.ts'
       - 'v3/@claude-flow/cli/src/mcp-client.ts'
       - 'v3/@claude-flow/cli/src/mcp-tools/index.ts'
@@ -28,7 +28,7 @@ on:
       - '.github/workflows/no-agentbbs-smoke.yml'
   pull_request:
     paths:
-      - 'plugins/ruflo-bbs-federation/**'
+      - 'plugins/swarmlo-bbs-federation/**'
       - 'v3/@claude-flow/cli/src/mcp-tools/agentbbs-tools.ts'
       - 'v3/@claude-flow/cli/src/mcp-client.ts'
       - 'v3/@claude-flow/cli/src/mcp-tools/index.ts'
@@ -57,7 +57,7 @@ jobs:
             const { join } = require('path');
             const candidates = [
               'package.json',
-              'ruflo/package.json',
+              'swarmlo/package.json',
               'v3/@claude-flow/cli/package.json',
             ];
             try {

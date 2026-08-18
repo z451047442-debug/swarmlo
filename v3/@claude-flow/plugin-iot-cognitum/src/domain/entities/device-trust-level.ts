@@ -1,6 +1,6 @@
 /**
  * IoT-adapted trust levels for Cognitum Seed devices.
- * Mirrors Ruflo agent trust but adds hardware-specific stages.
+ * Mirrors Swarmlo agent trust but adds hardware-specific stages.
  */
 export enum DeviceTrustLevel {
   /** Seen on the network but not paired. */

@@ -1,6 +1,6 @@
 # Security SOTA Report — 2026-07-01
 
-**TL;DR**: Six 2026 Grade A papers prove Ruflo's AgentDB retrieval pipeline is a high-confidence attack surface: certified defenses cut agent memory poisoning from 93–100% ASR to 0%, but Ruflo has neither a retrieval-layer injection filter nor behavioral forensics — and MCP caller identity remains unauthenticated across all major frameworks.
+**TL;DR**: Six 2026 Grade A papers prove Swarmlo's AgentDB retrieval pipeline is a high-confidence attack surface: certified defenses cut agent memory poisoning from 93–100% ASR to 0%, but Swarmlo has neither a retrieval-layer injection filter nor behavioral forensics — and MCP caller identity remains unauthenticated across all major frameworks.
 
 ## What's New in 2026
 
@@ -15,7 +15,7 @@
 | Indirect Prompt Injection in the Wild: decomposes payloads into retrieval-guaranteed fragments; near-100% retrieval success across 11 benchmarks | arXiv:2601.07072 (Jan 2026) | A |
 | OWASP LLM Top 10 2025: two new categories — LLM07 (System Prompt Leakage), LLM08 (Vector and Embedding Weaknesses) | OWASP GenAI 2025 | B |
 
-## Ruflo Current Capability
+## Swarmlo Current Capability
 
 | Layer | Current State | Gap |
 |-------|--------------|-----|
@@ -33,9 +33,9 @@
 | **AutoGen / AG2** | Docker isolation (code only); no RAG layer defense | No | No | 0.12.x Beta |
 | **CrewAI** | No documented defense | No | No | 1.14.2 (Apr 2026) |
 | **OpenAI Swarm** (deprecated) | N/A — ephemeral context only | N/A | No | Oct 2024 |
-| **Ruflo (current)** | None (ADR-165 closes CVE-1–5, not retrieval-layer) | None | None | 3.16.2 |
+| **Swarmlo (current)** | None (ADR-165 closes CVE-1–5, not retrieval-layer) | None | None | 3.16.2 |
 
-**All five frameworks share the RAG injection and caller-identity gaps. Ruflo is unique in having an extensible hook system (`post-retrieve`, `pre-context-inject`) that could be the insertion point — but the hooks do not exist yet.**
+**All five frameworks share the RAG injection and caller-identity gaps. Swarmlo is unique in having an extensible hook system (`post-retrieve`, `pre-context-inject`) that could be the insertion point — but the hooks do not exist yet.**
 
 ## Benchmarks
 

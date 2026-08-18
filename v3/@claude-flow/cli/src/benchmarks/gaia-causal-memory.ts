@@ -7,10 +7,10 @@
  * Before each new question, retrieves matching causal edges and injects
  * an "avoid these approaches" hint into the agent's system prompt.
  *
- * This is one of ruflo's 6 architectural primitives distinguishing it
- * from HAL: HAL is stateless across runs; ruflo accumulates causal memory.
+ * This is one of swarmlo's 6 architectural primitives distinguishing it
+ * from HAL: HAL is stateless across runs; swarmlo accumulates causal memory.
  *
- * Storage: JSONL file at ~/.cache/ruflo/gaia/causal-edges.jsonl
+ * Storage: JSONL file at ~/.cache/swarmlo/gaia/causal-edges.jsonl
  *   - Simple, portable, no runtime dependency on AgentDB
  *   - Production upgrade path: switch to AgentDB causal-edge MCP controller
  *     (`mcp__claude-flow__agentdb_causal-edge`) for cross-session persistence
@@ -69,7 +69,7 @@ export interface CausalEdge {
 export interface CausalMemoryOptions {
   /**
    * Override the JSONL store path.
-   * Default: ~/.cache/ruflo/gaia/causal-edges.jsonl
+   * Default: ~/.cache/swarmlo/gaia/causal-edges.jsonl
    */
   storePath?: string;
   /**
@@ -105,10 +105,10 @@ export interface RetrieveResult {
 // Internal helpers
 // ---------------------------------------------------------------------------
 
-const DEFAULT_STORE_SUFFIX = path.join('.cache', 'ruflo', 'gaia', 'causal-edges.jsonl');
+const DEFAULT_STORE_SUFFIX = path.join('.cache', 'swarmlo', 'gaia', 'causal-edges.jsonl');
 const DEFAULT_MAX_EDGES = 5;
 
-/** Resolve the JSONL store path from options, defaulting to ~/.cache/ruflo/…  */
+/** Resolve the JSONL store path from options, defaulting to ~/.cache/swarmlo/…  */
 function resolveStorePath(options?: CausalMemoryOptions): string {
   if (options?.storePath) {
     return options.storePath;

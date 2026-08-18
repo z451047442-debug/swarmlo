@@ -10,13 +10,13 @@ import { refreshInjectedToken, removeInjectedToken } from '../src/proxy/token-br
 let dir: string;
 
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), 'ruflo-token-bridge-'));
-  process.env.RUFLO_STATE_DIR = dir;
+  dir = mkdtempSync(join(tmpdir(), 'swarmlo-token-bridge-'));
+  process.env.SWARMLO_STATE_DIR = dir;
 });
 
 afterEach(() => {
   clearSessionToken('default');
-  delete process.env.RUFLO_STATE_DIR;
+  delete process.env.SWARMLO_STATE_DIR;
   rmSync(dir, { recursive: true, force: true });
 });
 
@@ -34,7 +34,7 @@ describe('proxy injected-token bridge', () => {
     await expect(refreshInjectedToken()).resolves.toBe(true);
     const envelope = JSON.parse(readFileSync(join(dir, 'proxy-injected-token.json'), 'utf8'));
     expect(envelope).toEqual({ schemaVersion: 1, accessToken: 'access-only-secret', expiresAt: new Date(expiresAt).toISOString() });
-    expect(readFileSync(join(dir, 'proxy-config.toml'), 'utf8')).toContain('ruflo_injected_token_path');
+    expect(readFileSync(join(dir, 'proxy-config.toml'), 'utf8')).toContain('swarmlo_injected_token_path');
     expect(readFileSync(join(dir, 'proxy-config.toml'), 'utf8')).not.toContain('access-only-secret');
     if (process.platform !== 'win32') expect(statSync(join(dir, 'proxy-injected-token.json')).mode & 0o077).toBe(0);
   });

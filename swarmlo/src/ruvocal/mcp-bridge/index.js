@@ -36,51 +36,51 @@ const TOOL_GROUPS = {
     prefixes: ["hooks_"],
   },
 
-  // --- Agents & Orchestration (ruflo) ---
+  // --- Agents & Orchestration (swarmlo) ---
   agents: {
     enabled: process.env.MCP_GROUP_AGENTS !== "false",
-    description: "Agent lifecycle, swarm coordination, task management, workflows (ruflo)",
-    source: "ruflo",
+    description: "Agent lifecycle, swarm coordination, task management, workflows (swarmlo)",
+    source: "swarmlo",
     prefixes: ["agent_", "swarm_", "task_", "session_", "hive-mind_", "workflow_", "coordination_"],
   },
 
-  // --- Memory & Knowledge (ruflo) ---
+  // --- Memory & Knowledge (swarmlo) ---
   memory: {
     enabled: process.env.MCP_GROUP_MEMORY !== "false",
-    description: "Vector memory, AgentDB, embeddings, semantic search (ruflo)",
-    source: "ruflo",
+    description: "Vector memory, AgentDB, embeddings, semantic search (swarmlo)",
+    source: "swarmlo",
     prefixes: ["memory_", "agentdb_", "embeddings_"],
   },
 
-  // --- Dev Tools (ruflo) ---
+  // --- Dev Tools (swarmlo) ---
   devtools: {
     enabled: process.env.MCP_GROUP_DEVTOOLS !== "false",
-    description: "Hooks, code analysis, performance profiling, GitHub integration (ruflo)",
-    source: "ruflo",
+    description: "Hooks, code analysis, performance profiling, GitHub integration (swarmlo)",
+    source: "swarmlo",
     prefixes: ["hooks_", "analyze_", "performance_", "github_", "terminal_", "config_", "system_", "progress_"],
   },
 
-  // --- Security & Safety (ruflo) ---
+  // --- Security & Safety (swarmlo) ---
   security: {
     enabled: process.env.MCP_GROUP_SECURITY === "true",
-    description: "AI defence, PII detection, claims management, pattern transfer (ruflo)",
-    source: "ruflo",
+    description: "AI defence, PII detection, claims management, pattern transfer (swarmlo)",
+    source: "swarmlo",
     prefixes: ["aidefence_", "claims_", "transfer_"],
   },
 
-  // --- Browser Automation (ruflo) ---
+  // --- Browser Automation (swarmlo) ---
   browser: {
     enabled: process.env.MCP_GROUP_BROWSER === "true",
-    description: "Headless browser control — navigate, click, fill, screenshot (ruflo)",
-    source: "ruflo",
+    description: "Headless browser control — navigate, click, fill, screenshot (swarmlo)",
+    source: "swarmlo",
     prefixes: ["browser_"],
   },
 
-  // --- Neural & DAA (ruflo) ---
+  // --- Neural & DAA (swarmlo) ---
   neural: {
     enabled: process.env.MCP_GROUP_NEURAL === "true",
-    description: "Neural network training, DAA autonomous agents, cognitive patterns (ruflo)",
-    source: "ruflo",
+    description: "Neural network training, DAA autonomous agents, cognitive patterns (swarmlo)",
+    source: "swarmlo",
     prefixes: ["neural_", "daa_"],
   },
 
@@ -214,7 +214,7 @@ class StdioMcpClient {
       const msg = JSON.stringify({ jsonrpc: "2.0", id, method, params }) + "\n";
       this.pending.set(id, { resolve, reject });
       this.process.stdin.write(msg);
-      // initialize is the cold-start gate for backends like ruflo/ruvector
+      // initialize is the cold-start gate for backends like swarmlo/ruvector
       // which boot a full claude-flow / ruvector kernel — on Cloud Run with
       // npx fetching artifacts it can take 45-60s. Other RPC methods are
       // post-init and stay snappy.
@@ -258,7 +258,7 @@ class StdioMcpClient {
 
 const BACKEND_DEFS = [
   { name: "ruvector",       command: "npx", args: ["-y", "ruvector", "mcp", "start"],   groups: ["intelligence"] },
-  { name: "ruflo",          command: "npx", args: ["-y", "ruflo", "mcp", "start"],      groups: ["agents", "memory", "devtools", "security", "browser", "neural"] },
+  { name: "swarmlo",          command: "npx", args: ["-y", "swarmlo", "mcp", "start"],      groups: ["agents", "memory", "devtools", "security", "browser", "neural"] },
   { name: "agentic-flow",   command: "npx", args: ["-y", "agentic-flow@alpha", "mcp", "start"], groups: ["agentic-flow"] },
   { name: "claude",         command: "claude", args: ["mcp", "serve"],                  groups: ["claude-code"] },
   { name: "gemini-mcp",     command: "npx", args: ["-y", "gemini-mcp-server"],          groups: ["gemini"] },
@@ -452,104 +452,104 @@ Self-learning intelligence tools for routing and vector memory.
 - To store important findings for cross-session memory
 - To recall previously stored patterns or solutions`,
 
-    agents: `# Agents & Orchestration Group (ruflo)
+    agents: `# Agents & Orchestration Group (swarmlo)
 
 Multi-agent lifecycle management, swarm coordination, and task workflows.
 
 ## Key Tools
-- **ruflo__agent_spawn** — Create a new agent with specific capabilities
-- **ruflo__agent_list** — List all active agents
-- **ruflo__swarm_init** — Initialize a swarm with a topology (mesh, hierarchical, ring, star)
-- **ruflo__task_create** — Create and assign tasks
-- **ruflo__workflow_create** — Define multi-step workflows
-- **ruflo__workflow_execute** — Execute a workflow
-- **ruflo__hive-mind_init** — Start collective intelligence coordination
-- **ruflo__coordination_orchestrate** — Multi-agent coordination
+- **swarmlo__agent_spawn** — Create a new agent with specific capabilities
+- **swarmlo__agent_list** — List all active agents
+- **swarmlo__swarm_init** — Initialize a swarm with a topology (mesh, hierarchical, ring, star)
+- **swarmlo__task_create** — Create and assign tasks
+- **swarmlo__workflow_create** — Define multi-step workflows
+- **swarmlo__workflow_execute** — Execute a workflow
+- **swarmlo__hive-mind_init** — Start collective intelligence coordination
+- **swarmlo__coordination_orchestrate** — Multi-agent coordination
 
 ## When to Use
 - Complex tasks requiring multiple agents working together
 - Pipeline workflows with sequential or parallel steps
 - Distributed task management`,
 
-    memory: `# Memory & Knowledge Group (ruflo)
+    memory: `# Memory & Knowledge Group (swarmlo)
 
 Vector storage, semantic search, AgentDB pattern learning, and embeddings.
 
 ## Key Tools
-- **ruflo__memory_store** — Store a value with vector embedding for semantic search
-- **ruflo__memory_search** — Semantic search across stored memories (HNSW-indexed)
-- **ruflo__memory_list** — List stored memory entries
-- **ruflo__agentdb_pattern-store** — Store a reasoning pattern for learning
-- **ruflo__agentdb_pattern-search** — Search for similar reasoning patterns
-- **ruflo__agentdb_context-synthesize** — Synthesize context from stored memories
-- **ruflo__embeddings_generate** — Generate vector embeddings for text
-- **ruflo__embeddings_search** — Semantic similarity search
+- **swarmlo__memory_store** — Store a value with vector embedding for semantic search
+- **swarmlo__memory_search** — Semantic search across stored memories (HNSW-indexed)
+- **swarmlo__memory_list** — List stored memory entries
+- **swarmlo__agentdb_pattern-store** — Store a reasoning pattern for learning
+- **swarmlo__agentdb_pattern-search** — Search for similar reasoning patterns
+- **swarmlo__agentdb_context-synthesize** — Synthesize context from stored memories
+- **swarmlo__embeddings_generate** — Generate vector embeddings for text
+- **swarmlo__embeddings_search** — Semantic similarity search
 
 ## When to Use
 - Persistent knowledge storage across sessions
 - Finding similar past solutions or patterns
 - Building semantic search over custom data`,
 
-    devtools: `# Dev Tools Group (ruflo)
+    devtools: `# Dev Tools Group (swarmlo)
 
 Code analysis, performance profiling, GitHub integration, and terminal access.
 
 ## Key Tools
-- **ruflo__analyze_diff** — Analyze git diff for risk and change classification
-- **ruflo__performance_benchmark** — Run performance benchmarks
-- **ruflo__performance_bottleneck** — Detect performance bottlenecks
-- **ruflo__github_repo_analyze** — Analyze a GitHub repository
-- **ruflo__github_pr_manage** — Manage pull requests
-- **ruflo__terminal_execute** — Execute commands in a terminal session
+- **swarmlo__analyze_diff** — Analyze git diff for risk and change classification
+- **swarmlo__performance_benchmark** — Run performance benchmarks
+- **swarmlo__performance_bottleneck** — Detect performance bottlenecks
+- **swarmlo__github_repo_analyze** — Analyze a GitHub repository
+- **swarmlo__github_pr_manage** — Manage pull requests
+- **swarmlo__terminal_execute** — Execute commands in a terminal session
 
 ## When to Use
 - Code review and change risk assessment
 - Performance analysis and optimization
 - GitHub repository management`,
 
-    security: `# Security & Safety Group (ruflo)
+    security: `# Security & Safety Group (swarmlo)
 
 AI defence, PII detection, and claims-based authorization.
 
 ## Key Tools
-- **ruflo__aidefence_scan** — Scan text for AI manipulation attempts
-- **ruflo__aidefence_has_pii** — Check for PII (emails, phones, SSNs)
-- **ruflo__aidefence_is_safe** — Quick safety check on input
-- **ruflo__claims_claim** — Claim an issue for work
-- **ruflo__claims_board** — Visual board of all claims
+- **swarmlo__aidefence_scan** — Scan text for AI manipulation attempts
+- **swarmlo__aidefence_has_pii** — Check for PII (emails, phones, SSNs)
+- **swarmlo__aidefence_is_safe** — Quick safety check on input
+- **swarmlo__claims_claim** — Claim an issue for work
+- **swarmlo__claims_board** — Visual board of all claims
 
 ## When to Use
 - Input validation and safety checking
 - PII detection before processing sensitive data
 - Work item management across agents`,
 
-    browser: `# Browser Automation Group (ruflo)
+    browser: `# Browser Automation Group (swarmlo)
 
 Headless browser control for web interaction and testing.
 
 ## Key Tools
-- **ruflo__browser_open** — Navigate to a URL
-- **ruflo__browser_click** — Click elements by reference
-- **ruflo__browser_fill** — Fill form inputs
-- **ruflo__browser_screenshot** — Capture page screenshots
-- **ruflo__browser_snapshot** — Get accessibility tree for AI parsing
-- **ruflo__browser_eval** — Execute JavaScript in page context
+- **swarmlo__browser_open** — Navigate to a URL
+- **swarmlo__browser_click** — Click elements by reference
+- **swarmlo__browser_fill** — Fill form inputs
+- **swarmlo__browser_screenshot** — Capture page screenshots
+- **swarmlo__browser_snapshot** — Get accessibility tree for AI parsing
+- **swarmlo__browser_eval** — Execute JavaScript in page context
 
 ## When to Use
 - Web scraping and data extraction
 - Automated testing (E2E)
 - Form filling and web interaction`,
 
-    neural: `# Neural & DAA Group (ruflo)
+    neural: `# Neural & DAA Group (swarmlo)
 
 Neural network operations and Decentralized Autonomous Agents.
 
 ## Key Tools
-- **ruflo__neural_train** — Train a neural model
-- **ruflo__neural_predict** — Make predictions
-- **ruflo__daa_agent_create** — Create an autonomous agent
-- **ruflo__daa_workflow_create** — Create autonomous workflows
-- **ruflo__daa_knowledge_share** — Share knowledge between agents
+- **swarmlo__neural_train** — Train a neural model
+- **swarmlo__neural_predict** — Make predictions
+- **swarmlo__daa_agent_create** — Create an autonomous agent
+- **swarmlo__daa_workflow_create** — Create autonomous workflows
+- **swarmlo__daa_knowledge_share** — Share knowledge between agents
 
 ## When to Use
 - Pattern learning and prediction
@@ -949,7 +949,7 @@ async function executeGoapSearchGemini(query, args) {
 // link that made the disclosed unauthenticated-RCE chain reach shell.
 const DANGEROUS_TOOLS = Object.freeze(new Set([
   "terminal_execute",
-  "ruflo__terminal_execute",
+  "swarmlo__terminal_execute",
   "devtools__terminal_execute",
 ]));
 function isTerminalTool(name) {
@@ -1277,7 +1277,7 @@ function buildSystemPrompt() {
 
 # Tool Groups
 
-Tools prefixed with backend name (e.g., \`ruflo__agent_spawn\`). Always use the full prefixed name.
+Tools prefixed with backend name (e.g., \`swarmlo__agent_spawn\`). Always use the full prefixed name.
 
 ## Group 1: Core Tools (always on)
 
@@ -1297,7 +1297,7 @@ Tools prefixed with backend name (e.g., \`ruflo__agent_spawn\`). Always use the 
 
 - **guidance** — Get help on tool groups or specific tool usage.
   Topics: \`overview\`, \`groups\`, \`agents\`, \`memory\`, \`intelligence\`, \`devtools\`
-  \`{"topic": "overview"}\` or \`{"topic": "tool", "tool_name": "ruflo__agent_spawn"}\`
+  \`{"topic": "overview"}\` or \`{"topic": "tool", "tool_name": "swarmlo__agent_spawn"}\`
 
 ## Group 2: Intelligence & Learning (ruvector)
 Pattern learning, routing, code analysis, and trajectory tracking. ${TOOL_GROUPS.intelligence.enabled ? "ACTIVE" : "DISABLED"}
@@ -1333,11 +1333,11 @@ Pattern learning, routing, code analysis, and trajectory tracking. ${TOOL_GROUPS
 - **ruvector__hooks_stats** — View learning statistics and metrics.
 - **ruvector__hooks_doctor** — Run diagnostics on the intelligence system.
 
-## Group 3: Agents & Orchestration (ruflo)
+## Group 3: Agents & Orchestration (swarmlo)
 Spawn agents, coordinate swarms, manage tasks and workflows. ${TOOL_GROUPS.agents.enabled ? "ACTIVE" : "DISABLED"}
 
 ### Agent Lifecycle:
-- **ruflo__agent_spawn** — Create a new specialized agent.
+- **swarmlo__agent_spawn** — Create a new specialized agent.
   \`{"type": "coder|researcher|tester|reviewer|architect|security", "name": "optional-name"}\`
   Agent types and when to use them:
   - \`coder\` — Write code, implement features, fix bugs
@@ -1346,139 +1346,139 @@ Spawn agents, coordinate swarms, manage tasks and workflows. ${TOOL_GROUPS.agent
   - \`reviewer\` — Review code quality, security, best practices
   - \`architect\` — Design systems, plan architectures, evaluate trade-offs
   - \`security\` — Audit security, find vulnerabilities, recommend fixes
-- **ruflo__agent_status** — Check an agent's current state. \`{"agentId": "agent-xxx"}\`
-- **ruflo__agent_list** — List all active agents with their states.
-- **ruflo__agent_terminate** — Stop an agent. \`{"agentId": "agent-xxx"}\`
-- **ruflo__agent_health** — Health check across all agents.
-- **ruflo__agent_pool** — View the agent pool and available capacity.
+- **swarmlo__agent_status** — Check an agent's current state. \`{"agentId": "agent-xxx"}\`
+- **swarmlo__agent_list** — List all active agents with their states.
+- **swarmlo__agent_terminate** — Stop an agent. \`{"agentId": "agent-xxx"}\`
+- **swarmlo__agent_health** — Health check across all agents.
+- **swarmlo__agent_pool** — View the agent pool and available capacity.
 
 ### Swarm Coordination:
-- **ruflo__swarm_init** — Initialize a multi-agent swarm.
+- **swarmlo__swarm_init** — Initialize a multi-agent swarm.
   \`{"topology": "hierarchical|mesh|ring|star", "maxAgents": 8, "strategy": "balanced|specialized|adaptive"}\`
   - \`hierarchical\` — Coordinator + workers, best for structured tasks (anti-drift)
   - \`mesh\` — Peer-to-peer, best for collaborative work
   - \`ring\` — Sequential pipeline, best for ordered processing
   - \`star\` — Central hub, best for fan-out parallel work
-- **ruflo__swarm_status** — Get swarm health, topology, and agent states.
-- **ruflo__swarm_health** — Detailed health metrics for the swarm.
-- **ruflo__swarm_shutdown** — Tear down a swarm and all its agents.
+- **swarmlo__swarm_status** — Get swarm health, topology, and agent states.
+- **swarmlo__swarm_health** — Detailed health metrics for the swarm.
+- **swarmlo__swarm_shutdown** — Tear down a swarm and all its agents.
 
 ### Task Management:
-- **ruflo__task_create** — Create a tracked task.
+- **swarmlo__task_create** — Create a tracked task.
   \`{"description": "what needs to be done", "priority": "low|normal|high|critical"}\`
-- **ruflo__task_status** — Check task progress. \`{"taskId": "task-xxx"}\`
-- **ruflo__task_list** — List all tasks with their statuses.
-- **ruflo__task_complete** — Mark a task as done. \`{"taskId": "task-xxx"}\`
-- **ruflo__task_update** — Update task details, status, or assignment.
-- **ruflo__task_cancel** — Cancel a task.
+- **swarmlo__task_status** — Check task progress. \`{"taskId": "task-xxx"}\`
+- **swarmlo__task_list** — List all tasks with their statuses.
+- **swarmlo__task_complete** — Mark a task as done. \`{"taskId": "task-xxx"}\`
+- **swarmlo__task_update** — Update task details, status, or assignment.
+- **swarmlo__task_cancel** — Cancel a task.
 
 ### Workflow Orchestration:
-- **ruflo__workflow_create** — Define a multi-step workflow with dependencies.
-- **ruflo__workflow_execute** — Run a workflow. \`{"workflowId": "wf-xxx"}\`
-- **ruflo__workflow_status** — Check workflow progress.
-- **ruflo__workflow_template** — Use a pre-built workflow template.
-- **ruflo__workflow_pause** / **ruflo__workflow_resume** — Control workflow execution.
+- **swarmlo__workflow_create** — Define a multi-step workflow with dependencies.
+- **swarmlo__workflow_execute** — Run a workflow. \`{"workflowId": "wf-xxx"}\`
+- **swarmlo__workflow_status** — Check workflow progress.
+- **swarmlo__workflow_template** — Use a pre-built workflow template.
+- **swarmlo__workflow_pause** / **swarmlo__workflow_resume** — Control workflow execution.
 
 ### Hive-Mind (Distributed Consensus):
-- **ruflo__hive-mind_init** — Start distributed consensus system.
-- **ruflo__hive-mind_spawn** — Add an agent to the hive.
-- **ruflo__hive-mind_consensus** — Run consensus vote across agents.
-- **ruflo__hive-mind_broadcast** — Send message to all hive agents.
-- **ruflo__hive-mind_memory** — Access shared hive memory.
+- **swarmlo__hive-mind_init** — Start distributed consensus system.
+- **swarmlo__hive-mind_spawn** — Add an agent to the hive.
+- **swarmlo__hive-mind_consensus** — Run consensus vote across agents.
+- **swarmlo__hive-mind_broadcast** — Send message to all hive agents.
+- **swarmlo__hive-mind_memory** — Access shared hive memory.
 
 ### Coordination:
-- **ruflo__coordination_topology** — View/change coordination topology.
-- **ruflo__coordination_load_balance** — Distribute work across agents.
-- **ruflo__coordination_orchestrate** — Orchestrate complex multi-agent tasks.
-- **ruflo__coordination_sync** — Synchronize state across agents.
+- **swarmlo__coordination_topology** — View/change coordination topology.
+- **swarmlo__coordination_load_balance** — Distribute work across agents.
+- **swarmlo__coordination_orchestrate** — Orchestrate complex multi-agent tasks.
+- **swarmlo__coordination_sync** — Synchronize state across agents.
 
 ### Session Management:
-- **ruflo__session_save** — Save current session state.
-- **ruflo__session_restore** — Restore a previous session.
-- **ruflo__session_list** — List available sessions.
+- **swarmlo__session_save** — Save current session state.
+- **swarmlo__session_restore** — Restore a previous session.
+- **swarmlo__session_list** — List available sessions.
 
-## Group 4: Memory & Knowledge (ruflo)
+## Group 4: Memory & Knowledge (swarmlo)
 Persistent memory, vector search, embeddings, and pattern storage. ${TOOL_GROUPS.memory.enabled ? "ACTIVE" : "DISABLED"}
 
 ### Memory Operations:
-- **ruflo__memory_store** — Store data in persistent memory.
+- **swarmlo__memory_store** — Store data in persistent memory.
   \`{"key": "my-key", "value": "data to store", "namespace": "default", "tags": ["tag1"]}\`
-- **ruflo__memory_retrieve** — Get stored data by key. \`{"key": "my-key"}\`
-- **ruflo__memory_search** — Semantic vector search across stored memories.
+- **swarmlo__memory_retrieve** — Get stored data by key. \`{"key": "my-key"}\`
+- **swarmlo__memory_search** — Semantic vector search across stored memories.
   \`{"query": "what to search for", "limit": 5, "namespace": "default"}\`
-- **ruflo__memory_list** — List all stored keys in a namespace.
-- **ruflo__memory_delete** — Remove a stored memory.
-- **ruflo__memory_stats** — View memory usage statistics.
+- **swarmlo__memory_list** — List all stored keys in a namespace.
+- **swarmlo__memory_delete** — Remove a stored memory.
+- **swarmlo__memory_stats** — View memory usage statistics.
 
 ### Embeddings:
-- **ruflo__embeddings_generate** — Generate vector embeddings for text.
-- **ruflo__embeddings_compare** — Compare semantic similarity of two texts.
-- **ruflo__embeddings_search** — Search embeddings database by similarity.
-- **ruflo__embeddings_neural** — Generate neural embeddings.
-- **ruflo__embeddings_hyperbolic** — Generate hyperbolic embeddings for hierarchical data.
+- **swarmlo__embeddings_generate** — Generate vector embeddings for text.
+- **swarmlo__embeddings_compare** — Compare semantic similarity of two texts.
+- **swarmlo__embeddings_search** — Search embeddings database by similarity.
+- **swarmlo__embeddings_neural** — Generate neural embeddings.
+- **swarmlo__embeddings_hyperbolic** — Generate hyperbolic embeddings for hierarchical data.
 
 ### AgentDB (Advanced Pattern Storage):
-- **ruflo__agentdb_pattern-store** — Store a learned pattern with metadata.
+- **swarmlo__agentdb_pattern-store** — Store a learned pattern with metadata.
   \`{"pattern": "description", "category": "code|debug|architecture", "confidence": 0.9}\`
-- **ruflo__agentdb_pattern-search** — Search patterns by similarity.
-- **ruflo__agentdb_route** — Route a query to the most relevant stored pattern.
-- **ruflo__agentdb_feedback** — Provide feedback on a pattern (reinforcement learning).
-- **ruflo__agentdb_context-synthesize** — Synthesize context from multiple sources.
-- **ruflo__agentdb_semantic-route** — Semantic routing based on stored knowledge.
-- **ruflo__agentdb_consolidate** — Consolidate and deduplicate stored patterns.
-- **ruflo__agentdb_batch** — Batch operations on patterns.
-- **ruflo__agentdb_session-start** / **ruflo__agentdb_session-end** — Session tracking.
-- **ruflo__agentdb_hierarchical-store** / **ruflo__agentdb_hierarchical-recall** — Hierarchical memory.
+- **swarmlo__agentdb_pattern-search** — Search patterns by similarity.
+- **swarmlo__agentdb_route** — Route a query to the most relevant stored pattern.
+- **swarmlo__agentdb_feedback** — Provide feedback on a pattern (reinforcement learning).
+- **swarmlo__agentdb_context-synthesize** — Synthesize context from multiple sources.
+- **swarmlo__agentdb_semantic-route** — Semantic routing based on stored knowledge.
+- **swarmlo__agentdb_consolidate** — Consolidate and deduplicate stored patterns.
+- **swarmlo__agentdb_batch** — Batch operations on patterns.
+- **swarmlo__agentdb_session-start** / **swarmlo__agentdb_session-end** — Session tracking.
+- **swarmlo__agentdb_hierarchical-store** / **swarmlo__agentdb_hierarchical-recall** — Hierarchical memory.
 
-## Group 5: Dev Tools & Analysis (ruflo)
+## Group 5: Dev Tools & Analysis (swarmlo)
 Performance, system health, GitHub integration, code analysis, terminal. ${TOOL_GROUPS.devtools.enabled ? "ACTIVE" : "DISABLED"}
 
 ### System & Performance:
-- **ruflo__system_status** — System health overview.
-- **ruflo__system_metrics** — Detailed performance metrics.
-- **ruflo__system_health** — Health check across all subsystems.
-- **ruflo__performance_report** — Generate performance report.
-- **ruflo__performance_bottleneck** — Identify performance bottlenecks.
-- **ruflo__performance_benchmark** — Run benchmarks.
-- **ruflo__performance_optimize** — Get optimization recommendations.
-- **ruflo__performance_profile** — Profile specific operations.
+- **swarmlo__system_status** — System health overview.
+- **swarmlo__system_metrics** — Detailed performance metrics.
+- **swarmlo__system_health** — Health check across all subsystems.
+- **swarmlo__performance_report** — Generate performance report.
+- **swarmlo__performance_bottleneck** — Identify performance bottlenecks.
+- **swarmlo__performance_benchmark** — Run benchmarks.
+- **swarmlo__performance_optimize** — Get optimization recommendations.
+- **swarmlo__performance_profile** — Profile specific operations.
 
 ### Code Analysis:
-- **ruflo__analyze_diff** — Analyze a code diff.
-- **ruflo__analyze_diff-risk** — Assess risk level of changes.
-- **ruflo__analyze_diff-classify** — Classify type of changes (feature, bugfix, refactor).
-- **ruflo__analyze_diff-reviewers** — Suggest code reviewers.
-- **ruflo__analyze_file-risk** — Assess risk of a specific file.
+- **swarmlo__analyze_diff** — Analyze a code diff.
+- **swarmlo__analyze_diff-risk** — Assess risk level of changes.
+- **swarmlo__analyze_diff-classify** — Classify type of changes (feature, bugfix, refactor).
+- **swarmlo__analyze_diff-reviewers** — Suggest code reviewers.
+- **swarmlo__analyze_file-risk** — Assess risk of a specific file.
 
 ### GitHub Integration:
-- **ruflo__github_repo_analyze** — Analyze a GitHub repository.
+- **swarmlo__github_repo_analyze** — Analyze a GitHub repository.
   \`{"repo": "owner/repo", "analysis_type": "code_quality|performance|security"}\`
-- **ruflo__github_pr_manage** — Manage pull requests (create, review, merge).
-- **ruflo__github_issue_track** — Track and manage issues.
-- **ruflo__github_workflow** — Manage GitHub Actions workflows.
-- **ruflo__github_metrics** — Repository metrics and insights.
+- **swarmlo__github_pr_manage** — Manage pull requests (create, review, merge).
+- **swarmlo__github_issue_track** — Track and manage issues.
+- **swarmlo__github_workflow** — Manage GitHub Actions workflows.
+- **swarmlo__github_metrics** — Repository metrics and insights.
 
 ### Terminal Access:
-- **ruflo__terminal_create** — Create a terminal session.
-- **ruflo__terminal_execute** — Execute a command. \`{"command": "ls -la"}\`
-- **ruflo__terminal_list** — List active terminals.
-- **ruflo__terminal_history** — View command history.
+- **swarmlo__terminal_create** — Create a terminal session.
+- **swarmlo__terminal_execute** — Execute a command. \`{"command": "ls -la"}\`
+- **swarmlo__terminal_list** — List active terminals.
+- **swarmlo__terminal_history** — View command history.
 
 ### Development Hooks:
-- **ruflo__hooks_pre-task** / **ruflo__hooks_post-task** — Task lifecycle hooks for learning.
-- **ruflo__hooks_pre-edit** / **ruflo__hooks_post-edit** — File edit hooks.
-- **ruflo__hooks_session-start** / **ruflo__hooks_session-end** — Session lifecycle.
-- **ruflo__hooks_worker-dispatch** — Dispatch background workers.
+- **swarmlo__hooks_pre-task** / **swarmlo__hooks_post-task** — Task lifecycle hooks for learning.
+- **swarmlo__hooks_pre-edit** / **swarmlo__hooks_post-edit** — File edit hooks.
+- **swarmlo__hooks_session-start** / **swarmlo__hooks_session-end** — Session lifecycle.
+- **swarmlo__hooks_worker-dispatch** — Dispatch background workers.
   Workers: \`optimize\`, \`audit\`, \`testgaps\`, \`document\`, \`map\`, \`deepdive\`, \`benchmark\`
-- **ruflo__hooks_model-route** — Route to optimal AI model for a task.
-- **ruflo__hooks_explain** — Explain a routing or intelligence decision.
+- **swarmlo__hooks_model-route** — Route to optimal AI model for a task.
+- **swarmlo__hooks_explain** — Explain a routing or intelligence decision.
 
 ### Configuration:
-- **ruflo__config_get** / **ruflo__config_set** / **ruflo__config_list** — Manage settings.
+- **swarmlo__config_get** / **swarmlo__config_set** / **swarmlo__config_list** — Manage settings.
 
 ### Progress Tracking:
-- **ruflo__progress_check** — Check implementation progress.
-- **ruflo__progress_summary** — Summarize overall progress.
+- **swarmlo__progress_check** — Check implementation progress.
+- **swarmlo__progress_summary** — Summarize overall progress.
 
 # Decision Framework — FOLLOW THIS EXACTLY
 
@@ -1488,8 +1488,8 @@ Performance, system health, GitHub integration, code analysis, terminal. ${TOOL_
 4. **"Is it true that..."** → \`web_research(action='fact_check', query='...')\`
 5. **Complex research** → \`web_research(action='goap', query='...')\` — auto multi-step pipeline
 6. **Internal docs/procedures** → \`search(query='...')\` first, then web_research if not found
-7. **Code task** → \`ruvector__hooks_route\` + \`ruflo__agent_spawn\`
-8. **Remember something** → \`ruflo__memory_store\` / \`ruflo__memory_search\`
+7. **Code task** → \`ruvector__hooks_route\` + \`swarmlo__agent_spawn\`
+8. **Remember something** → \`swarmlo__memory_store\` / \`swarmlo__memory_search\`
 9. **"What can you do?"** → \`guidance(topic='overview')\`
 10. **Unknown** → \`guidance(topic='overview')\`
 
@@ -1504,13 +1504,13 @@ IMPORTANT: For questions 1-5, ALWAYS call web_research. Never say "I don't have 
 \`web_research(action='goap')\` → analyze → respond with citations
 
 ### Code Implementation
-\`ruvector__hooks_route\` → \`ruflo__agent_spawn(coder)\` → track with \`ruflo__task_create\` → report
+\`ruvector__hooks_route\` → \`swarmlo__agent_spawn(coder)\` → track with \`swarmlo__task_create\` → report
 
 ### Multi-Agent Analysis
-\`ruflo__swarm_init(hierarchical)\` → spawn agents → coordinate → synthesize results
+\`swarmlo__swarm_init(hierarchical)\` → spawn agents → coordinate → synthesize results
 
 ### Learning & Memory
-\`ruflo__memory_search\` (check existing) → do work → \`ruflo__memory_store\` (save results) → \`ruvector__hooks_learn\`
+\`swarmlo__memory_search\` (check existing) → do work → \`swarmlo__memory_store\` (save results) → \`ruvector__hooks_learn\`
 
 # Parallel Execution
 
@@ -1536,7 +1536,7 @@ NEVER call tools sequentially when they could run in parallel.
 - Raw JSON, similarity scores, chunk IDs, internal IDs, task IDs
 - Tool names, function names, API endpoints, backend names
 - References to "MCP", "tool calls", "vectors", "embeddings", infrastructure
-- The prefixes "ruflo__" or "ruvector__" — just describe what you're doing naturally
+- The prefixes "swarmlo__" or "ruvector__" — just describe what you're doing naturally
 - Error stack traces — summarize errors in plain language`;
 }
 
@@ -1615,7 +1615,7 @@ async function handleAutopilot(req, res, provider, body) {
   const MAX_AUTOPILOT_TOOLS = 30;
   const externalTools = getActiveTools();
   // Prioritize tools from enabled high-value groups
-  const priorityPrefixes = ['ruvector__hooks', 'ruvector__memory', 'ruflo__memory', 'ruflo__agent'];
+  const priorityPrefixes = ['ruvector__hooks', 'ruvector__memory', 'swarmlo__memory', 'swarmlo__agent'];
   const prioritized = externalTools
     .sort((a, b) => {
       const aP = priorityPrefixes.some(p => a.name.startsWith(p)) ? 0 : 1;

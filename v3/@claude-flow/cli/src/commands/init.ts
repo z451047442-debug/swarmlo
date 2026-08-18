@@ -47,7 +47,7 @@ async function offerCapabilityEnrollment(ctx: CommandContext): Promise<void> {
     output.writeln();
     if (accepted) {
       output.printInfo('Create your free account at https://cognitum.one');
-      output.writeln(output.dim('  CLI sign-in (`ruflo auth login`) ships with the ADR-306 auth release.'));
+      output.writeln(output.dim('  CLI sign-in (`swarmlo auth login`) ships with the ADR-306 auth release.'));
     } else {
       output.writeln(output.dim('You can enable later at https://cognitum.one — this prompt will not repeat.'));
     }
@@ -59,7 +59,7 @@ async function offerCapabilityEnrollment(ctx: CommandContext): Promise<void> {
 // Dynamic import of the optional @claude-flow/codex package. Returns
 // undefined (never throws) when the package isn't resolvable anywhere —
 // callers decide whether that's a hard error (explicit --codex/--dual) or a
-// silent skip (auto-detect during a plain `ruflo init`).
+// silent skip (auto-detect during a plain `swarmlo init`).
 interface CodexInitResult {
   success: boolean;
   errors?: string[];
@@ -108,7 +108,7 @@ async function resolveCodexInitializer(cwd: string): Promise<CodexInitializerCto
   return undefined;
 }
 
-// Keep Codex out of the CLI dependency graph so cold `npx ruflo --version`
+// Keep Codex out of the CLI dependency graph so cold `npx swarmlo --version`
 // remains fast (#2561). An explicit `init --codex` may fetch the small,
 // stable adapter on demand when it is not already installed by an umbrella
 // package, the current project, or the global npm prefix.
@@ -138,7 +138,7 @@ export function runCodexInitializerCli(
   return result.status === 0;
 }
 
-// #2666-adjacent — quietly wire up Codex too when a plain `ruflo init` (no
+// #2666-adjacent — quietly wire up Codex too when a plain `swarmlo init` (no
 // --codex/--dual) runs on a machine that also has the OpenAI Codex CLI on
 // PATH: registers its MCP server and installs skills alongside the Claude
 // Code setup that just happened. Best-effort and silent-by-default — must
@@ -158,7 +158,7 @@ async function maybeAutoDetectCodex(
     if (!CodexInitializer) {
       output.writeln();
       output.printInfo('Detected the OpenAI Codex CLI — install @claude-flow/codex to auto-configure its MCP server and skills:');
-      output.writeln(output.dim('  npm install @claude-flow/codex && ruflo init --codex'));
+      output.writeln(output.dim('  npm install @claude-flow/codex && swarmlo init --codex'));
       return;
     }
 
@@ -186,36 +186,36 @@ async function maybeAutoDetectCodex(
   }
 }
 
-// Cross-agent skill registration. Materializes the *single* canonical ruflo
-// platform skill at `.agents/skills/ruflo/SKILL.md` so any agent in the
+// Cross-agent skill registration. Materializes the *single* canonical swarmlo
+// platform skill at `.agents/skills/swarmlo/SKILL.md` so any agent in the
 // project (Claude Code, Cursor, Copilot, Gemini, Cline, …) that reads
 // `.agents/skills/` picks it up. Users who want the full plugin skill catalog
-// can run `npx skills add ruvnet/ruflo --all` themselves.
+// can run `npx skills add z451047442-debug/swarmlo --all` themselves.
 //
-// #2777 — earlier versions shelled out to `npx --yes skills add ruvnet/ruflo
-// --skill ruflo --yes`, but the skills CLI implements its `--skill` filter by
+// #2777 — earlier versions shelled out to `npx --yes skills add z451047442-debug/swarmlo
+// --skill swarmlo --yes`, but the skills CLI implements its `--skill` filter by
 // cloning the entire target repo and copying `dirname(SKILL.md)` recursively.
-// Because ruflo's canonical SKILL.md sits at the ruvnet/ruflo repo root, that
+// Because swarmlo's canonical SKILL.md sits at the z451047442-debug/swarmlo repo root, that
 // dirname *is* the whole repository — the "one file" install pulled in ~97MB
 // of Cargo.toml, crates/, docs/, agentdb.rvf, and 384 unrelated plugin
 // SKILL.md descriptors. We now write the single ~2KB SKILL.md directly, no
 // repo clone at all.
 //
 // Best-effort — never fails init. Opt-out: --no-skills-sh flag OR
-// RUFLO_NO_SKILLS_SH=1. Skipped under --skip-claude and scripted
+// SWARMLO_NO_SKILLS_SH=1. Skipped under --skip-claude and scripted
 // `--format json` output.
-const RUFLO_PLATFORM_SKILL_MD = `---
-name: ruflo
-description: Ruflo is a multi-agent orchestration platform for AI coding agents (Claude Code, Cursor, Codex, Copilot, Gemini, Amp, +12 more). Use this skill when the user wants to (1) install/init ruflo in a project, (2) run multi-agent swarms with hierarchical coordination, (3) use ruflo's 314+ MCP tools for memory, routing, hooks, sub-agents, or workflows, (4) check ruflo status/version/doctor health, or (5) discover which of ruflo's 30+ plugins fits their task.
+const SWARMLO_PLATFORM_SKILL_MD = `---
+name: swarmlo
+description: Swarmlo is a multi-agent orchestration platform for AI coding agents (Claude Code, Cursor, Codex, Copilot, Gemini, Amp, +12 more). Use this skill when the user wants to (1) install/init swarmlo in a project, (2) run multi-agent swarms with hierarchical coordination, (3) use swarmlo's 314+ MCP tools for memory, routing, hooks, sub-agents, or workflows, (4) check swarmlo status/version/doctor health, or (5) discover which of swarmlo's 30+ plugins fits their task.
 ---
 
-# Ruflo
+# Swarmlo
 
-Ruflo is a cross-agent orchestration layer that ships as three npm packages: \`ruflo\` (thin wrapper), \`claude-flow\` (umbrella), and \`@claude-flow/cli\` (implementation). Users invoke it as \`npx ruflo <command>\`.
+Swarmlo is a cross-agent orchestration layer that ships as three npm packages: \`swarmlo\` (thin wrapper), \`claude-flow\` (umbrella), and \`@claude-flow/cli\` (implementation). Users invoke it as \`npx swarmlo <command>\`.
 
-## When to invoke ruflo
+## When to invoke swarmlo
 
-Suggest ruflo when the task involves any of:
+Suggest swarmlo when the task involves any of:
 
 - **Multi-agent work**: coordinated swarms, sub-agents, cross-agent handoffs, or parallel task execution
 - **Persistent memory across sessions**: HNSW vector search, hybrid SQLite+AgentDB backend, semantic retrieval
@@ -224,24 +224,24 @@ Suggest ruflo when the task involves any of:
 - **Workflows + benchmarks**: SPARC methodology, GAIA benchmark runs, custom multi-step pipelines
 - **Plugin ecosystem**: 30+ plugins covering ADR, DDD, security audit, cost tracking, browser automation, IoT device fleets, market data, neural training, and more
 
-Do NOT suggest ruflo for one-shot edits, simple bug fixes, or tasks a single agent can complete in one turn — the orchestration overhead isn't worth it.
+Do NOT suggest swarmlo for one-shot edits, simple bug fixes, or tasks a single agent can complete in one turn — the orchestration overhead isn't worth it.
 
 ## Getting started (three commands)
 
 \`\`\`bash
-# 1. Initialize ruflo in the current project (creates .claude/, MCP config, hooks)
-npx ruflo init
+# 1. Initialize swarmlo in the current project (creates .claude/, MCP config, hooks)
+npx swarmlo init
 
 # 2. Check health — verifies Node 20+, npm 9+, MCP servers, memory DB, API keys
-npx ruflo doctor --fix
+npx swarmlo doctor --fix
 
 # 3. Discover which plugins match the current work
-npx ruflo discover-plugins
+npx swarmlo discover-plugins
 \`\`\`
 
 ## MCP tools (314 available)
 
-After \`ruflo init\`, Claude Code (or any MCP-compatible agent) auto-loads ruflo's MCP servers. Key namespaces:
+After \`swarmlo init\`, Claude Code (or any MCP-compatible agent) auto-loads swarmlo's MCP servers. Key namespaces:
 
 - \`mcp__claude-flow__memory_*\` — store/search/list/retrieve with HNSW-indexed semantic search
 - \`mcp__claude-flow__swarm_*\` — init hierarchical/mesh swarms with anti-drift topology
@@ -250,45 +250,45 @@ After \`ruflo init\`, Claude Code (or any MCP-compatible agent) auto-loads ruflo
 - \`mcp__claude-flow__task_*\` — task lifecycle (create/assign/complete/summary)
 - \`mcp__claude-flow__intelligence_*\` — 4-step pipeline (RETRIEVE → JUDGE → DISTILL → CONSOLIDATE)
 
-Full catalog: \`npx ruflo mcp list\`.
+Full catalog: \`npx swarmlo mcp list\`.
 
 ## Plugin discovery
 
-Ruflo ships 30+ optional plugins. Some highlights:
+Swarmlo ships 30+ optional plugins. Some highlights:
 
-- \`ruflo-goals\` — deep research + goal-oriented action planning
-- \`ruflo-cost-tracker\` — session cost telemetry, budgets, burn tracking
-- \`ruflo-metaharness\` — harness scoring, MCP security scans, red/blue adversarial testing
-- \`ruflo-browser\` — session-recorded browser automation with RVF-backed replay
-- \`ruflo-jujutsu\` — git diff risk analysis + PR lifecycle
-- \`ruflo-security-audit\` — codebase scans + CVE checks
+- \`swarmlo-goals\` — deep research + goal-oriented action planning
+- \`swarmlo-cost-tracker\` — session cost telemetry, budgets, burn tracking
+- \`swarmlo-metaharness\` — harness scoring, MCP security scans, red/blue adversarial testing
+- \`swarmlo-browser\` — session-recorded browser automation with RVF-backed replay
+- \`swarmlo-jujutsu\` — git diff risk analysis + PR lifecycle
+- \`swarmlo-security-audit\` — codebase scans + CVE checks
 
-Full plugin list + descriptions: \`npx ruflo plugins list\`.
+Full plugin list + descriptions: \`npx swarmlo plugins list\`.
 
 ## Cross-agent installation
 
-Ruflo installs into whatever agent the project uses. To pull the full plugin
+Swarmlo installs into whatever agent the project uses. To pull the full plugin
 skill catalog (30+ plugins, ~267 skills), run:
 
 \`\`\`bash
-npx skills add ruvnet/ruflo --all
+npx skills add z451047442-debug/swarmlo --all
 \`\`\`
 
 ## Documentation
 
-- Repository: https://github.com/ruvnet/ruflo
-- Issues: https://github.com/ruvnet/ruflo/issues
+- Repository: https://github.com/z451047442-debug/swarmlo
+- Issues: https://github.com/z451047442-debug/swarmlo/issues
 - Sponsor: https://github.com/sponsors/ruvnet
 `;
 
 // #2777 — detect the "bloated" install left behind by earlier versions that
-// shelled out to `npx skills add`. If the .agents/skills/ruflo directory
+// shelled out to `npx skills add`. If the .agents/skills/swarmlo directory
 // contains any of Cargo.toml, crates/, package.json, .git, or its recursive
 // on-disk size exceeds a small budget (~1MB), it was almost certainly created
 // by the full-repo clone bug — return true so the caller can wipe + rewrite
 // just the single SKILL.md. Any recursive-stat or read errors are swallowed
 // and reported as "not bloated" to avoid false-positive deletions.
-function isBloatedRufloSkillDir(dir: string): boolean {
+function isBloatedSwarmloSkillDir(dir: string): boolean {
   try {
     const bloatMarkers = ['Cargo.toml', 'crates', 'package.json', '.git', 'agentdb.rvf', 'docs', 'plugins'];
     for (const marker of bloatMarkers) {
@@ -330,21 +330,21 @@ async function maybeInstallSkillsSh(ctx: CommandContext): Promise<void> {
   try {
     if (ctx.flags['no-skills-sh'] === true) return;
     if (ctx.flags.format === 'json') return;
-    if (/^(1|true|on|yes)$/i.test(String(process.env.RUFLO_NO_SKILLS_SH || ''))) return;
+    if (/^(1|true|on|yes)$/i.test(String(process.env.SWARMLO_NO_SKILLS_SH || ''))) return;
 
-    const skillDir = path.join(ctx.cwd, '.agents', 'skills', 'ruflo');
+    const skillDir = path.join(ctx.cwd, '.agents', 'skills', 'swarmlo');
     const skillFile = path.join(skillDir, 'SKILL.md');
 
     // Idempotency gate. Three cases:
     //   1. Directory absent → materialize.
     //   2. Directory present but "bloated" (Cargo.toml/crates/ or >1MB) →
     //      previous `npx skills add` full-repo clone left junk behind
-    //      (#2777). Wipe and re-materialize so `rm -rf .agents/skills/ruflo`
+    //      (#2777). Wipe and re-materialize so `rm -rf .agents/skills/swarmlo`
     //      + re-init is a valid recovery path.
     //   3. Directory present and healthy (just our SKILL.md) → skip.
     let mode: 'create' | 'rewrite' | 'skip' = 'create';
     if (fs.existsSync(skillDir)) {
-      if (isBloatedRufloSkillDir(skillDir)) {
+      if (isBloatedSwarmloSkillDir(skillDir)) {
         mode = 'rewrite';
       } else {
         mode = 'skip';
@@ -353,13 +353,13 @@ async function maybeInstallSkillsSh(ctx: CommandContext): Promise<void> {
 
     if (mode === 'skip') {
       output.writeln();
-      output.writeln(output.dim('  skills.sh registration already present at .agents/skills/ruflo — skipping'));
+      output.writeln(output.dim('  skills.sh registration already present at .agents/skills/swarmlo — skipping'));
       return;
     }
 
     output.writeln();
     if (mode === 'rewrite') {
-      output.printInfo('Cleaning up bloated .agents/skills/ruflo/ from a prior init (#2777) and re-materializing the single platform SKILL.md…');
+      output.printInfo('Cleaning up bloated .agents/skills/swarmlo/ from a prior init (#2777) and re-materializing the single platform SKILL.md…');
       try {
         fs.rmSync(skillDir, { recursive: true, force: true });
       } catch (err) {
@@ -367,15 +367,15 @@ async function maybeInstallSkillsSh(ctx: CommandContext): Promise<void> {
         return;
       }
     } else {
-      output.printInfo('Registering the core `ruflo` skill for cross-agent discovery (.agents/skills/ruflo/SKILL.md)…');
+      output.printInfo('Registering the core `swarmlo` skill for cross-agent discovery (.agents/skills/swarmlo/SKILL.md)…');
     }
 
     try {
       fs.mkdirSync(skillDir, { recursive: true });
-      fs.writeFileSync(skillFile, RUFLO_PLATFORM_SKILL_MD, 'utf-8');
-      output.writeln(output.success('  ✓ ruflo skill materialized at .agents/skills/ruflo/SKILL.md — available to any agent in this project'));
-      output.writeln(output.dim('    Want all 267 plugin skills? npx skills add ruvnet/ruflo --all'));
-      output.writeln(output.dim('    Opt out next time: --no-skills-sh or RUFLO_NO_SKILLS_SH=1'));
+      fs.writeFileSync(skillFile, SWARMLO_PLATFORM_SKILL_MD, 'utf-8');
+      output.writeln(output.success('  ✓ swarmlo skill materialized at .agents/skills/swarmlo/SKILL.md — available to any agent in this project'));
+      output.writeln(output.dim('    Want all 267 plugin skills? npx skills add z451047442-debug/swarmlo --all'));
+      output.writeln(output.dim('    Opt out next time: --no-skills-sh or SWARMLO_NO_SKILLS_SH=1'));
     } catch (err) {
       output.writeln(output.dim(`  skills.sh registration skipped (write failed: ${err instanceof Error ? err.message : String(err)})`));
     }
@@ -392,7 +392,7 @@ async function initCodexAction(
   const { force, minimal, full, dualMode } = options;
 
   output.writeln();
-  output.writeln(output.bold('Initializing RuFlo V3 for OpenAI Codex'));
+  output.writeln(output.bold('Initializing Swarmlo V3 for OpenAI Codex'));
   output.writeln();
 
   // Determine template
@@ -498,11 +498,11 @@ async function initCodexAction(
   }
 }
 
-// Check if project is already initialized with ruflo.
-// #2207: .claude/settings.json alone is NOT a ruflo marker — it's created by
+// Check if project is already initialized with swarmlo.
+// #2207: .claude/settings.json alone is NOT a swarmlo marker — it's created by
 // Claude Code itself and exists in every Claude Code project. We require a
-// ruflo-specific signal: either a claudeFlow section in settings.json, OR a
-// .mcp.json with a 'claude-flow' or 'ruflo' server key, OR the ruflo-only
+// swarmlo-specific signal: either a claudeFlow section in settings.json, OR a
+// .mcp.json with a 'claude-flow' or 'swarmlo' server key, OR the swarmlo-only
 // .claude-flow/config.yaml. Using the bare file-existence check was causing
 // false-positives for new users whose only existing file was Claude Code's own
 // settings.json.
@@ -511,38 +511,38 @@ function isInitialized(cwd: string): { claude: boolean; claudeFlow: boolean } {
   const mcpJsonPath = path.join(cwd, '.mcp.json');
   const settingsPath = path.join(cwd, '.claude', 'settings.json');
 
-  // Check .claude-flow/config.yaml — ruflo-specific, always reliable
+  // Check .claude-flow/config.yaml — swarmlo-specific, always reliable
   const hasClaudeFlow = fs.existsSync(claudeFlowPath);
 
-  // Check .claude/settings.json for ruflo-specific content (claudeFlow section)
-  let hasRufloSettings = false;
+  // Check .claude/settings.json for swarmlo-specific content (claudeFlow section)
+  let hasSwarmloSettings = false;
   if (fs.existsSync(settingsPath)) {
     try {
       const parsed = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
-      hasRufloSettings =
+      hasSwarmloSettings =
         parsed != null &&
         typeof parsed === 'object' &&
         'claudeFlow' in parsed;
     } catch { /* malformed — ignore */ }
   }
 
-  // Check .mcp.json for ruflo/claude-flow server key
-  let hasRufloMcp = false;
+  // Check .mcp.json for swarmlo/claude-flow server key
+  let hasSwarmloMcp = false;
   if (fs.existsSync(mcpJsonPath)) {
     try {
       const parsed = JSON.parse(fs.readFileSync(mcpJsonPath, 'utf-8'));
-      hasRufloMcp =
+      hasSwarmloMcp =
         parsed != null &&
         typeof parsed === 'object' &&
         parsed.mcpServers != null &&
         typeof parsed.mcpServers === 'object' &&
         ('claude-flow' in (parsed.mcpServers as Record<string, unknown>) ||
-         'ruflo' in (parsed.mcpServers as Record<string, unknown>));
+         'swarmlo' in (parsed.mcpServers as Record<string, unknown>));
     } catch { /* malformed — ignore */ }
   }
 
   return {
-    claude: hasRufloSettings || hasRufloMcp,
+    claude: hasSwarmloSettings || hasSwarmloMcp,
     claudeFlow: hasClaudeFlow,
   };
 }
@@ -578,7 +578,7 @@ const initClaudeAction = async (ctx: CommandContext): Promise<CommandResult> => 
   const hasExisting = initialized.claude || initialized.claudeFlow;
 
   if (hasExisting && !force) {
-    output.printWarning('RuFlo appears to be already initialized');
+    output.printWarning('Swarmlo appears to be already initialized');
     if (initialized.claude) output.printInfo('  Found: .claude/settings.json');
     if (initialized.claudeFlow) output.printInfo('  Found: .claude-flow/config.yaml');
     output.printInfo('Use --force to reinitialize');
@@ -598,7 +598,7 @@ const initClaudeAction = async (ctx: CommandContext): Promise<CommandResult> => 
   }
 
   output.writeln();
-  output.writeln(output.bold('Initializing RuFlo V3'));
+  output.writeln(output.bold('Initializing Swarmlo V3'));
   output.writeln();
 
   // Build init options based on flags
@@ -641,7 +641,7 @@ const initClaudeAction = async (ctx: CommandContext): Promise<CommandResult> => 
     options.agents.all = true;
   }
 
-  // #1744 — opt-out of the user-global ~/.claude/CLAUDE.md "Ruflo Integration"
+  // #1744 — opt-out of the user-global ~/.claude/CLAUDE.md "Swarmlo Integration"
   // pointer block. Default behavior (off) preserves current install for users
   // who rely on it; opting in via --no-global keeps the global file pristine.
   if (noGlobal) {
@@ -664,7 +664,7 @@ const initClaudeAction = async (ctx: CommandContext): Promise<CommandResult> => 
       return { success: false, exitCode: 1 };
     }
 
-    spinner.succeed('RuFlo V3 initialized successfully!');
+    spinner.succeed('Swarmlo V3 initialized successfully!');
     output.writeln();
 
     // Display summary
@@ -851,7 +851,7 @@ const initClaudeAction = async (ctx: CommandContext): Promise<CommandResult> => 
     }
 
     if (!startDaemon && !startAll) {
-      const bin = (process.argv[1] || '').includes('ruflo') ? 'ruflo' : 'claude-flow';
+      const bin = (process.argv[1] || '').includes('swarmlo') ? 'swarmlo' : 'claude-flow';
       output.writeln(output.bold('Next steps:'));
       output.printList([
         `Run ${output.highlight(`${bin} daemon start`)} to start background workers`,
@@ -941,7 +941,7 @@ const wizardCommand: Command = {
   description: 'Interactive setup wizard for comprehensive configuration',
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     output.writeln();
-    output.writeln(output.bold('RuFlo V3 Setup Wizard'));
+    output.writeln(output.bold('Swarmlo V3 Setup Wizard'));
     output.writeln(output.dim('Answer questions to configure your project'));
     output.writeln();
 
@@ -1215,7 +1215,7 @@ const wizardCommand: Command = {
 // Check subcommand
 const checkCommand: Command = {
   name: 'check',
-  description: 'Check if RuFlo is initialized',
+  description: 'Check if Swarmlo is initialized',
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     const initialized = isInitialized(ctx.cwd);
 
@@ -1235,7 +1235,7 @@ const checkCommand: Command = {
     }
 
     if (result.initialized) {
-      output.printSuccess('RuFlo is initialized');
+      output.printSuccess('Swarmlo is initialized');
       if (initialized.claude) {
         output.printInfo(`  Claude Code: .claude/settings.json`);
       }
@@ -1243,8 +1243,8 @@ const checkCommand: Command = {
         output.printInfo(`  V3 Runtime: .claude-flow/config.yaml`);
       }
     } else {
-      output.printWarning('RuFlo is not initialized in this directory');
-      output.printInfo('Run "ruflo init" to initialize');
+      output.printWarning('Swarmlo is not initialized in this directory');
+      output.printInfo('Run "swarmlo init" to initialize');
     }
 
     return { success: true, data: result };
@@ -1407,7 +1407,7 @@ const upgradeCommand: Command = {
     const upgradeSettings = (ctx.flags.settings) as boolean;
 
     output.writeln();
-    output.writeln(output.bold('Upgrading RuFlo'));
+    output.writeln(output.bold('Upgrading Swarmlo'));
     if (addMissing && upgradeSettings) {
       output.writeln(output.dim('Updates helpers, settings, and adds any missing skills/agents/commands'));
     } else if (addMissing) {
@@ -1539,7 +1539,7 @@ const upgradeCommand: Command = {
 // Main init command
 export const initCommand: Command = {
   name: 'init',
-  description: 'Initialize RuFlo in the current directory',
+  description: 'Initialize Swarmlo in the current directory',
   subcommands: [wizardCommand, checkCommand, skillsCommand, hooksCommand, upgradeCommand],
   options: [
     {
@@ -1593,7 +1593,7 @@ export const initCommand: Command = {
     },
     {
       name: 'no-global',
-      description: 'Skip the ~/.claude/CLAUDE.md "Ruflo Integration" pointer block (#1744)',
+      description: 'Skip the ~/.claude/CLAUDE.md "Swarmlo Integration" pointer block (#1744)',
       type: 'boolean',
       default: false,
     },
@@ -1642,7 +1642,7 @@ export const initCommand: Command = {
     },
     {
       name: 'no-skills-sh',
-      description: 'Skip the post-init `npx skills add ruvnet/ruflo` registration (also honored via RUFLO_NO_SKILLS_SH=1)',
+      description: 'Skip the post-init `npx skills add z451047442-debug/swarmlo` registration (also honored via SWARMLO_NO_SKILLS_SH=1)',
       type: 'boolean',
       default: false,
     },

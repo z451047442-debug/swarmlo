@@ -197,7 +197,7 @@
     "oidc_auth": true,
     "svelte5_source": true,
     "ruvector_integration": true,
-    "ruflo_integration": true,
+    "swarmlo_integration": true,
     "embedding_model": "all-MiniLM-L6-v2",
     "embedding_dimensions": 384
   }

@@ -1,6 +1,6 @@
-# RuFlo Browser Substrate — `@claude-flow/browser@3.0.0-alpha.4`
+# Swarmlo Browser Substrate — `@claude-flow/browser@3.0.0-alpha.4`
 
-> **TL;DR.** RuFlo is no longer "a browser agent." With ADR-122 it becomes the **substrate** underneath Stagehand, Browser Use, Surfer-H, Playwright, Browserbase, and Operator: signed-replay trajectories, causal-graph self-healing, attested cookie vaults, federated MCTS, risk-class gating, and a workflow compiler that emits replayable YAML. **230 tests, 0 new CVEs, all under 100µs.**
+> **TL;DR.** Swarmlo is no longer "a browser agent." With ADR-122 it becomes the **substrate** underneath Stagehand, Browser Use, Surfer-H, Playwright, Browserbase, and Operator: signed-replay trajectories, causal-graph self-healing, attested cookie vaults, federated MCTS, risk-class gating, and a workflow compiler that emits replayable YAML. **230 tests, 0 new CVEs, all under 100µs.**
 
 ## Why this is beyond current public SOTA
 
@@ -10,17 +10,17 @@ The public stack today:
 agent → browser → action → observation → next action
 ```
 
-RuFlo should be:
+Swarmlo should be:
 
 ```
 agent → governed Session Capsule → distributed MCTS search →
   Browser Execution Adapter → replay verification → RuVector memory →
-  Workflow Compiler → reusable RuFlo primitive
+  Workflow Compiler → reusable Swarmlo primitive
 ```
 
 Stagehand makes browser automation portable. Browserbase persists sessions. Browser Use exposes real session-reuse pain. Surfer-H+Holo1 improves visual navigation (92.2% WebVoyager). Reflective MCTS improves agent search. **None of them ship cryptographic provenance, queryable causal recovery, attested cookie vaults, federated MCTS, or compiled workflows.**
 
-RuFlo combines the missing parts.
+Swarmlo combines the missing parts.
 
 ## The eight phases
 
@@ -28,7 +28,7 @@ RuFlo combines the missing parts.
 |---|---|---|
 | 0 | `agent-browser` 0.27 + converge package & plugin | Closed a 21-minor drift on the upstream CLI |
 | 1 | Signed trajectory containers (Ed25519 + RVF) | Cryptographic provenance for AI browsing — no other system has this |
-| 2 | Causal-graph self-healing selectors | Surfer-H / Stagehand / Skyvern heal silently; ruflo records *why* |
+| 2 | Causal-graph self-healing selectors | Surfer-H / Stagehand / Skyvern heal silently; swarmlo records *why* |
 | 3 | AIDefence-attested cookie vault | PII-gated, content-hash-verified, witness-signed handles |
 | 4 | Federated MCTS branch exploration | Distributes MCTS across federation peers (no single-process limit) |
 | 5 | Cost-aware routing + GOAP pre-planning | 3-tier classifier ($0 / $0.0002 / $0.005+) with GOAP dry-run |
@@ -120,7 +120,7 @@ console.log(compiler.toYaml(workflow));
 ## References
 
 - ADR-122: `v3/docs/adr/ADR-122-browser-beyond-sota.md`
-- Tracking issue: ruvnet/ruflo#2041
+- Tracking issue: z451047442-debug/swarmlo#2041
 - Branch: `feat/adr-122-browser-beyond-sota`
 - Reflective MCTS for web agents — https://arxiv.org/abs/2410.02052
 - Surfer-H + Holo1 — https://arxiv.org/abs/2506.02865

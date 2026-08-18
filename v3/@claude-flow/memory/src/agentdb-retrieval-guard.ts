@@ -2,7 +2,7 @@
  * AgentDbRetrievalGuard — ADR-377 Phase 1.
  *
  * Filters AgentDB HNSW top-K retrieval results before they are assembled
- * into agent context. Closes the gap identified in ruvnet/ruflo#2516:
+ * into agent context. Closes the gap identified in z451047442-debug/swarmlo#2516:
  * AgentDB's retrieval path has zero certified defenses against poisoned
  * memory entries — SMSR (arXiv:2606.12703) shows 93-100% undefended attack
  * success, reduced to 0% behind a certified content guard.

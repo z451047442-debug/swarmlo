@@ -1,4 +1,4 @@
-# RuFlo Chat UI (ruvocal fork) + MCP Bridge
+# Swarmlo Chat UI (ruvocal fork) + MCP Bridge
 # All secrets via environment variables. Never commit .env files with keys.
 #
 # Usage:
@@ -16,7 +16,7 @@ services:
       - "127.0.0.1:27017:27017"
     environment:
       MONGO_INITDB_DATABASE: ${MONGODB_DB_NAME:-chat-db}
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-ruflo}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-swarmlo}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:?FATAL: MONGO_INITDB_ROOT_PASSWORD is required. Generate: MONGO_INITDB_ROOT_PASSWORD=$(openssl rand -base64 32)}
     command: ["--auth"]
 
@@ -86,7 +86,7 @@ services:
       timeout: 5s
       retries: 3
 
-  # --- RuFlo Chat UI (ruvocal SvelteKit fork — built from source) ---
+  # --- Swarmlo Chat UI (ruvocal SvelteKit fork — built from source) ---
   chat-ui:
     build:
       context: ./src/ruvocal
@@ -99,9 +99,9 @@ services:
     environment:
       # Runtime config injected via DOTENV_LOCAL (entrypoint.sh writes .env.local)
       DOTENV_LOCAL: |
-        MONGODB_URL=mongodb://${MONGO_INITDB_ROOT_USERNAME:-ruflo}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017/${MONGODB_DB_NAME:-chat-db}?authSource=admin
+        MONGODB_URL=mongodb://${MONGO_INITDB_ROOT_USERNAME:-swarmlo}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017/${MONGODB_DB_NAME:-chat-db}?authSource=admin
         MONGODB_DB_NAME=${MONGODB_DB_NAME:-chat-db}
-        PUBLIC_APP_NAME=${BRAND_NAME:-RuFlo}
+        PUBLIC_APP_NAME=${BRAND_NAME:-Swarmlo}
         PUBLIC_APP_DESCRIPTION=${BRAND_DESCRIPTION:-Enterprise AI Agent Orchestration Platform}
         PUBLIC_APP_ASSETS=chatui
         PUBLIC_ORIGIN=

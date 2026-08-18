@@ -1,4 +1,4 @@
-// Regression tests for #2234 — parent-death watchdog so `ruflo mcp start`
+// Regression tests for #2234 — parent-death watchdog so `swarmlo mcp start`
 // doesn't orphan and accumulate ~1 GB of stale MCP servers when Claude Code
 // restarts.
 

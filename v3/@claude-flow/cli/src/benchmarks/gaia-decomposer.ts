@@ -27,8 +27,8 @@
  *  - Total overhead per question (when decomposed): ~$0.002-0.003.
  *
  * Plugin sync TODO (follow-up PR after gaia-bench wiring):
- *  - Update plugins/ruflo-workflows/commands/gaia-run.md with --decompose flag.
- *  - Update plugins/ruflo-workflows/skills/gaia-debugging/SKILL.md: add
+ *  - Update plugins/swarmlo-workflows/commands/gaia-run.md with --decompose flag.
+ *  - Update plugins/swarmlo-workflows/skills/gaia-debugging/SKILL.md: add
  *    decomposition as a recommended strategy for multi-step failures.
  *
  * Refs: ADR-135, ADR-133, iter 29 finding, #2156

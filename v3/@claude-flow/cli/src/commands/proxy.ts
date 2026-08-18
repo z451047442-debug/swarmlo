@@ -1,5 +1,5 @@
 /**
- * `ruflo proxy` — Meta LLM Proxy control surface (ADR-304/307/313).
+ * `swarmlo proxy` — Meta LLM Proxy control surface (ADR-304/307/313).
  *
  * This command currently implements the ADR-313 sponsored-downtime
  * subcommands only (`sponsor-enable` / `sponsor-disable` / `sponsor-status`).
@@ -10,9 +10,9 @@
  * from its config mirror.
  *
  * Consent (ADR-302/313): granting `sponsored-downtime` consent here writes
- * BOTH the ruflo-side consent receipt (source of truth) AND a mirror flag
- * into ~/.ruflo/proxy-config.toml (the file the Rust proxy binary reads).
- * The proxy never writes this file — ruflo does, exactly once per
+ * BOTH the swarmlo-side consent receipt (source of truth) AND a mirror flag
+ * into ~/.swarmlo/proxy-config.toml (the file the Rust proxy binary reads).
+ * The proxy never writes this file — swarmlo does, exactly once per
  * enable/disable action.
  */
 
@@ -32,7 +32,7 @@ const PROXY_CONFIG_FILE = 'proxy-config.toml';
 
 /**
  * Minimal hand-rolled TOML writer — this config has exactly one boolean
- * field ruflo needs to set (`sponsored_consent_granted`); every other field
+ * field swarmlo needs to set (`sponsored_consent_granted`); every other field
  * the proxy binary defaults itself (ADR-307 "a malformed config must never
  * crash the proxy — it degrades to safe defaults"). We read-modify-write
  * the raw text so a user's own bind/backend customizations survive, only
@@ -103,8 +103,8 @@ function writeDataPlane(plane: 'local' | 'cloud' | 'passthrough'): void {
  * command must not offer a one-flag route into someone else's consent gate.
  */
 const PLANE_RESTORE_COMMAND: Record<string, string> = {
-  passthrough: 'ruflo proxy config --passthrough',
-  local: 'ruflo proxy config --local-only',
+  passthrough: 'swarmlo proxy config --passthrough',
+  local: 'swarmlo proxy config --local-only',
 };
 
 /**
@@ -178,13 +178,13 @@ const CLOUD_ROUTING_DISCLOSURE = [
   '  trivial question is not served at frontier rates because the client',
   '  happened to name a frontier model. The scorer reads prompt shape, not',
   '  task difficulty, so pin a tier if you disagree with its judgement:',
-  '    ruflo proxy config --routing-mode high',
+  '    swarmlo proxy config --routing-mode high',
   '',
   'Requests routed to local backends never leave this machine.',
   '',
   'Turning it off is a choice of where to go back to, not one command:',
-  '  ruflo proxy config --passthrough    Your own Claude subscription',
-  '  ruflo proxy config --local-only     Your own local backend',
+  '  swarmlo proxy config --passthrough    Your own Claude subscription',
+  '  swarmlo proxy config --local-only     Your own local backend',
 ].join('\n');
 
 const configSub: Command = {
@@ -259,7 +259,7 @@ const configSub: Command = {
       // sitting on `local` silently opts you out of ADR-321 entirely.
       if (plane === 'local') {
         output.writeln('  Note: automatic quota failover (ADR-321) applies only on passthrough.');
-        output.writeln('        Use your Claude subscription instead: ruflo proxy config --passthrough');
+        output.writeln('        Use your Claude subscription instead: swarmlo proxy config --passthrough');
       }
       return { success: true, data: { plane, routingMode: mode } };
     }
@@ -277,7 +277,7 @@ const configSub: Command = {
       );
       if (readDataPlane() !== 'cloud') {
         output.writeln('  Cloud routing is currently OFF, so this takes effect once you enable it:');
-        output.writeln('    ruflo proxy config --cloud --yes');
+        output.writeln('    swarmlo proxy config --cloud --yes');
       }
       return { success: true, data: { routingMode } };
     }
@@ -293,20 +293,20 @@ const configSub: Command = {
       // subscription is used at all.
       if (plane === 'local') {
         output.writeln('  Your own Claude subscription is NOT used on this plane. To use it instead:');
-        output.writeln('    ruflo proxy config --passthrough');
+        output.writeln('    swarmlo proxy config --passthrough');
       }
       return { success: true, data: { plane } };
     }
 
     // wantCloud. Read the plane being left BEFORE overwriting it — this is
-    // the only moment ruflo knows where the user was, and "how do I get back"
+    // the only moment swarmlo knows where the user was, and "how do I get back"
     // is otherwise unanswerable from the config file afterwards.
     const previousPlane = readDataPlane();
     if (!hasConsent('cloud-routing')) {
       output.writeln(CLOUD_ROUTING_DISCLOSURE);
       output.writeln('');
       if (!ctx.flags.yes) {
-        output.writeln('Re-run with --yes to confirm: ruflo proxy config --cloud --yes');
+        output.writeln('Re-run with --yes to confirm: swarmlo proxy config --cloud --yes');
         // Nothing is written on the unconfirmed path — including any
         // --routing-mode passed alongside, which would otherwise leave a
         // trace of an activation the user never confirmed.
@@ -329,7 +329,7 @@ const configSub: Command = {
       output.writeln(`  Previous plane: ${previousPlane}. Restore it with:`);
       output.writeln(`    ${restore}`);
     } else {
-      output.writeln('  Turn it off with: ruflo proxy config --passthrough (or --local-only)');
+      output.writeln('  Turn it off with: swarmlo proxy config --passthrough (or --local-only)');
     }
     return { success: true, data: { plane: 'cloud', routingMode: effectiveMode, previousPlane } };
   },
@@ -346,7 +346,7 @@ const SPONSOR_DISCLOSURE = [
   '',
   'Sponsored capacity is rate-limited and best-effort — Cognitum may',
   'throttle or decline requests under load. Disable anytime:',
-  '  ruflo proxy sponsor-disable',
+  '  swarmlo proxy sponsor-disable',
 ].join('\n');
 
 const sponsorEnableSub: Command = {
@@ -363,15 +363,15 @@ const sponsorEnableSub: Command = {
     output.writeln(SPONSOR_DISCLOSURE);
     output.writeln('');
     if (!ctx.flags.yes) {
-      output.writeln('Re-run with --yes to confirm: ruflo proxy sponsor-enable --yes');
+      output.writeln('Re-run with --yes to confirm: swarmlo proxy sponsor-enable --yes');
       return { success: true, data: { confirmed: false } };
     }
     recordConsent('sponsored-downtime', true, 'proxy-sponsor-enable');
     writeSponsoredConsentMirror(true);
     recordFunnelEvent('sponsor_mode_enabled', 'statusline', getInstalledCliVersion());
     output.printSuccess('Sponsored downtime mode enabled.');
-    output.writeln('The proxy will use it automatically while ruflo settings notices');
-    output.writeln('rate-limited is flagged. Disable anytime: ruflo proxy sponsor-disable');
+    output.writeln('The proxy will use it automatically while swarmlo settings notices');
+    output.writeln('rate-limited is flagged. Disable anytime: swarmlo proxy sponsor-disable');
     return { success: true, data: { confirmed: true } };
   },
 };
@@ -399,7 +399,7 @@ const sponsorStatusSub: Command = {
     if (rateLimited.limited && !consented) {
       output.writeln('');
       output.writeln('You are flagged as rate-limited but have not enabled sponsored');
-      output.writeln('capacity. Enable it with: ruflo proxy sponsor-enable --yes');
+      output.writeln('capacity. Enable it with: swarmlo proxy sponsor-enable --yes');
     }
     return { success: true, data: { consented, rateLimited } };
   },
@@ -430,7 +430,7 @@ const POWER_SAVER_DISCLOSURE = [
   'account (cloud-routing), not sponsored/free capacity — a separate',
   'decision from sponsored downtime mode.',
   '',
-  'Disable anytime: ruflo proxy power-saver-disable',
+  'Disable anytime: swarmlo proxy power-saver-disable',
 ].join('\n');
 
 const powerSaverEnableSub: Command = {
@@ -447,15 +447,15 @@ const powerSaverEnableSub: Command = {
     output.writeln(POWER_SAVER_DISCLOSURE);
     output.writeln('');
     if (!ctx.flags.yes) {
-      output.writeln('Re-run with --yes to confirm: ruflo proxy power-saver-enable --yes');
+      output.writeln('Re-run with --yes to confirm: swarmlo proxy power-saver-enable --yes');
       return { success: true, data: { confirmed: false } };
     }
     recordConsent('power-saver', true, 'proxy-power-saver-enable');
     writePowerSaverConsentMirror(true);
     recordFunnelEvent('power_saver_enabled', 'statusline', getInstalledCliVersion());
     output.printSuccess('Power saver mode enabled.');
-    output.writeln('Flag it active with: ruflo settings notices quota-low');
-    output.writeln('Disable anytime: ruflo proxy power-saver-disable');
+    output.writeln('Flag it active with: swarmlo settings notices quota-low');
+    output.writeln('Disable anytime: swarmlo proxy power-saver-disable');
     return { success: true, data: { confirmed: true } };
   },
 };
@@ -483,7 +483,7 @@ const powerSaverStatusSub: Command = {
     if (quotaLow.low && !consented) {
       output.writeln('');
       output.writeln('You are flagged as running low but have not enabled power saver');
-      output.writeln('mode. Enable it with: ruflo proxy power-saver-enable --yes');
+      output.writeln('mode. Enable it with: swarmlo proxy power-saver-enable --yes');
     }
     return { success: true, data: { consented, quotaLow } };
   },
@@ -517,7 +517,7 @@ const TRAINING_SHARE_DISCLOSURE = [
   '',
   'Declining has zero effect on sponsored-capacity access.',
   '',
-  'Disable anytime: ruflo proxy training-share-disable',
+  'Disable anytime: swarmlo proxy training-share-disable',
 ].join('\n');
 
 const trainingShareEnableSub: Command = {
@@ -534,7 +534,7 @@ const trainingShareEnableSub: Command = {
     output.writeln(TRAINING_SHARE_DISCLOSURE);
     output.writeln('');
     if (!ctx.flags.yes) {
-      output.writeln('Re-run with --yes to confirm: ruflo proxy training-share-enable --yes');
+      output.writeln('Re-run with --yes to confirm: swarmlo proxy training-share-enable --yes');
       return { success: true, data: { confirmed: false } };
     }
     recordConsent('training-data-sharing', true, 'proxy-training-share-enable');
@@ -542,7 +542,7 @@ const trainingShareEnableSub: Command = {
     recordFunnelEvent('training_share_enabled', 'statusline', getInstalledCliVersion());
     output.printSuccess('Training-data sharing enabled.');
     output.writeln('Only sponsored-plane requests carry the consent header. Disable anytime:');
-    output.writeln('  ruflo proxy training-share-disable');
+    output.writeln('  swarmlo proxy training-share-disable');
     return { success: true, data: { confirmed: true } };
   },
 };
@@ -583,17 +583,17 @@ export const proxyCommand: Command = {
     trainingShareEnableSub, trainingShareDisableSub, trainingShareStatusSub,
   ],
   examples: [
-    { command: 'ruflo proxy install --yes', description: `Install the signed Meta-Proxy v${DEFAULT_PROXY_RELEASE} binary` },
-    { command: 'ruflo proxy start', description: 'Start meta-proxy in the foreground' },
-    { command: 'ruflo proxy status', description: 'Show install + process status' },
-    { command: 'ruflo proxy config --cloud --yes', description: 'Enable cloud routing (ADR-304)' },
-    { command: 'ruflo proxy config --routing-mode high', description: 'Pin the cloud tier instead of auto (ADR-321)' },
-    { command: 'ruflo proxy config --passthrough', description: 'Turn cloud routing off, back to your Claude subscription' },
-    { command: 'ruflo proxy config --local-only', description: 'Revert to local-only routing' },
-    { command: 'ruflo proxy sponsor-status', description: 'Show current sponsored-mode state' },
-    { command: 'ruflo proxy sponsor-enable --yes', description: 'Opt into sponsored downtime capacity' },
-    { command: 'ruflo proxy power-saver-enable --yes', description: 'Opt into power saver mode' },
-    { command: 'ruflo proxy training-share-enable --yes', description: 'Opt into training-data sharing (ADR-315)' },
+    { command: 'swarmlo proxy install --yes', description: `Install the signed Meta-Proxy v${DEFAULT_PROXY_RELEASE} binary` },
+    { command: 'swarmlo proxy start', description: 'Start meta-proxy in the foreground' },
+    { command: 'swarmlo proxy status', description: 'Show install + process status' },
+    { command: 'swarmlo proxy config --cloud --yes', description: 'Enable cloud routing (ADR-304)' },
+    { command: 'swarmlo proxy config --routing-mode high', description: 'Pin the cloud tier instead of auto (ADR-321)' },
+    { command: 'swarmlo proxy config --passthrough', description: 'Turn cloud routing off, back to your Claude subscription' },
+    { command: 'swarmlo proxy config --local-only', description: 'Revert to local-only routing' },
+    { command: 'swarmlo proxy sponsor-status', description: 'Show current sponsored-mode state' },
+    { command: 'swarmlo proxy sponsor-enable --yes', description: 'Opt into sponsored downtime capacity' },
+    { command: 'swarmlo proxy power-saver-enable --yes', description: 'Opt into power saver mode' },
+    { command: 'swarmlo proxy training-share-enable --yes', description: 'Opt into training-data sharing (ADR-315)' },
   ],
   action: async () => {
     const status = getProxyStatus();

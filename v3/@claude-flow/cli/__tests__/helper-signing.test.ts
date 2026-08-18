@@ -4,7 +4,7 @@
  * The auto-refresh copies auto-executing hook code from the installed package.
  * These tests prove the fail-closed gate: a validly-signed manifest verifies,
  * ANY tampering (hash, signature, algorithm) is rejected, and the ACTUAL
- * shipped manifest is both signed by ruflo's key and matches the shipped
+ * shipped manifest is both signed by swarmlo's key and matches the shipped
  * helper files byte-for-byte.
  */
 import { describe, it, expect } from 'vitest';
@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 
 import {
   verifyHelpersManifest, canonicalManifestBytes, sha256Hex,
-  RUFLO_HELPERS_PUBKEY, HELPERS_MANIFEST_FILE,
+  SWARMLO_HELPERS_PUBKEY, HELPERS_MANIFEST_FILE,
   type HelpersManifest,
 } from '../src/init/helper-signing.js';
 
@@ -62,14 +62,14 @@ describe('verifyHelpersManifest — fail-closed Ed25519 gate', () => {
 describe('shipped helpers manifest — real signature + real content', () => {
   const manifestPath = join(HELPERS_DIR, HELPERS_MANIFEST_FILE);
 
-  it('exists and verifies against the baked ruflo public key', () => {
+  it('exists and verifies against the baked swarmlo public key', () => {
     expect(existsSync(manifestPath)).toBe(true);
-    const trusted = verifyHelpersManifest(readFileSync(manifestPath, 'utf-8'), RUFLO_HELPERS_PUBKEY);
+    const trusted = verifyHelpersManifest(readFileSync(manifestPath, 'utf-8'), SWARMLO_HELPERS_PUBKEY);
     expect(trusted).not.toBeNull();
   });
 
   it('its hashes match the actual shipped helper files (a byte flip would break the gate)', () => {
-    const trusted = verifyHelpersManifest(readFileSync(manifestPath, 'utf-8'), RUFLO_HELPERS_PUBKEY)!;
+    const trusted = verifyHelpersManifest(readFileSync(manifestPath, 'utf-8'), SWARMLO_HELPERS_PUBKEY)!;
     for (const [name, expected] of Object.entries(trusted.files)) {
       const p = join(HELPERS_DIR, name);
       expect(existsSync(p), `${name} shipped`).toBe(true);

@@ -4,7 +4,7 @@
  * Research basis: MAGE (arXiv 2606.06090) observes that semantic-similarity
  * retrieval fragments decision trajectories on long-horizon tasks; retrieving
  * by POSITION in a hierarchical execution-state tree (the root→current path)
- * preserves coherence. This module mirrors ruflo's existing trajectory
+ * preserves coherence. This module mirrors swarmlo's existing trajectory
  * recording (hooks_intelligence_trajectory-start/step/end) into such a tree
  * and offers position-based recall — NO embedding search anywhere.
  *

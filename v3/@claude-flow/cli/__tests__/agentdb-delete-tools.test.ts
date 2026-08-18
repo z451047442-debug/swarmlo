@@ -9,7 +9,7 @@
  * AgentDB) are out of scope here — they require a sqlite + agentdb
  * instance which the cli's existing test scaffolding doesn't spin up
  * for unit tests. The MCP-level shape tests below cover the contract
- * the importer (plugins/ruflo-adr/scripts/import.mjs) depends on.
+ * the importer (plugins/swarmlo-adr/scripts/import.mjs) depends on.
  */
 
 import { describe, expect, it } from 'vitest';

@@ -1,5 +1,5 @@
 /**
- * Regression guard for ruvnet/ruflo#2962 — explicit provider/model selection
+ * Regression guard for z451047442-debug/swarmlo#2962 — explicit provider/model selection
  * (`providers configure`, `agent spawn --provider/--model`) did not
  * propagate into actual agent execution. Backend/model selection at
  * `agent_execute` time was driven solely by env vars, never by the
@@ -29,7 +29,7 @@ const ENV_KEYS = [
   'OPENROUTER_API_KEY',
   'OLLAMA_API_KEY',
   'OLLAMA_BASE_URL',
-  'RUFLO_PROVIDER',
+  'SWARMLO_PROVIDER',
 ] as const;
 
 describe('#2962 — provider/model config propagates into agent execution', () => {
@@ -39,7 +39,7 @@ describe('#2962 — provider/model config propagates into agent execution', () =
   let fetchSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'ruflo-2962-'));
+    dir = mkdtempSync(join(tmpdir(), 'swarmlo-2962-'));
     prevCwd = process.env.CLAUDE_FLOW_CWD;
     process.env.CLAUDE_FLOW_CWD = dir;
 

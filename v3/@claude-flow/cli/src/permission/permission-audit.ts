@@ -3,7 +3,7 @@
  *
  * Every grant / check / deny / revoke event is written to
  * `.swarm/permission-audit.jsonl` — one JSON object per line, no rewrites,
- * no deletes. Persistence follows the same discipline as ruflo's other
+ * no deletes. Persistence follows the same discipline as swarmlo's other
  * append-only ledgers (routing-outcomes, funnel-events) so downstream
  * readers can tail without truncation risk.
  */

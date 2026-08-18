@@ -1,11 +1,11 @@
 /**
- * Generate RuFlo welcome animation — Foundation-inspired graph universe.
+ * Generate Swarmlo welcome animation — Foundation-inspired graph universe.
  *
  * Creates an animated GIF with:
  * - Deep space background (#06060f)
  * - Constellation-style graph nodes connected by glowing edges
  * - Orbital paths and particle trails
- * - "RuFlo" text with subtle glow
+ * - "Swarmlo" text with subtle glow
  * - Stars scattered throughout
  *
  * Uses sharp (already installed) for PNG frame generation,
@@ -124,9 +124,9 @@ function generateFrame(frameIdx) {
 	svg += `<ellipse cx="${centerX.toFixed(1)}" cy="${centerY.toFixed(1)}" rx="45" ry="18" fill="none" stroke="#3b82f6" stroke-opacity="0.2" stroke-width="0.5" transform="rotate(${(t * 30).toFixed(1)} ${centerX.toFixed(1)} ${centerY.toFixed(1)})"/>`;
 	svg += `<ellipse cx="${centerX.toFixed(1)}" cy="${centerY.toFixed(1)}" rx="55" ry="22" fill="none" stroke="#818cf8" stroke-opacity="0.15" stroke-width="0.5" transform="rotate(${(-t * 20 + 60).toFixed(1)} ${centerX.toFixed(1)} ${centerY.toFixed(1)})"/>`;
 
-	// "RuFlo" text
+	// "Swarmlo" text
 	const textY = HEIGHT - 40;
-	svg += `<text x="${WIDTH / 2}" y="${textY}" text-anchor="middle" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="32" font-weight="300" fill="#e0e7ff" letter-spacing="8" filter="url(#textglow)">RuFlo</text>`;
+	svg += `<text x="${WIDTH / 2}" y="${textY}" text-anchor="middle" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="32" font-weight="300" fill="#e0e7ff" letter-spacing="8" filter="url(#textglow)">Swarmlo</text>`;
 
 	// Subtitle
 	svg += `<text x="${WIDTH / 2}" y="${textY + 20}" text-anchor="middle" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9" fill="#94a3b8" letter-spacing="3" opacity="0.7">INTELLIGENT WORKFLOWS</text>`;

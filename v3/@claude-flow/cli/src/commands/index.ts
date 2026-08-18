@@ -80,9 +80,9 @@ const commandLoaders: Record<string, CommandLoader> = {
   autopilot: () => import('./autopilot.js'),
   // GAIA Benchmark Harness (ADR-133)
   'gaia-bench': () => import('./gaia-bench.js'),
-  // MetaHarness integration (ADR-150) — dispatcher over plugins/ruflo-metaharness/
+  // MetaHarness integration (ADR-150) — dispatcher over plugins/swarmlo-metaharness/
   metaharness: () => import('./metaharness.js'),
-  // Eject (ADR-150 Phase 2) — lift ruflo project into a renamed standalone harness
+  // Eject (ADR-150 Phase 2) — lift swarmlo project into a renamed standalone harness
   eject: () => import('./eject.js'),
   // Cognitum lifecycle funnel controls (ADR-301/305/309)
   funnel: () => import('./funnel.js'),
@@ -95,13 +95,13 @@ const commandLoaders: Record<string, CommandLoader> = {
   proxy: () => import('./proxy.js'),
   // Fable co-pilot advisor tip in the statusline insight ticker (ADR-316)
   advisor: () => import('./advisor.js'),
-  // Ruflo verbs in Claude Code's spinnerVerbs rotation (ADR-318)
+  // Swarmlo verbs in Claude Code's spinnerVerbs rotation (ADR-318)
   spinner: () => import('./spinner.js'),
-  // Ruflo entries in Claude Code's companyAnnouncements startup rotation (ADR-319)
+  // Swarmlo entries in Claude Code's companyAnnouncements startup rotation (ADR-319)
   announcements: () => import('./announcements.js'),
   // AGNTCY/Outshift runtime transport selection (ADR-324 §2) — optional,
   // removable augmentation; no-ops to local transport when AGNTCY/SLIM is
-  // not configured (RUFLO_AGNTCY_SLIM_ENDPOINT unset).
+  // not configured (SWARMLO_AGNTCY_SLIM_ENDPOINT unset).
   transport: () => import('./agntcy/transport.js'),
 };
 

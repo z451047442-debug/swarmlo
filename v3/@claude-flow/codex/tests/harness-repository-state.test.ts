@@ -28,7 +28,7 @@ function git(cwd: string, ...args: string[]): string {
 }
 
 function createRepository(): string {
-  const root = mkdtempSync(join(tmpdir(), 'ruflo-harness-state-'));
+  const root = mkdtempSync(join(tmpdir(), 'swarmlo-harness-state-'));
   roots.push(root);
   execFileSync('git', ['init', '--quiet', root]);
   git(root, 'config', 'user.email', 'test@example.com');

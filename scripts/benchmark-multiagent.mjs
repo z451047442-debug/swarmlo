@@ -8,7 +8,7 @@
  *
  * MOTIVATION (from ADR-163)
  *   LangGraph / AutoGen / CrewAI publish task-completion-rate benchmarks
- *   (62 / 58 / 54 % on a 2,000-run independent 2026 benchmark). Ruflo
+ *   (62 / 58 / 54 % on a 2,000-run independent 2026 benchmark). Swarmlo
  *   has no comparable published number. This blocks data-driven tuning
  *   of the 3-tier routing thresholds and creates a credibility gap.
  *
@@ -21,7 +21,7 @@
  * BACKENDS
  *   --backend mock   — synthetic deterministic runner. No LLM calls.
  *                       Use for: CI smoke, pipeline validation, $0 cost.
- *   --backend ruflo  — real ruflo CLI invocation per task. Costs real $.
+ *   --backend swarmlo  — real swarmlo CLI invocation per task. Costs real $.
  *                       Use for: publishable numbers. Gate behind explicit
  *                       --confirm to prevent surprise bills (~$50-75 for full sweep).
  *
@@ -42,7 +42,7 @@
  *   node scripts/benchmark-multiagent.mjs
  *
  *   # full publishable sweep (ADR-163: 100 runs × 5 tasks × Tier-3 ~= $50-75)
- *   node scripts/benchmark-multiagent.mjs --backend ruflo --runs 100 --confirm
+ *   node scripts/benchmark-multiagent.mjs --backend swarmlo --runs 100 --confirm
  *
  *   # subset
  *   node scripts/benchmark-multiagent.mjs --tasks T1,T4 --runs 10
@@ -52,8 +52,8 @@
  *   1  --alert-on-pass-rate-below threshold breached
  *   2  config error or runner crash
  *
- * Created for the ruflo perf benchmark suite (ADR-163).
- * Co-Authored-By: RuFlo <ruv@ruv.net>
+ * Created for the swarmlo perf benchmark suite (ADR-163).
+ * Co-Authored-By: Swarmlo <ruv@ruv.net>
  */
 
 import { fileURLToPath } from 'node:url';
@@ -144,15 +144,15 @@ const ARGS = (() => {
 
 // ─── Safety: real backend requires explicit --confirm ────────────────────
 
-if (ARGS.backend === 'ruflo' && !ARGS.confirm) {
-  console.error('benchmark-multiagent: --backend ruflo requires --confirm.');
+if (ARGS.backend === 'swarmlo' && !ARGS.confirm) {
+  console.error('benchmark-multiagent: --backend swarmlo requires --confirm.');
   console.error('  Full sweep (100 runs × 5 tasks) costs ~$50-75 at Tier-3 rates.');
   console.error('  Pass --confirm to proceed, or use --backend mock for $0 smoke.');
   process.exit(2);
 }
 
-if (!['mock', 'ruflo'].includes(ARGS.backend)) {
-  console.error(`benchmark-multiagent: --backend must be mock|ruflo (got: ${ARGS.backend})`);
+if (!['mock', 'swarmlo'].includes(ARGS.backend)) {
+  console.error(`benchmark-multiagent: --backend must be mock|swarmlo (got: ${ARGS.backend})`);
   process.exit(2);
 }
 
@@ -204,29 +204,29 @@ function runOneMock(task, rng) {
 }
 
 /**
- * Ruflo backend — real CLI invocation. Spawns `node bin/cli.js task <T#>`
+ * Swarmlo backend — real CLI invocation. Spawns `node bin/cli.js task <T#>`
  * (would need a task-runner binding — for now, this is stubbed and will
  * exit 2 with a clear "not implemented" until the orchestration bridge is wired).
  *
  * This is the path to publishable numbers but requires:
- *   (a) a `ruflo bench-task <id>` subcommand that runs a single task end-to-end
+ *   (a) a `swarmlo bench-task <id>` subcommand that runs a single task end-to-end
  *   (b) cost tracking (which we already have via cost-tracker plugin)
  *   (c) explicit user --confirm because $50-75 per full sweep
  *
  * Tracked as follow-up — out of scope for the smoke-validation PR that
- * lands this script. Until wired, --backend ruflo prints a clear error
+ * lands this script. Until wired, --backend swarmlo prints a clear error
  * and exits 2 so CI can opt out cleanly.
  */
-function runOneRuflo(_task, _rng) {
-  console.error('benchmark-multiagent: --backend ruflo is not yet wired to a real');
+function runOneSwarmlo(_task, _rng) {
+  console.error('benchmark-multiagent: --backend swarmlo is not yet wired to a real');
   console.error('  task runner. The infrastructure (cost-tracker, hooks_route,');
-  console.error('  swarm_init) exists but needs a `ruflo bench-task <id>` subcommand');
+  console.error('  swarm_init) exists but needs a `swarmlo bench-task <id>` subcommand');
   console.error('  to drive it from this script. Tracked as a follow-up to ADR-163.');
   console.error('  For now, use --backend mock for the pipeline smoke.');
   process.exit(2);
 }
 
-const runOne = ARGS.backend === 'mock' ? runOneMock : runOneRuflo;
+const runOne = ARGS.backend === 'mock' ? runOneMock : runOneSwarmlo;
 
 // ─── Main loop ────────────────────────────────────────────────────────────
 
@@ -267,7 +267,7 @@ function main() {
   };
 
   const report = {
-    schemaVersion: 'ruflo.multiagent.v1',
+    schemaVersion: 'swarmlo.multiagent.v1',
     adr: 'ADR-163',
     backend: ARGS.backend,
     seed: ARGS.seed,
@@ -281,10 +281,10 @@ function main() {
       langGraph: { passRate: 0.62, costPerTask: 0.08, source: 'Independent 2026 benchmark, Grade B' },
       autoGen: { passRate: 0.58, costPerTask: 0.10, source: 'Same' },
       crewAi: { passRate: 0.54, costPerTask: 0.12, source: 'Same' },
-      rufloTarget: { passRate: 0.65 },
+      swarmloTarget: { passRate: 0.65 },
     },
     note: ARGS.backend === 'mock'
-      ? 'MOCK backend — synthetic deterministic Bernoulli. No LLM calls. Use --backend ruflo --confirm for publishable numbers.'
+      ? 'MOCK backend — synthetic deterministic Bernoulli. No LLM calls. Use --backend swarmlo --confirm for publishable numbers.'
       : 'REAL backend — values reflect actual measured runs.',
   };
 
@@ -314,13 +314,13 @@ function main() {
     console.log(`| AutoGen | 58.0% | ~$0.10 | Same |`);
     console.log(`| CrewAI | 54.0% | ~$0.12 | Same |`);
     const ourCost = perTask.length > 0 ? (overall.totalCostUsd / overall.totalRuns).toFixed(4) : 'n/a';
-    console.log(`| **Ruflo (this run, ${ARGS.backend})** | **${(overall.overallPassRate * 100).toFixed(1)}%** | **$${ourCost}** | This run |`);
+    console.log(`| **Swarmlo (this run, ${ARGS.backend})** | **${(overall.overallPassRate * 100).toFixed(1)}%** | **$${ourCost}** | This run |`);
     console.log('');
     console.log(`Artifact: ${path.relative(REPO_ROOT, artifactPath)}`);
     if (ARGS.backend === 'mock') {
       console.log('');
       console.log('> ⚠️  MOCK backend — synthetic Bernoulli, NOT publishable.');
-      console.log('> Run with --backend ruflo --runs 100 --confirm for publishable numbers (~$50-75).');
+      console.log('> Run with --backend swarmlo --runs 100 --confirm for publishable numbers (~$50-75).');
     }
   }
 

@@ -26,8 +26,8 @@
  *  - Approximate extra cost per question: ~$0.003-0.005 (well within budget).
  *
  * Plugin sync TODO (follow-up PR after gaia-bench wiring):
- *  - Update plugins/ruflo-workflows/commands/gaia-run.md with --enable-critic flag.
- *  - Update plugins/ruflo-workflows/skills/gaia-debugging/SKILL.md: add critic
+ *  - Update plugins/swarmlo-workflows/commands/gaia-run.md with --enable-critic flag.
+ *  - Update plugins/swarmlo-workflows/skills/gaia-debugging/SKILL.md: add critic
  *    as a recommended diagnostic step for wrong-answer analysis.
  *
  * Refs: ADR-135, ADR-133, iter 29 finding, #2156

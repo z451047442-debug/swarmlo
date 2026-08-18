@@ -483,7 +483,7 @@ export const taskTools: MCPTool[] = [
     },
   },
   {
-    // #1916: the `ruflo task retry <id>` CLI subcommand referenced an
+    // #1916: the `swarmlo task retry <id>` CLI subcommand referenced an
     // unregistered `task_retry` tool. Re-queues a finished/cancelled task by
     // cloning its spec into a fresh pending task (the original is left intact
     // as history).

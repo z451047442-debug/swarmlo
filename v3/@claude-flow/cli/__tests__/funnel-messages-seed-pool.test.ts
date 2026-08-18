@@ -7,7 +7,7 @@
  * The seed pool must:
  *   - Contain at least one 'disclosure' message so the disclosure gate
  *     can unlock without waiting for a remote fetch.
- *   - Every disclosure MUST contain the exact " · manage: ruflo settings"
+ *   - Every disclosure MUST contain the exact " · manage: swarmlo settings"
  *     tail — this is an ADR-301 invariant enforced by `isValidMessage`
  *     and a UX contract with users who look for the manage instruction.
  *   - Every seed message must pass `isValidMessage` (schema, host
@@ -30,10 +30,10 @@ describe('funnel seed pool — cold-start recovery for statusline promo (2026-07
     expect(disclosures.length).toBeGreaterThan(0);
   });
 
-  it('every disclosure carries the exact " · manage: ruflo settings" tail (ADR-301)', () => {
+  it('every disclosure carries the exact " · manage: swarmlo settings" tail (ADR-301)', () => {
     const disclosures = MESSAGES.filter((m) => m.class === 'disclosure');
     for (const msg of disclosures) {
-      expect(msg.text).toContain(' · manage: ruflo settings');
+      expect(msg.text).toContain(' · manage: swarmlo settings');
     }
   });
 

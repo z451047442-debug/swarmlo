@@ -1,5 +1,5 @@
 /**
- * Opens the system default browser for the `ruflo auth login` flow. A
+ * Opens the system default browser for the `swarmlo auth login` flow. A
  * TypeScript port of meta-proxy's `src/oauth/browser.rs`.
  *
  * Deliberately does NOT go through `SafeExecutor.execute()`: `SafeExecutor`'s

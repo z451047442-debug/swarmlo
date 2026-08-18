@@ -1,5 +1,5 @@
 {
-  "$comment": "ADR-150 iter 30 — MCP governance policy for ruflo's claude-flow MCP server. Closes the 'no-policy' HIGH finding from `harness mcp-scan`. Configured to reflect ruflo's ACTUAL MCP-layer posture: the claude-flow MCP server exposes 314 tools that operate via higher-level abstractions (memory_*, hooks_*, agentdb_*) — NOT raw shell, network, or filesystem. Those primitives are reached via native Claude Code tools (Bash / Write / Edit / WebFetch) which are governed by Claude Code's own permission system, not this MCP policy. Hence: this policy denies all three at the MCP layer.",
+  "$comment": "ADR-150 iter 30 — MCP governance policy for swarmlo's claude-flow MCP server. Closes the 'no-policy' HIGH finding from `harness mcp-scan`. Configured to reflect swarmlo's ACTUAL MCP-layer posture: the claude-flow MCP server exposes 314 tools that operate via higher-level abstractions (memory_*, hooks_*, agentdb_*) — NOT raw shell, network, or filesystem. Those primitives are reached via native Claude Code tools (Bash / Write / Edit / WebFetch) which are governed by Claude Code's own permission system, not this MCP policy. Hence: this policy denies all three at the MCP layer.",
 
   "schema": 1,
   "policyVersion": 1,
@@ -35,7 +35,7 @@
 
   "references": {
     "adr": "v3/docs/adr/ADR-150-metaharness-integration-surfaces.md",
-    "constraint": "Ruflo remains operational if every MetaHarness package is removed.",
+    "constraint": "Swarmlo remains operational if every MetaHarness package is removed.",
     "upstream": "github.com/ruvnet/agent-harness-generator/blob/main/dist/mcp-scan.js"
   }
 }

@@ -748,11 +748,11 @@ describe('WorkerDaemon resource thresholds', () => {
   // #2356 — Self-terminating lifecycle (TTL + idle shutdown)
   // Caps how long a forgotten daemon can keep dispatching headless worker
   // sweeps. Precedence: constructor arg > config.json (seconds) > env
-  // (RUFLO_DAEMON_TTL_SECS / RUFLO_DAEMON_IDLE_SECS) > built-in default.
+  // (SWARMLO_DAEMON_TTL_SECS / SWARMLO_DAEMON_IDLE_SECS) > built-in default.
   // =========================================================================
   describe('self-terminating lifecycle (ttl/idle)', () => {
-    const TTL_ENV = 'RUFLO_DAEMON_TTL_SECS';
-    const IDLE_ENV = 'RUFLO_DAEMON_IDLE_SECS';
+    const TTL_ENV = 'SWARMLO_DAEMON_TTL_SECS';
+    const IDLE_ENV = 'SWARMLO_DAEMON_IDLE_SECS';
     let savedTtl: string | undefined;
     let savedIdle: string | undefined;
 
@@ -774,13 +774,13 @@ describe('WorkerDaemon resource thresholds', () => {
       expect(config.idleShutdownMs).toBe(30 * 60 * 1000);
     });
 
-    it('honors RUFLO_DAEMON_TTL_SECS env override (seconds → ms)', () => {
+    it('honors SWARMLO_DAEMON_TTL_SECS env override (seconds → ms)', () => {
       process.env[TTL_ENV] = '3600';
       const config = new WorkerDaemon(tempDir).getStatus().config;
       expect(config.ttlMs).toBe(3600 * 1000);
     });
 
-    it('honors an explicit RUFLO_DAEMON_TTL_SECS=0 as "disabled" (not falling back to default)', () => {
+    it('honors an explicit SWARMLO_DAEMON_TTL_SECS=0 as "disabled" (not falling back to default)', () => {
       process.env[TTL_ENV] = '0';
       const config = new WorkerDaemon(tempDir).getStatus().config;
       expect(config.ttlMs).toBe(0);
@@ -792,7 +792,7 @@ describe('WorkerDaemon resource thresholds', () => {
       expect(config.ttlMs).toBe(12 * 60 * 60 * 1000);
     });
 
-    it('honors RUFLO_DAEMON_IDLE_SECS env override', () => {
+    it('honors SWARMLO_DAEMON_IDLE_SECS env override', () => {
       process.env[IDLE_ENV] = '7200';
       const config = new WorkerDaemon(tempDir).getStatus().config;
       expect(config.idleShutdownMs).toBe(7200 * 1000);

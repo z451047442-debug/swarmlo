@@ -1,7 +1,7 @@
 /**
  * Regression tests for #2369 (and the batchable companions #2370 / #2371).
  *
- * All three bugs are the same shape: the rename from `claude-flow` to `ruflo`
+ * All three bugs are the same shape: the rename from `claude-flow` to `swarmlo`
  * left three runtime call sites referencing the deprecated dist-tag
  * `claude-flow@v3alpha` (or `claude-flow@alpha`), each of which silently
  * routes users / workers / detectors to a pre-rename build that lacks
@@ -35,15 +35,15 @@ describe('#2369 — stale MCP key handling in init', () => {
     'utf-8',
   );
 
-  it('detectExistingRufloMCP recognises the legacy `claude-flow@alpha` key at the top level', () => {
+  it('detectExistingSwarmloMCP recognises the legacy `claude-flow@alpha` key at the top level', () => {
     expect(executorSrc).toMatch(/'claude-flow@alpha'\s+in\s+servers/);
   });
 
-  it('detectExistingRufloMCP recognises the legacy `claude-flow@v3alpha` key at the top level', () => {
+  it('detectExistingSwarmloMCP recognises the legacy `claude-flow@v3alpha` key at the top level', () => {
     expect(executorSrc).toMatch(/'claude-flow@v3alpha'\s+in\s+servers/);
   });
 
-  it('detectExistingRufloMCP also recognises legacy keys in project-scoped registrations', () => {
+  it('detectExistingSwarmloMCP also recognises legacy keys in project-scoped registrations', () => {
     // The project-scoped path needs the same widening — pin both.
     expect(executorSrc).toMatch(/'claude-flow@alpha'\s+in\s+mcp/);
     expect(executorSrc).toMatch(/'claude-flow@v3alpha'\s+in\s+mcp/);
@@ -71,12 +71,12 @@ describe('#2370 — swarm.ts MCP-down hint references the current package', () =
     expect(swarmCode).not.toMatch(/claude-flow@v3alpha/);
   });
 
-  it('points users at `ruflo@latest` with the `-y` flag (forces fresh fetch)', () => {
-    expect(swarmSrc).toMatch(/npx -y ruflo@latest/);
+  it('points users at `swarmlo@latest` with the `-y` flag (forces fresh fetch)', () => {
+    expect(swarmSrc).toMatch(/npx -y swarmlo@latest/);
   });
 
   it('uses the `--` separator before the npx invocation (avoids claude-mcp flag ambiguity)', () => {
-    expect(swarmSrc).toMatch(/claude mcp add claude-flow -- npx -y ruflo@latest/);
+    expect(swarmSrc).toMatch(/claude mcp add claude-flow -- npx -y swarmlo@latest/);
   });
 });
 
@@ -91,11 +91,11 @@ describe('#2371 — ContainerWorkerPool spawns workers with the current package'
     expect(poolCode).not.toMatch(/claude-flow@v3alpha/);
   });
 
-  it('spawns workers via `ruflo@latest` with `-y` so npx never falls back to a stale local install', () => {
+  it('spawns workers via `swarmlo@latest` with `-y` so npx never falls back to a stale local install', () => {
     // The argv array must contain the three tokens in order. Match the
     // structure rather than the exact whitespace so trivial reformatting
     // doesn't break the test.
-    expect(poolSrc).toMatch(/['"]npx['"]\s*,\s*['"]-y['"]\s*,\s*['"]ruflo@latest['"]/);
+    expect(poolSrc).toMatch(/['"]npx['"]\s*,\s*['"]-y['"]\s*,\s*['"]swarmlo@latest['"]/);
   });
 });
 
@@ -121,7 +121,7 @@ describe('Sanity — no other runtime source references the deprecated dist-tags
       const text = fs.readFileSync(file, 'utf-8');
       const code = stripComments(text);
       // Strip the legitimate appearances:
-      // (a) the legacy-key recognition list in detectExistingRufloMCP
+      // (a) the legacy-key recognition list in detectExistingSwarmloMCP
       // (b) the staleKeys array in writeMCPConfig
       const stripped = code
         .replace(/'claude-flow@v3alpha'\s+in\s+\w+/g, '')

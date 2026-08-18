@@ -39,7 +39,7 @@ describe('#2790 memory search wiring bugs', () => {
   const VALUE = 'Deployment notes for the storage subsystem: replication factor, shard rebalancing, snapshot retention policy, and quorum configuration for the cluster.';
 
   beforeAll(() => {
-    workdir = mkdtempSync(join(tmpdir(), 'ruflo-2790-'));
+    workdir = mkdtempSync(join(tmpdir(), 'swarmlo-2790-'));
     run(['memory', 'init'], workdir);
     run(['memory', 'store', '--namespace', NAMESPACE, '--key', KEY, '--value', VALUE], workdir);
   }, 60_000);

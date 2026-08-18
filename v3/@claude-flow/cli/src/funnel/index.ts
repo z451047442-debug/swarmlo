@@ -1,5 +1,5 @@
 /**
- * Funnel module — ruflo → Cognitum lifecycle system (ADR-301..310).
+ * Funnel module — swarmlo → Cognitum lifecycle system (ADR-301..310).
  * Local-only: nothing in this module performs network I/O.
  */
 

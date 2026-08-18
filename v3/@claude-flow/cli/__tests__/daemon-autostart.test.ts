@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import {
   ensureDaemonRunning,
   isDaemonAlive,
-  isRufloProject,
+  isSwarmloProject,
   resolveDaemonProjectRoot,
 } from '../src/services/daemon-autostart.js';
 import { applyChampion } from '../src/config/harness-feedback-applier.js';
@@ -21,11 +21,11 @@ function project(): string {
 }
 
 describe('ensureDaemonRunning', () => {
-  const saved = process.env.RUFLO_DAEMON_AUTOSTART;
-  afterEach(() => { if (saved === undefined) delete process.env.RUFLO_DAEMON_AUTOSTART; else process.env.RUFLO_DAEMON_AUTOSTART = saved; });
+  const saved = process.env.SWARMLO_DAEMON_AUTOSTART;
+  afterEach(() => { if (saved === undefined) delete process.env.SWARMLO_DAEMON_AUTOSTART; else process.env.SWARMLO_DAEMON_AUTOSTART = saved; });
 
-  it('starts (spawns) when no daemon is alive in a ruflo project', () => {
-    delete process.env.RUFLO_DAEMON_AUTOSTART;
+  it('starts (spawns) when no daemon is alive in a swarmlo project', () => {
+    delete process.env.SWARMLO_DAEMON_AUTOSTART;
     const cwd = project();
     let spawned = 0;
     const r = ensureDaemonRunning(cwd, { isAlive: () => false, spawnFn: () => { spawned++; } });
@@ -34,7 +34,7 @@ describe('ensureDaemonRunning', () => {
   });
 
   it('is a no-op when a daemon is already alive (single-instance)', () => {
-    delete process.env.RUFLO_DAEMON_AUTOSTART;
+    delete process.env.SWARMLO_DAEMON_AUTOSTART;
     let spawned = 0;
     const r = ensureDaemonRunning(project(), { isAlive: () => true, spawnFn: () => { spawned++; } });
     expect(r.started).toBe(false);
@@ -42,8 +42,8 @@ describe('ensureDaemonRunning', () => {
     expect(spawned).toBe(0);
   });
 
-  it('respects the opt-out (RUFLO_DAEMON_AUTOSTART=0)', () => {
-    process.env.RUFLO_DAEMON_AUTOSTART = '0';
+  it('respects the opt-out (SWARMLO_DAEMON_AUTOSTART=0)', () => {
+    process.env.SWARMLO_DAEMON_AUTOSTART = '0';
     let spawned = 0;
     const r = ensureDaemonRunning(project(), { isAlive: () => false, spawnFn: () => { spawned++; } });
     expect(r.started).toBe(false);
@@ -51,29 +51,29 @@ describe('ensureDaemonRunning', () => {
     expect(spawned).toBe(0);
   });
 
-  it('does not spawn in a non-ruflo directory', () => {
-    delete process.env.RUFLO_DAEMON_AUTOSTART;
-    const cwd = mkdtempSync(join(tmpdir(), 'not-ruflo-'));
+  it('does not spawn in a non-swarmlo directory', () => {
+    delete process.env.SWARMLO_DAEMON_AUTOSTART;
+    const cwd = mkdtempSync(join(tmpdir(), 'not-swarmlo-'));
     let spawned = 0;
     const r = ensureDaemonRunning(cwd, { isAlive: () => false, spawnFn: () => { spawned++; } });
     expect(r.started).toBe(false);
     expect(spawned).toBe(0);
   });
 
-  it('does not treat a Claude Code-only .claude directory as Ruflo initialization (#2834)', () => {
-    delete process.env.RUFLO_DAEMON_AUTOSTART;
+  it('does not treat a Claude Code-only .claude directory as Swarmlo initialization (#2834)', () => {
+    delete process.env.SWARMLO_DAEMON_AUTOSTART;
     const cwd = mkdtempSync(join(tmpdir(), 'claude-only-'));
     mkdirSync(join(cwd, '.claude'), { recursive: true });
     writeFileSync(join(cwd, '.claude', 'settings.json'), '{}');
     let spawned = 0;
     const r = ensureDaemonRunning(cwd, { isAlive: () => false, spawnFn: () => { spawned++; } });
-    expect(r).toEqual({ started: false, reason: 'not a ruflo project' });
+    expect(r).toEqual({ started: false, reason: 'not a swarmlo project' });
     expect(spawned).toBe(0);
     expect(existsSync(join(cwd, '.claude-flow'))).toBe(false);
   });
 
   it('does not let startup-created policy state authorize daemon auto-start (#2852)', () => {
-    delete process.env.RUFLO_DAEMON_AUTOSTART;
+    delete process.env.SWARMLO_DAEMON_AUTOSTART;
     const cwd = mkdtempSync(join(tmpdir(), 'claude-policy-only-'));
     mkdirSync(join(cwd, '.claude'), { recursive: true });
     writeFileSync(
@@ -85,33 +85,33 @@ describe('ensureDaemonRunning', () => {
     // champion creates .claude-flow before daemon auto-start is evaluated.
     expect(applyChampion(cwd).applied).toBe(true);
     expect(existsSync(join(cwd, '.claude-flow'))).toBe(true);
-    expect(isRufloProject(cwd)).toBe(false);
+    expect(isSwarmloProject(cwd)).toBe(false);
 
     let spawned = 0;
     const result = ensureDaemonRunning(cwd, {
       isAlive: () => false,
       spawnFn: () => { spawned++; },
     });
-    expect(result).toEqual({ started: false, reason: 'not a ruflo project' });
+    expect(result).toEqual({ started: false, reason: 'not a swarmlo project' });
     expect(spawned).toBe(0);
   });
 
-  it('recognizes only explicit Ruflo markers, not generic state directories', () => {
-    const cwd = mkdtempSync(join(tmpdir(), 'ruflo-markers-'));
+  it('recognizes only explicit Swarmlo markers, not generic state directories', () => {
+    const cwd = mkdtempSync(join(tmpdir(), 'swarmlo-markers-'));
     mkdirSync(join(cwd, '.claude-flow'), { recursive: true });
-    expect(isRufloProject(cwd)).toBe(false);
+    expect(isSwarmloProject(cwd)).toBe(false);
 
     writeFileSync(join(cwd, '.claude-flow', 'config.json'), '{}');
-    expect(isRufloProject(cwd)).toBe(true);
+    expect(isSwarmloProject(cwd)).toBe(true);
   });
 
   it('respects a project-local claude-flow.config.json opt-out (survives env vars not propagating)', () => {
     // The real-world gap this closes: a non-interactive shell never sources
     // ~/.bashrc (its own top-of-file `case $- in *i*) ;; *) return;; esac`
-    // guard skips it outright), so `export RUFLO_DAEMON_AUTOSTART=0` in one
+    // guard skips it outright), so `export SWARMLO_DAEMON_AUTOSTART=0` in one
     // such shell does not carry to the next command's shell. A file on disk
     // has no such gap.
-    delete process.env.RUFLO_DAEMON_AUTOSTART;
+    delete process.env.SWARMLO_DAEMON_AUTOSTART;
     const cwd = project();
     writeFileSync(join(cwd, 'claude-flow.config.json'), JSON.stringify({ daemon: { autostart: false } }));
     let spawned = 0;
@@ -122,7 +122,7 @@ describe('ensureDaemonRunning', () => {
   });
 
   it('a malformed claude-flow.config.json is treated as not-disabled (fails open on parse errors, not silently blocking)', () => {
-    delete process.env.RUFLO_DAEMON_AUTOSTART;
+    delete process.env.SWARMLO_DAEMON_AUTOSTART;
     const cwd = project();
     writeFileSync(join(cwd, 'claude-flow.config.json'), 'this is not valid json {{{');
     let spawned = 0;
@@ -132,7 +132,7 @@ describe('ensureDaemonRunning', () => {
   });
 
   it('a config file present but without daemon.autostart:false does not disable it', () => {
-    delete process.env.RUFLO_DAEMON_AUTOSTART;
+    delete process.env.SWARMLO_DAEMON_AUTOSTART;
     const cwd = project();
     writeFileSync(join(cwd, 'claude-flow.config.json'), JSON.stringify({ funnel: { enabled: false } }));
     let spawned = 0;
@@ -143,9 +143,9 @@ describe('ensureDaemonRunning', () => {
 });
 
 describe('resolveDaemonProjectRoot (#2877)', () => {
-  const saved = process.env.RUFLO_DAEMON_AUTOSTART;
-  beforeEach(() => { delete process.env.RUFLO_DAEMON_AUTOSTART; });
-  afterEach(() => { if (saved === undefined) delete process.env.RUFLO_DAEMON_AUTOSTART; else process.env.RUFLO_DAEMON_AUTOSTART = saved; });
+  const saved = process.env.SWARMLO_DAEMON_AUTOSTART;
+  beforeEach(() => { delete process.env.SWARMLO_DAEMON_AUTOSTART; });
+  afterEach(() => { if (saved === undefined) delete process.env.SWARMLO_DAEMON_AUTOSTART; else process.env.SWARMLO_DAEMON_AUTOSTART = saved; });
 
   it('resolves the project root to itself', () => {
     const root = project();

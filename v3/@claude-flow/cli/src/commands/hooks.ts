@@ -2989,7 +2989,7 @@ const workerDispatchCommand: Command = {
     if (!trigger) {
       output.printError('--trigger is required');
       output.writeln('Available triggers: ultralearn, optimize, consolidate, predict, audit, map, preload, deepdive, document, refactor, benchmark, testgaps, oia-audit');
-      output.writeln(output.dim('Tip: `oia-audit` (ADR-150) also runs as `ruflo metaharness oia-audit` for direct invocation.'));
+      output.writeln(output.dim('Tip: `oia-audit` (ADR-150) also runs as `swarmlo metaharness oia-audit` for direct invocation.'));
       return { success: false, exitCode: 1 };
     }
 
@@ -4500,7 +4500,7 @@ const statuslineCommand: Command = {
 
     // Get user info
     function getUserInfo() {
-      const identityMode = (process.env.RUFLO_STATUSLINE_IDENTITY || 'project').toLowerCase();
+      const identityMode = (process.env.SWARMLO_STATUSLINE_IDENTITY || 'project').toLowerCase();
       let name = path.basename(process.cwd()) || 'project';
       let gitBranch = '';
       // Real active model from Claude Code's stdin payload when available;
@@ -4544,7 +4544,7 @@ const statuslineCommand: Command = {
 
     // Funnel promo row (ADR-301). The statusline is spawned with piped stdio
     // by an interactive host, so interactivity is asserted here; all other
-    // gates (RUFLO_FUNNEL, enterprise policy, config, CI, disclosure,
+    // gates (SWARMLO_FUNNEL, enterprise policy, config, CI, disclosure,
     // rotation ratio) are enforced inside getFunnelPromo. Never allowed to
     // break the statusline.
     let promo: import('../funnel/types.js').PromoRow | null = null;
@@ -4614,7 +4614,7 @@ const statuslineCommand: Command = {
     };
 
     // Generate lines
-    let header = `${c.bold}${c.brightPurple}▊ RuFlo V3 ${c.reset}`;
+    let header = `${c.bold}${c.brightPurple}▊ Swarmlo V3 ${c.reset}`;
     header += `${swarm.coordinationActive ? c.brightCyan : c.dim}● ${c.brightCyan}${user.name}${c.reset}`;
     if (user.gitBranch) {
       header += `  ${c.dim}│${c.reset}  ${c.brightBlue}⎇ ${user.gitBranch}${c.reset}`;

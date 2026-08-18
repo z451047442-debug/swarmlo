@@ -52,18 +52,18 @@ export function generateMCPConfig(options: InitOptions): object {
     npm_config_update_notifier: 'false',
   };
 
-  // Ruflo MCP server (core) — the registration KEY is intentionally
-  // `claude-flow` (not `ruflo`) because #2206 established that all ~166
+  // Swarmlo MCP server (core) — the registration KEY is intentionally
+  // `claude-flow` (not `swarmlo`) because #2206 established that all ~166
   // plugin tool references use `mcp__claude-flow__*`. The invoked binary
-  // is `ruflo@latest` (the post-rename wrapper) — only the registration
+  // is `swarmlo@latest` (the post-rename wrapper) — only the registration
   // name stays legacy so plugin tool resolution keeps working.
-  // #2612 (duplicate `claude-flow` + `ruflo` registrations after users
-  // followed pre-rename setup docs) is healed by `ruflo doctor`, which
+  // #2612 (duplicate `claude-flow` + `swarmlo` registrations after users
+  // followed pre-rename setup docs) is healed by `swarmlo doctor`, which
   // detects the duplicate and instructs the operator to remove the
-  // extra `ruflo`-keyed entry — NOT by flipping the canonical key here.
+  // extra `swarmlo`-keyed entry — NOT by flipping the canonical key here.
   if (config.claudeFlow) {
     mcpServers['claude-flow'] = createMCPServerEntry(
-      ['ruflo@latest', 'mcp', 'start'],
+      ['swarmlo@latest', 'mcp', 'start'],
       {
         ...npmEnv,
         CLAUDE_FLOW_MODE: 'v3',
@@ -115,7 +115,7 @@ export function generateMCPCommands(options: InitOptions): string[] {
   if (isWindows()) {
     if (config.claudeFlow) {
       // #2206: registration name must be `claude-flow` to match mcp__claude-flow__* plugin tool references
-      commands.push('claude mcp add claude-flow -- cmd /c npx -y ruflo@latest mcp start');
+      commands.push('claude mcp add claude-flow -- cmd /c npx -y swarmlo@latest mcp start');
     }
     if (config.ruvSwarm) {
       commands.push('claude mcp add ruv-swarm -- cmd /c npx -y ruv-swarm mcp start');
@@ -126,7 +126,7 @@ export function generateMCPCommands(options: InitOptions): string[] {
   } else {
     if (config.claudeFlow) {
       // #2206: registration name must be `claude-flow` to match mcp__claude-flow__* plugin tool references
-      commands.push("claude mcp add claude-flow -- npx -y ruflo@latest mcp start");
+      commands.push("claude mcp add claude-flow -- npx -y swarmlo@latest mcp start");
     }
     if (config.ruvSwarm) {
       commands.push("claude mcp add ruv-swarm -- npx -y ruv-swarm mcp start");

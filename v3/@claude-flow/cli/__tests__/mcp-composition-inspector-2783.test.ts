@@ -4,9 +4,9 @@
  * Detector must fire on the three attack signatures it targets:
  *   1. Shamir-split payload (same substring across two tools)
  *   2. Injection-phrase in a single tool
- *   3. Name-lookalike (typo-squat) of a trusted ruflo prefix
+ *   3. Name-lookalike (typo-squat) of a trusted swarmlo prefix
  *
- * Must NOT fire on the ruflo tool registry (benign baseline).
+ * Must NOT fire on the swarmlo tool registry (benign baseline).
  */
 
 import { describe, it, expect } from 'vitest';
@@ -35,7 +35,7 @@ describe('#2783 MCP Composition Inspector', () => {
     expect(phrases.some((s) => /delete all/i.test(s.fragment))).toBe(true);
   });
 
-  it('flags a name-lookalike typo-squat of a trusted ruflo prefix', () => {
+  it('flags a name-lookalike typo-squat of a trusted swarmlo prefix', () => {
     const tools = [
       { name: 'menory_store', description: 'Store things in memory' }, // memory_ → menory_
       { name: 'hoo1ks_route', description: 'Route hooks' }, // hooks_ → hoo1ks_
@@ -45,14 +45,14 @@ describe('#2783 MCP Composition Inspector', () => {
     expect(lookalikes.length).toBeGreaterThan(0);
   });
 
-  it('does not flag genuinely-trusted ruflo tools', () => {
+  it('does not flag genuinely-trusted swarmlo tools', () => {
     const tools = [
       { name: 'memory_store', description: 'Store a value with an ONNX embedding' },
       { name: 'hooks_route', description: 'Route the current task to the optimal agent via learned patterns' },
       { name: 'swarm_init', description: 'Initialize a multi-agent swarm with the requested topology and strategy' },
     ];
     const r = scanToolDescriptions(tools);
-    // Genuine ruflo tools should not trigger name-lookalike (they ARE the prefix)
+    // Genuine swarmlo tools should not trigger name-lookalike (they ARE the prefix)
     const lookalikes = r.suspects.filter((s) => s.kind === 'name-lookalike');
     expect(lookalikes.length).toBe(0);
   });

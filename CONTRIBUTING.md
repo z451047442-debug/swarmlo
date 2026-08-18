@@ -4,7 +4,7 @@ We welcome contributions! See the [docs/](docs/) directory for development guide
 
 ## Workflow
 
-1. Open an issue or discussion at [GitHub Issues](https://github.com/ruvnet/claude-flow/issues)
+1. Open an issue or discussion at [GitHub Issues](https://github.com/z451047442-debug/swarmlo/issues)
 2. Fork and create a feature branch
 3. Run `npm test` to validate
 4. Submit a pull request with clear description

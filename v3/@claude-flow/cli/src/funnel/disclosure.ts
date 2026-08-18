@@ -83,7 +83,7 @@ export function recordDisclosureShown(now: Date = new Date()): DisclosureRecord 
   return rec;
 }
 
-/** User explicitly declined (e.g. `ruflo funnel disable`). */
+/** User explicitly declined (e.g. `swarmlo funnel disable`). */
 export function recordDisclosureDeclined(now: Date = new Date()): DisclosureRecord {
   const current = getDisclosure();
   const rec: DisclosureRecord = {

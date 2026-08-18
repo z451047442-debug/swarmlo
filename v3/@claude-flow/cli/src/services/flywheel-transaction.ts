@@ -488,7 +488,7 @@ export async function promoteFlywheelCandidate(
         return {
           success: false,
           idempotent: false,
-          reason: 'receipt carries aggregate-only evidence (no task-level pairedOutcomes) — re-evaluate the candidate with a current ruflo, or pass the explicit aggregate-evidence override',
+          reason: 'receipt carries aggregate-only evidence (no task-level pairedOutcomes) — re-evaluate the candidate with a current swarmlo, or pass the explicit aggregate-evidence override',
         } satisfies PromotionResult;
       }
       // Epoch-boundary enforcement (ADR-381 §2): a receipt whose OWN evidence

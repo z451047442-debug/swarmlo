@@ -14,7 +14,7 @@
  *     https://huggingface.co/datasets/gaia-benchmark/GAIA for full spec).
  *
  * Caching: judgment results are persisted under
- *   ~/.cache/ruflo/gaia/judgments/<hash>.json
+ *   ~/.cache/swarmlo/gaia/judgments/<hash>.json
  * keyed on (question_id, candidate_answer, model_id, JUDGE_PROMPT_VERSION).
  * Re-running the same pair hits the cache and returns instantly.
  *
@@ -37,7 +37,7 @@ import { execSync } from 'node:child_process';
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_API_VERSION = '2023-06-01';
 const DEFAULT_JUDGE_MODEL = 'claude-sonnet-4-6';
-const DEFAULT_CACHE_DIR = path.join(os.homedir(), '.cache', 'ruflo', 'gaia', 'judgments');
+const DEFAULT_CACHE_DIR = path.join(os.homedir(), '.cache', 'swarmlo', 'gaia', 'judgments');
 
 /**
  * Bump this string whenever the judge prompt changes so stale cached verdicts
@@ -69,7 +69,7 @@ export interface JudgeResult {
 export interface JudgeOptions {
   /** Default: 'claude-sonnet-4-6' */
   judgeModel?: string;
-  /** Default: '~/.cache/ruflo/gaia/judgments/' */
+  /** Default: '~/.cache/swarmlo/gaia/judgments/' */
   cacheDir?: string;
   skipCache?: boolean;
   apiKey?: string;

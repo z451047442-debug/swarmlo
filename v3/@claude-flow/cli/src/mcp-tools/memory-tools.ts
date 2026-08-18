@@ -835,7 +835,7 @@ export const memoryTools: MCPTool[] = [
 
   {
     name: 'memory_import_claude',
-    description: 'Import Claude Code auto-memory files into AgentDB with ONNX vector embeddings. Reads ~/.claude/projects/*/memory/*.md files, parses YAML frontmatter, splits into sections, and stores with 384-dim embeddings for semantic search. Use allProjects=true to import from ALL Claude projects. Pass projectPath to override cwd-based detection (#1883 — required when Ruflo runs in WSL but Claude Code is on Windows). Pass excludeFilePatterns (glob list) or excludeFiles (absolute path list) to skip voice-load-bearing, PII, or persona-restricted files (#1937). Use when native Read/Write is wrong because you need (a) cross-session retrieval by semantic similarity (vector embeddings) not by file path, (b) namespacing across projects without managing directory layout, or (c) the .swarm/memory.db audit trail. For one-shot file I/O, native Read/Write is fine.',
+    description: 'Import Claude Code auto-memory files into AgentDB with ONNX vector embeddings. Reads ~/.claude/projects/*/memory/*.md files, parses YAML frontmatter, splits into sections, and stores with 384-dim embeddings for semantic search. Use allProjects=true to import from ALL Claude projects. Pass projectPath to override cwd-based detection (#1883 — required when Swarmlo runs in WSL but Claude Code is on Windows). Pass excludeFilePatterns (glob list) or excludeFiles (absolute path list) to skip voice-load-bearing, PII, or persona-restricted files (#1937). Use when native Read/Write is wrong because you need (a) cross-session retrieval by semantic similarity (vector embeddings) not by file path, (b) namespacing across projects without managing directory layout, or (c) the .swarm/memory.db audit trail. For one-shot file I/O, native Read/Write is fine.',
     category: 'memory',
     inputSchema: {
       type: 'object',
@@ -1201,7 +1201,7 @@ export const memoryTools: MCPTool[] = [
     },
   },
   {
-    // #1916: `ruflo status memory` (the detailed view) referenced an
+    // #1916: `swarmlo status memory` (the detailed view) referenced an
     // unregistered `memory_detailed-stats` tool. memory_stats returns a
     // different shape; this returns what the CLI renders.
     name: 'memory_detailed-stats',
@@ -1229,7 +1229,7 @@ export const memoryTools: MCPTool[] = [
     },
   },
   {
-    // #1916: `ruflo memory cleanup` referenced an unregistered `memory_cleanup`
+    // #1916: `swarmlo memory cleanup` referenced an unregistered `memory_cleanup`
     // tool. Removes entries whose TTL has expired. Defaults to a dry run —
     // pass dryRun:false to actually delete.
     name: 'memory_cleanup',
@@ -1288,7 +1288,7 @@ export const memoryTools: MCPTool[] = [
     },
   },
   {
-    // #1916: `ruflo memory compress` referenced an unregistered tool. The
+    // #1916: `swarmlo memory compress` referenced an unregistered tool. The
     // sql.js backend has no on-disk compression; this reports current sizes.
     name: 'memory_compress',
     description: 'Report memory-store size breakdown (the sql.js backend has no on-disk compression — entries are already stored compactly; quantized embeddings via RaBitQ are configured elsewhere). Use when native du is wrong because the data is in .swarm/memory.db. For pruning expired entries use memory_cleanup.',
@@ -1310,7 +1310,7 @@ export const memoryTools: MCPTool[] = [
     },
   },
   {
-    // #1916: `ruflo memory export -o <file>` referenced an unregistered tool.
+    // #1916: `swarmlo memory export -o <file>` referenced an unregistered tool.
     // Dumps entry metadata (and values when the backend returns them) to JSON.
     name: 'memory_export',
     description: 'Export memory entries to a JSON file (keys, namespaces, timestamps, and values when available). Use when native Write is wrong because the data is rows in .swarm/memory.db, not a file you can copy. For ingesting an export elsewhere use memory_import. (CSV output and embedding-vector export are follow-ups.)',
@@ -1338,7 +1338,7 @@ export const memoryTools: MCPTool[] = [
       // they need it).
       const all = await listEntries({ limit: 100000, namespace, includeContent: true });
       const payload = {
-        schema: 'ruflo-memory-export/v1',
+        schema: 'swarmlo-memory-export/v1',
         exportedAt: new Date().toISOString(),
         namespace: namespace ?? null,
         count: all.entries.length,
@@ -1365,8 +1365,8 @@ export const memoryTools: MCPTool[] = [
     },
   },
   {
-    // #1916: `ruflo memory import <file>` referenced an unregistered tool.
-    // Reads a ruflo-memory-export JSON and re-stores each entry.
+    // #1916: `swarmlo memory import <file>` referenced an unregistered tool.
+    // Reads a swarmlo-memory-export JSON and re-stores each entry.
     name: 'memory_import',
     description: 'Import memory entries from a JSON export file (produced by memory_export) into .swarm/memory.db, re-embedding values. Use when native Read is wrong because the data must be re-stored as memory rows (with new embeddings), not just read. For importing Claude Code\'s own memory files use memory_import_claude. Pair with memory_export on the source.',
     category: 'memory',

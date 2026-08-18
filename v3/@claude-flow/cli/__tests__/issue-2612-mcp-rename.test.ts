@@ -1,12 +1,12 @@
 /**
- * Regression guard for ruvnet/ruflo#2612.
+ * Regression guard for z451047442-debug/swarmlo#2612.
  *
  * The canonical MCP registration name is `claude-flow` — this preserves the
  * `mcp__claude-flow__*` prefix that ~166 plugin tool references depend on
- * (#2206). `ruflo` is the legacy-duplicate name that pre-rename setup docs
- * (or a manual `claude mcp add ruflo`) can create alongside the canonical
+ * (#2206). `swarmlo` is the legacy-duplicate name that pre-rename setup docs
+ * (or a manual `claude mcp add swarmlo`) can create alongside the canonical
  * entry. init/doctor must detect this coexistence so Claude Code does not
- * start two identical Ruflo MCP servers and load two identical tool schemas.
+ * start two identical Swarmlo MCP servers and load two identical tool schemas.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -15,7 +15,7 @@ import { tmpdir } from 'os';
 import path from 'path';
 import doctorCommand from '../src/commands/doctor.js';
 
-describe('#2612 — ruflo MCP rename duplicate detection', () => {
+describe('#2612 — swarmlo MCP rename duplicate detection', () => {
   let home: string;
   let project: string;
   let oldHome: string | undefined;
@@ -23,8 +23,8 @@ describe('#2612 — ruflo MCP rename duplicate detection', () => {
   let oldCwd: string;
 
   beforeEach(() => {
-    home = mkdtempSync(path.join(tmpdir(), 'ruflo-2612-home-'));
-    project = mkdtempSync(path.join(tmpdir(), 'ruflo-2612-project-'));
+    home = mkdtempSync(path.join(tmpdir(), 'swarmlo-2612-home-'));
+    project = mkdtempSync(path.join(tmpdir(), 'swarmlo-2612-project-'));
     oldHome = process.env.HOME;
     oldUserProfile = process.env.USERPROFILE;
     oldCwd = process.cwd();
@@ -43,12 +43,12 @@ describe('#2612 — ruflo MCP rename duplicate detection', () => {
     rmSync(project, { recursive: true, force: true });
   });
 
-  it('doctor warns when project .mcp.json has claude-flow and ~/.claude.json has ruflo', async () => {
+  it('doctor warns when project .mcp.json has claude-flow and ~/.claude.json has swarmlo', async () => {
     writeFileSync(
       path.join(project, '.mcp.json'),
       JSON.stringify({
         mcpServers: {
-          'claude-flow': { command: 'npx', args: ['-y', 'ruflo@latest', 'mcp', 'start'] },
+          'claude-flow': { command: 'npx', args: ['-y', 'swarmlo@latest', 'mcp', 'start'] },
         },
       }),
       'utf-8',
@@ -59,7 +59,7 @@ describe('#2612 — ruflo MCP rename duplicate detection', () => {
         projects: {
           [project]: {
             mcpServers: {
-              ruflo: { command: 'npx', args: ['-y', 'ruflo@latest', 'mcp', 'start'] },
+              swarmlo: { command: 'npx', args: ['-y', 'swarmlo@latest', 'mcp', 'start'] },
             },
           },
         },
@@ -77,8 +77,8 @@ describe('#2612 — ruflo MCP rename duplicate detection', () => {
     const checks = (result.data as { results: Array<{ name: string; status: string; message: string }> }).results;
     const mcp = checks.find(check => check.name === 'MCP Servers');
     expect(mcp?.status).toBe('warn');
-    expect(mcp?.message).toContain('Duplicate Ruflo MCP registrations found');
+    expect(mcp?.message).toContain('Duplicate Swarmlo MCP registrations found');
     expect(mcp?.message).toContain('claude-flow');
-    expect(mcp?.message).toContain('ruflo');
+    expect(mcp?.message).toContain('swarmlo');
   });
 });

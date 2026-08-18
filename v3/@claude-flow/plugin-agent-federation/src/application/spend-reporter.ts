@@ -17,7 +17,7 @@
  * branch on which integrations are wired.
  *
  * Event shape matches the consumer contract pinned by
- * plugins/ruflo-cost-tracker/scripts/federation.mjs:
+ * plugins/swarmlo-cost-tracker/scripts/federation.mjs:
  *
  *   { peerId, taskId, tokensUsed, usdSpent, ts }
  *
@@ -25,7 +25,7 @@
  * key `fed-spend-<peerId>-<ts>`. The interface is storage-agnostic; the
  * default in-memory reporter included here is for tests + a reference
  * implementation. Production integrators write a thin adapter that
- * persists to ruflo memory / Redis / Datadog / their accounting system.
+ * persists to swarmlo memory / Redis / Datadog / their accounting system.
  */
 
 /** A single per-send cost report from the integrator. */
@@ -86,7 +86,7 @@ export class InMemorySpendReporter implements SpendReporter {
 /**
  * Minimal memory-backend interface (ADR-110). The integrator wires this
  * to whatever store satisfies their durability/consistency needs:
- * ruflo memory, Redis, DynamoDB, file-backed JSON, etc. The federation
+ * swarmlo memory, Redis, DynamoDB, file-backed JSON, etc. The federation
  * plugin doesn't import any specific memory client — pluggable by
  * design.
  */
@@ -110,7 +110,7 @@ export interface MemorySpendReporterConfig {
   readonly ttlSeconds?: number;
 }
 
-/** Default namespace per cost-tracker's `plugins/ruflo-cost-tracker/scripts/federation.mjs`. */
+/** Default namespace per cost-tracker's `plugins/swarmlo-cost-tracker/scripts/federation.mjs`. */
 export const DEFAULT_FEDERATION_SPEND_NAMESPACE = 'federation-spend';
 
 /** Default TTL: 7 days, matching cost-tracker's longest rolling window. */
@@ -120,25 +120,25 @@ export const DEFAULT_FEDERATION_SPEND_TTL_SECONDS = 7 * 24 * 60 * 60;
  * Production reporter (ADR-110) that satisfies the cost-tracker
  * consumer contract: writes to namespace `federation-spend`, key
  * `fed-spend-<peerId>-<ts>`. The consumer
- * (`plugins/ruflo-cost-tracker/scripts/federation.mjs`) `memory list`s
+ * (`plugins/swarmlo-cost-tracker/scripts/federation.mjs`) `memory list`s
  * the namespace, retrieves each key, and aggregates into rolling
  * windows.
  *
  * Storage-agnostic: the integrator injects a `MemoryStore`
  * implementation. Common wirings:
  *
- *   // ruflo memory MCP
+ *   // swarmlo memory MCP
  *   new MemorySpendReporter({
  *     memoryStore: {
  *       store: async (a) => mcpClient.call('memory_store', a),
  *     },
  *   });
  *
- *   // ruflo memory CLI shell-out
+ *   // swarmlo memory CLI shell-out
  *   new MemorySpendReporter({
  *     memoryStore: {
  *       store: async ({namespace, key, value, ttl}) => {
- *         await execFile('npx', ['ruflo', 'memory', 'store',
+ *         await execFile('npx', ['swarmlo', 'memory', 'store',
  *           '--namespace', namespace, '--key', key, '--value', value]);
  *       },
  *     },

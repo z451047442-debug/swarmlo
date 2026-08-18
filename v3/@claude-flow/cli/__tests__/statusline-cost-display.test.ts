@@ -6,8 +6,8 @@
  * misleading (token usage is not billed per dollar). The statusline therefore
  * lets each user relabel or hide the cost segment without changing the default:
  *
- *   RUFLO_STATUSLINE_COST_SYMBOL  override the leading '$' ('' => number alone)
- *   RUFLO_STATUSLINE_HIDE_COST    1/true/yes/on => omit the segment
+ *   SWARMLO_STATUSLINE_COST_SYMBOL  override the leading '$' ('' => number alone)
+ *   SWARMLO_STATUSLINE_HIDE_COST    1/true/yes/on => omit the segment
  *
  * These tests cover three layers:
  *   1. Generator contract — the emitted script wires the env vars and keeps '$'
@@ -41,7 +41,7 @@ const stripAnsi = (s: string): string =>
  * and deterministic. Returns the first (header) line with ANSI stripped.
  */
 function renderHeader(env: Record<string, string> = {}): string {
-  const dir = mkdtempSync(path.join(tmpdir(), 'ruflo-statusline-'));
+  const dir = mkdtempSync(path.join(tmpdir(), 'swarmlo-statusline-'));
   const scriptPath = path.join(dir, 'statusline.cjs');
   writeFileSync(scriptPath, SCRIPT, 'utf-8');
   const payload = JSON.stringify({
@@ -64,10 +64,10 @@ function renderHeader(env: Record<string, string> = {}): string {
 
 describe('statusline cost display — generator contract', () => {
   it('reads both env vars and keeps "$" as the default', () => {
-    expect(SCRIPT).toContain('RUFLO_STATUSLINE_COST_SYMBOL');
-    expect(SCRIPT).toContain('RUFLO_STATUSLINE_HIDE_COST');
+    expect(SCRIPT).toContain('SWARMLO_STATUSLINE_COST_SYMBOL');
+    expect(SCRIPT).toContain('SWARMLO_STATUSLINE_HIDE_COST');
     // Default must be the dollar sign (?? '$') so existing setups are unchanged.
-    expect(SCRIPT).toContain("process.env.RUFLO_STATUSLINE_COST_SYMBOL ?? '$'");
+    expect(SCRIPT).toContain("process.env.SWARMLO_STATUSLINE_COST_SYMBOL ?? '$'");
   });
 
   it('renders the cost via the configurable symbol, not a hardcoded "$"', () => {
@@ -86,19 +86,19 @@ describe('statusline cost display — runtime behavior', () => {
     expect(renderHeader()).toContain('$1.30');
   });
 
-  it('replaces the symbol when RUFLO_STATUSLINE_COST_SYMBOL is set', () => {
-    const header = renderHeader({ RUFLO_STATUSLINE_COST_SYMBOL: '⚡' });
+  it('replaces the symbol when SWARMLO_STATUSLINE_COST_SYMBOL is set', () => {
+    const header = renderHeader({ SWARMLO_STATUSLINE_COST_SYMBOL: '⚡' });
     expect(header).toContain('⚡1.30');
     expect(header).not.toContain('$1.30');
   });
 
-  it('omits the segment when RUFLO_STATUSLINE_HIDE_COST is truthy', () => {
-    const header = renderHeader({ RUFLO_STATUSLINE_HIDE_COST: '1' });
+  it('omits the segment when SWARMLO_STATUSLINE_HIDE_COST is truthy', () => {
+    const header = renderHeader({ SWARMLO_STATUSLINE_HIDE_COST: '1' });
     expect(header).not.toContain('1.30');
   });
 
   it('shows the number alone when the symbol is an empty string', () => {
-    const header = renderHeader({ RUFLO_STATUSLINE_COST_SYMBOL: '' });
+    const header = renderHeader({ SWARMLO_STATUSLINE_COST_SYMBOL: '' });
     expect(header).toContain('1.30');
     expect(header).not.toContain('$1.30');
   });
@@ -142,7 +142,7 @@ describe('statusline trailing newline — breathing room before the input prompt
   });
 
   it('the rendered statusline output ends with a real newline character', () => {
-    const dir = mkdtempSync(path.join(tmpdir(), 'ruflo-statusline-nl-'));
+    const dir = mkdtempSync(path.join(tmpdir(), 'swarmlo-statusline-nl-'));
     const scriptPath = path.join(dir, 'statusline.cjs');
     writeFileSync(scriptPath, SCRIPT, 'utf-8');
     const payload = JSON.stringify({
@@ -211,13 +211,13 @@ describe('getPkgVersion() — highest candidate wins, not first-found', () => {
   });
 
   it('renders the HIGHER of two real candidate package.json versions', () => {
-    const home = mkdtempSync(path.join(tmpdir(), 'ruflo-statusline-ver-home-'));
-    const cwd = mkdtempSync(path.join(tmpdir(), 'ruflo-statusline-ver-cwd-'));
+    const home = mkdtempSync(path.join(tmpdir(), 'swarmlo-statusline-ver-home-'));
+    const cwd = mkdtempSync(path.join(tmpdir(), 'swarmlo-statusline-ver-cwd-'));
     const scriptPath = path.join(cwd, 'statusline.cjs');
     writeFileSync(scriptPath, SCRIPT, 'utf-8');
     try {
       // Marketplace candidate (checked first) — deliberately the STALE one.
-      const marketplaceDir = path.join(home, '.claude', 'plugins', 'marketplaces', 'ruflo');
+      const marketplaceDir = path.join(home, '.claude', 'plugins', 'marketplaces', 'swarmlo');
       mkdirSync(marketplaceDir, { recursive: true });
       writeFileSync(path.join(marketplaceDir, 'package.json'), JSON.stringify({ version: '3.27.0' }));
       // v3 monorepo candidate (checked later) — the NEWER one.

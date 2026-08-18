@@ -1,16 +1,16 @@
 openapi: 3.1.0
 # ADR-308 — Cognitum Public API and Server Contract (v1).
 # This spec is the cross-organization boundary: it is checked into BOTH the
-# ruflo repository (this file) and the Cognitum server repository; CI in both
+# swarmlo repository (this file) and the Cognitum server repository; CI in both
 # validates against it, and drift fails the build. Breaking changes require
 # /v2 with a documented overlap window.
 info:
   title: Cognitum Public API
   version: 1.0.0
   description: >
-    Public contract between the open-source ruflo CLI / local Meta LLM proxy
+    Public contract between the open-source swarmlo CLI / local Meta LLM proxy
     and api.cognitum.one. Client failure policy is normative (ADR-308):
-    auth unavailable → local ruflo keeps working; telemetry unavailable →
+    auth unavailable → local swarmlo keeps working; telemetry unavailable →
     drop or bounded local queue, never block the CLI; funnel policy
     unavailable → last valid signed policy, else package default; proxy
     backend unavailable → error to caller, never silent rerouting; deletion
@@ -99,7 +99,7 @@ paths:
   /v1/auth/revoke:
     post:
       operationId: revokeToken
-      summary: Revoke a refresh token / session (ruflo auth logout)
+      summary: Revoke a refresh token / session (swarmlo auth logout)
       requestBody:
         required: true
         content:
@@ -151,7 +151,7 @@ paths:
           in: path
           required: true
           schema: { type: string, format: uuid }
-          description: The pseudonymous funnel ID (printable via `ruflo funnel id`).
+          description: The pseudonymous funnel ID (printable via `swarmlo funnel id`).
       responses:
         '200':
           description: Deletion completed; durable receipt returned

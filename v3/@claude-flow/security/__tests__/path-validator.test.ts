@@ -509,7 +509,7 @@ describe('PathValidator', () => {
     });
 
     it('validates a temp-directory tree the way an installer does', async () => {
-      // The shape that broke `ruflo proxy install` on macOS: a validator built
+      // The shape that broke `swarmlo proxy install` on macOS: a validator built
       // over a freshly-created temp dir, checking a file extracted into it,
       // with the default options.
       const workDir = await fsPromises.mkdtemp(path.join(os.tmpdir(), 'installer-'));

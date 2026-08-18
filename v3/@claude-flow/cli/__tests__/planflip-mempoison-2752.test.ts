@@ -67,7 +67,7 @@ describe('#2752 PlanFlip + MemPoison', () => {
 
   it('MemPoison CLI wire: `memory store --scan-content` accepts a benign value', () => {
     // A tmp cwd so we don't touch the real project memory
-    const workdir = mkdtempSync(join(tmpdir(), 'ruflo-mempoison-'));
+    const workdir = mkdtempSync(join(tmpdir(), 'swarmlo-mempoison-'));
     const originalCwd = process.cwd();
     try {
       process.chdir(workdir);
@@ -87,7 +87,7 @@ describe('#2752 PlanFlip + MemPoison', () => {
     }
   }, 30_000);
 
-  it('MemPoison env-var wire: RUFLO_MEMORY_SCAN_ON_WRITE=1 activates the gate without --scan-content', () => {
+  it('MemPoison env-var wire: SWARMLO_MEMORY_SCAN_ON_WRITE=1 activates the gate without --scan-content', () => {
     let stdout = '';
     let exit = 0;
     try {
@@ -98,7 +98,7 @@ describe('#2752 PlanFlip + MemPoison', () => {
         '--namespace', 'test-e2e',
       ], {
         encoding: 'utf-8',
-        env: { ...process.env, RUFLO_MEMORY_SCAN_ON_WRITE: '1' },
+        env: { ...process.env, SWARMLO_MEMORY_SCAN_ON_WRITE: '1' },
         stdio: ['ignore', 'pipe', 'pipe'],
       });
     } catch (err) {
@@ -111,7 +111,7 @@ describe('#2752 PlanFlip + MemPoison', () => {
   }, 30_000);
 
   it('PlanFlip CLI: `security scan-plan --plan-file` returns exit 2 when high-severity finding present', () => {
-    const workdir = mkdtempSync(join(tmpdir(), 'ruflo-planflip-'));
+    const workdir = mkdtempSync(join(tmpdir(), 'swarmlo-planflip-'));
     const planPath = join(workdir, 'plan.md');
     writeFileSync(planPath, [
       '# Plan',

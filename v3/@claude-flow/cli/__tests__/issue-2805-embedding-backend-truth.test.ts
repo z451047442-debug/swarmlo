@@ -23,7 +23,7 @@ let workdir: string;
 
 beforeEach(async () => {
   originalCwd = process.cwd();
-  workdir = mkdtempSync(join(tmpdir(), 'ruflo-2805-'));
+  workdir = mkdtempSync(join(tmpdir(), 'swarmlo-2805-'));
   process.chdir(workdir);
   await init.handler({ force: true });
 });

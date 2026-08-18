@@ -651,7 +651,7 @@ docker-compose up -d
 
 ## Learn More
 - [RuVector Docker Hub](https://hub.docker.com/r/ruvnet/ruvector-postgres)
-- [Claude-Flow Documentation](https://github.com/ruvnet/claude-flow)
+- [Claude-Flow Documentation](https://github.com/z451047442-debug/swarmlo)
 `;
 
 /**

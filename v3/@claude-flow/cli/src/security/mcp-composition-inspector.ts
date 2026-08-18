@@ -24,7 +24,7 @@
  *      "you are now", "system prompt", "delete all", etc.) — even
  *      inside one tool, flagged.
  *   3. Tool-name lookalikes: names that differ by ≤ 2 chars from a
- *      known-trusted ruflo tool (typosquatting mitigation).
+ *      known-trusted swarmlo tool (typosquatting mitigation).
  *
  * Future v2: SimHash + LSH for scale (arXiv 2606.27027's proposal),
  * OWASP LLM07 alignment.
@@ -63,7 +63,7 @@ export interface CompositionScanResult {
 // runtime companion). Adding a phrase there strengthens both surfaces.
 import { INJECTION_PHRASES } from './injection-catalog.js';
 
-/** Known-trusted ruflo tool-name prefixes for typosquatting comparison. */
+/** Known-trusted swarmlo tool-name prefixes for typosquatting comparison. */
 const TRUSTED_PREFIXES = [
   'memory_', 'hooks_', 'swarm_', 'agent_', 'claims_', 'coordination_',
   'session_', 'workflow_', 'neural_', 'browser_', 'daemon_', 'agentdb_',
@@ -140,7 +140,7 @@ export function scanToolDescriptions(
      * as "template language" and stop flagging it. Attack fragments live
      * in small conspiracies (2–3 tools); template language shows up in
      * dozens. Default 3 catches Shamir-split attacks without flooding on
-     * legitimate ruflo tools that share the same MCP-tool-description
+     * legitimate swarmlo tools that share the same MCP-tool-description
      * template.
      */
     maxFragmentPopulation?: number;
@@ -221,7 +221,7 @@ export function scanToolDescriptions(
   // 3) Name-lookalike scan (typosquat detection against trusted prefixes)
   for (const t of normalized) {
     for (const prefix of trustedPrefixes) {
-      // Exact-prefix match is fine (that's a legitimate ruflo tool)
+      // Exact-prefix match is fine (that's a legitimate swarmlo tool)
       if (t.name.startsWith(prefix)) break;
       // Near-match to a trusted prefix (1-2 char edit distance)
       const nameHead = t.name.slice(0, prefix.length);
@@ -233,7 +233,7 @@ export function scanToolDescriptions(
           peer: prefix,
           fragment: nameHead,
           score: 0.7,
-          reason: `Tool name prefix "${nameHead}" is ${dist} edit(s) from trusted ruflo prefix "${prefix}" — possible typosquat`,
+          reason: `Tool name prefix "${nameHead}" is ${dist} edit(s) from trusted swarmlo prefix "${prefix}" — possible typosquat`,
         });
         break;
       }

@@ -1,6 +1,6 @@
 # Self-Learning Wiring — Proof + Reproduction Guide (#2245)
 
-> Companion to [ADR-074](../adr/ADR-074-self-learning-wiring-2245.md) and [#2245](https://github.com/ruvnet/ruflo/issues/2245).
+> Companion to [ADR-074](../adr/ADR-074-self-learning-wiring-2245.md) and [#2245](https://github.com/z451047442-debug/swarmlo/issues/2245).
 >
 > This document gives anyone the copy-paste commands needed to *verify the
 > learning system actually persists what it claims*, plus the multi-path map of
@@ -30,8 +30,8 @@ what it did and didn't do.
 ### One-shot benchmark
 
 ```bash
-git clone https://github.com/ruvnet/ruflo
-cd ruflo && npm install
+git clone https://github.com/z451047442-debug/swarmlo
+cd swarmlo && npm install
 ( cd v3/@claude-flow/cli && npx tsc -b )
 
 # Default: N=20 calls per surface; writes a run JSON.
@@ -92,13 +92,13 @@ After running the benchmark, the scratch directory is cleaned up. To inspect
 persistence on your own machine:
 
 ```bash
-mkdir -p /tmp/ruflo-learn-demo && cd /tmp/ruflo-learn-demo
+mkdir -p /tmp/swarmlo-learn-demo && cd /tmp/swarmlo-learn-demo
 
 # Run one task-completed with training enabled
-RUFLO_CWD=$(pwd) node -e '
+SWARMLO_CWD=$(pwd) node -e '
 (async () => {
-  process.chdir(process.env.RUFLO_CWD);
-  const { hooksTools } = await import("/Users/cohen/Projects/ruflo/v3/@claude-flow/cli/dist/src/mcp-tools/hooks-tools.js");
+  process.chdir(process.env.SWARMLO_CWD);
+  const { hooksTools } = await import("/Users/cohen/Projects/swarmlo/v3/@claude-flow/cli/dist/src/mcp-tools/hooks-tools.js");
   const tool = hooksTools.find(t => t.name === "hooks_task-completed");
   const r = await tool.handler({
     taskId: "demo-1",
@@ -137,14 +137,14 @@ available), the handler would return `learningPath: "recorded-only"` plus a
 
 ## When the dashboards still show 0
 
-If you're using `ruflo hooks metrics` and seeing zeros, check **which store**
+If you're using `swarmlo hooks metrics` and seeing zeros, check **which store**
 your activity is writing to. The 4 stat aggregators sample different stores:
 
 | Reading from | Reflects activity via |
 |---|---|
 | `hooks_intelligence_stats` | `globalStats` (trajectory-end + task-completed `trainPatterns:true`) + `sonaCoordinator` |
 | `memory_bridge_status` | the memory-bridge SQL store directly |
-| `ruflo hooks metrics` | reads `globalStats` + a different aggregator subset |
+| `swarmlo hooks metrics` | reads `globalStats` + a different aggregator subset |
 | `neural_patterns list` | the `.claude-flow/neural/patterns.json` file (pretrain + `neural_patterns store` action) |
 
 This fragmentation is the #2245 reporter's "four contradictory sources" finding

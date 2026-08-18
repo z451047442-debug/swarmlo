@@ -14,8 +14,8 @@ import {
   validateAgentCard,
   A2A_PROTOCOL_VERSION,
   A2A_WELL_KNOWN_PATH,
-  RUFLO_FEDERATION_BINDING,
-  RUFLO_FEDERATION_EXTENSION_URI,
+  SWARMLO_FEDERATION_BINDING,
+  SWARMLO_FEDERATION_EXTENSION_URI,
   type A2AAgentCard,
 } from '../../src/a2a/agent-card.js';
 import { DiscoveryService } from '../../src/domain/services/discovery-service.js';
@@ -79,10 +79,10 @@ describe('toAgentCard', () => {
     expect(Array.isArray(card.skills)).toBe(true);
   });
 
-  it('advertises the federation endpoint as an open-form RUFLO-FEDERATION binding', () => {
+  it('advertises the federation endpoint as an open-form SWARMLO-FEDERATION binding', () => {
     const card = toAgentCard(makeManifest());
     const iface = card.supportedInterfaces[0]!;
-    expect(iface.protocolBinding).toBe(RUFLO_FEDERATION_BINDING);
+    expect(iface.protocolBinding).toBe(SWARMLO_FEDERATION_BINDING);
     expect(iface.protocolVersion).toBe(A2A_PROTOCOL_VERSION);
     expect(iface.url).toBe('ws://127.0.0.1:9100');
   });
@@ -116,7 +116,7 @@ describe('toAgentCard', () => {
     expect(card.provider).toEqual({ url: 'https://ruv.net', organization: 'ruvnet' });
     // additional interfaces come first (preferred per spec ordering)
     expect(card.supportedInterfaces[0]!.protocolBinding).toBe('JSONRPC');
-    expect(card.supportedInterfaces[1]!.protocolBinding).toBe(RUFLO_FEDERATION_BINDING);
+    expect(card.supportedInterfaces[1]!.protocolBinding).toBe(SWARMLO_FEDERATION_BINDING);
   });
 });
 
@@ -165,7 +165,7 @@ describe('validateAgentCard', () => {
 });
 
 describe('fromAgentCard', () => {
-  it('round-trips a ruflo-generated card back to the federation identity', () => {
+  it('round-trips a swarmlo-generated card back to the federation identity', () => {
     const manifest = makeManifest();
     const node = fromAgentCard(toAgentCard(manifest), 'http://127.0.0.1:41241/.well-known/agent-card.json');
 
@@ -185,7 +185,7 @@ describe('fromAgentCard', () => {
     expect(node.trustScore).toBe(0);
   });
 
-  it('maps a foreign (non-ruflo) A2A card without the federation extension', () => {
+  it('maps a foreign (non-swarmlo) A2A card without the federation extension', () => {
     const foreign: A2AAgentCard = {
       name: 'GeoSpatial Route Planner Agent',
       description: 'Route planning services.',

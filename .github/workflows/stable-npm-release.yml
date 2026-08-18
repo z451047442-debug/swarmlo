@@ -72,9 +72,9 @@ jobs:
           const packages = [
             ['@claude-flow/cli', require('./v3/@claude-flow/cli/package.json')],
             ['claude-flow', require('./package.json')],
-            ['ruflo', require('./ruflo/package.json')],
+            ['swarmlo', require('./swarmlo/package.json')],
           ];
-          const expectedNames = ['@claude-flow/cli', 'claude-flow', 'ruflo'];
+          const expectedNames = ['@claude-flow/cli', 'claude-flow', 'swarmlo'];
           if (JSON.stringify(packages.map(([name]) => name)) !== JSON.stringify(expectedNames)) {
             throw new Error('stable release package set drifted');
           }
@@ -148,11 +148,11 @@ jobs:
           node - <<'NODE'
           const fs = require('node:fs');
           fs.copyFileSync('README.md', 'v3/@claude-flow/cli/README.md');
-          const target = 'v3/@claude-flow/cli/plugins/ruflo-metaharness';
+          const target = 'v3/@claude-flow/cli/plugins/swarmlo-metaharness';
           fs.rmSync(target, { recursive: true, force: true });
           fs.mkdirSync('v3/@claude-flow/cli/plugins', { recursive: true });
-          fs.cpSync('plugins/ruflo-metaharness', target, { recursive: true });
-          fs.copyFileSync('README.md', 'ruflo/README.md');
+          fs.cpSync('plugins/swarmlo-metaharness', target, { recursive: true });
+          fs.copyFileSync('README.md', 'swarmlo/README.md');
           NODE
 
       - name: Build and smoke-test immutable package archives
@@ -168,19 +168,19 @@ jobs:
           NODE
 
           release_version="${RELEASE_TAG#v}"
-          release_dir="$RUNNER_TEMP/ruflo-release-${release_version}"
+          release_dir="$RUNNER_TEMP/swarmlo-release-${release_version}"
           mkdir -p "$release_dir"
           npm pack --json --ignore-scripts --pack-destination "$release_dir" \
             ./v3/@claude-flow/cli >"$release_dir/cli-pack.json"
           npm pack --json --ignore-scripts --pack-destination "$release_dir" \
             . >"$release_dir/root-pack.json"
           npm pack --json --ignore-scripts --pack-destination "$release_dir" \
-            ./ruflo >"$release_dir/ruflo-pack.json"
+            ./swarmlo >"$release_dir/swarmlo-pack.json"
 
           cli_archive="$release_dir/$(node -p "require('$release_dir/cli-pack.json')[0].filename")"
           root_archive="$release_dir/$(node -p "require('$release_dir/root-pack.json')[0].filename")"
-          ruflo_archive="$release_dir/$(node -p "require('$release_dir/ruflo-pack.json')[0].filename")"
-          archives=("$cli_archive" "$root_archive" "$ruflo_archive")
+          swarmlo_archive="$release_dir/$(node -p "require('$release_dir/swarmlo-pack.json')[0].filename")"
+          archives=("$cli_archive" "$root_archive" "$swarmlo_archive")
           test "${#archives[@]}" -eq 3
           test "$(find "$release_dir" -maxdepth 1 -name '*.tgz' | wc -l)" -eq 3
 
@@ -287,14 +287,14 @@ jobs:
             node node_modules/claude-flow/bin/cli.js policy status
           )
 
-          ruflo_install="$(mktemp -d)"
+          swarmlo_install="$(mktemp -d)"
           (
-            cd "$ruflo_install"
+            cd "$swarmlo_install"
             npm init -y >/dev/null
-            npm install "$cli_archive" "$ruflo_archive" \
+            npm install "$cli_archive" "$swarmlo_archive" \
               --omit=optional --no-audit --no-fund
             npm ls --all
-            node node_modules/ruflo/bin/ruflo.js --version
+            node node_modules/swarmlo/bin/swarmlo.js --version
           )
 
           agentic_v3_install="$(mktemp -d)"
@@ -332,10 +332,10 @@ jobs:
           {
             echo "CLI_ARCHIVE=$cli_archive"
             echo "ROOT_ARCHIVE=$root_archive"
-            echo "RUFLO_ARCHIVE=$ruflo_archive"
+            echo "SWARMLO_ARCHIVE=$swarmlo_archive"
             echo "CLI_INTEGRITY=$(node -p "require('$release_dir/cli-pack.json')[0].integrity")"
             echo "ROOT_INTEGRITY=$(node -p "require('$release_dir/root-pack.json')[0].integrity")"
-            echo "RUFLO_INTEGRITY=$(node -p "require('$release_dir/ruflo-pack.json')[0].integrity")"
+            echo "SWARMLO_INTEGRITY=$(node -p "require('$release_dir/swarmlo-pack.json')[0].integrity")"
           } >>"$GITHUB_ENV"
 
       - name: Publish the three verified archives
@@ -346,9 +346,9 @@ jobs:
         run: |
           version="${RELEASE_TAG#v}"
           candidate_tag="release-${version//./-}"
-          packages=("@claude-flow/cli" "claude-flow" "ruflo")
-          archives=("$CLI_ARCHIVE" "$ROOT_ARCHIVE" "$RUFLO_ARCHIVE")
-          integrities=("$CLI_INTEGRITY" "$ROOT_INTEGRITY" "$RUFLO_INTEGRITY")
+          packages=("@claude-flow/cli" "claude-flow" "swarmlo")
+          archives=("$CLI_ARCHIVE" "$ROOT_ARCHIVE" "$SWARMLO_ARCHIVE")
+          integrities=("$CLI_INTEGRITY" "$ROOT_INTEGRITY" "$SWARMLO_INTEGRITY")
           test "${#packages[@]}" -eq 3
           test "${#archives[@]}" -eq 3
           test "${#integrities[@]}" -eq 3
@@ -395,7 +395,7 @@ jobs:
           RELEASE_TAG: ${{ inputs.tag }}
         run: |
           version="${RELEASE_TAG#v}"
-          packages=("@claude-flow/cli" "claude-flow" "ruflo")
+          packages=("@claude-flow/cli" "claude-flow" "swarmlo")
           for package in "${packages[@]}"; do
             tags_ready=false
             for attempt in {1..10}; do
@@ -450,11 +450,11 @@ jobs:
             node node_modules/claude-flow/bin/cli.js policy status
           )
 
-          ruflo_install="$(mktemp -d)"
+          swarmlo_install="$(mktemp -d)"
           (
-            cd "$ruflo_install"
+            cd "$swarmlo_install"
             npm init -y >/dev/null
-            npm install "ruflo@${version}" --omit=optional --no-audit --no-fund
+            npm install "swarmlo@${version}" --omit=optional --no-audit --no-fund
             npm ls --all
-            node node_modules/ruflo/bin/ruflo.js --version
+            node node_modules/swarmlo/bin/swarmlo.js --version
           )

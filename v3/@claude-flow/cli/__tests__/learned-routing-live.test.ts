@@ -16,7 +16,7 @@ beforeAll(() => {
   originalCwd = process.cwd();
   originalDisableBridge = process.env.CLAUDE_FLOW_DISABLE_BRIDGE;
   originalDisableNativeRouter = process.env.CLAUDE_FLOW_DISABLE_NATIVE_ROUTER;
-  projectRoot = mkdtempSync(path.join(tmpdir(), 'ruflo-routing-live-'));
+  projectRoot = mkdtempSync(path.join(tmpdir(), 'swarmlo-routing-live-'));
   mkdirSync(path.join(projectRoot, '.claude-flow'), { recursive: true });
   process.chdir(projectRoot);
   process.env.CLAUDE_FLOW_DISABLE_BRIDGE = '1';

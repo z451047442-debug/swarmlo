@@ -54,7 +54,7 @@ const SCAN_TARGETS = [
 const allFiles = SCAN_TARGETS.flat();
 
 // Pattern to detect: the emoji + "Generated with" prefix
-// Matches both "Generated with Claude Code" and "Generated with [RuFlo](…)"
+// Matches both "Generated with Claude Code" and "Generated with [Swarmlo](…)"
 const HARDCODED_PATTERN = /🤖\s+Generated with/;
 
 const violations = [];

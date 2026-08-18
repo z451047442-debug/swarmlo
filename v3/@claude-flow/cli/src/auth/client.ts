@@ -1,5 +1,5 @@
 /**
- * `ruflo auth login` flow orchestration (ADR-306) — composes
+ * `swarmlo auth login` flow orchestration (ADR-306) — composes
  * `@claude-flow/security`'s ported OAuth primitives (loopback PKCE, OOB
  * manual-paste, refresh) the same way meta-proxy's `oauth/login.rs`
  * orchestrates its own Rust primitives. See security-bridge.ts for why the
@@ -89,7 +89,7 @@ export class StateMismatchError extends Error {
 
 export class NotLoggedInError extends Error {
   constructor(profile: string) {
-    super(`not logged in for profile "${profile}" — run: ruflo auth login --profile ${profile}`);
+    super(`not logged in for profile "${profile}" — run: swarmlo auth login --profile ${profile}`);
     this.name = 'NotLoggedInError';
   }
 }
@@ -98,7 +98,7 @@ export class SessionOnlyExpiredError extends Error {
   constructor(profile: string) {
     super(
       `profile "${profile}" has no persisted refresh token and its in-memory access token is ` +
-        `absent or expiring — run: ruflo auth login --profile ${profile}`,
+        `absent or expiring — run: swarmlo auth login --profile ${profile}`,
     );
     this.name = 'SessionOnlyExpiredError';
   }
@@ -203,7 +203,7 @@ export async function tokenStdinLogin(input: NodeJS.ReadableStream = process.std
  * Refreshes an access token. Classifies failure into network-unreachable
  * vs. a reachable-but-erroring server so callers can print an honest
  * message instead of collapsing both into "offline" (ADR-308 failure
- * policy: local ruflo functionality is never affected by auth being
+ * policy: local swarmlo functionality is never affected by auth being
  * unavailable, but the diagnostic should say WHY it's unavailable).
  */
 export async function refreshAccessToken(refreshTokenValue: string): Promise<OAuthTokenResponse> {
@@ -214,7 +214,7 @@ export async function refreshAccessToken(refreshTokenValue: string): Promise<OAu
     if (e instanceof sec.OAuthError) {
       if (e.code === 'network') {
         throw new Error(
-          'Could not reach the Cognitum auth service. ruflo core functionality is unaffected — ' +
+          'Could not reach the Cognitum auth service. swarmlo core functionality is unaffected — ' +
             'sign-in is not required for local use.',
         );
       }

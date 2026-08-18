@@ -3,21 +3,21 @@
  *
  * The self-optimizing loop's workers (distillation, backup, and the future
  * evolve worker) are inert unless the daemon runs — but it required a manual
- * `ruflo daemon start`. This ensures a daemon is running on CLI use, SAFELY:
+ * `swarmlo daemon start`. This ensures a daemon is running on CLI use, SAFELY:
  *
  *   - single-instance: only starts when no live daemon holds the pidfile, and
  *     the spawned `daemon start` independently enforces single-instance via its
  *     own lock + checkExistingDaemon() — so a race spawns at most one survivor,
  *   - bounded lifetime: the daemon self-terminates on TTL/idle (12h hard TTL,
- *     30m idle default; RUFLO_DAEMON_TTL_SECS / RUFLO_DAEMON_IDLE_SECS) —
+ *     30m idle default; SWARMLO_DAEMON_TTL_SECS / SWARMLO_DAEMON_IDLE_SECS) —
  *     auto-start never means "runs forever",
- *   - opt-out: RUFLO_DAEMON_AUTOSTART=0|false|no disables it entirely, OR a
+ *   - opt-out: SWARMLO_DAEMON_AUTOSTART=0|false|no disables it entirely, OR a
  *     project-local `daemon.autostart: false` in claude-flow.config.json —
  *     the file-based opt-out exists because the env var only reaches a
  *     process that inherited it. A non-interactive shell (cron, CI, many
  *     tool-invoked shells — bash skips ~/.bashrc entirely for these; see
  *     its own `case $- in *i*) ;; *) return;; esac` guard) never re-sources
- *     a shell rc file per invocation, so `export RUFLO_DAEMON_AUTOSTART=0`
+ *     a shell rc file per invocation, so `export SWARMLO_DAEMON_AUTOSTART=0`
  *     in one such shell does NOT persist to the next one. A project config
  *     field has no such gap — it's read fresh from disk every time,
  *     independent of which shell (or whether any shell at all) launched
@@ -60,19 +60,19 @@ function autostartDisabledByProjectConfig(projectRoot: string): boolean {
 }
 
 function autostartDisabled(projectRoot: string): boolean {
-  if (/^(0|false|no|off)$/i.test(process.env.RUFLO_DAEMON_AUTOSTART ?? '')) return true;
+  if (/^(0|false|no|off)$/i.test(process.env.SWARMLO_DAEMON_AUTOSTART ?? '')) return true;
   return autostartDisabledByProjectConfig(projectRoot);
 }
 
 /**
- * Return true only when the directory contains a durable Ruflo project marker.
+ * Return true only when the directory contains a durable Swarmlo project marker.
  *
  * A bare `.claude/` is owned by Claude Code, and a bare `.claude-flow/` is not
  * sufficient either: startup-time policy/champion migration can create it
  * before this function runs. Treating that mutation as authorization caused a
  * read-only command in any Claude project to spawn a detached daemon (#2852).
  */
-export function isRufloProject(projectRoot: string): boolean {
+export function isSwarmloProject(projectRoot: string): boolean {
   const root = path.resolve(projectRoot);
   const directMarkers = [
     path.join(root, '.claude-flow', 'config.yaml'),
@@ -90,16 +90,16 @@ export function isRufloProject(projectRoot: string): boolean {
     if (settings && typeof settings === 'object' && 'claudeFlow' in settings) {
       return true;
     }
-  } catch { /* absent/malformed/non-Ruflo settings */ }
+  } catch { /* absent/malformed/non-Swarmlo settings */ }
 
   try {
     const mcp = JSON.parse(fs.readFileSync(path.join(root, '.mcp.json'), 'utf-8'));
     const servers = mcp?.mcpServers;
     if (servers && typeof servers === 'object'
-      && ('ruflo' in servers || 'claude-flow' in servers)) {
+      && ('swarmlo' in servers || 'claude-flow' in servers)) {
       return true;
     }
-  } catch { /* absent/malformed/non-Ruflo MCP config */ }
+  } catch { /* absent/malformed/non-Swarmlo MCP config */ }
 
   return false;
 }
@@ -116,22 +116,22 @@ export function isRufloProject(projectRoot: string): boolean {
  * and leaving two daemons supervising the same tree.
  *
  * Resolution walks up from `startDir` and returns the NEAREST enclosing
- * directory carrying a durable Ruflo marker (`isRufloProject`). Nearest-wins
+ * directory carrying a durable Swarmlo marker (`isSwarmloProject`). Nearest-wins
  * is what keeps a monorepo's independently-initialized sub-project on its own
  * daemon: it matches its own marker before the walk ever reaches the parent.
  *
  * A `.git` directory is a hard stop — the repository boundary. Without it the
- * walk could escape into an unrelated ancestor (a Ruflo project living at
+ * walk could escape into an unrelated ancestor (a Swarmlo project living at
  * `$HOME`, say) and hand every repo below it the same daemon.
  *
  * Returns the resolved `startDir` unchanged when no marker is found, so a
- * non-Ruflo directory still fails `isRufloProject` and declines autostart.
+ * non-Swarmlo directory still fails `isSwarmloProject` and declines autostart.
  */
 export function resolveDaemonProjectRoot(startDir: string): string {
   const start = path.resolve(startDir);
   let dir = start;
   for (;;) {
-    if (isRufloProject(dir)) return dir;
+    if (isSwarmloProject(dir)) return dir;
     if (fs.existsSync(path.join(dir, '.git'))) return start;
     const parent = path.dirname(dir);
     if (parent === dir) return start;
@@ -169,9 +169,9 @@ export function ensureDaemonRunning(
 ): EnsureResult {
   try {
     const projectRoot = resolveDaemonProjectRoot(startDir);
-    if (autostartDisabled(projectRoot)) return { started: false, reason: 'disabled (RUFLO_DAEMON_AUTOSTART=0 or project config)' };
-    if (!isRufloProject(projectRoot)) {
-      return { started: false, reason: 'not a ruflo project' };
+    if (autostartDisabled(projectRoot)) return { started: false, reason: 'disabled (SWARMLO_DAEMON_AUTOSTART=0 or project config)' };
+    if (!isSwarmloProject(projectRoot)) {
+      return { started: false, reason: 'not a swarmlo project' };
     }
     const alive = (opts.isAlive ?? isDaemonAlive)(projectRoot);
     if (alive) return { started: false, reason: 'already running' };

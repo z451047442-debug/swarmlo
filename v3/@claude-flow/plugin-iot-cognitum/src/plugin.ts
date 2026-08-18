@@ -189,7 +189,7 @@ export class IoTCognitumPlugin implements ClaudeFlowPlugin {
       {
         type: 'device-coordinator',
         name: 'Device Coordinator',
-        description: 'Manages Cognitum Seed device fleet as Ruflo agent swarm members',
+        description: 'Manages Cognitum Seed device fleet as Swarmlo agent swarm members',
         defaultConfig: {
           id: '',
           name: 'device-coordinator',

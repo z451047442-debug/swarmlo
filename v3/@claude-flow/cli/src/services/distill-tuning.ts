@@ -1,6 +1,6 @@
 /**
  * distill-tuning.ts — Milestone 4 self-optimization harness (ADR-174
- * "Self-optimization (ruflo tuning ruflo)").
+ * "Self-optimization (swarmlo tuning swarmlo)").
  *
  * Finds the memory-distillation config (batchSize, dedupDistance,
  * promoteThreshold) that maximises MEASURED retrieval quality — not a

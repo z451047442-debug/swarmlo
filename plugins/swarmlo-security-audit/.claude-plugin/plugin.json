@@ -1,0 +1,22 @@
+{
+  "name": "swarmlo-security-audit",
+  "description": "Security review, dependency scanning, policy gates, and CVE monitoring",
+  "version": "0.2.1",
+  "author": {
+    "name": "ruvnet",
+    "url": "https://github.com/ruvnet"
+  },
+  "homepage": "https://github.com/z451047442-debug/swarmlo",
+  "license": "MIT",
+  "keywords": [
+    "swarmlo",
+    "security",
+    "audit",
+    "cve",
+    "scanning",
+    "mcp",
+    "cve-monitoring",
+    "policy-gates",
+    "shell-injection"
+  ]
+}

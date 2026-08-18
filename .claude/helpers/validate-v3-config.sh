@@ -4,7 +4,7 @@
 
 set -e
 
-echo "🔍 RuFlo V3 Configuration Validation"
+echo "🔍 Swarmlo V3 Configuration Validation"
 echo "==========================================="
 echo ""
 

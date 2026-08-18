@@ -17,7 +17,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
-const root = mkdtempSync(join(tmpdir(), 'ruflo-2968-persist-warning-'));
+const root = mkdtempSync(join(tmpdir(), 'swarmlo-2968-persist-warning-'));
 const dbPath = join(root, 'memory.db');
 
 let db: Database.Database | null = null;

@@ -1133,7 +1133,7 @@ const defendCommand: Command = {
 // Standalone scanner (no LLM) that reads the registered MCP tool
 // descriptors and flags cross-tool signals of Shamir-split prompt
 // injection (arXiv 2606.27027 ShareLock) + typo-squat lookalikes
-// against trusted ruflo prefixes.
+// against trusted swarmlo prefixes.
 const compositionScanCommand: Command = {
   name: 'composition-scan',
   description: 'Scan registered MCP tool descriptions for cross-tool prompt-injection signatures (dream-cycle #2783)',
@@ -1400,7 +1400,7 @@ export const securityCommand: Command = {
   ],
   action: async (): Promise<CommandResult> => {
     output.writeln();
-    output.writeln(output.bold('RuFlo Security Suite'));
+    output.writeln(output.bold('Swarmlo Security Suite'));
     output.writeln(output.dim('Comprehensive security scanning and vulnerability management'));
     output.writeln();
     output.writeln('Subcommands:');

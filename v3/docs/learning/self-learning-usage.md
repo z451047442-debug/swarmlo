@@ -1,6 +1,6 @@
 # Self-Learning — Usage Guide
 
-> Copy-paste examples for the three paths ruflo's self-learning system actually
+> Copy-paste examples for the three paths swarmlo's self-learning system actually
 > supports, plus how to pretrain it from a repo's GitHub history and verify
 > that learning happened.
 >
@@ -27,7 +27,7 @@ naming exactly what fired and what didn't.
 
 ```bash
 # Via the MCP tool (most common — Claude Code agents use this)
-mcp__ruflo__hooks_task-completed {
+mcp__swarmlo__hooks_task-completed {
   taskId: 'fix-2245-stub',
   success: true,
   quality: 0.95,
@@ -93,7 +93,7 @@ final outcome.
 When you want to remember something but don't want it shaping future routing:
 
 ```bash
-mcp__ruflo__memory_store {
+mcp__swarmlo__memory_store {
   key: 'note-2026-05-30',
   value: 'Reminder: the Opus alias bump landed in 3.10.14',
   namespace: 'notes',
@@ -139,7 +139,7 @@ Two complementary verifiers.
 ### Counter-based (any time)
 
 ```bash
-mcp__ruflo__hooks_intelligence_unified-stats {}
+mcp__swarmlo__hooks_intelligence_unified-stats {}
 
 # Returns: { global, sona, memoryBridge, neuralPatterns, consistency }
 # Each sub-view names its source path. The consistency block flags drift
@@ -183,7 +183,7 @@ catches future regressions.
 ## Reproduce all the proofs in this repo
 
 ```bash
-git clone https://github.com/ruvnet/ruflo && cd ruflo
+git clone https://github.com/z451047442-debug/swarmlo && cd swarmlo
 npm install && ( cd v3/@claude-flow/cli && npx tsc -b )
 
 # ⓐ Self-learning wiring (5 sections — primitives → MCP surfaces → multi-step)
@@ -208,10 +208,10 @@ non-zero on failure, so they double as CI gates.
 
 - **"My dashboard shows 0 after I called `post-edit`"** — read the
   `learningPath` field. If it's `'recorded-only'`, the trajectory pipeline
-  wasn't reachable in the calling process. Run from inside ruflo's CLI
+  wasn't reachable in the calling process. Run from inside swarmlo's CLI
   process or set up the bridge explicitly.
 - **"`neural_patterns list` is empty after `pretrain`"** — fixed in 3.10.14
-  (ADR-074). Make sure you're on `npx ruflo@3.10.14` or later.
+  (ADR-074). Make sure you're on `npx swarmlo@3.10.14` or later.
 - **"`hooks_intelligence_stats` shows different numbers than
   `memory_bridge_status`"** — that's by design (they measure different
   layers). Use `hooks_intelligence_unified-stats` for one coherent view,

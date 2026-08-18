@@ -14,7 +14,7 @@ const originalRoot = process.env.CLAUDE_FLOW_MEMORY_PATH;
 const originalDisableBridge = process.env.CLAUDE_FLOW_DISABLE_BRIDGE;
 
 beforeEach(() => {
-  root = mkdtempSync(path.join(tmpdir(), 'ruflo-memory-2815-'));
+  root = mkdtempSync(path.join(tmpdir(), 'swarmlo-memory-2815-'));
   process.env.CLAUDE_FLOW_MEMORY_PATH = root;
   process.env.CLAUDE_FLOW_DISABLE_BRIDGE = '1';
   vi.resetModules();

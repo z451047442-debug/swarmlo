@@ -2,7 +2,7 @@
 /**
  * Reproducible ADR-330 benchmark.
  *
- * This does not repeat the external paper's claims. It measures Ruflo's local
+ * This does not repeat the external paper's claims. It measures Swarmlo's local
  * implementation on a declared synthetic convergence workload and fails when
  * safety or latency bounds regress.
  */
@@ -60,7 +60,7 @@ const rawMean = (rows) => rows.reduce((sum, row) => sum + row.rawScore, 0) / Mat
 const baselineMean = rawMean(Object.values(state.agents));
 const activeMean = rawMean(active);
 const report = {
-  schemaVersion: 'ruflo.apsc-benchmark/v1',
+  schemaVersion: 'swarmlo.apsc-benchmark/v1',
   workload: {
     agents: agents.length,
     strongAgents: agents.filter((agent) => agent.strong).length,
@@ -80,7 +80,7 @@ const report = {
     quorumPreserved: active.length >= state.config.minActiveAgents,
     updateP95Ms: p95Ms,
   },
-  claimBoundary: 'Synthetic Ruflo implementation benchmark; external TPSC percentages are not claimed.',
+  claimBoundary: 'Synthetic Swarmlo implementation benchmark; external TPSC percentages are not claimed.',
 };
 
 console.log(JSON.stringify(report, null, 2));

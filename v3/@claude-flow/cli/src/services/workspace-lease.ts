@@ -75,7 +75,7 @@ export class WorkspaceLeaseRegistry {
 
   constructor(options?: { baseDir?: string }) {
     this.dir = options?.baseDir
-      ?? process.env.RUFLO_AI_BUDGET_DIR // shares the same override as global-ai-budget for test isolation
+      ?? process.env.SWARMLO_AI_BUDGET_DIR // shares the same override as global-ai-budget for test isolation
       ?? join(homedir(), '.claude-flow');
   }
 
@@ -201,7 +201,7 @@ export function getWorkspaceLeaseRegistry(): WorkspaceLeaseRegistry {
   return registryInstance;
 }
 
-/** Test hook: reset the singleton (e.g. after changing RUFLO_AI_BUDGET_DIR). */
+/** Test hook: reset the singleton (e.g. after changing SWARMLO_AI_BUDGET_DIR). */
 export function resetWorkspaceLeaseRegistryForTests(): void {
   registryInstance = null;
 }

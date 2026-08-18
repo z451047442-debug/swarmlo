@@ -1,6 +1,6 @@
 # Memory Agent SOTA Report — 2026-06-13
 
-**TL;DR:** Three 2026 papers establish that flat HNSW retrieval without temporal decay is SOTA-deficient: MemMachine cuts token cost 80% via episodic ground-truth preservation (LoCoMo 0.9169); SSGM identifies semantic drift and knowledge-leakage as architectural risks in flat-vector long-term stores; the survey arXiv:2603.07670 names "learned forgetting" and "causal retrieval" as the two biggest unsolved frontiers. Ruflo's AgentDB has neither.
+**TL;DR:** Three 2026 papers establish that flat HNSW retrieval without temporal decay is SOTA-deficient: MemMachine cuts token cost 80% via episodic ground-truth preservation (LoCoMo 0.9169); SSGM identifies semantic drift and knowledge-leakage as architectural risks in flat-vector long-term stores; the survey arXiv:2603.07670 names "learned forgetting" and "causal retrieval" as the two biggest unsolved frontiers. Swarmlo's AgentDB has neither.
 
 ---
 
@@ -17,7 +17,7 @@
 
 ---
 
-## Ruflo Current Capability
+## Swarmlo Current Capability
 
 | Capability | Status | Notes |
 |-----------|--------|-------|
@@ -42,7 +42,7 @@
 | **LangGraph v0.4** | PostgresSaver checkpointer | ✅ TTL eviction | ❌ state snapshots | Not published |
 | **Zep** | Temporal knowledge graph | ✅ native | ✅ entity tracking | 63.8% temporal retrieval (arXiv:2501.13956, Grade B) |
 | **Mem0** | Hybrid semantic+short-term | ❌ no decay | ❌ | LoCoMo ~49% temporal, 91% lower latency (Grade A) |
-| **Ruflo AgentDB** | SQLite + HNSW flat store | ❌ absent | ❌ | ADR-088: deferred |
+| **Swarmlo AgentDB** | SQLite + HNSW flat store | ❌ absent | ❌ | ADR-088: deferred |
 
 ---
 
@@ -55,7 +55,7 @@
 | Mem0 p95 latency | 1.44 s vs 17.12 s full-context | Mem0 | 2025 | A (arXiv:2504.19413) |
 | Zep temporal retrieval | 63.8% vs Mem0 49.0% | Zep | 2026 | B (arXiv:2501.13956, single source) |
 
-> Note: No 2026 benchmark data available for Ruflo AgentDB's LoCoMo or LongMemEvalS performance.
+> Note: No 2026 benchmark data available for Swarmlo AgentDB's LoCoMo or LongMemEvalS performance.
 
 ---
 
@@ -79,4 +79,4 @@ printf '%s%s' "42dc7ff29b2f3c387bc7ce8ae8e528c8dda6f3904ed49e93d4100ddadc9d0acd"
 
 2. **Add episodic ground-truth layer alongside HNSW embeddings**: Store raw conversation episodes as first-class objects (not just embeddings) to enable MemMachine-style retrieval. Target: recover 80% token efficiency vs current embedding-only recall on LoCoMo-style queries.
 
-3. **Run LoCoMo benchmark against current AgentDB**: Establishes baseline before ADR-156 changes land. MemMachine 0.9169 is the 2026 SOTA bar. Current Ruflo likely trails without temporal decay + episodic layer.
+3. **Run LoCoMo benchmark against current AgentDB**: Establishes baseline before ADR-156 changes land. MemMachine 0.9169 is the 2026 SOTA bar. Current Swarmlo likely trails without temporal decay + episodic layer.

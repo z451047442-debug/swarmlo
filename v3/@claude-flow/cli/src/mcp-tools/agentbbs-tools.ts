@@ -2,14 +2,14 @@
  * AgentBBS MCP Tools — Federated business-domain BBS room surface (ADR-164 Phase 1).
  *
  * Exposes the `agentbbs@~0.1.0` (a sibling BBS-style federation peer by the same
- * author as ruflo) as MCP tools so ruflo agents can register business rooms
+ * author as swarmlo) as MCP tools so swarmlo agents can register business rooms
  * (#sales, #finance, #marketing, ...), publish/watch typed envelopes, and
  * mint single-use human-join tokens for SSH/web cockpit access.
  *
  * Motivation:
  *   ADR-164 wires the "business autopilot" cockpit on top of the existing
- *   ruflo federation primitives (FederationEnvelope, PII pipeline, budget
- *   circuit breaker). The 4 tools here are the ruflo-side handles into the
+ *   swarmlo federation primitives (FederationEnvelope, PII pipeline, budget
+ *   circuit breaker). The 4 tools here are the swarmlo-side handles into the
  *   agentbbs Rust workspace (`crates/agentbbs-federation/` and
  *   `crates/agentbbs-mcp/`) that already implement Ed25519-signed envelopes
  *   and an MCP transport. Phase 1 ships the surface; Phases 2-5 wire deeper.

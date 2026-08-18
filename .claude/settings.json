@@ -268,7 +268,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "ruflo@latest",
+        "swarmlo@latest",
         "mcp",
         "start"
       ]

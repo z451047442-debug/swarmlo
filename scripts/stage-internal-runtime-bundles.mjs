@@ -124,7 +124,7 @@ export function createBundledRuntimeManifest(packageJson) {
 
   const bundledManifest = {
     ...packageJson,
-    rufloBundledRuntime: {
+    swarmloBundledRuntime: {
       format: 1,
       sourceDependencies: dependencyMetadata,
     },

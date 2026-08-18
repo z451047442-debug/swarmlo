@@ -23,10 +23,10 @@ function keys() {
 }
 
 const manifest: ProvenConfigManifest = {
-  schema: 'ruflo.proven-config/v1',
+  schema: 'swarmlo.proven-config/v1',
   policy: { ref: 'sha256:abc123' },
   platform: ['linux', 'macOS'],
-  compatibility: { ruflo: '>=3.24.0' },
+  compatibility: { swarmlo: '>=3.24.0' },
   benchmark: { corpus: 'LAB-v1', corpusHash: 'deadbeef' },
   layer: 'framework/node-cli',
 };
@@ -77,7 +77,7 @@ describe('adopt path parity — RVFA-packed champion adopts like raw JSON', () =
     const decoded = loadShippedChampion(rvfPath);
     expect(decoded).not.toBeNull();
 
-    const env = { platform: 'linux', versions: { ruflo: '3.24.0' } };
+    const env = { platform: 'linux', versions: { swarmlo: '3.24.0' } };
     const res = adoptSignedConfig(cwd, decoded!, env, { pubkeyPem: pub });
     expect(res.adopted).toBe(true);
     expect(res.to).toBe('sha256:abc123');
@@ -98,7 +98,7 @@ describe('adopt path parity — RVFA-packed champion adopts like raw JSON', () =
     // …but adoption fails closed: the inner signature doesn't verify under pub.
     const cwd = mkdtempSync(join(tmpdir(), 'pcrvfa-'));
     mkdirSync(join(cwd, '.claude'), { recursive: true });
-    const res = adoptSignedConfig(cwd, decoded!, { platform: 'linux', versions: { ruflo: '3.24.0' } }, { pubkeyPem: pub });
+    const res = adoptSignedConfig(cwd, decoded!, { platform: 'linux', versions: { swarmlo: '3.24.0' } }, { pubkeyPem: pub });
     expect(res.adopted).toBe(false);
   });
 });

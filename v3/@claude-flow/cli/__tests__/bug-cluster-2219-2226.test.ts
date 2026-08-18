@@ -42,8 +42,8 @@ describe('#2221 — statusline version probe covers global npm installs', () => 
   });
 
   it('still keeps the project-local and plugin-marketplace probes', () => {
-    expect(SCRIPT).toContain("'marketplaces', 'ruflo', 'package.json'");
-    expect(SCRIPT).toContain("'node_modules', 'ruflo', 'package.json'");
+    expect(SCRIPT).toContain("'marketplaces', 'swarmlo', 'package.json'");
+    expect(SCRIPT).toContain("'node_modules', 'swarmlo', 'package.json'");
   });
 });
 
@@ -65,7 +65,7 @@ describe('#2215 — system_info and hooks_intelligence agree on flashAttention',
 
 describe('#2222 — route feedback persists the Q-table to disk', () => {
   it('writes the model after a single update + explicit save', async () => {
-    const dir = mkdtempSync(path.join(tmpdir(), 'ruflo-qlearn-'));
+    const dir = mkdtempSync(path.join(tmpdir(), 'swarmlo-qlearn-'));
     const modelPath = path.join(dir, 'q-learning-model.json');
     try {
       const router = createQLearningRouter({ modelPath, autoSaveInterval: 100 });
@@ -180,7 +180,7 @@ describe('#2226 — pattern store and search share a backend', () => {
  */
 describe('3.10.8 #bugB — Q-router reflects a learned update immediately (no 50-update cache lag)', () => {
   it('changes the exploited route within a handful of updates', async () => {
-    const dir = mkdtempSync(path.join(tmpdir(), 'ruflo-qcache-'));
+    const dir = mkdtempSync(path.join(tmpdir(), 'swarmlo-qcache-'));
     try {
       const r = createQLearningRouter({ modelPath: path.join(dir, 'q.json') });
       await r.initialize();

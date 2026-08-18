@@ -1,7 +1,7 @@
 /**
- * `ruflo proxy install`/`update` orchestration (ADR-307): download -> verify
+ * `swarmlo proxy install`/`update` orchestration (ADR-307): download -> verify
  * -> extract -> place -> record. The per-user bearer token
- * (`~/.ruflo/proxy-token`) is NOT generated here — confirmed empirically
+ * (`~/.swarmlo/proxy-token`) is NOT generated here — confirmed empirically
  * (2026-07-16) that the meta-proxy binary itself creates it on first launch
  * (`load_or_create_token()`), so this module's job ends at a verified binary
  * on disk plus an install manifest doctor can check against.
@@ -64,7 +64,7 @@ async function extractWithPowerShell(archivePath: string, extractDir: string): P
  * still not something to lean on by default. But `Microsoft.PowerShell.Archive`
  * is a *script* module resolved through PowerShell's module autoloading, so it
  * can fail for environment reasons entirely unrelated to the archive. Observed
- * in the wild on a healthy Windows 11 box, from ruflo's own `-NonInteractive`
+ * in the wild on a healthy Windows 11 box, from swarmlo's own `-NonInteractive`
  * child process:
  *
  *   Expand-Archive : The 'Expand-Archive' command was found in the module
@@ -123,7 +123,7 @@ export async function installProxy(opts: InstallOptions): Promise<InstallResult>
   const triple: TargetTriple = detectTargetTriple();
   const archiveFilename = releaseAssetFilename(opts.version, triple);
 
-  const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ruflo-proxy-install-'));
+  const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'swarmlo-proxy-install-'));
   try {
     log(`Fetching meta-proxy ${opts.version} (${triple})...`);
     const assets = await fetchReleaseAssets(opts.version, triple, workDir, log);

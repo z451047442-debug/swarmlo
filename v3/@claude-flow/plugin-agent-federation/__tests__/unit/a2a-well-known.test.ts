@@ -150,7 +150,7 @@ describe('fetchAgentCard', () => {
     const { card, sourceUrl } = await fetchAgentCard('http://127.0.0.1:1', {
       fetchImpl: stubFetch(goldenCard()),
     });
-    expect(card.name).toBe('ruflo-federation/node-golden');
+    expect(card.name).toBe('swarmlo-federation/node-golden');
     expect(sourceUrl).toBe(`http://127.0.0.1:1${A2A_WELL_KNOWN_PATH}`);
   });
 

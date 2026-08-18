@@ -3,7 +3,7 @@
  * the install pipeline, and previously the only one with no direct coverage.
  *
  * Motivating failure, observed on a healthy Windows 11 machine running
- * `ruflo proxy install --yes`, after the release had already been downloaded
+ * `swarmlo proxy install --yes`, after the release had already been downloaded
  * and its Ed25519 signature + sha256 verified:
  *
  *   [ERROR] Install failed

@@ -1,6 +1,6 @@
 /**
  * V3 CLI Cleanup Command
- * Removes project artifacts created by claude-flow/ruflo
+ * Removes project artifacts created by claude-flow/swarmlo
  *
  * Created with ruv.io
  */
@@ -11,17 +11,17 @@ import { existsSync, statSync, rmSync, readdirSync, readFileSync, writeFileSync 
 import { join } from 'path';
 
 /**
- * Ruflo-owned subdirectories within .claude/ that are safe to delete.
+ * Swarmlo-owned subdirectories within .claude/ that are safe to delete.
  * Everything else in .claude/ (agents, skills, commands, settings.local.json,
  * memory.db, worktrees, launch.json) belongs to Claude Code and must be preserved.
- * See: https://github.com/ruvnet/ruflo/issues/1557
+ * See: https://github.com/z451047442-debug/swarmlo/issues/1557
  */
 const CLAUDE_OWNED_SUBDIRS = [
-  { path: join('.claude', 'helpers'), description: 'Ruflo hook scripts' },
+  { path: join('.claude', 'helpers'), description: 'Swarmlo hook scripts' },
 ];
 
 /**
- * Artifact directories and files that claude-flow/ruflo may create
+ * Artifact directories and files that claude-flow/swarmlo may create
  */
 const ARTIFACT_DIRS = [
   { path: '.claude-flow', description: 'Capabilities and configuration' },
@@ -83,7 +83,7 @@ function formatSize(bytes: number): string {
  */
 export const cleanupCommand: Command = {
   name: 'cleanup',
-  description: 'Remove project artifacts created by claude-flow/ruflo',
+  description: 'Remove project artifacts created by claude-flow/swarmlo',
   aliases: ['clean'],
   options: [
     {
@@ -138,7 +138,7 @@ export const cleanupCommand: Command = {
     const found: { path: string; description: string; size: number; type: 'dir' | 'file'; skipped?: boolean }[] = [];
     let totalSize = 0;
 
-    // Scan ruflo-owned subdirs within .claude/ (surgical — preserves Claude Code files)
+    // Scan swarmlo-owned subdirs within .claude/ (surgical — preserves Claude Code files)
     for (const artifact of CLAUDE_OWNED_SUBDIRS) {
       const fullPath = join(cwd, artifact.path);
       if (existsSync(fullPath)) {
@@ -148,10 +148,10 @@ export const cleanupCommand: Command = {
       }
     }
 
-    // Check if .claude/settings.json has ruflo hooks/claudeFlow blocks to clean
+    // Check if .claude/settings.json has swarmlo hooks/claudeFlow blocks to clean
     const settingsPath = join(cwd, '.claude', 'settings.json');
     if (existsSync(settingsPath)) {
-      found.push({ path: join('.claude', 'settings.json'), description: 'Remove ruflo hooks/claudeFlow blocks (preserves rest)', size: 0, type: 'file' });
+      found.push({ path: join('.claude', 'settings.json'), description: 'Remove swarmlo hooks/claudeFlow blocks (preserves rest)', size: 0, type: 'file' });
     }
 
     // Scan standalone artifact directories

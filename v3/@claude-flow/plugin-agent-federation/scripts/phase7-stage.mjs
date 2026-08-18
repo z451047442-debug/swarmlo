@@ -103,42 +103,42 @@ try {
   console.error(`  ${e?.message ?? e}`);
   process.exit(2);
 }
-writeFileSync(join(stageDir, 'ruflo-fed.conf'), interfaceConfig);
+writeFileSync(join(stageDir, 'swarmlo-fed.conf'), interfaceConfig);
 
 // Firewall projection per OS
 const fw = new wgFirewall.WgFirewallService();
-const fwFile = process.platform === 'linux' ? 'ruflo-fed.nft' : 'ruflo-fed.pf';
+const fwFile = process.platform === 'linux' ? 'swarmlo-fed.nft' : 'swarmlo-fed.pf';
 const fwResult = fw.projectRules([fakePeer]);
 writeFileSync(join(stageDir, fwFile), fwResult.content);
 
 console.log('=== Staged files ===');
 console.log(`  ${stageDir}/wg-key-${localNodeId}.json   (mode 0600 — local private key)`);
-console.log(`  ${stageDir}/ruflo-fed.conf               (wg-quick config)`);
+console.log(`  ${stageDir}/swarmlo-fed.conf               (wg-quick config)`);
 console.log(`  ${stageDir}/${fwFile}                    (firewall projection)`);
 console.log();
 console.log('=== Activation checklist (operator-mediated; NOT auto-run) ===');
 console.log('  [ ] Cross-check: peer host ran the same staging with our local pubkey above?');
-console.log('  [ ] Review ruflo-fed.conf for unexpected [Peer] blocks (defense vs compromised manifest)');
+console.log('  [ ] Review swarmlo-fed.conf for unexpected [Peer] blocks (defense vs compromised manifest)');
 console.log('  [ ] Verify the AllowedIPs only includes the peer\'s mesh IP, not broader CIDR');
 console.log('  [ ] Confirm UDP/51820 is open between the two hosts');
 console.log();
 console.log('=== Activation commands ===');
-console.log(`  sudo install -m 0600 ${stageDir}/ruflo-fed.conf /etc/wireguard/ruflo-fed.conf`);
+console.log(`  sudo install -m 0600 ${stageDir}/swarmlo-fed.conf /etc/wireguard/swarmlo-fed.conf`);
 if (process.platform === 'linux') {
   console.log(`  sudo nft -f ${stageDir}/${fwFile}`);
 } else {
-  console.log(`  sudo pfctl -a ruflo-fed -f ${stageDir}/${fwFile}`);
+  console.log(`  sudo pfctl -a swarmlo-fed -f ${stageDir}/${fwFile}`);
 }
-console.log('  sudo wg-quick up ruflo-fed');
+console.log('  sudo wg-quick up swarmlo-fed');
 console.log();
 console.log('=== Verification ===');
-console.log('  sudo wg show ruflo-fed');
+console.log('  sudo wg show swarmlo-fed');
 console.log(`  ping ${peerMeshIP.replace('/32', '')}    # mesh reachability`);
 console.log();
 console.log('=== Rollback ===');
-console.log('  sudo wg-quick down ruflo-fed');
+console.log('  sudo wg-quick down swarmlo-fed');
 if (process.platform === 'linux') {
-  console.log('  sudo nft delete table inet ruflo_fed');
+  console.log('  sudo nft delete table inet swarmlo_fed');
 } else {
-  console.log('  sudo pfctl -a ruflo-fed -F all');
+  console.log('  sudo pfctl -a swarmlo-fed -F all');
 }

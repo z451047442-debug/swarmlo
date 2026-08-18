@@ -1,5 +1,5 @@
 /**
- * `ruflo proxy install|start|stop|status|logs|update|uninstall` (ADR-307) —
+ * `swarmlo proxy install|start|stop|status|logs|update|uninstall` (ADR-307) —
  * the full lifecycle command set, kept in its own file so
  * src/commands/proxy.ts (the ADR-313/314/315 consent subcommands) stays
  * under the repo's 500-line-per-file convention. Merged into one
@@ -33,11 +33,11 @@ import { removeInjectedToken, startTokenRefreshPump } from '../proxy/token-bridg
  */
 export const DEFAULT_PROXY_RELEASE = '0.7.3';
 
-const PROXY_COMMAND = 'npx ruflo@latest proxy';
-const AUTH_COMMAND = 'npx ruflo@latest auth';
+const PROXY_COMMAND = 'npx swarmlo@latest proxy';
+const AUTH_COMMAND = 'npx swarmlo@latest auth';
 
 /**
- * Human-oriented next steps for `ruflo proxy` and `ruflo proxy status`.
+ * Human-oriented next steps for `swarmlo proxy` and `swarmlo proxy status`.
  * Keep this independent of the command framework so the state-specific
  * guidance has a small, direct regression-test surface.
  */
@@ -114,10 +114,10 @@ const INSTALL_DISCLOSURE = [
   'checksum verified before anything is written to disk) and runs it as a',
   'local process bound to 127.0.0.1 only. The proxy routes to LOCAL',
   'backends by default — no prompt leaves this machine. Cloud routing is a',
-  'separate, explicit opt-in (`ruflo proxy config --cloud`), never enabled',
+  'separate, explicit opt-in (`swarmlo proxy config --cloud`), never enabled',
   'by install alone.',
   '',
-  'Uninstall anytime: ruflo proxy uninstall',
+  'Uninstall anytime: swarmlo proxy uninstall',
 ].join('\n');
 
 const installSub: Command = {
@@ -128,7 +128,7 @@ const installSub: Command = {
     // anywhere in argv (`if (flags.version || flags.V) { showVersion(); return; }`)
     // BEFORE subcommand dispatch, regardless of which command defines it. A
     // subcommand-local --version is silently swallowed by the CLI's own
-    // `ruflo --version` handling — confirmed the hard way in E2E testing.
+    // `swarmlo --version` handling — confirmed the hard way in E2E testing.
     { name: 'release', description: `Release version to install (default: ${DEFAULT_PROXY_RELEASE})`, type: 'string' },
     { name: 'yes', description: 'Skip the confirmation prompt', type: 'boolean', default: false },
   ],
@@ -138,7 +138,7 @@ const installSub: Command = {
     const version = typeof ctx.flags.release === 'string' ? ctx.flags.release : DEFAULT_PROXY_RELEASE;
     if (!version) {
       output.printError(
-        'ruflo proxy install requires --release <x.y.z> — there is no version-discovery ' +
+        'swarmlo proxy install requires --release <x.y.z> — there is no version-discovery ' +
           'endpoint yet (see the plan doc for the tracked follow-up). Find the latest at ' +
           'the release channel and pass it explicitly.',
       );
@@ -150,7 +150,7 @@ const installSub: Command = {
       output.writeln('');
       const confirmed = Boolean(ctx.flags.yes);
       if (!confirmed) {
-        output.writeln(`Re-run with --yes to confirm: ruflo proxy install --yes (installs ${version})`);
+        output.writeln(`Re-run with --yes to confirm: swarmlo proxy install --yes (installs ${version})`);
         return { success: true, data: { confirmed: false } };
       }
       recordConsent('proxy-install', true, 'proxy-install');
@@ -190,7 +190,7 @@ const updateSub: Command = {
   action: async (ctx): Promise<CommandResult> => {
     const version = typeof ctx.flags.release === 'string' ? ctx.flags.release : DEFAULT_PROXY_RELEASE;
     if (!version) {
-      output.printError('ruflo proxy update requires --release <x.y.z>');
+      output.printError('swarmlo proxy update requires --release <x.y.z>');
       return { success: false, exitCode: 1 };
     }
     try {
@@ -221,7 +221,7 @@ const startSub: Command = {
         const { pid } = await startBackground();
         output.printSuccess(`meta-proxy started in the background (pid ${pid})`);
         output.writeln('  Note: survives this terminal closing, but not a reboot — OS-service registration is not yet implemented.');
-        output.writeln('  Logs: ruflo proxy logs');
+        output.writeln('  Logs: swarmlo proxy logs');
         return { success: true, data: { pid } };
       }
       output.writeln('Starting meta-proxy in the foreground — press Ctrl+C to stop.');

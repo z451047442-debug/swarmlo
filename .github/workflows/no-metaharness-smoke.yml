@@ -1,10 +1,10 @@
 # ADR-150 architectural constraint rule #4 enforcement.
 #
-#   "Ruflo remains operational if every MetaHarness package is removed."
+#   "Swarmlo remains operational if every MetaHarness package is removed."
 #
-# This workflow installs ruflo with `--no-optional` (or equivalent) so
+# This workflow installs swarmlo with `--no-optional` (or equivalent) so
 # every `@metaharness/*` and `metaharness` package is EXCLUDED. It then
-# runs scripts/smoke-all-plugins.mjs and asserts that ruflo's entire
+# runs scripts/smoke-all-plugins.mjs and asserts that swarmlo's entire
 # plugin fleet still passes its structural contract.
 #
 # If this job ever fails, a MetaHarness package has accidentally been
@@ -45,7 +45,7 @@ jobs:
 
       - name: Verify no `@metaharness/*` or `metaharness` appears in non-optional deps anywhere
         # Static check: every plugins/*/package.json AND v3/*/package.json
-        # AND the root package.json AND ruflo/package.json must NOT list
+        # AND the root package.json AND swarmlo/package.json must NOT list
         # metaharness/router/kernel in `dependencies` (only `optionalDependencies`
         # or `peerDependencies` are allowed).
         run: |
@@ -54,7 +54,7 @@ jobs:
             const { join } = require('path');
             const candidates = [
               'package.json',
-              'ruflo/package.json',
+              'swarmlo/package.json',
               'v3/@claude-flow/cli/package.json',
             ];
             // Also scan all plugins/*/package.json (if any plugin has one)
@@ -83,7 +83,7 @@ jobs:
           "
 
       - name: Run meta-smoke (should pass with current optional deps in place)
-        # iter 119 — 300s timeout to give ruflo-metaharness (118 steps,
+        # iter 119 — 300s timeout to give swarmlo-metaharness (118 steps,
         # many npx invocations) enough wall time. Same change as
         # all-plugins-smoke.yml; 60s was timing out at 151s+ in CI.
         run: node scripts/smoke-all-plugins.mjs --timeout 300
@@ -105,12 +105,12 @@ jobs:
           export NPX_NO_LOCAL=1
           # Since the pinned-cache resolution (_invoke.mjs), skills no longer
           # go through npx: they resolve locally-installed metaharness first,
-          # then a versioned ~/.ruflo cache. Both defeat this drill's absence
+          # then a versioned ~/.swarmlo cache. Both defeat this drill's absence
           # simulation (metaharness IS installed in the CI workspace, and the
           # meta-smoke step above warms the cache). Use the purpose-built test
           # seams so "absent" means absent again:
-          export RUFLO_METAHARNESS_SKIP_LOCAL=1
-          export RUFLO_METAHARNESS_CACHE_BASE="$(mktemp -d)/empty-cache-root"
+          export SWARMLO_METAHARNESS_SKIP_LOCAL=1
+          export SWARMLO_METAHARNESS_CACHE_BASE="$(mktemp -d)/empty-cache-root"
 
           # iter 55 — expanded from 4 to 7 skills. The new entries are:
           # oia-audit (composite, calls all 5 sub-skills), mint (scaffolds
@@ -131,7 +131,7 @@ jobs:
             echo "--- exercising ${skill}.mjs with unreachable registry ---"
             ARGS="${SKILL_ARGS[$skill]}"
             set +e
-            OUT=$(node plugins/ruflo-metaharness/scripts/$skill.mjs $ARGS 2>&1)
+            OUT=$(node plugins/swarmlo-metaharness/scripts/$skill.mjs $ARGS 2>&1)
             EXIT=$?
             set -e
             echo "$OUT" | head -10

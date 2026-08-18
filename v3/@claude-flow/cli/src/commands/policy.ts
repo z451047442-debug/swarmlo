@@ -109,10 +109,10 @@ export const policyCommand: Command = {
     }
   },
   examples: [
-    { command: 'ruflo policy status', description: 'Show policy mode and ledger health' },
-    { command: 'ruflo policy init --mode observe', description: 'Migrate an existing install without blocking legacy actions' },
-    { command: 'ruflo policy budget set \'{"id":"daily-model","action":"model.call","maxCostUsd":10,"periodMs":86400000}\'', description: 'Set an atomic policy budget ceiling' },
-    { command: 'ruflo policy evaluate \'{"identity":{"id":"agent-1","type":"agent"},"action":{"type":"deploy","environment":"production"}}\'', description: 'Evaluate an action and write a decision receipt' },
+    { command: 'swarmlo policy status', description: 'Show policy mode and ledger health' },
+    { command: 'swarmlo policy init --mode observe', description: 'Migrate an existing install without blocking legacy actions' },
+    { command: 'swarmlo policy budget set \'{"id":"daily-model","action":"model.call","maxCostUsd":10,"periodMs":86400000}\'', description: 'Set an atomic policy budget ceiling' },
+    { command: 'swarmlo policy evaluate \'{"identity":{"id":"agent-1","type":"agent"},"action":{"type":"deploy","environment":"production"}}\'', description: 'Evaluate an action and write a decision receipt' },
   ],
 };
 

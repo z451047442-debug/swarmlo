@@ -2,7 +2,7 @@
  * ToolOutputGuardrail — semantic screening of content returned by MCP tool
  * calls, memory reads, and external API responses before that content enters
  * agent reasoning. Closes the OWASP ASI01 (Agent Goal Hijacking) gap
- * identified in ruvnet/ruflo#2149 / ADR-131.
+ * identified in z451047442-debug/swarmlo#2149 / ADR-131.
  *
  * Threat model
  * ------------

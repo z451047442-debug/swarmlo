@@ -43,7 +43,7 @@ export interface NormalizedCandidate extends ProposedCandidate {
 }
 
 export interface CandidateArchive {
-  archiveVersion: 'ruflo.candidate-archive/v1';
+  archiveVersion: 'swarmlo.candidate-archive/v1';
   archiveId: string;
   requestedProposer: ProposerMode;
   effectiveProposer: ProposerName;
@@ -158,7 +158,7 @@ function finalizeArchive(input: {
   const paretoCandidates = admissible.filter((candidate, index) =>
     !admissible.some((other, otherIndex) => otherIndex !== index && dominates(other, candidate)));
   const core = {
-    archiveVersion: 'ruflo.candidate-archive/v1' as const,
+    archiveVersion: 'swarmlo.candidate-archive/v1' as const,
     requestedProposer: input.requested,
     effectiveProposer: input.effective,
     ...(input.substitution ? { proposerSubstitution: input.substitution } : {}),

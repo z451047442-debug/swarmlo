@@ -44,7 +44,7 @@ function writeStore(root: string, entries: Entry[]): string {
 
 describe('#2920 intelligence: same-ID content edits must not stay cached/unpersisted', () => {
   it('init() rebuilds ranked-context.json when an entry\'s content changes but its ID and the entry count do not', () => {
-    const root = mkdtempSync(join(tmpdir(), 'ruflo-2920-init-'));
+    const root = mkdtempSync(join(tmpdir(), 'swarmlo-2920-init-'));
     const dataDir = writeStore(root, [{ id: 'sec-1', content: 'ORIGINAL BODY', namespace: 'auto-memory' }]);
 
     try {
@@ -67,7 +67,7 @@ describe('#2920 intelligence: same-ID content edits must not stay cached/unpersi
   });
 
   it('consolidate() persists an ID assigned to a previously ID-less entry instead of silently discarding it', () => {
-    const root = mkdtempSync(join(tmpdir(), 'ruflo-2920-consolidate-'));
+    const root = mkdtempSync(join(tmpdir(), 'swarmlo-2920-consolidate-'));
     // No id/key — consolidate() must assign one to build edges/nodes. Entry
     // count and dedup outcome are unchanged (1 entry in, 1 entry out, no
     // pending insights), which is exactly the condition the old persist
@@ -96,7 +96,7 @@ describe('#2920 intelligence: same-ID content edits must not stay cached/unpersi
   });
 
   it('init() cache-hits right after consolidate() when content is unchanged (consolidate must stamp contentFingerprint too)', () => {
-    const root = mkdtempSync(join(tmpdir(), 'ruflo-2920-consolidate-cache-'));
+    const root = mkdtempSync(join(tmpdir(), 'swarmlo-2920-consolidate-cache-'));
     writeStore(root, [{ id: 'sec-1', content: 'STABLE BODY', namespace: 'auto-memory' }]);
 
     try {

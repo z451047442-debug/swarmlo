@@ -1,5 +1,5 @@
 /**
- * proxy/lifecycle.ts — PID-file/status logic, isolated via RUFLO_STATE_DIR.
+ * proxy/lifecycle.ts — PID-file/status logic, isolated via SWARMLO_STATE_DIR.
  * The actual process spawn/stop/log-redirect round trip against the real
  * meta-proxy v0.1.0 binary was verified manually during implementation
  * (start -> status -> real log content -> stop; double-start correctly
@@ -19,7 +19,7 @@ let savedEnv: NodeJS.ProcessEnv;
 beforeEach(() => {
   stateDir = fs.mkdtempSync(path.join(os.tmpdir(), 'proxy-lifecycle-test-'));
   savedEnv = { ...process.env };
-  process.env.RUFLO_STATE_DIR = stateDir;
+  process.env.SWARMLO_STATE_DIR = stateDir;
 });
 
 afterEach(() => {

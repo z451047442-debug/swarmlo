@@ -1,5 +1,5 @@
 /**
- * `ruflo version` — ANV (Agent-Native Versioning) Phase 1.
+ * `swarmlo version` — ANV (Agent-Native Versioning) Phase 1.
  * https://gist.github.com/ruvnet/0d858ad440a4439b4a2281a40c39b1a0
  *
  * Black-box against the real built CLI binary (same pattern as
@@ -55,7 +55,7 @@ describe('buildAdvisorySuffix — pure function', () => {
   });
 });
 
-describe.skipIf(!CLI_BUILT)('ruflo version — CLI black-box', () => {
+describe.skipIf(!CLI_BUILT)('swarmlo version — CLI black-box', () => {
   it('bare "version" prints plain semver, no suffix', () => {
     const { out, code } = cli(['version']);
     expect(code).toBe(0);

@@ -5,7 +5,7 @@
  *  1. GraphEdgesSource reads edges from graph_edges correctly
  *  2. KnowledgeGraphAdapter can be created with GraphEdgesSource (autoRegister path)
  *  3. Exported SparseMatrix has correct structure
- *  4. ruflo-plugin-creator SKILL.md mentions graph_adapter stub
+ *  4. swarmlo-plugin-creator SKILL.md mentions graph_adapter stub
  *
  * Usage: node scripts/smoke-graph-plugin-adapter.mjs
  */
@@ -71,9 +71,9 @@ async function testGraphEdgesSource() {
 // ─── TEST 2: graph_adapter field in plugin.json (structural check) ──────────
 
 async function testPluginJsonStub() {
-  console.log('\nTEST 2: ruflo-plugin-creator SKILL.md mentions graph_adapter stub');
+  console.log('\nTEST 2: swarmlo-plugin-creator SKILL.md mentions graph_adapter stub');
   try {
-    const skillPath = path.join(projectRoot, 'plugins/ruflo-plugin-creator/skills/create-plugin/SKILL.md');
+    const skillPath = path.join(projectRoot, 'plugins/swarmlo-plugin-creator/skills/create-plugin/SKILL.md');
     assert(fs.existsSync(skillPath), '2a: create-plugin SKILL.md exists');
 
     const content = fs.readFileSync(skillPath, 'utf-8');
@@ -90,7 +90,7 @@ async function testPluginJsonStub() {
 async function testAdapterExports() {
   console.log('\nTEST 3: knowledge-graph-adapter exports GraphEdgesSource and createAutoGraphAdapter');
   try {
-    const adapterPath = path.join(projectRoot, 'plugins/ruflo-graph-intelligence/src/adapters/knowledge-graph-adapter.ts');
+    const adapterPath = path.join(projectRoot, 'plugins/swarmlo-graph-intelligence/src/adapters/knowledge-graph-adapter.ts');
     assert(fs.existsSync(adapterPath), '3a: knowledge-graph-adapter.ts exists');
 
     const content = fs.readFileSync(adapterPath, 'utf-8');
@@ -108,7 +108,7 @@ async function testAdapterExports() {
 async function testAdapterBackwardCompat() {
   console.log('\nTEST 4: existing adapters have fallback path documented');
   try {
-    const adaptersDir = path.join(projectRoot, 'plugins/ruflo-graph-intelligence/src/adapters');
+    const adaptersDir = path.join(projectRoot, 'plugins/swarmlo-graph-intelligence/src/adapters');
     const adapters = fs.readdirSync(adaptersDir).filter(f => f.endsWith('.ts') && f !== 'index.ts' && f !== 'knowledge-graph-adapter.ts');
 
     for (const adapter of adapters) {

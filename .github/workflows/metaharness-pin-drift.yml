@@ -1,4 +1,4 @@
-# metaharness-pin-drift — watch ruflo's metaharness dependency pins for drift.
+# metaharness-pin-drift — watch swarmlo's metaharness dependency pins for drift.
 #
 # A pin correct at publish time silently rots when upstream ships a release the
 # pin's range excludes (agent-harness-generator#142 / #149). This workflow diffs

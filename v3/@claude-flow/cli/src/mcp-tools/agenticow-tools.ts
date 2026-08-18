@@ -2,7 +2,7 @@
  * Agenticow MCP Tools — Copy-On-Write memory branching surface.
  *
  * Exposes `agenticow@~0.2.3` (a sibling RVF-based COW vector store by the same
- * author as ruflo) as MCP tools so agents can branch, checkpoint, rollback,
+ * author as swarmlo) as MCP tools so agents can branch, checkpoint, rollback,
  * and promote memory state without copying GB-scale `.rvf` files.
  *
  * Motivation:

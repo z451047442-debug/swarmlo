@@ -272,7 +272,7 @@ export async function evaluateFlywheelCandidate(projectRoot: string, deps: Flywh
     const provisionalGates = Object.fromEntries(Object.entries(result.verdict?.terms ?? {}).map(([k, v]) => [k, v.pass]));
     const txState = readFlywheelTransactionState(projectRoot);
     const safetyEnvelopeRef = deps.safetyEnvelopeRef ?? sha256Ref(JSON.stringify({
-      schema: 'ruflo.safety-envelope/local-default-v1',
+      schema: 'swarmlo.safety-envelope/local-default-v1',
       authorizationExpansion: false,
       networkExpansion: false,
       spendExpansion: false,
@@ -397,7 +397,7 @@ export async function evaluateFlywheelCandidate(projectRoot: string, deps: Flywh
 export async function runFlywheelTick(projectRoot: string, deps: FlywheelDeps): Promise<FlywheelResult> {
   const result = await evaluateFlywheelCandidate(projectRoot, deps);
   if (
-    process.env.RUFLO_FLYWHEEL_LEGACY_APPLY === '1'
+    process.env.SWARMLO_FLYWHEEL_LEGACY_APPLY === '1'
     && result.accepted
     && result.candidateConfig
     && result.championRef

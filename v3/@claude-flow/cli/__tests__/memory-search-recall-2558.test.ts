@@ -32,9 +32,9 @@ const CLI_BUILT = fs.existsSync(CLI);
 
 const NS = 'recall2558';
 const ENTRIES = [
-  { key: 'note/alpha', value: 'ruflo memory connectivity health probe alpha', unique: 'probe' },
-  { key: 'note/beta', value: 'ruflo memory connectivity latency check beta', unique: 'latency' },
-  { key: 'note/gamma', value: 'ruflo memory connectivity throughput report gamma', unique: 'throughput' },
+  { key: 'note/alpha', value: 'swarmlo memory connectivity health probe alpha', unique: 'probe' },
+  { key: 'note/beta', value: 'swarmlo memory connectivity latency check beta', unique: 'latency' },
+  { key: 'note/gamma', value: 'swarmlo memory connectivity throughput report gamma', unique: 'throughput' },
 ];
 
 let cwd = '';

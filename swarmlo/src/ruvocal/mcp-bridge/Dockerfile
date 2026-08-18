@@ -10,7 +10,7 @@ RUN npm install --production
 # Pre-install MCP backends for faster startup (avoids npx download on first call)
 # Each installed separately so one failure doesn't block others
 RUN npm install -g ruvector || true
-RUN npm install -g ruflo || true
+RUN npm install -g swarmlo || true
 RUN npm install -g agentic-flow@alpha || true
 RUN npm install -g gemini-mcp-server || true
 RUN npm install -g @openai/codex || true
@@ -18,7 +18,7 @@ RUN npm install -g @openai/codex || true
 COPY index.js ./
 COPY mcp-stdio-kernel.js ./
 
-# Create writable directories for MCP backends (ruflo, ruvector, agentic-flow)
+# Create writable directories for MCP backends (swarmlo, ruvector, agentic-flow)
 # These tools write state/tasks/memory to the working directory at runtime
 RUN mkdir -p /app/.claude-flow/tasks /app/.claude-flow/memory /app/.claude-flow/sessions \
     /app/.claude-flow/agents /app/.claude-flow/config /app/.claude-flow/data \

@@ -1,7 +1,7 @@
 /**
  * #2661 — Global AI launch budget (emergency cost fuse).
  *
- * Every autonomous `claude --print` launch across ALL ruflo daemons in ALL
+ * Every autonomous `claude --print` launch across ALL swarmlo daemons in ALL
  * worktrees/workspaces owned by the current user must pass through this
  * user-global budget before a process is created. Without it, N worktree
  * daemons each schedule their own AI workers and aggregate launch volume
@@ -144,7 +144,7 @@ export class GlobalAiBudget {
 
   constructor(options?: { baseDir?: string; limits?: Partial<AiBudgetLimits> }) {
     this.dir = options?.baseDir
-      ?? process.env.RUFLO_AI_BUDGET_DIR
+      ?? process.env.SWARMLO_AI_BUDGET_DIR
       ?? join(homedir(), '.claude-flow');
     this.ledgerFile = join(this.dir, 'ai-budget.json');
     this.lockFile = join(this.dir, 'ai-budget.lock');
@@ -152,19 +152,19 @@ export class GlobalAiBudget {
     this.limits = {
       maxConcurrentGlobal:
         options?.limits?.maxConcurrentGlobal
-        ?? envPositiveInt('RUFLO_AI_MAX_CONCURRENT')
+        ?? envPositiveInt('SWARMLO_AI_MAX_CONCURRENT')
         ?? DEFAULT_AI_BUDGET_LIMITS.maxConcurrentGlobal,
       maxLaunchesPerHour:
         options?.limits?.maxLaunchesPerHour
-        ?? envPositiveInt('RUFLO_AI_MAX_PER_HOUR')
+        ?? envPositiveInt('SWARMLO_AI_MAX_PER_HOUR')
         ?? DEFAULT_AI_BUDGET_LIMITS.maxLaunchesPerHour,
       maxLaunchesPerDay:
         options?.limits?.maxLaunchesPerDay
-        ?? envPositiveInt('RUFLO_AI_MAX_PER_DAY')
+        ?? envPositiveInt('SWARMLO_AI_MAX_PER_DAY')
         ?? DEFAULT_AI_BUDGET_LIMITS.maxLaunchesPerDay,
       pauseOnQuotaErrorMinutes:
         options?.limits?.pauseOnQuotaErrorMinutes
-        ?? envPositiveInt('RUFLO_AI_QUOTA_PAUSE_MINUTES')
+        ?? envPositiveInt('SWARMLO_AI_QUOTA_PAUSE_MINUTES')
         ?? DEFAULT_AI_BUDGET_LIMITS.pauseOnQuotaErrorMinutes,
     };
   }
@@ -181,10 +181,10 @@ export class GlobalAiBudget {
    *
    * Fails CLOSED: if the ledger cannot be read or locked, the launch is
    * denied — an unaccountable launch is exactly what this fuse exists to
-   * prevent. `RUFLO_AI_BUDGET_DISABLE=1` is the explicit escape hatch.
+   * prevent. `SWARMLO_AI_BUDGET_DISABLE=1` is the explicit escape hatch.
    */
   async reserve(req: AiBudgetRequest): Promise<AiBudgetPermit> {
-    if (process.env.RUFLO_AI_BUDGET_DISABLE === '1') {
+    if (process.env.SWARMLO_AI_BUDGET_DISABLE === '1') {
       return { allowed: true, permitId: `bypass_${Date.now()}_${process.pid}` };
     }
 
@@ -269,7 +269,7 @@ export class GlobalAiBudget {
   }
 
   /**
-   * #2661 root-fix — manual pause, via `ruflo daemon budget pause`. Distinct
+   * #2661 root-fix — manual pause, via `swarmlo daemon budget pause`. Distinct
    * from the automatic quota-error circuit breaker only in duration (open-
    * ended, until explicitly resumed, instead of a fixed cooldown) and
    * reason text — the enforcement path in reserve() is identical, so a
@@ -285,7 +285,7 @@ export class GlobalAiBudget {
       // is the only thing that clears it. year ~2255, safely beyond any
       // realistic process lifetime, and still a valid finite JS timestamp.
       ledger.pausedUntil = 9_000_000_000_000;
-      ledger.pauseReason = (reason ?? 'manual pause (ruflo daemon budget pause)').slice(0, 200);
+      ledger.pauseReason = (reason ?? 'manual pause (swarmlo daemon budget pause)').slice(0, 200);
       this.writeLedger(ledger);
       this.appendReceipt({ event: 'manual-pause', at: now, reason: ledger.pauseReason });
     } finally {
@@ -293,7 +293,7 @@ export class GlobalAiBudget {
     }
   }
 
-  /** #2661 root-fix — `ruflo daemon budget resume`. Clears ANY pause (manual or quota-triggered). */
+  /** #2661 root-fix — `swarmlo daemon budget resume`. Clears ANY pause (manual or quota-triggered). */
   async resume(): Promise<void> {
     let unlock: (() => void) | null = null;
     try {
@@ -472,7 +472,7 @@ export function getGlobalAiBudget(): GlobalAiBudget {
   return budgetInstance;
 }
 
-/** Test hook: reset the singleton (e.g. after changing RUFLO_AI_BUDGET_DIR). */
+/** Test hook: reset the singleton (e.g. after changing SWARMLO_AI_BUDGET_DIR). */
 export function resetGlobalAiBudgetForTests(): void {
   budgetInstance = null;
 }

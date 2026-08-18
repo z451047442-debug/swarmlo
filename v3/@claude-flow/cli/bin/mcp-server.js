@@ -138,7 +138,7 @@ async function handleMessage(message) {
           id: message.id,
           result: {
             protocolVersion: '2024-11-05',
-            serverInfo: { name: 'ruflo', version: VERSION },
+            serverInfo: { name: 'swarmlo', version: VERSION },
             capabilities: {
               tools: { listChanged: true },
               resources: { subscribe: true, listChanged: true },

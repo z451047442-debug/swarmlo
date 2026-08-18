@@ -1,6 +1,6 @@
 /**
  * Corpus harvester — grows the benchmark yardstick from REAL store data so the
- * flywheel gets a bigger, fresher test set as ruflo is used (ADR-176).
+ * flywheel gets a bigger, fresher test set as swarmlo is used (ADR-176).
  *
  * Self-supervised self-retrieval: a stored doc is unambiguous ground truth for a
  * query derived from its OWN body. To make it discriminative (so different

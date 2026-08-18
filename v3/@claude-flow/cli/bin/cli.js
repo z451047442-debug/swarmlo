@@ -128,9 +128,9 @@ console.log = (...args) => {
     try {
       const __dirname = dirname(fileURLToPath(import.meta.url));
       const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
-      process.stdout.write(`ruflo v${pkg.version || '0.0.0'}\n`);
+      process.stdout.write(`swarmlo v${pkg.version || '0.0.0'}\n`);
     } catch {
-      process.stdout.write('ruflo v0.0.0\n');
+      process.stdout.write('swarmlo v0.0.0\n');
     }
     process.exit(0);
   }
@@ -252,7 +252,7 @@ if (isMCPMode) {
           id: message.id,
           result: {
             protocolVersion: '2024-11-05',
-            serverInfo: { name: 'ruflo', version: VERSION },
+            serverInfo: { name: 'swarmlo', version: VERSION },
             capabilities: {
               tools: { listChanged: true },
               resources: { subscribe: true, listChanged: true },

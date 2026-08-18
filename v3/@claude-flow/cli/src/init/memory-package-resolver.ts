@@ -2,7 +2,7 @@
  * Memory Package Resolver (#2545)
  *
  * `@claude-flow/memory` is an *optionalDependency* of `@claude-flow/cli`. On the
- * documented `npx ruflo` install path it lands in the npx cache
+ * documented `npx swarmlo` install path it lands in the npx cache
  * (`~/.npm/_npx/<hash>/node_modules`), which is NOT on the node_modules walk-up
  * path from the user's project. The SessionStart auto-memory hook therefore
  * could never resolve it and self-learning silently no-op'd.

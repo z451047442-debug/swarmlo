@@ -2,7 +2,7 @@
  * V3 CLI MetaHarness Command — ADR-150 deep integration entry point.
  *
  * Top-level dispatcher that delegates each subcommand to the matching
- * `plugins/ruflo-metaharness/scripts/<name>.mjs` via spawnSync. This is
+ * `plugins/swarmlo-metaharness/scripts/<name>.mjs` via spawnSync. This is
  * the user-facing wrapper around the upstream `metaharness` / `harness`
  * CLIs.
  *
@@ -16,13 +16,13 @@
  * Each subcommand is a thin subprocess invocation — the plugin scripts
  * own the actual logic. This command exists so users can run:
  *
- *   npx ruflo metaharness score
- *   npx ruflo metaharness mcp-scan --fail-on high
- *   npx ruflo metaharness mint --name foo --template vertical:coding
+ *   npx swarmlo metaharness score
+ *   npx swarmlo metaharness mcp-scan --fail-on high
+ *   npx swarmlo metaharness mint --name foo --template vertical:coding
  *
  * instead of:
  *
- *   node plugins/ruflo-metaharness/scripts/score.mjs
+ *   node plugins/swarmlo-metaharness/scripts/score.mjs
  *
  * ADR-150 ARCHITECTURAL CONSTRAINT
  * --------------------------------
@@ -204,17 +204,17 @@ async function dispatchFlywheel(
 }
 
 /**
- * Walk up from the current dirname to find the ruflo repo root that
- * contains plugins/ruflo-metaharness/. Handles three install layouts:
- *   1. ruflo dev tree   (cwd / ../plugins/...)
- *   2. ruflo wrapper    (ruflo/node_modules/@claude-flow/cli/...)
+ * Walk up from the current dirname to find the swarmlo repo root that
+ * contains plugins/swarmlo-metaharness/. Handles three install layouts:
+ *   1. swarmlo dev tree   (cwd / ../plugins/...)
+ *   2. swarmlo wrapper    (swarmlo/node_modules/@claude-flow/cli/...)
  *   3. npx              (npm-cache/__npx/... — fall back to cwd-scan)
  *
  * `requiredScript`, if provided, narrows the match: the returned dir must
  * contain BOTH `_harness.mjs` (proves it's a plugin-scripts dir) AND the
  * named script. This guards against the publish-artifact mirror at
- * `v3/@claude-flow/cli/plugins/ruflo-metaharness/scripts/` getting picked
- * over the source `plugins/ruflo-metaharness/scripts/` when the mirror
+ * `v3/@claude-flow/cli/plugins/swarmlo-metaharness/scripts/` getting picked
+ * over the source `plugins/swarmlo-metaharness/scripts/` when the mirror
  * lags the source (the mirror is regenerated only at publish time by
  * `prepublishOnly`).
  */
@@ -223,16 +223,16 @@ function locatePluginScripts(requiredScript?: string): string | null {
   // Up from the cli dist dir
   let p = resolve(__dirname);
   for (let i = 0; i < 8; i++) {
-    candidates.push(join(p, 'plugins', 'ruflo-metaharness', 'scripts'));
-    candidates.push(join(p, '..', 'plugins', 'ruflo-metaharness', 'scripts'));
+    candidates.push(join(p, 'plugins', 'swarmlo-metaharness', 'scripts'));
+    candidates.push(join(p, '..', 'plugins', 'swarmlo-metaharness', 'scripts'));
     p = dirname(p);
   }
-  // Also try from cwd (covers the "npx ruflo" case where the user is
-  // sitting in their own repo and `npx ruflo metaharness score` should
+  // Also try from cwd (covers the "npx swarmlo" case where the user is
+  // sitting in their own repo and `npx swarmlo metaharness score` should
   // score THAT repo using the LOCAL plugin if present).
   const cwd = process.cwd();
-  candidates.push(join(cwd, 'plugins', 'ruflo-metaharness', 'scripts'));
-  candidates.push(join(cwd, 'node_modules', '@claude-flow', 'cli', 'plugins', 'ruflo-metaharness', 'scripts'));
+  candidates.push(join(cwd, 'plugins', 'swarmlo-metaharness', 'scripts'));
+  candidates.push(join(cwd, 'node_modules', '@claude-flow', 'cli', 'plugins', 'swarmlo-metaharness', 'scripts'));
 
   for (const c of candidates) {
     if (!existsSync(join(c, '_harness.mjs'))) continue;
@@ -312,7 +312,7 @@ export const metaharnessCommand: Command = {
     const subArgs = [...positionalRest, ...reconstructedFlags];
 
     if (!subcommand || subcommand === 'help' || subcommand === '--help' || subcommand === '-h') {
-      output.writeln(output.bold('npx ruflo metaharness <subcommand> [options]'));
+      output.writeln(output.bold('npx swarmlo metaharness <subcommand> [options]'));
       output.writeln('');
       output.writeln('Subcommands:');
       output.writeln('  score         5-dimension harness readiness scorecard');
@@ -350,7 +350,7 @@ export const metaharnessCommand: Command = {
     if (!scriptDir) {
       output.writeln(
         output.warning(
-          'metaharness: plugins/ruflo-metaharness/scripts/ not found. Install ruflo with `npm i ruflo` or run from the ruflo repo.'
+          'metaharness: plugins/swarmlo-metaharness/scripts/ not found. Install swarmlo with `npm i swarmlo` or run from the swarmlo repo.'
         )
       );
       output.writeln(

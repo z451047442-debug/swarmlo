@@ -27,7 +27,7 @@ import {
   neuralTools,
 } from '../src/mcp-tools/neural-tools.js';
 
-// Fixture — a tiny mock "history" shaped like real ruflo commits + issues.
+// Fixture — a tiny mock "history" shaped like real swarmlo commits + issues.
 // Intentionally small so this stays fast. The shape (subject + body + verdict)
 // matches what pretrain-from-github.mjs builds from git log + gh issue list.
 const FIXTURE = [

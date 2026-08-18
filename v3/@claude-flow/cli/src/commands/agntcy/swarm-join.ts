@@ -1,5 +1,5 @@
 /**
- * V3 CLI `ruflo swarm join <namespace>` — ADR-380 §2.
+ * V3 CLI `swarmlo swarm join <namespace>` — ADR-380 §2.
  *
  * Joins a SLIM group-membership channel scoped to a Cognitum tenant/project
  * namespace (e.g. `cognitum/research/security`). This is an AGNTCY/SLIM
@@ -53,13 +53,13 @@ const joinCommand: Command = {
   name: 'join',
   description: 'Join a SLIM group-membership channel scoped to a namespace (ADR-380 §2)',
   examples: [
-    { command: 'ruflo swarm join cognitum/research/security', description: 'Join the SLIM group-membership channel for a tenant namespace' },
+    { command: 'swarmlo swarm join cognitum/research/security', description: 'Join the SLIM group-membership channel for a tenant namespace' },
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     const namespace = (ctx.args[0] || (ctx.flags.namespace as string) || '').trim();
 
     if (!namespace) {
-      output.printError('Namespace is required. Usage: ruflo swarm join <namespace> (e.g. cognitum/research/security)');
+      output.printError('Namespace is required. Usage: swarmlo swarm join <namespace> (e.g. cognitum/research/security)');
       return { success: false, exitCode: 1 };
     }
 

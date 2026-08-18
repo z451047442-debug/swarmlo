@@ -2,7 +2,7 @@
  * distill-oracle.ts — Tiered `resolved` oracle for distill / weight-EFT SFT data.
  *
  * THE PROBLEM: weight-EFT's SFT data wants a gold `resolved: boolean` per
- * trajectory. Ruflo has no SWE-bench oracle, so today `resolved` is
+ * trajectory. Swarmlo has no SWE-bench oracle, so today `resolved` is
  * structural-confidence — a proxy that risks distilling plausible-but-wrong
  * completions. This module replaces that single proxy with a TIERED labeler,
  * where every label carries HONEST PROVENANCE (ADR-169 reporting integrity — a
@@ -14,7 +14,7 @@
  *     maps to a metaharness/darwin bench-suite case, EXECUTE the real eval and
  *     set resolved = tests-pass. This needs Docker/compute, so it runs on a
  *     REMOTE host over SSH (host parameterized via `remote` / env
- *     RUFLO_DISTILL_REMOTE — never hard-coded). DRY-RUN by default: it prints
+ *     SWARMLO_DISTILL_REMOTE — never hard-coded). DRY-RUN by default: it prints
  *     the ssh/darwin-bench/eval commands + a preflight plan and does NOT touch
  *     the network; only `execute: true` runs the real eval (with a wrapped,
  *     non-fatal preflight probe first).
@@ -100,7 +100,7 @@ export interface Trajectory {
 // ── Options / results ───────────────────────────────────────────────────────
 
 export interface LabelOptions {
-  /** SSH host for Tier-1 execution. Falls back to env RUFLO_DISTILL_REMOTE. Never hard-coded. */
+  /** SSH host for Tier-1 execution. Falls back to env SWARMLO_DISTILL_REMOTE. Never hard-coded. */
   remote?: string;
   /** Run the REAL Tier-1 eval over SSH. Default false → dry-run preflight only. */
   execute?: boolean;
@@ -236,7 +236,7 @@ export async function labelResolved<T extends Trajectory>(
           plan,
           fellThroughBecause: remote
             ? 'dry-run (pass execute:true to run the real eval over SSH)'
-            : 'dry-run and no remote configured (set remote / RUFLO_DISTILL_REMOTE)',
+            : 'dry-run and no remote configured (set remote / SWARMLO_DISTILL_REMOTE)',
         });
       }
     }
@@ -349,7 +349,7 @@ export function hasMechanicalSpec(t: Trajectory): boolean {
 
 /** Resolve the remote host from opts → env, never a hard-coded host. */
 export function resolveRemote(remote?: string): string | null {
-  const r = (remote ?? process.env.RUFLO_DISTILL_REMOTE ?? '').trim();
+  const r = (remote ?? process.env.SWARMLO_DISTILL_REMOTE ?? '').trim();
   return r.length > 0 ? r : null;
 }
 
@@ -362,7 +362,7 @@ export function buildOraclePlan(spec: TestSpec, remote: string | null): OraclePl
   const host = remote; // may be null; commands render `<remote>` placeholder then
   const r = host ?? '<remote>';
   const sshLocal = host ? `ssh ${host} ` : `ssh <remote> `;
-  const workdir = spec.workdir ?? (spec.repo ? `~/ruflo-distill/${sanitize(spec.repo)}` : '~/ruflo-distill/work');
+  const workdir = spec.workdir ?? (spec.repo ? `~/swarmlo-distill/${sanitize(spec.repo)}` : '~/swarmlo-distill/work');
 
   // Preflight probes — reachability + the tools Tier-1 needs on the remote.
   const probeCommands = [

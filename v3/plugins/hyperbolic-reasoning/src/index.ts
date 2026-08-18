@@ -121,7 +121,7 @@ export const pluginMetadata = {
   category: 'exotic',
   author: 'rUv',
   license: 'MIT',
-  repository: 'https://github.com/ruvnet/claude-flow',
+  repository: 'https://github.com/z451047442-debug/swarmlo',
   tools: [
     'hyperbolic_embed_hierarchy',
     'hyperbolic_taxonomic_reason',

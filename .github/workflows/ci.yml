@@ -181,7 +181,7 @@ jobs:
           # temp dir rather than running the source-tree CLI directly, because
           # the source-tree CLI imports the sibling workspace package
           # `@claude-flow/cli-core` (split out in #1764) which isn't always
-          # resolvable from a source checkout. Skipping the `ruflo` umbrella
+          # resolvable from a source checkout. Skipping the `swarmlo` umbrella
           # (just a thin wrapper) keeps the install footprint smaller on the
           # cold-cache Windows runner.
           $ErrorActionPreference = 'Stop'

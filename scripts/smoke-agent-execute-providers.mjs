@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Regression guard for ruvnet/ruflo#2042 — agent_execute hardcoded the
+ * Regression guard for z451047442-debug/swarmlo#2042 — agent_execute hardcoded the
  * Anthropic SDK and ignored the v3 provider system. Reporter: @ummcke00.
  *
  * The fix routes executeAgentTask() through callAnthropicMessages(),
  * which dispatches to Anthropic / OpenRouter / Ollama based on:
- *   1. Explicit `RUFLO_PROVIDER=...`
+ *   1. Explicit `SWARMLO_PROVIDER=...`
  *   2. Available API keys when no provider is forced
  *
  * This smoke statically asserts the wiring:

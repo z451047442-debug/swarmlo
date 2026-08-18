@@ -7,7 +7,7 @@
  *
  *   1. Authenticity  — Ed25519 signature over the canonical manifest bytes,
  *                      verified against a baked public key. Proves it came from
- *                      ruflo, unmodified. (native node:crypto, zero deps —
+ *                      swarmlo, unmodified. (native node:crypto, zero deps —
  *                      same primitive as helper-signing.ts / rvfa-signing.ts.)
  *   2. Suitability   — the constraint contract (host/platform/compatibility/
  *                      layer) checked against THIS install. A perfectly-signed
@@ -20,8 +20,8 @@
  */
 import { createHash, verify as edVerify, sign as edSign } from 'crypto';
 
-/** Ruflo config-signing PUBLIC key (safe to commit). Private half in GCP Secret Manager (ruflo-config-signing-key). */
-export const RUFLO_CONFIG_PUBKEY = `-----BEGIN PUBLIC KEY-----
+/** Swarmlo config-signing PUBLIC key (safe to commit). Private half in GCP Secret Manager (swarmlo-config-signing-key). */
+export const SWARMLO_CONFIG_PUBKEY = `-----BEGIN PUBLIC KEY-----
 MCowBQYDK2VwAyEA3zr3BLCFKyrjvjZg9BXxchXIuGYwYwq21FYCjTpQO6A=
 -----END PUBLIC KEY-----`;
 
@@ -36,14 +36,14 @@ export interface ProvenConfigReceipt {
 
 /** The constraint contract (ADR-177 §signed != suitable) + policy reference + receipt. */
 export interface ProvenConfigManifest {
-  schema: string;                        // 'ruflo.proven-config/v1'
+  schema: string;                        // 'swarmlo.proven-config/v1'
   policy: {
     ref: string;                         // content hash of the verified execution policy (RVFA payload)
     value?: Record<string, unknown>;     // the policy payload itself (config the applier makes active). Optional + additive: older CLIs verify the signature and ignore this field.
   };
   host?: Record<string, string>;         // host name -> semver range (e.g. { 'claude-code': '>=1.9' })
   platform?: string[];                   // e.g. ['linux', 'macOS']
-  compatibility?: Record<string, string>;// package -> semver range (e.g. { ruflo: '>=3.24.0' })
+  compatibility?: Record<string, string>;// package -> semver range (e.g. { swarmlo: '>=3.24.0' })
   benchmark?: { corpus: string; corpusHash: string };
   layer?: string;                        // ADR-176 hierarchy, e.g. 'framework/node-cli'
   receipt?: ProvenConfigReceipt;
@@ -60,7 +60,7 @@ export interface SignedProvenConfig {
 export interface InstallEnv {
   platform: string;                      // node process.platform ('darwin'|'linux'|'win32') or a normalized name
   hosts?: Record<string, string>;        // installed host -> version (e.g. { 'claude-code': '1.9.3' })
-  versions?: Record<string, string>;     // package -> installed version (e.g. { ruflo: '3.24.0' })
+  versions?: Record<string, string>;     // package -> installed version (e.g. { swarmlo: '3.24.0' })
   layer?: string;                        // the layer this install claims (ADR-176 hierarchy)
 }
 
@@ -92,13 +92,13 @@ export function signProvenConfig(manifest: ProvenConfigManifest, privateKeyPem: 
 }
 
 /**
- * Verify a signed manifest against ruflo's config public key. Returns the
+ * Verify a signed manifest against swarmlo's config public key. Returns the
  * manifest on success, or null on ANY failure (bad signature, malformed JSON,
  * wrong algorithm, missing fields). Fail-closed.
  */
 export function verifyProvenConfig(
   signedJson: string | SignedProvenConfig,
-  pubkeyPem: string = RUFLO_CONFIG_PUBKEY,
+  pubkeyPem: string = SWARMLO_CONFIG_PUBKEY,
 ): ProvenConfigManifest | null {
   try {
     const signed: SignedProvenConfig = typeof signedJson === 'string' ? JSON.parse(signedJson) : signedJson;
@@ -184,7 +184,7 @@ export function isSuitable(manifest: ProvenConfigManifest, env: InstallEnv): Sui
       }
     }
   }
-  // package compatibility ranges (ruflo, metaharness, …)
+  // package compatibility ranges (swarmlo, metaharness, …)
   if (manifest.compatibility) {
     for (const [pkg, range] of Object.entries(manifest.compatibility)) {
       const installed = env.versions?.[pkg];
@@ -212,7 +212,7 @@ export function isSuitable(manifest: ProvenConfigManifest, env: InstallEnv): Sui
 export function evaluateForAdoption(
   signedJson: string | SignedProvenConfig,
   env: InstallEnv,
-  pubkeyPem: string = RUFLO_CONFIG_PUBKEY,
+  pubkeyPem: string = SWARMLO_CONFIG_PUBKEY,
 ): { adopt: boolean; manifest?: ProvenConfigManifest; reason: string } {
   const manifest = verifyProvenConfig(signedJson, pubkeyPem);
   if (!manifest) return { adopt: false, reason: 'signature invalid — refusing (authenticity gate)' };

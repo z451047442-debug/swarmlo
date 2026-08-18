@@ -42,7 +42,7 @@ export const pluginMetadata = {
   tags: ['testing', 'ci-optimization', 'machine-learning', 'coverage', 'mutation-testing'],
   author: 'Claude Flow Team',
   license: 'MIT',
-  repository: 'https://github.com/ruvnet/claude-flow',
+  repository: 'https://github.com/z451047442-debug/swarmlo',
   engines: {
     'claude-flow': '>=3.0.0-alpha.1',
     node: '>=18.0.0',

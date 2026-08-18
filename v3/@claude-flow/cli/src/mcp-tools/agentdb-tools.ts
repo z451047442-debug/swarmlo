@@ -974,7 +974,7 @@ interface ComplexityBudget {
 
 export const agentdbGraphQuery: MCPTool = {
   name: 'agentdb_graph-query',
-  description: 'Unified graph traversal across the knowledge graph (ADR-130). Dispatches to the most capable backend: graph-node native for k-hop, sql.js CTE for fallback, HNSW cosine for semantic, ruflo-graph-intelligence PageRank for pagerank mode. Use when you need structured graph traversal beyond flat memory search.',
+  description: 'Unified graph traversal across the knowledge graph (ADR-130). Dispatches to the most capable backend: graph-node native for k-hop, sql.js CTE for fallback, HNSW cosine for semantic, swarmlo-graph-intelligence PageRank for pagerank mode. Use when you need structured graph traversal beyond flat memory search.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1076,7 +1076,7 @@ export const agentdbGraphQuery: MCPTool = {
           // #2246 fix: lazy-create memory.db on first pathfinder call so
           // fresh environments work without a pre-existing memory init.
           const db = await getBridgeDb(undefined, { createIfMissing: true });
-          if (!db) return { success: false, error: 'graph_edges DB unavailable (sql.js could not load)', hint: 'Check Node version + try `ruflo memory init` to initialize manually.', mode, nodeId };
+          if (!db) return { success: false, error: 'graph_edges DB unavailable (sql.js could not load)', hint: 'Check Node version + try `swarmlo memory init` to initialize manually.', mode, nodeId };
 
           // Load all rows with embedding_ref and score by cosine.
           // better-sqlite3 API — `db.exec(sql, params)` (sql.js) silently
@@ -1120,7 +1120,7 @@ export const agentdbGraphQuery: MCPTool = {
           // #2246 fix: lazy-create memory.db on first pathfinder call so
           // fresh environments work without a pre-existing memory init.
           const db = await getBridgeDb(undefined, { createIfMissing: true });
-          if (!db) return { success: false, error: 'graph_edges DB unavailable (sql.js could not load)', hint: 'Check Node version + try `ruflo memory init` to initialize manually.', mode, nodeId };
+          if (!db) return { success: false, error: 'graph_edges DB unavailable (sql.js could not load)', hint: 'Check Node version + try `swarmlo memory init` to initialize manually.', mode, nodeId };
 
           // better-sqlite3 API — see semantic-mode comment above.
           const edges = db.prepare(
@@ -1199,7 +1199,7 @@ function deduplicateByNodeId(arr: Array<{ nodeId: string; score: number; relatio
 
 /**
  * Simple Personalized PageRank without external solver.
- * Used as fallback when ruflo-graph-intelligence is unavailable.
+ * Used as fallback when swarmlo-graph-intelligence is unavailable.
  * damping = restart probability from seed node; iterations = power steps.
  */
 function simplePersonalizedPageRank(
@@ -1264,7 +1264,7 @@ function simplePersonalizedPageRank(
 
 export const agentdbGraphPathfinder: MCPTool = {
   name: 'agentdb_graph-pathfinder',
-  description: 'Multi-algorithm native graph pathfinder (ADR-130 Phase 5). Use when agentdb_graph-query k-hop is not enough — pathfinder supports personalized-pagerank, dynamic-mincut, spectral-sparsify, temporal-centrality, connected-component-churn, and witness-chain-divergence. Prefer over prompt-level graph loops in ruflo-knowledge-graph graph-navigator when you need ranked paths with formal complexityBudget enforcement.',
+  description: 'Multi-algorithm native graph pathfinder (ADR-130 Phase 5). Use when agentdb_graph-query k-hop is not enough — pathfinder supports personalized-pagerank, dynamic-mincut, spectral-sparsify, temporal-centrality, connected-component-churn, and witness-chain-divergence. Prefer over prompt-level graph loops in swarmlo-knowledge-graph graph-navigator when you need ranked paths with formal complexityBudget enforcement.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1323,7 +1323,7 @@ export const agentdbGraphPathfinder: MCPTool = {
       const { getBridgeDb } = await getGraphEdgeWriter();
       // #2246 fix: lazy-create memory.db on first pathfinder call.
       const db = await getBridgeDb(undefined, { createIfMissing: true });
-      if (!db) return { success: false, error: 'graph_edges DB unavailable (sql.js could not load)', hint: 'Check Node version + try `ruflo memory init` to initialize manually.', seedNodeId };
+      if (!db) return { success: false, error: 'graph_edges DB unavailable (sql.js could not load)', hint: 'Check Node version + try `swarmlo memory init` to initialize manually.', seedNodeId };
 
       const colsSql = algorithm === 'witness-chain-divergence'
         ? 'source_id, target_id, weight, last_reinforced, witness_id'

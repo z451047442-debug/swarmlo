@@ -209,7 +209,7 @@ if (!result.accepted) {
 const manifest = result.manifest;
 manifest.policy.value = best;
 manifest.platform = ['linux', 'macOS', 'windows'];
-manifest.compatibility = { ruflo: '>=3.24.0' };
+manifest.compatibility = { swarmlo: '>=3.24.0' };
 const outPath = join(CLI_ROOT, '.claude', 'proven-config.manifest.json');
 writeFileSync(outPath, JSON.stringify(manifest, null, 2) + '\n', 'utf-8');
 console.log(`\n✓ champion minted → ${outPath}`);

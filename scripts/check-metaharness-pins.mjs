@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// check-metaharness-pins — pin-drift watcher for ruflo's metaharness deps.
+// check-metaharness-pins — pin-drift watcher for swarmlo's metaharness deps.
 //
 // WHY: a version pin that was correct at publish time silently rots when the
 // upstream ships a new release the pin's range excludes. This is the failure
 // mode reported upstream in agent-harness-generator#142 (`@metaharness/darwin`
 // caret-locked to 0.2.x, three majors behind) and #149 (META_PROXY_VERSION
-// pinned, three releases behind, with no watcher). Ruflo pins three metaharness
+// pinned, three releases behind, with no watcher). Swarmlo pins three metaharness
 // packages; this script diffs each declared range against npm `latest` and
 // flags any pin whose range no longer admits the current release.
 //
@@ -18,7 +18,7 @@
 //   - peer-only for an installable pin: darwin / flywheel / radio are
 //     advertised integration surfaces and MUST live in optionalDependencies so
 //     a clean `npm install` actually materializes them; an optional PEER
-//     dependency is never auto-installed, which is how a fresh ruflo install
+//     dependency is never auto-installed, which is how a fresh swarmlo install
 //     shipped with zero MetaHarness packages on disk.
 //   - metaharness              — the umbrella / MCP subprocess CLI (npx path; peer ok)
 //   - @metaharness/router      — neural-router.ts dynamic import (peer ok — triple-gated)
@@ -63,7 +63,7 @@ function parseVer(v) {
   return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null;
 }
 
-/** Does `latest` satisfy `range`? Supports the caret/tilde/exact forms ruflo uses. */
+/** Does `latest` satisfy `range`? Supports the caret/tilde/exact forms swarmlo uses. */
 function satisfies(range, latest) {
   const lv = parseVer(latest);
   if (!lv) return null;

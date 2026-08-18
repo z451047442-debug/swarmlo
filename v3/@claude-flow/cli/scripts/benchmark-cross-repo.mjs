@@ -3,7 +3,7 @@
 //
 // Pretrains on a DIFFERENT repo's history (default: ruvnet/agentdb) and runs
 // labelled queries about THAT repo's work. If the retrieval system genuinely
-// generalises (vs overfits to the ruflo corpus it was tuned on), nDCG@3
+// generalises (vs overfits to the swarmlo corpus it was tuned on), nDCG@3
 // should stay near 0.96.
 //
 // Usage:
@@ -21,8 +21,8 @@ import { performance } from 'node:perf_hooks';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const CLI_ROOT = resolve(SCRIPT_DIR, '..');
-const RUFLO_ROOT = resolve(SCRIPT_DIR, '../../../..');
-const RUNS_DIR = join(RUFLO_ROOT, 'docs', 'benchmarks', 'runs');
+const SWARMLO_ROOT = resolve(SCRIPT_DIR, '../../../..');
+const RUNS_DIR = join(SWARMLO_ROOT, 'docs', 'benchmarks', 'runs');
 
 // Labelled queries about agentdb's actual history (commits + issues
 // observed via `git log` + `gh issue list` on ruvnet/agentdb).
@@ -43,7 +43,7 @@ const QUERIES_AGENTDB = [
     labels: ['better-sqlite3', 'inline schema', 'schemas'] },
   { q: 'Claude Code marketplace plugins',
     labels: ['marketplace', 'plugin', 'claude code'] },
-  { q: 'README rewrite ruflo style',
+  { q: 'README rewrite swarmlo style',
     labels: ['readme', 'rewrite'] },
   { q: 'WASM browser fs.readFileSync blocking',
     labels: ['wasm', 'browser', 'fs.readfilesync', 'readfilesync', 'agentdb/wasm'] },

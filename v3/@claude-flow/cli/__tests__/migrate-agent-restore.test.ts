@@ -1,5 +1,5 @@
 /**
- * #2985 — `ruflo migrate fix --agents` restore path.
+ * #2985 — `swarmlo migrate fix --agents` restore path.
  *
  * Same isolation discipline as migrate-agent-detection.test.ts: every test
  * gets a temp project and temp home, and the GitHub fallback is exercised
@@ -15,14 +15,14 @@ import type { RemovedAgentGap } from '../src/commands/migrate-agent-detection.js
 
 const CODER_GAP: RemovedAgentGap = {
   agent: 'coder.md',
-  plugin: 'ruflo-core',
-  installCommand: '/plugin install ruflo-core@ruflo',
+  plugin: 'swarmlo-core',
+  installCommand: '/plugin install swarmlo-core@swarmlo',
 };
 
 const GOAL_GAP: RemovedAgentGap = {
   agent: 'goal-planner.md',
-  plugin: 'ruflo-goals',
-  installCommand: '/plugin install ruflo-goals@ruflo',
+  plugin: 'swarmlo-goals',
+  installCommand: '/plugin install swarmlo-goals@swarmlo',
 };
 
 const PLUGIN_AGENT_CONTENT = [
@@ -30,7 +30,7 @@ const PLUGIN_AGENT_CONTENT = [
   'name: coder',
   'description: Implementation specialist',
   '---',
-  'Use mcp__plugin_ruflo-core_ruflo__memory_store to persist decisions.',
+  'Use mcp__plugin_swarmlo-core_swarmlo__memory_store to persist decisions.',
   '',
 ].join('\n');
 
@@ -44,7 +44,7 @@ function emptyHome(): string {
 
 function homeWithMarketplaceClone(plugin: string, basename: string, content: string): string {
   const home = emptyHome();
-  const agentsDir = join(home, '.claude', 'plugins', 'marketplaces', 'ruflo', 'plugins', plugin, 'agents');
+  const agentsDir = join(home, '.claude', 'plugins', 'marketplaces', 'swarmlo', 'plugins', plugin, 'agents');
   mkdirSync(agentsDir, { recursive: true });
   writeFileSync(join(agentsDir, basename), content);
   return home;
@@ -57,7 +57,7 @@ function failingFetch(): typeof fetch {
 describe('restoreRemovedAgents', () => {
   it('restores from the marketplace clone, rewrites the namespace, and records provenance', async () => {
     const cwd = project();
-    const homeDir = homeWithMarketplaceClone('ruflo-core', 'coder.md', PLUGIN_AGENT_CONTENT);
+    const homeDir = homeWithMarketplaceClone('swarmlo-core', 'coder.md', PLUGIN_AGENT_CONTENT);
 
     const results = await restoreRemovedAgents(cwd, [CODER_GAP], { homeDir, fetchImpl: failingFetch() });
 
@@ -66,8 +66,8 @@ describe('restoreRemovedAgents', () => {
     ]);
     const written = readFileSync(join(cwd, '.claude', 'agents', 'core', 'coder.md'), 'utf-8');
     expect(written).toContain('mcp__claude-flow__memory_store');
-    expect(written).not.toContain('mcp__plugin_ruflo-core_ruflo__');
-    expect(written).toContain('restored by `ruflo migrate fix --agents`');
+    expect(written).not.toContain('mcp__plugin_swarmlo-core_swarmlo__');
+    expect(written).toContain('restored by `swarmlo migrate fix --agents`');
     // Provenance lands after the frontmatter block, not before it.
     expect(written.startsWith('---\n')).toBe(true);
   });
@@ -87,15 +87,15 @@ describe('restoreRemovedAgents', () => {
     expect(results[0]).toEqual(
       expect.objectContaining({ agent: 'goal-planner.md', status: 'restored', source: 'github-main' })
     );
-    expect(urls[0]).toBe('https://raw.githubusercontent.com/ruvnet/ruflo/v9.9.9/plugins/ruflo-goals/agents/goal-planner.md');
-    expect(urls[1]).toBe('https://raw.githubusercontent.com/ruvnet/ruflo/main/plugins/ruflo-goals/agents/goal-planner.md');
+    expect(urls[0]).toBe('https://raw.githubusercontent.com/z451047442-debug/swarmlo/v9.9.9/plugins/swarmlo-goals/agents/goal-planner.md');
+    expect(urls[1]).toBe('https://raw.githubusercontent.com/z451047442-debug/swarmlo/main/plugins/swarmlo-goals/agents/goal-planner.md');
     // goal-planner restores to its original init category.
     expect(existsSync(join(cwd, '.claude', 'agents', 'goal', 'goal-planner.md'))).toBe(true);
   });
 
   it('never overwrites an existing file', async () => {
     const cwd = project();
-    const homeDir = homeWithMarketplaceClone('ruflo-core', 'coder.md', PLUGIN_AGENT_CONTENT);
+    const homeDir = homeWithMarketplaceClone('swarmlo-core', 'coder.md', PLUGIN_AGENT_CONTENT);
     const dest = join(cwd, '.claude', 'agents', 'core');
     mkdirSync(dest, { recursive: true });
     writeFileSync(join(dest, 'coder.md'), 'hand-authored — do not touch\n');
@@ -116,13 +116,13 @@ describe('restoreRemovedAgents', () => {
     const results = await restoreRemovedAgents(cwd, [CODER_GAP], { homeDir, fetchImpl });
 
     expect(results[0].status).toBe('failed');
-    expect(results[0].error).toContain('/plugin install ruflo-core@ruflo');
+    expect(results[0].error).toContain('/plugin install swarmlo-core@swarmlo');
     expect(existsSync(join(cwd, '.claude', 'agents', 'core', 'coder.md'))).toBe(false);
   });
 
   it('dry-run resolves and reports without writing', async () => {
     const cwd = project();
-    const homeDir = homeWithMarketplaceClone('ruflo-core', 'coder.md', PLUGIN_AGENT_CONTENT);
+    const homeDir = homeWithMarketplaceClone('swarmlo-core', 'coder.md', PLUGIN_AGENT_CONTENT);
 
     const results = await restoreRemovedAgents(cwd, [CODER_GAP], { homeDir, fetchImpl: failingFetch(), dryRun: true });
 

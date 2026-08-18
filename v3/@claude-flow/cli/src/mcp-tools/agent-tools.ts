@@ -287,7 +287,7 @@ async function determineAgentModel(
 export const agentTools: MCPTool[] = [
   {
     name: 'agent_spawn',
-    description: 'Spawn a Ruflo-tracked agent with cost attribution + memory persistence + swarm coordination. Use when native Task tool is wrong because you need (a) cost tracking per agent in the cost-tracking namespace, (b) cross-session learning via the patterns namespace, or (c) coordination with other agents in a swarm topology (hierarchical / mesh / consensus). For one-shot subtasks with no learning loop, native Task is fine. Pair with hooks_route to pick the right model first.',
+    description: 'Spawn a Swarmlo-tracked agent with cost attribution + memory persistence + swarm coordination. Use when native Task tool is wrong because you need (a) cost tracking per agent in the cost-tracking namespace, (b) cross-session learning via the patterns namespace, or (c) coordination with other agents in a swarm topology (hierarchical / mesh / consensus). For one-shot subtasks with no learning loop, native Task is fine. Pair with hooks_route to pick the right model first.',
     category: 'agent',
     inputSchema: {
       type: 'object',
@@ -517,7 +517,7 @@ export const agentTools: MCPTool[] = [
   },
   {
     name: 'agent_terminate',
-    description: 'Remove a Ruflo-tracked agent from the registry and free its swarm slot. Use when you need to (a) clean up a spawned agent so its cost-tracking row finalizes, (b) reclaim a swarm-topology slot for another agent, or (c) end a stuck agent without restarting the whole swarm. For one-shot Task tool invocations that already self-terminate, this tool is not needed. Pair with agent_list first to confirm the agentId.',
+    description: 'Remove a Swarmlo-tracked agent from the registry and free its swarm slot. Use when you need to (a) clean up a spawned agent so its cost-tracking row finalizes, (b) reclaim a swarm-topology slot for another agent, or (c) end a stuck agent without restarting the whole swarm. For one-shot Task tool invocations that already self-terminate, this tool is not needed. Pair with agent_list first to confirm the agentId.',
     category: 'agent',
     inputSchema: {
       type: 'object',
@@ -611,7 +611,7 @@ export const agentTools: MCPTool[] = [
   },
   {
     name: 'agent_list',
-    description: 'List every Ruflo-tracked agent in the registry with its type, model, status, and taskCount. Use when native Task tool is wrong because you need to see the swarm-wide agent inventory across turns (which agents exist, their roles, their cost-tracking handles) rather than spawn a new one-shot Task. Filter by status/domain/agentType if needed. For starting a fresh single-shot subagent, native Task is fine.',
+    description: 'List every Swarmlo-tracked agent in the registry with its type, model, status, and taskCount. Use when native Task tool is wrong because you need to see the swarm-wide agent inventory across turns (which agents exist, their roles, their cost-tracking handles) rather than spawn a new one-shot Task. Filter by status/domain/agentType if needed. For starting a fresh single-shot subagent, native Task is fine.',
     category: 'agent',
     inputSchema: {
       type: 'object',
@@ -921,7 +921,7 @@ export const agentTools: MCPTool[] = [
     },
   },
   {
-    // #1916 — the `ruflo agent logs <id>` CLI subcommand and the guidance
+    // #1916 — the `swarmlo agent logs <id>` CLI subcommand and the guidance
     // surface both reference an `agent_logs` MCP tool that was never
     // registered, so it errored with `MCP tool not found: agent_logs`.
     // This is the registered handler. Note: agents don't yet keep a
@@ -931,7 +931,7 @@ export const agentTools: MCPTool[] = [
     // response. The shape matches what the CLI `logs` subcommand expects:
     // `{ agentId, entries: [{timestamp,level,message,context?}], total }`.
     name: 'agent_logs',
-    description: 'Return recorded activity-log entries for a tracked agent (idle/running history, last task result). Use when native Task tool is wrong because you need the agent\'s log across turns (what it did, last error/result, swarm context) rather than a one-shot Task transcript. For a Task you just ran, native Task output is fine. Pair with agent_list to find the agentId. (Hive-mind-spawned workers are resolved here too.) Today this returns the last task result as a synthetic entry — full per-agent activity logs land with hive worker execution wiring (ruvnet/ruflo#1916).',
+    description: 'Return recorded activity-log entries for a tracked agent (idle/running history, last task result). Use when native Task tool is wrong because you need the agent\'s log across turns (what it did, last error/result, swarm context) rather than a one-shot Task transcript. For a Task you just ran, native Task output is fine. Pair with agent_list to find the agentId. (Hive-mind-spawned workers are resolved here too.) Today this returns the last task result as a synthetic entry — full per-agent activity logs land with hive worker execution wiring (z451047442-debug/swarmlo#1916).',
     category: 'agent',
     inputSchema: {
       type: 'object',
@@ -965,7 +965,7 @@ export const agentTools: MCPTool[] = [
         agentId: agent.agentId,
         entries: sliced,
         total: entries.length,
-        note: 'per-agent activity logging is not yet wired; entries are synthetic (ruvnet/ruflo#1916)',
+        note: 'per-agent activity logging is not yet wired; entries are synthetic (z451047442-debug/swarmlo#1916)',
       };
     },
   },

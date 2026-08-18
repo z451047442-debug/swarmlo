@@ -19,7 +19,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
-const root = mkdtempSync(join(tmpdir(), 'ruflo-2982-truncation-'));
+const root = mkdtempSync(join(tmpdir(), 'swarmlo-2982-truncation-'));
 const dbPath = join(root, 'memory.db');
 const ROW_COUNT = 1005;
 const NEEDLE = 'zzzneedle2982';

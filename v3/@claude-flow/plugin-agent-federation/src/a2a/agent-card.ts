@@ -1,8 +1,8 @@
 /**
  * A2A (Agent2Agent, Linux Foundation) Agent Card adapter — cards only.
  *
- * Maps ruflo's bespoke federation identity (`FederationManifest` /
- * `FederationNode`) to and from a spec-compliant A2A Agent Card so ruflo
+ * Maps swarmlo's bespoke federation identity (`FederationManifest` /
+ * `FederationNode`) to and from a spec-compliant A2A Agent Card so swarmlo
  * nodes are discoverable by A2A peers and A2A peers appear in federation
  * discovery. This is an ADAPTER over the existing federation schema, not a
  * rewrite — A2A Tasks/messaging are deliberately out of scope.
@@ -33,18 +33,18 @@ export const A2A_PROTOCOL_VERSION = '1.0';
 export const A2A_WELL_KNOWN_PATH = '/.well-known/agent-card.json';
 
 /**
- * Open-form protocol binding string advertising ruflo's federation wire
+ * Open-form protocol binding string advertising swarmlo's federation wire
  * (Ed25519-signed envelopes over WebSocket/QUIC). Spec §4.4.6 explicitly
  * allows non-core bindings: "This is an open form string, to be easily
  * extended for other protocol bindings."
  */
-export const RUFLO_FEDERATION_BINDING = 'RUFLO-FEDERATION';
+export const SWARMLO_FEDERATION_BINDING = 'SWARMLO-FEDERATION';
 
 /**
  * Extension URI carrying the bespoke federation identity inside the card
  * (spec §4.6 AgentExtension). Enables lossless round-trip in fromAgentCard.
  */
-export const RUFLO_FEDERATION_EXTENSION_URI = 'urn:ruflo:federation:manifest:v1';
+export const SWARMLO_FEDERATION_EXTENSION_URI = 'urn:swarmlo:federation:manifest:v1';
 
 // ---------------------------------------------------------------------------
 // A2A 1.0 card types (subset used by this adapter — field names per spec JSON
@@ -109,7 +109,7 @@ export interface A2AAgentCard {
 // ---------------------------------------------------------------------------
 
 export interface ToAgentCardOptions {
-  /** Human-readable agent name; defaults to `ruflo-federation/<nodeId>`. */
+  /** Human-readable agent name; defaults to `swarmlo-federation/<nodeId>`. */
   readonly name?: string;
   /** Human-readable description override. */
   readonly description?: string;
@@ -130,9 +130,9 @@ function endpointToUrl(endpoint: string): string {
 }
 
 /**
- * Generate a spec-compliant A2A Agent Card from a ruflo federation manifest.
+ * Generate a spec-compliant A2A Agent Card from a swarmlo federation manifest.
  * Every agent type becomes an AgentSkill; the federation endpoint becomes a
- * `RUFLO-FEDERATION` interface; the bespoke identity (nodeId, publicKey,
+ * `SWARMLO-FEDERATION` interface; the bespoke identity (nodeId, publicKey,
  * complianceModes, manifest signature) rides in a spec §4.6 extension so
  * `fromAgentCard` can restore it.
  */
@@ -143,22 +143,22 @@ export function toAgentCard(
   const skills: A2AAgentSkill[] = manifest.capabilities.agentTypes.map((agentType) => ({
     id: `agent-type:${agentType}`,
     name: agentType,
-    description: `Federated ruflo agent role "${agentType}" — dispatchable via cross-installation federation sessions.`,
-    tags: ['ruflo', 'federation', 'agent-role', agentType],
+    description: `Federated swarmlo agent role "${agentType}" — dispatchable via cross-installation federation sessions.`,
+    tags: ['swarmlo', 'federation', 'agent-role', agentType],
   }));
 
   const interfaces: A2AAgentInterface[] = [
     ...(options.additionalInterfaces ?? []),
     {
       url: endpointToUrl(manifest.endpoint),
-      protocolBinding: RUFLO_FEDERATION_BINDING,
+      protocolBinding: SWARMLO_FEDERATION_BINDING,
       protocolVersion: A2A_PROTOCOL_VERSION,
     },
   ];
 
   const federationExtension: A2AAgentExtension = {
-    uri: RUFLO_FEDERATION_EXTENSION_URI,
-    description: 'ruflo cross-installation federation identity (Ed25519-signed manifest)',
+    uri: SWARMLO_FEDERATION_EXTENSION_URI,
+    description: 'swarmlo cross-installation federation identity (Ed25519-signed manifest)',
     required: false,
     params: {
       nodeId: manifest.nodeId,
@@ -173,10 +173,10 @@ export function toAgentCard(
   };
 
   return {
-    name: options.name ?? `ruflo-federation/${manifest.nodeId}`,
+    name: options.name ?? `swarmlo-federation/${manifest.nodeId}`,
     description:
       options.description ??
-      `Ruflo federation node ${manifest.nodeId} — zero-trust cross-installation agent federation ` +
+      `Swarmlo federation node ${manifest.nodeId} — zero-trust cross-installation agent federation ` +
       `(${manifest.capabilities.agentTypes.length} agent role(s), PII-gated data flow, compliance-grade audit trail).`,
     supportedInterfaces: interfaces,
     version: manifest.version,
@@ -289,7 +289,7 @@ function slugify(name: string): string {
 }
 
 function findFederationExtension(card: A2AAgentCard): A2AAgentExtension | undefined {
-  return card.capabilities.extensions?.find((e) => e.uri === RUFLO_FEDERATION_EXTENSION_URI);
+  return card.capabilities.extensions?.find((e) => e.uri === SWARMLO_FEDERATION_EXTENSION_URI);
 }
 
 /**
@@ -307,7 +307,7 @@ export function fromAgentCard(card: A2AAgentCard, sourceUrl?: string): Federatio
 
   const preferred = card.supportedInterfaces[0];
   const federationIface = card.supportedInterfaces.find(
-    (i) => i.protocolBinding === RUFLO_FEDERATION_BINDING,
+    (i) => i.protocolBinding === SWARMLO_FEDERATION_BINDING,
   );
   const endpoint =
     (typeof params['endpoint'] === 'string' && params['endpoint']) ||

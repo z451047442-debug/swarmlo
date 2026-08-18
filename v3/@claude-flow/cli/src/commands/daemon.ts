@@ -29,7 +29,7 @@ const startCommand: Command = {
     { name: 'background', short: 'b', type: 'boolean', description: 'Run daemon in background (detached process)', default: true },
     { name: 'foreground', short: 'f', type: 'boolean', description: 'Run daemon in foreground (blocks terminal)' },
     // #2661: --headless is the explicit consent gate for scheduled AI workers.
-    // Without it (or daemon.aiWorkers.enabled / RUFLO_DAEMON_AI_WORKERS=1),
+    // Without it (or daemon.aiWorkers.enabled / SWARMLO_DAEMON_AI_WORKERS=1),
     // every worker runs its $0 local path — the daemon never spawns
     // `claude --print` merely because the Claude CLI is on PATH.
     { name: 'headless', type: 'boolean', description: 'Enable AI workers (scheduled `claude --print` execution, governed by the user-global AI budget). Default: off — workers run local-only' },
@@ -37,7 +37,7 @@ const startCommand: Command = {
     { name: 'max-cpu-load', type: 'string', description: 'Override maxCpuLoad resource threshold (e.g. 4.0)' },
     { name: 'min-free-memory', type: 'string', description: 'Override minFreeMemoryPercent resource threshold (e.g. 15)' },
     // #2356: self-terminating lifecycle. Caps how long a forgotten daemon can
-    // keep dispatching headless worker sweeps. Default 12h (or RUFLO_DAEMON_TTL_SECS); 0 = run until stopped.
+    // keep dispatching headless worker sweeps. Default 12h (or SWARMLO_DAEMON_TTL_SECS); 0 = run until stopped.
     { name: 'ttl', type: 'string', description: 'Max daemon age in seconds before graceful self-shutdown (0 = run until stopped; default 43200 = 12h)' },
     // #1914: workspace root for this daemon. Set automatically when the
     // background launcher forks the foreground child so the daemon process
@@ -61,7 +61,7 @@ const startCommand: Command = {
     // same process) picks it up too; the background path forwards it to the
     // forked child's env explicitly (see startBackgroundDaemon below).
     if (noDistill) {
-      process.env.RUFLO_DAEMON_NO_DISTILL = '1';
+      process.env.SWARMLO_DAEMON_NO_DISTILL = '1';
     }
     // #1914: a forked daemon child receives --workspace <root>; the launcher
     // and interactive invocations have no flag and fall back to cwd.
@@ -543,7 +543,7 @@ async function startBackgroundDaemon(projectRoot: string, quiet: boolean, forwar
     forkArgs.push('--sandbox', sandbox);
   }
   // ADR-174 M3: forward the distillation opt-out to the forked foreground
-  // child; its own `start` action sets RUFLO_DAEMON_NO_DISTILL from this flag.
+  // child; its own `start` action sets SWARMLO_DAEMON_NO_DISTILL from this flag.
   if (noDistill === true) {
     forkArgs.push('--no-distill');
   }
@@ -598,11 +598,11 @@ async function startBackgroundDaemon(projectRoot: string, quiet: boolean, forwar
       if (fleet.length > 1) {
         output.writeln();
         output.printWarning(
-          `Found ${fleet.length} ruflo daemons running across workspaces/worktrees.`
+          `Found ${fleet.length} swarmlo daemons running across workspaces/worktrees.`
         );
         output.printInfo('Scheduled AI workers are off by default and every AI launch is capped by the user-global budget.');
-        output.printInfo('Inspect:  ruflo daemon status --all');
-        output.printInfo('Stop all: ruflo daemon stop --all');
+        output.printInfo('Inspect:  swarmlo daemon status --all');
+        output.printInfo('Stop all: swarmlo daemon stop --all');
       }
     } catch { /* best-effort visibility — never fail the start */ }
 
@@ -622,20 +622,20 @@ const stopCommand: Command = {
   description: 'Stop the worker daemon and all background workers',
   options: [
     { name: 'quiet', short: 'Q', type: 'boolean', description: 'Suppress output' },
-    // #2661: emergency stop for worktree-daemon fleets. Stops every ruflo
+    // #2661: emergency stop for worktree-daemon fleets. Stops every swarmlo
     // daemon owned by the current user across ALL workspaces/worktrees.
-    { name: 'all', short: 'a', type: 'boolean', description: 'Stop ruflo daemons in ALL workspaces/worktrees (not just the current one)' },
+    { name: 'all', short: 'a', type: 'boolean', description: 'Stop swarmlo daemons in ALL workspaces/worktrees (not just the current one)' },
   ],
   examples: [
     { command: 'claude-flow daemon stop', description: 'Stop the daemon in this workspace' },
-    { command: 'claude-flow daemon stop --all', description: 'Stop ruflo daemons in every workspace/worktree' },
+    { command: 'claude-flow daemon stop --all', description: 'Stop swarmlo daemons in every workspace/worktree' },
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     const quiet = ctx.flags.quiet as boolean;
     const projectRoot = resolveDaemonProjectRoot(process.cwd());
 
     // #2661: `stop --all` — the containment lever for daemon fanout across
-    // Git worktrees. Only processes positively identified as ruflo daemons
+    // Git worktrees. Only processes positively identified as swarmlo daemons
     // (via their self-identifying argv) are touched; each receives SIGTERM
     // so its own shutdown path reaps in-flight Claude process groups.
     if (ctx.flags.all as boolean) {
@@ -672,16 +672,16 @@ const stopCommand: Command = {
 };
 
 /**
- * #2661: stop every running ruflo daemon across all workspaces/worktrees.
+ * #2661: stop every running swarmlo daemon across all workspaces/worktrees.
  *
  * Reuses the same positive identification as `daemon status --all`
  * (scanRunningDaemons): a process is only touched when its command line is
- * self-identifying as a ruflo daemon (`daemon start --foreground` +
- * claude-flow markers). Interactive Claude sessions and non-ruflo processes
+ * self-identifying as a swarmlo daemon (`daemon start --foreground` +
+ * claude-flow markers). Interactive Claude sessions and non-swarmlo processes
  * are never candidates. Each daemon gets SIGTERM first — its own shutdown
  * handler cancels in-flight headless Claude process groups and removes its
  * PID file — with a SIGKILL fallback for daemons that don't exit within 2s.
- * Only ruflo-owned registry entries (each workspace's daemon.pid) are removed.
+ * Only swarmlo-owned registry entries (each workspace's daemon.pid) are removed.
  */
 async function stopAllDaemons(quiet: boolean): Promise<CommandResult> {
   // Stop any in-process daemon plus this workspace's tracked daemon first,
@@ -692,7 +692,7 @@ async function stopAllDaemons(quiet: boolean): Promise<CommandResult> {
   const daemons = await scanRunningDaemons();
   if (daemons.length === 0) {
     if (!quiet) {
-      output.printInfo('No ruflo daemons are running in any workspace.');
+      output.printInfo('No swarmlo daemons are running in any workspace.');
     }
     return { success: true, data: { stopped: 0 } };
   }
@@ -723,7 +723,7 @@ async function stopAllDaemons(quiet: boolean): Promise<CommandResult> {
     if (!isWin && isProcessRunning(d.pid)) {
       try { process.kill(d.pid, 'SIGKILL'); } catch { /* already dead */ }
     }
-    // Remove the ruflo-owned PID file for that workspace — but only when it
+    // Remove the swarmlo-owned PID file for that workspace — but only when it
     // still points at the daemon we just stopped (never clobber a newer one).
     if (d.workspace) {
       try {
@@ -737,7 +737,7 @@ async function stopAllDaemons(quiet: boolean): Promise<CommandResult> {
   }
 
   if (!quiet) {
-    output.printSuccess(`Stopped ${stopped} ruflo daemon(s) across all workspaces.`);
+    output.printSuccess(`Stopped ${stopped} swarmlo daemon(s) across all workspaces.`);
   }
   return { success: true, data: { stopped } };
 }
@@ -938,7 +938,7 @@ function isProcessRunning(pid: number): boolean {
 }
 
 /**
- * #2356: enumerate every running ruflo daemon across ALL workspaces. Reuses
+ * #2356: enumerate every running swarmlo daemon across ALL workspaces. Reuses
  * the same `ps`/`tasklist` scan as killStaleDaemons but, instead of killing,
  * returns each live daemon's PID + workspace so `daemon status --all` can
  * surface daemons leaked in other projects. Best-effort: any tooling failure
@@ -985,7 +985,7 @@ function defaultMultiDaemonWarningMarker(): string {
 /**
  * #2661 root-fix — one-time upgrade migration warning. A user who had
  * `aiWorkersEnabled: true` configured BEFORE this fix landed (old config
- * file or RUFLO_DAEMON_AI_WORKERS=1) and already has multiple worktree
+ * file or SWARMLO_DAEMON_AI_WORKERS=1) and already has multiple worktree
  * daemons running is exactly the P0 scenario the issue describes — surface
  * it plainly, ONCE ever (not on every `daemon start`, which would just be
  * noise once the user has seen and acted on it). The supervisor/lease
@@ -1029,10 +1029,10 @@ export async function maybeShowMultiDaemonMigrationWarning(opts?: {
     // lighter, always-shown fleet-size notice at daemon start.
     if (anyAiEnabled) {
       output.writeln();
-      output.printWarning(`Ruflo found ${fleet.length} worktree daemons. Scheduled AI workers are now supervisor-gated.`);
-      output.printInfo('Inspect:                      ruflo daemon status --all');
-      output.printInfo('Stop all:                      ruflo daemon stop --all');
-      output.printInfo('Pause autonomous launches:     ruflo daemon budget pause');
+      output.printWarning(`Swarmlo found ${fleet.length} worktree daemons. Scheduled AI workers are now supervisor-gated.`);
+      output.printInfo('Inspect:                      swarmlo daemon status --all');
+      output.printInfo('Stop all:                      swarmlo daemon stop --all');
+      output.printInfo('Pause autonomous launches:     swarmlo daemon budget pause');
       output.writeln();
     }
 
@@ -1054,8 +1054,8 @@ async function renderAllDaemonsStatus(): Promise<CommandResult> {
 
   if (daemons.length === 0) {
     output.printBox(
-      'No ruflo daemons are running in any workspace.',
-      'RuFlo Daemons (all workspaces)'
+      'No swarmlo daemons are running in any workspace.',
+      'Swarmlo Daemons (all workspaces)'
     );
     return { success: true, data: { daemons: [] } };
   }
@@ -1110,13 +1110,13 @@ async function renderAllDaemonsStatus(): Promise<CommandResult> {
   output.writeln();
   if (staleCount > 0) {
     output.printWarning(
-      `${staleCount} daemon(s) have outlived their TTL (or have run >12h). Stop one with: cd <workspace> && ruflo daemon stop`
+      `${staleCount} daemon(s) have outlived their TTL (or have run >12h). Stop one with: cd <workspace> && swarmlo daemon stop`
     );
   } else {
     output.printInfo(`${daemons.length} daemon(s) running, all within their TTL.`);
   }
   if (daemons.length > 1) {
-    output.printInfo('Stop all daemons across workspaces with: ruflo daemon stop --all');
+    output.printInfo('Stop all daemons across workspaces with: swarmlo daemon stop --all');
   }
 
   // #2661 root-fix — repository supervisor state, one row per distinct
@@ -1191,9 +1191,9 @@ const statusCommand: Command = {
     { name: 'verbose', short: 'v', type: 'boolean', description: 'Show detailed worker statistics' },
     { name: 'show-modes', type: 'boolean', description: 'Show worker execution modes (local/headless) and sandbox settings' },
     // #2356: the default status reads only the CURRENT workspace, so a daemon
-    // leaked in another project is invisible. --all scans every running ruflo
+    // leaked in another project is invisible. --all scans every running swarmlo
     // daemon across all workspaces (the global view that surfaces leaks).
-    { name: 'all', short: 'a', type: 'boolean', description: 'List ruflo daemons across ALL workspaces (global view — surfaces leaked daemons)' },
+    { name: 'all', short: 'a', type: 'boolean', description: 'List swarmlo daemons across ALL workspaces (global view — surfaces leaked daemons)' },
   ],
   examples: [
     { command: 'claude-flow daemon status', description: 'Show daemon status' },
@@ -1259,7 +1259,7 @@ const statusCommand: Command = {
           `Max CPU Load: ${status.config.resourceThresholds.maxCpuLoad}`,
           `Min Free Memory: ${status.config.resourceThresholds.minFreeMemoryPercent}%`,
         ].filter(Boolean).join('\n'),
-        'RuFlo Daemon'
+        'Swarmlo Daemon'
       );
 
       output.writeln();
@@ -1339,7 +1339,7 @@ const statusCommand: Command = {
           '',
           'Run "claude-flow daemon start" to start the daemon',
         ].join('\n'),
-        'RuFlo Daemon'
+        'Swarmlo Daemon'
       );
 
       return { success: true };
@@ -1485,7 +1485,7 @@ const installSupervisorCommand: Command = {
 
     if (platform === 'win32') {
       output.printError('Windows scheduled-task installer is not yet implemented.');
-      output.printInfo('Use Task Scheduler manually, or follow this issue: https://github.com/ruvnet/ruflo/issues/1565');
+      output.printInfo('Use Task Scheduler manually, or follow this issue: https://github.com/z451047442-debug/swarmlo/issues/1565');
       return { success: false, exitCode: 1 };
     }
     if (platform !== 'darwin' && platform !== 'linux') {
@@ -1510,13 +1510,13 @@ const installSupervisorCommand: Command = {
 
     if (platform === 'darwin') {
       const plistDir = join(home, 'Library', 'LaunchAgents');
-      const plistPath = join(plistDir, 'io.ruv.ruflo.daemon.plist');
+      const plistPath = join(plistDir, 'io.ruv.swarmlo.daemon.plist');
       const logDir = join(projectRoot, '.claude-flow', 'logs');
       const plist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>Label</key><string>io.ruv.ruflo.daemon</string>
+    <key>Label</key><string>io.ruv.swarmlo.daemon</string>
     <key>ProgramArguments</key>
     <array>
         <string>${nodeBin}</string>
@@ -1574,9 +1574,9 @@ const installSupervisorCommand: Command = {
 
     // Linux: systemd-user
     const unitDir = join(home, '.config', 'systemd', 'user');
-    const unitPath = join(unitDir, 'ruflo-daemon.service');
+    const unitPath = join(unitDir, 'swarmlo-daemon.service');
     const unit = `[Unit]
-Description=RuFlo background worker daemon
+Description=Swarmlo background worker daemon
 After=default.target
 
 [Service]
@@ -1611,15 +1611,15 @@ WantedBy=default.target
       try {
         const { execFileSync } = await import('child_process');
         execFileSync('systemctl', ['--user', 'daemon-reload'], { encoding: 'utf-8', timeout: 5000 });
-        execFileSync('systemctl', ['--user', 'enable', '--now', 'ruflo-daemon.service'], { encoding: 'utf-8', timeout: 10000 });
+        execFileSync('systemctl', ['--user', 'enable', '--now', 'swarmlo-daemon.service'], { encoding: 'utf-8', timeout: 10000 });
         output.printSuccess('Supervisor enabled — daemon will auto-restart on crash and survive reboot.');
         output.printInfo('Note: requires `loginctl enable-linger $USER` for restart-after-logout on some distros.');
       } catch (err) {
         output.printWarning(`systemctl --user enable failed: ${err instanceof Error ? err.message : String(err)}`);
-        output.printInfo(`Run manually: systemctl --user daemon-reload && systemctl --user enable --now ruflo-daemon.service`);
+        output.printInfo(`Run manually: systemctl --user daemon-reload && systemctl --user enable --now swarmlo-daemon.service`);
       }
     } else {
-      output.printInfo(`Run when ready:  systemctl --user daemon-reload && systemctl --user enable --now ruflo-daemon.service`);
+      output.printInfo(`Run when ready:  systemctl --user daemon-reload && systemctl --user enable --now swarmlo-daemon.service`);
     }
     return { success: true };
   },
@@ -1634,7 +1634,7 @@ const uninstallSupervisorCommand: Command = {
     const home = process.env.HOME ?? process.env.USERPROFILE ?? '';
 
     if (platform === 'darwin') {
-      const plistPath = join(home, 'Library', 'LaunchAgents', 'io.ruv.ruflo.daemon.plist');
+      const plistPath = join(home, 'Library', 'LaunchAgents', 'io.ruv.swarmlo.daemon.plist');
       try {
         const { execFileSync } = await import('child_process');
         try { execFileSync('launchctl', ['unload', plistPath], { encoding: 'utf-8', timeout: 5000 }); } catch { /* ok */ }
@@ -1648,10 +1648,10 @@ const uninstallSupervisorCommand: Command = {
       return { success: true };
     }
     if (platform === 'linux') {
-      const unitPath = join(home, '.config', 'systemd', 'user', 'ruflo-daemon.service');
+      const unitPath = join(home, '.config', 'systemd', 'user', 'swarmlo-daemon.service');
       try {
         const { execFileSync } = await import('child_process');
-        try { execFileSync('systemctl', ['--user', 'disable', '--now', 'ruflo-daemon.service'], { encoding: 'utf-8', timeout: 5000 }); } catch { /* ok */ }
+        try { execFileSync('systemctl', ['--user', 'disable', '--now', 'swarmlo-daemon.service'], { encoding: 'utf-8', timeout: 5000 }); } catch { /* ok */ }
       } catch { /* ignore */ }
       if (fs.existsSync(unitPath)) {
         fs.unlinkSync(unitPath);
@@ -1668,7 +1668,7 @@ const uninstallSupervisorCommand: Command = {
 
 // #2661 root-fix — `daemon budget show|pause|resume`. The budget state was
 // previously visible only inline in `daemon status --all`; these give it an
-// independently scriptable surface (e.g. `ruflo daemon budget pause` before
+// independently scriptable surface (e.g. `swarmlo daemon budget pause` before
 // a long interactive session, `... resume` after).
 const budgetShowCommand: Command = {
   name: 'show',
@@ -1708,7 +1708,7 @@ const budgetPauseCommand: Command = {
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     const { getGlobalAiBudget } = await import('../services/global-ai-budget.js');
     await getGlobalAiBudget().pause(ctx.flags.reason as string | undefined);
-    output.printSuccess('Autonomous AI worker launches paused across all daemons. Resume with: ruflo daemon budget resume');
+    output.printSuccess('Autonomous AI worker launches paused across all daemons. Resume with: swarmlo daemon budget resume');
     return { success: true };
   },
 };
@@ -1767,7 +1767,7 @@ export const daemonCommand: Command = {
   ],
   action: async (): Promise<CommandResult> => {
     output.writeln();
-    output.writeln(output.bold('RuFlo Daemon - Background Task Management'));
+    output.writeln(output.bold('Swarmlo Daemon - Background Task Management'));
     output.writeln();
     output.writeln('Node.js-based background worker system that auto-runs like shell daemons.');
     output.writeln('Manages 12 specialized workers for continuous optimization and monitoring.');

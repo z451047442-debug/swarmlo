@@ -59,7 +59,7 @@ export function sealTrajectory(input: SealTrajectoryInput): SealedTrajectory {
   const envelope = signTrajectory(
     {
       trajectoryId: input.trajectory.id,
-      projectId: input.projectId ?? process.env.RUFLO_PROJECT_ID ?? 'unknown',
+      projectId: input.projectId ?? process.env.SWARMLO_PROJECT_ID ?? 'unknown',
       trajectory: {
         id: input.trajectory.id,
         sessionId: input.trajectory.sessionId,

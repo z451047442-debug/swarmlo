@@ -898,7 +898,7 @@ describe('Config Adapter', () => {
     const v3 = systemConfigToV3Config({} as any);
     const sys = v3ConfigToSystemConfig(v3);
     expect(sys.swarm?.topology).toBe('hierarchical');
-    expect(sys.mcp?.name).toBe('ruflo');
+    expect(sys.mcp?.name).toBe('swarmlo');
   });
 
   it('should denormalize hybrid topology to hierarchical-mesh', () => {

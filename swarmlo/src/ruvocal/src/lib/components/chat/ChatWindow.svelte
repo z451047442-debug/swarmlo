@@ -350,43 +350,43 @@
 		const n = toolName.toLowerCase();
 		if (n.includes("memory_store"))
 			return [
-				{ title: "Verify the save", prompt: "Use ruflo__memory_retrieve with the same key and namespace to confirm the save." },
-				{ title: "List the namespace", prompt: "Use ruflo__memory_list to show every entry in that namespace." },
+				{ title: "Verify the save", prompt: "Use swarmlo__memory_retrieve with the same key and namespace to confirm the save." },
+				{ title: "List the namespace", prompt: "Use swarmlo__memory_list to show every entry in that namespace." },
 			];
 		if (n.includes("memory_search") || n.includes("memory_retrieve") || n.includes("memory_list"))
 			return [
-				{ title: "Save a related item", prompt: "Use ruflo__memory_store to add a related entry to the same namespace." },
+				{ title: "Save a related item", prompt: "Use swarmlo__memory_store to add a related entry to the same namespace." },
 				{ title: "Semantic search", prompt: "Run ruvector__hooks_recall on the same query for a semantic match." },
 			];
 		if (n.includes("system_status") || n.includes("system_health"))
 			return [
-				{ title: "Performance metrics", prompt: "Run ruflo__performance_metrics and ruflo__performance_bottleneck in parallel." },
-				{ title: "Memory usage", prompt: "Run ruflo__memory_stats and ruflo__system_metrics in parallel." },
+				{ title: "Performance metrics", prompt: "Run swarmlo__performance_metrics and swarmlo__performance_bottleneck in parallel." },
+				{ title: "Memory usage", prompt: "Run swarmlo__memory_stats and swarmlo__system_metrics in parallel." },
 			];
 		if (n.includes("performance_metrics") || n.includes("performance_bottleneck"))
 			return [
-				{ title: "Optimize", prompt: "Use ruflo__performance_optimize on the slowest component identified." },
-				{ title: "Run benchmarks", prompt: "Run ruflo__performance_benchmark with --suite=all." },
+				{ title: "Optimize", prompt: "Use swarmlo__performance_optimize on the slowest component identified." },
+				{ title: "Run benchmarks", prompt: "Run swarmlo__performance_benchmark with --suite=all." },
 			];
 		if (n.includes("agent_spawn") || n.includes("swarm_init"))
 			return [
-				{ title: "Track progress", prompt: "Use ruflo__progress_summary to show what each agent is doing right now." },
+				{ title: "Track progress", prompt: "Use swarmlo__progress_summary to show what each agent is doing right now." },
 				{ title: "Add a tester", prompt: "Spawn a tester agent for the same swarm and have it write integration tests." },
 			];
 		if (n.includes("hooks_route") || n.includes("hooks_swarm_recommend"))
 			return [
-				{ title: "Spawn the agent", prompt: "Use ruflo__agent_spawn to create the recommended agent type now." },
+				{ title: "Spawn the agent", prompt: "Use swarmlo__agent_spawn to create the recommended agent type now." },
 				{ title: "Track this run", prompt: "Begin a trajectory with ruvector__hooks_trajectory_begin so the system learns from this work." },
 			];
 		if (n.includes("analyze_diff") || n.includes("analyze_file"))
 			return [
-				{ title: "Suggest reviewers", prompt: "Use ruflo__analyze_diff-reviewers to recommend reviewers for the same diff." },
-				{ title: "Risk per file", prompt: "Use ruflo__analyze_file-risk on the highest-risk files." },
+				{ title: "Suggest reviewers", prompt: "Use swarmlo__analyze_diff-reviewers to recommend reviewers for the same diff." },
+				{ title: "Risk per file", prompt: "Use swarmlo__analyze_file-risk on the highest-risk files." },
 			];
 		if (n.includes("github_repo_analyze") || n.includes("github_pr_manage") || n.includes("github_issue_track"))
 			return [
-				{ title: "Repo metrics", prompt: "Run ruflo__github_metrics on the same repo and summarize health signals." },
-				{ title: "Recent issues", prompt: "List the most recently updated issues with ruflo__github_issue_track." },
+				{ title: "Repo metrics", prompt: "Run swarmlo__github_metrics on the same repo and summarize health signals." },
+				{ title: "Recent issues", prompt: "List the most recently updated issues with swarmlo__github_issue_track." },
 			];
 		if (n.includes("hooks_trajectory_begin") || n.includes("hooks_trajectory_step"))
 			return [
@@ -406,7 +406,7 @@
 		if (n === "web_research" || n.includes("__web_research"))
 			return [
 				{ title: "Fact-check it", prompt: "Run web_research with action='fact_check' to verify the key claims." },
-				{ title: "Save findings", prompt: "Use ruflo__memory_store to save the research summary into a 'research' namespace." },
+				{ title: "Save findings", prompt: "Use swarmlo__memory_store to save the research summary into a 'research' namespace." },
 			];
 		if (n.includes("guidance"))
 			return [

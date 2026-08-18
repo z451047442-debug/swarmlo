@@ -9,7 +9,7 @@
  *      reconstructs to >=2 promotions, lineage intact, back to the immutable
  *      root — i.e. 'the flywheel turned' can't silently rot,
  *   3. the shipped proven-config champion (.rvf) verifies against the BAKED
- *      RUFLO_CONFIG_PUBKEY — a tampered/unsigned champion can never ship.
+ *      SWARMLO_CONFIG_PUBKEY — a tampered/unsigned champion can never ship.
  *
  * Pure, deterministic, $0. Needs dist/ built. Exit 1 on any failure.
  */
@@ -59,8 +59,8 @@ if (reals.length === 2) {
 const rvfPath = cl('proven-config.signed.rvf');
 if (existsSync(rvfPath)) {
   const signed = rvfa.unpackProvenConfigRvfa(readFileSync(rvfPath));
-  const manifest = signed && pc.verifyProvenConfig(signed, pc.RUFLO_CONFIG_PUBKEY);
-  manifest ? ok(`shipped champion .rvf verifies against baked RUFLO_CONFIG_PUBKEY (policy ${manifest.policy.ref.slice(0, 20)}…)`)
+  const manifest = signed && pc.verifyProvenConfig(signed, pc.SWARMLO_CONFIG_PUBKEY);
+  manifest ? ok(`shipped champion .rvf verifies against baked SWARMLO_CONFIG_PUBKEY (policy ${manifest.policy.ref.slice(0, 20)}…)`)
            : fail('shipped champion .rvf FAILED signature verification against the baked pubkey');
 } else {
   ok('no config champion shipped (optional) — skipped');

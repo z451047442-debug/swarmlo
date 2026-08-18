@@ -24,7 +24,7 @@
  *      previously-cached pool intact (empty, if nothing has landed yet).
  *   4. **Bounded cache size.** ≤ 128 KiB and ≤ 200 messages — matches
  *      ADR-309's bounded-local-queue discipline.
- *   5. **Kill switch.** `RUFLO_FUNNEL_MESSAGES=0` (or `RUFLO_FUNNEL=0`)
+ *   5. **Kill switch.** `SWARMLO_FUNNEL_MESSAGES=0` (or `SWARMLO_FUNNEL=0`)
  *      disables the fetcher entirely.
  *   6. **Signature-verification hook.** Reserved for a future ADR-311
  *      amendment; currently the transport-layer TLS + host allowlist is
@@ -46,7 +46,7 @@ const FETCH_TIMEOUT_MS = 4_000;
 
 /** Endpoint the client hits — overridable for staging / self-hosted. */
 export const DEFAULT_MESSAGES_ENDPOINT =
-  process.env.RUFLO_FUNNEL_MESSAGES_ENDPOINT ?? 'https://funnel.ruv.io/v1/messages';
+  process.env.SWARMLO_FUNNEL_MESSAGES_ENDPOINT ?? 'https://funnel.ruv.io/v1/messages';
 
 interface CacheEnvelope {
   _ts: number;
@@ -95,7 +95,7 @@ function httpsGet(url: string): Promise<FetchResult> {
         path: target.pathname + target.search,
         method: 'GET',
         headers: {
-          'User-Agent': 'ruflo-funnel/messages',
+          'User-Agent': 'swarmlo-funnel/messages',
           'Accept': 'application/json',
         },
       },
@@ -117,7 +117,7 @@ function httpsGet(url: string): Promise<FetchResult> {
 
 function killSwitched(env: NodeJS.ProcessEnv = process.env): boolean {
   const kill = (v?: string) => v !== undefined && /^(0|false|off|no)$/i.test(v.trim());
-  return kill(env.RUFLO_FUNNEL_MESSAGES) || kill(env.RUFLO_FUNNEL);
+  return kill(env.SWARMLO_FUNNEL_MESSAGES) || kill(env.SWARMLO_FUNNEL);
 }
 
 /**

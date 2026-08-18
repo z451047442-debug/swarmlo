@@ -33,7 +33,7 @@
  * are longer (~200 input / ~400 output). Projected: ~$1-3 USD. Default
  * --max-cost gate is $5.00.
  *
- * Co-Authored-By: RuFlo <ruv@ruv.net>
+ * Co-Authored-By: Swarmlo <ruv@ruv.net>
  */
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -265,8 +265,8 @@ async function callOR(modelId, prompt, apiKey, opts = {}) {
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://github.com/ruvnet/ruflo',
-      'X-Title': 'ruflo-benchmark-seed-corpus',
+      'HTTP-Referer': 'https://github.com/z451047442-debug/swarmlo',
+      'X-Title': 'swarmlo-benchmark-seed-corpus',
     },
     body: JSON.stringify({
       model: modelId,

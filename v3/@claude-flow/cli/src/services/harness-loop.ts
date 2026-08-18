@@ -103,10 +103,10 @@ export async function runHarnessLoop<C>(opts: HarnessLoopOptions<C>): Promise<Ha
   // 6. EMIT the champion manifest (UNSIGNED) on acceptance.
   if (decision.accept && canaryCmp.pass) {
     result.manifest = {
-      schema: 'ruflo.proven-config/v1',
+      schema: 'swarmlo.proven-config/v1',
       policy: { ref: opts.policyRefOf ? opts.policyRefOf(opts.candidate) : 'sha256:unknown' },
       layer: opts.layer,
-      compatibility: { ruflo: '>=3.24.0' },
+      compatibility: { swarmlo: '>=3.24.0' },
       benchmark: { corpus: opts.corpus.version, corpusHash: opts.corpus.corpusHash },
       receipt: {
         heldOutDelta: candidateScore - baselineScore,

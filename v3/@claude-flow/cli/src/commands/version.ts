@@ -1,10 +1,10 @@
 /**
- * `ruflo version` — ANV (Agent-Native Versioning) Phase 1.
+ * `swarmlo version` — ANV (Agent-Native Versioning) Phase 1.
  * https://gist.github.com/ruvnet/0d858ad440a4439b4a2281a40c39b1a0
  *
- * Plain `ruflo --version` / `-V` (index.ts's showVersion()) is UNCHANGED —
+ * Plain `swarmlo --version` / `-V` (index.ts's showVersion()) is UNCHANGED —
  * it stays bare semver so scripts parsing that output never see a surprise
- * suffix. This is a separate subcommand: `ruflo version` prints the same
+ * suffix. This is a separate subcommand: `swarmlo version` prints the same
  * bare semver by default, and `--explain` additionally renders the ANV
  * catalog/benchmark breakdown when a catalog-manifest.json ships with this
  * install. No catalog-manifest.json (e.g. an old install, or a dev checkout
@@ -84,9 +84,9 @@ export const versionCommand: Command = {
     },
   ],
   examples: [
-    { command: 'ruflo version', description: 'Print the installed semver' },
-    { command: 'ruflo version --explain', description: 'Print the full ANV catalog/benchmark breakdown' },
-    { command: 'ruflo version --require-catalog-gte 40', description: 'Gate a script on a minimum catalog generation' },
+    { command: 'swarmlo version', description: 'Print the installed semver' },
+    { command: 'swarmlo version --explain', description: 'Print the full ANV catalog/benchmark breakdown' },
+    { command: 'swarmlo version --require-catalog-gte 40', description: 'Gate a script on a minimum catalog generation' },
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     const version = getInstalledCliVersion();
@@ -109,13 +109,13 @@ export const versionCommand: Command = {
     }
 
     if (!manifest) {
-      output.writeln(`Installed: ruflo@${version}`);
+      output.writeln(`Installed: swarmlo@${version}`);
       output.writeln(output.dim('  (no catalog-manifest.json — plain semver, pre-ANV or dev checkout)'));
       return { success: true };
     }
 
     const suffix = buildAdvisorySuffix(manifest);
-    output.writeln(`Installed: ${output.bold(`ruflo@${version}${suffix}`)}`);
+    output.writeln(`Installed: ${output.bold(`swarmlo@${version}${suffix}`)}`);
     output.writeln();
     output.writeln(`Era:       AD (Agent Descent) — 1st generation`);
     output.writeln(

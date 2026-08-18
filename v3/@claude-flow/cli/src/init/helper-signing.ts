@@ -6,7 +6,7 @@
  * INSTALL time, but not the files on disk afterward — a sibling package's
  * postinstall (or disk tampering) could overwrite them, and the refresh would
  * faithfully propagate the tampered code. This gate closes that: every helper
- * is verified against a ruflo-signed manifest before install, and a mismatch is
+ * is verified against a swarmlo-signed manifest before install, and a mismatch is
  * REFUSED (fail-closed). The public key is baked in below; the private key is
  * never in the repo (see scripts/sign-helpers.mjs).
  *
@@ -16,18 +16,18 @@
 import { createHash, verify as edVerify } from 'crypto';
 
 /**
- * Ruflo helper-signing PUBLIC key (safe to commit). The matching private key is
+ * Swarmlo helper-signing PUBLIC key (safe to commit). The matching private key is
  * held out-of-repo and provided to scripts/sign-helpers.mjs at publish time via
- * $RUFLO_HELPERS_SIGNING_KEY. Rotating the key = replace this constant + re-sign.
+ * $SWARMLO_HELPERS_SIGNING_KEY. Rotating the key = replace this constant + re-sign.
  *
  * ROTATED 2026-07-14 (v3.29.0): the previous key was accidentally exposed in a
  * Claude Code session transcript. Old GCP secret version 1 was destroyed (not
  * disabled) so it cannot be re-enabled; new v2 generated here. Users on old
- * ruflo versions keep the old pubkey and verify old manifests successfully;
+ * swarmlo versions keep the old pubkey and verify old manifests successfully;
  * upgrading to v3.29.0+ atomically picks up this new pubkey along with the
  * new-key-signed manifest.
  */
-export const RUFLO_HELPERS_PUBKEY = `-----BEGIN PUBLIC KEY-----
+export const SWARMLO_HELPERS_PUBKEY = `-----BEGIN PUBLIC KEY-----
 MCowBQYDK2VwAyEAyLl9cG+V/C+ffKWaSwvOsHdXSWmB5e3x1z9NUNvq6Ys=
 -----END PUBLIC KEY-----`;
 
@@ -58,14 +58,14 @@ export function canonicalManifestBytes(m: HelpersManifest): Buffer {
 }
 
 /**
- * Verify a signed helpers manifest against ruflo's public key. Returns the
+ * Verify a signed helpers manifest against swarmlo's public key. Returns the
  * trusted file->sha256 manifest, or null on ANY failure (bad signature,
  * malformed JSON, wrong algorithm). Fail-closed — the caller MUST refuse to
  * install unverified helpers.
  */
 export function verifyHelpersManifest(
   signedJson: string,
-  pubkeyPem: string = RUFLO_HELPERS_PUBKEY,
+  pubkeyPem: string = SWARMLO_HELPERS_PUBKEY,
 ): HelpersManifest | null {
   try {
     const signed = JSON.parse(signedJson) as SignedHelpersManifest;

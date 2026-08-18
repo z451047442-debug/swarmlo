@@ -21,7 +21,7 @@ import {
 } from './generators/skill-md.js';
 import { generateConfigToml } from './generators/config-toml.js';
 import { DEFAULT_SKILLS_BY_TEMPLATE, AGENTS_OVERRIDE_TEMPLATE, GITIGNORE_ENTRIES } from './templates/index.js';
-import { getRufloMcpAddCommand } from './mcp-config.js';
+import { getSwarmloMcpAddCommand } from './mcp-config.js';
 
 /**
  * Bundled skills source directory (relative to package)
@@ -91,7 +91,7 @@ export class CodexInitializer {
         if (omitted.length > 0) {
           warnings.push(
             `Omitted ${omitted.length} catalog skills without canonical packaged assets. ` +
-            'Install additional capabilities from the Ruflo plugin catalog.',
+            'Install additional capabilities from the Swarmlo plugin catalog.',
           );
         }
       }
@@ -174,20 +174,20 @@ export class CodexInitializer {
       // Register MCP server with Codex
       const mcpResult = await this.registerMCPServer();
       if (mcpResult.registered) {
-        filesCreated.push('MCP server (ruflo) registered');
+        filesCreated.push('MCP server (swarmlo) registered');
       }
       if (mcpResult.warning) {
         warnings.push(mcpResult.warning);
       }
 
-      // #2801 — install the canonical ruflo-core@ruflo plugin so Codex
-      // gets Ruflo's lifecycle hooks (PreToolUse/PostToolUse/PreCompact/
+      // #2801 — install the canonical swarmlo-core@swarmlo plugin so Codex
+      // gets Swarmlo's lifecycle hooks (PreToolUse/PostToolUse/PreCompact/
       // Stop). Before this, --codex/--dual set up skills + MCP but no
       // lifecycle hooks. We install the UPSTREAM plugin (not a second
       // project-local bundle) to avoid the #2640 double-firing class.
-      const pluginResult = await this.installRufloCorePlugin();
+      const pluginResult = await this.installSwarmloCorePlugin();
       if (pluginResult.installed) {
-        filesCreated.push('Codex plugin (ruflo-core@ruflo) installed');
+        filesCreated.push('Codex plugin (swarmlo-core@swarmlo) installed');
       }
       if (pluginResult.warning) {
         warnings.push(pluginResult.warning);
@@ -388,7 +388,7 @@ export class CodexInitializer {
       } catch {
         return {
           registered: false,
-          warning: `Codex CLI not found. Run: ${getRufloMcpAddCommand()}`,
+          warning: `Codex CLI not found. Run: ${getSwarmloMcpAddCommand()}`,
         };
       }
 
@@ -396,7 +396,7 @@ export class CodexInitializer {
       // (each entry has a `name` field — confirmed current as of the 2026
       // `codex mcp` CLI) over a plain substring match against the human
       // -readable table, which false-positives on any server whose name or
-      // command merely contains "ruflo" and breaks silently if the table
+      // command merely contains "swarmlo" and breaks silently if the table
       // formatting changes.
       try {
         const listJson = execSync('codex mcp list --json 2>&1', { encoding: 'utf-8' });
@@ -407,7 +407,7 @@ export class CodexInitializer {
         // not-registered — falls through to the safe text-based fallback.
         const servers = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.servers) ? parsed.servers : null;
         if (!servers) throw new Error('unrecognized `codex mcp list --json` shape');
-        if (servers.some((s: unknown) => s && typeof s === 'object' && (s as { name?: unknown }).name === 'ruflo')) {
+        if (servers.some((s: unknown) => s && typeof s === 'object' && (s as { name?: unknown }).name === 'swarmlo')) {
           return { registered: true }; // Already registered
         }
       } catch {
@@ -415,7 +415,7 @@ export class CodexInitializer {
         // the plain-text listing so registration still no-ops idempotently.
         try {
           const list = execSync('codex mcp list 2>&1', { encoding: 'utf-8' });
-          if (list.includes('ruflo')) {
+          if (list.includes('swarmlo')) {
             return { registered: true };
           }
         } catch {
@@ -425,11 +425,11 @@ export class CodexInitializer {
 
       // Register the MCP server.
       //
-      // Use the shared platform-aware Ruflo MCP definition so generators,
+      // Use the shared platform-aware Swarmlo MCP definition so generators,
       // migrations, and live registration cannot drift.
       try {
         execSync(
-          getRufloMcpAddCommand(),
+          getSwarmloMcpAddCommand(),
           {
             stdio: 'pipe',
             timeout: 10000,
@@ -440,35 +440,35 @@ export class CodexInitializer {
         const errorMessage = err instanceof Error ? err.message : String(err);
         return {
           registered: false,
-          warning: `Failed to register MCP server: ${errorMessage}. Run manually: ${getRufloMcpAddCommand()}`,
+          warning: `Failed to register MCP server: ${errorMessage}. Run manually: ${getSwarmloMcpAddCommand()}`,
         };
       }
     } catch {
       return {
         registered: false,
-        warning: `Could not register MCP server. Run manually: ${getRufloMcpAddCommand()}`,
+        warning: `Could not register MCP server. Run manually: ${getSwarmloMcpAddCommand()}`,
       };
     }
   }
 
   /**
-   * #2801 — Install the canonical `ruflo-core@ruflo` plugin so Codex
-   * discovers Ruflo's lifecycle hooks. Idempotent: adds the marketplace
+   * #2801 — Install the canonical `swarmlo-core@swarmlo` plugin so Codex
+   * discovers Swarmlo's lifecycle hooks. Idempotent: adds the marketplace
    * and installs the plugin at user scope, mirroring registerMCPServer's
    * detect-then-add pattern. Codex does NOT auto-trust command hooks, so
    * we always return an activation message instructing the user to review
    * and trust them in a new session. Installation state is NOT reported as
    * "hook-active" — only "installed, pending trust review".
    */
-  private async installRufloCorePlugin(): Promise<{ installed: boolean; warning?: string; activationMessage?: string }> {
+  private async installSwarmloCorePlugin(): Promise<{ installed: boolean; warning?: string; activationMessage?: string }> {
     const ACTIVATION = [
       '',
-      'ACTION REQUIRED (Ruflo lifecycle hooks): start a new Codex session, open /hooks,',
-      'review the ruflo-core@ruflo hook definitions, and trust them. Use "trust all" only',
-      'when every pending definition is from Ruflo; otherwise trust the Ruflo definitions',
+      'ACTION REQUIRED (Swarmlo lifecycle hooks): start a new Codex session, open /hooks,',
+      'review the swarmlo-core@swarmlo hook definitions, and trust them. Use "trust all" only',
+      'when every pending definition is from Swarmlo; otherwise trust the Swarmlo definitions',
       'individually. Hooks are installed but remain INACTIVE until you complete this review.',
     ].join('\n');
-    const MANUAL = 'Install manually: codex plugin marketplace add ruvnet/ruflo --ref main && codex plugin add ruflo-core@ruflo';
+    const MANUAL = 'Install manually: codex plugin marketplace add z451047442-debug/swarmlo --ref main && codex plugin add swarmlo-core@swarmlo';
 
     try {
       const { execSync } = await import('child_process');
@@ -489,7 +489,7 @@ export class CodexInitializer {
         if (plugins && plugins.some((p: unknown) => {
           if (!p || typeof p !== 'object') return false;
           const name = String((p as { name?: unknown }).name ?? '');
-          return name === 'ruflo-core' || name === 'ruflo-core@ruflo' || name.startsWith('ruflo-core@');
+          return name === 'swarmlo-core' || name === 'swarmlo-core@swarmlo' || name.startsWith('swarmlo-core@');
         })) {
           // Installed already — still surface the trust reminder (idempotent).
           return { installed: true, activationMessage: ACTIVATION };
@@ -497,7 +497,7 @@ export class CodexInitializer {
       } catch {
         try {
           const list = execSync('codex plugin list 2>&1', { encoding: 'utf-8' });
-          if (list.includes('ruflo-core')) {
+          if (list.includes('swarmlo-core')) {
             return { installed: true, activationMessage: ACTIVATION };
           }
         } catch {
@@ -508,7 +508,7 @@ export class CodexInitializer {
       // Add the marketplace (idempotent — codex no-ops if already added; any
       // error here is non-fatal, the plugin-add below reports the real failure).
       try {
-        execSync('codex plugin marketplace add ruvnet/ruflo --ref main', { stdio: 'pipe', timeout: 20000 });
+        execSync('codex plugin marketplace add z451047442-debug/swarmlo --ref main', { stdio: 'pipe', timeout: 20000 });
       } catch {
         // Marketplace may already exist, or the CLI may not support this exact
         // verb — let the plugin-add attempt surface the actionable error.
@@ -516,14 +516,14 @@ export class CodexInitializer {
 
       // Install the plugin at user scope.
       try {
-        execSync('codex plugin add ruflo-core@ruflo', { stdio: 'pipe', timeout: 20000 });
+        execSync('codex plugin add swarmlo-core@swarmlo', { stdio: 'pipe', timeout: 20000 });
         return { installed: true, activationMessage: ACTIVATION };
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        return { installed: false, warning: `Failed to install ruflo-core@ruflo plugin: ${msg}. ${MANUAL}` };
+        return { installed: false, warning: `Failed to install swarmlo-core@swarmlo plugin: ${msg}. ${MANUAL}` };
       }
     } catch {
-      return { installed: false, warning: `Could not install Ruflo plugin. ${MANUAL}` };
+      return { installed: false, warning: `Could not install Swarmlo plugin. ${MANUAL}` };
     }
   }
 
@@ -705,7 +705,7 @@ Skills are invoked using \`$skill-name\` syntax. Each skill has:
 
 - Main instructions: \`AGENTS.md\` (project root)
 - Local overrides: \`.codex/AGENTS.override.md\` (gitignored)
-- Ruflo: https://github.com/ruvnet/ruflo
+- Swarmlo: https://github.com/z451047442-debug/swarmlo
 `;
   }
 
@@ -780,9 +780,9 @@ ${this.skills.map(s => `- \`$${s}\` (Codex) / \`/${s}\` (Claude Code)`).join('\n
 ## MCP Integration
 
 \`\`\`bash
-# Start Ruflo's MCP server over stdio (dedicated entry point — the
-# management \`ruflo mcp start\` CLI does NOT answer JSON-RPC on stdio).
-npx -y ruflo@latest mcp start
+# Start Swarmlo's MCP server over stdio (dedicated entry point — the
+# management \`swarmlo mcp start\` CLI does NOT answer JSON-RPC on stdio).
+npx -y swarmlo@latest mcp start
 \`\`\`
 
 ## Swarm Orchestration

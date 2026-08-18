@@ -56,7 +56,7 @@ export function recordEnrollment(rec: Omit<PayoutEnrollment, 'policy_version'>):
 }
 
 /**
- * Delete local enrollment state. Called by `ruflo funnel unenroll`. The
+ * Delete local enrollment state. Called by `swarmlo funnel unenroll`. The
  * server-side revoke is separate — this only removes the local token so
  * subsequent attribution events stop being enriched. Idempotent — deleting
  * a missing enrollment is a no-op success.

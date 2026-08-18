@@ -48,7 +48,7 @@ describe('callAnthropicMessages request body (#2357)', () => {
   beforeEach(() => {
     captured.length = 0;
     process.env.ANTHROPIC_API_KEY = 'sk-ant-test-not-real';
-    delete process.env.RUFLO_PROVIDER;
+    delete process.env.SWARMLO_PROVIDER;
     delete process.env.OPENROUTER_API_KEY;
     delete process.env.OLLAMA_API_KEY;
     vi.stubGlobal(

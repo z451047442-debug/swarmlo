@@ -49,12 +49,12 @@ describe('createKeychainAdapter', () => {
 
   it('round-trips a canary secret through whatever backend was selected', async () => {
     const adapter = await createKeychainAdapter();
-    const account = `ruflo-test-${Date.now()}`;
-    await adapter.setSecret('ruflo-security-test', account, 'round-trip-value');
+    const account = `swarmlo-test-${Date.now()}`;
+    await adapter.setSecret('swarmlo-security-test', account, 'round-trip-value');
     try {
-      expect(await adapter.getSecret('ruflo-security-test', account)).toBe('round-trip-value');
+      expect(await adapter.getSecret('swarmlo-security-test', account)).toBe('round-trip-value');
     } finally {
-      await adapter.deleteSecret('ruflo-security-test', account);
+      await adapter.deleteSecret('swarmlo-security-test', account);
     }
   });
 });

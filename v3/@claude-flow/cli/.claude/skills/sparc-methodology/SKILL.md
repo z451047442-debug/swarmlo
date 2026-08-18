@@ -1057,8 +1057,8 @@ mcp__claude-flow__token_usage {
 
 ## Support and Resources
 
-- **Documentation**: https://github.com/ruvnet/claude-flow
-- **Issues**: https://github.com/ruvnet/claude-flow/issues
+- **Documentation**: https://github.com/z451047442-debug/swarmlo
+- **Issues**: https://github.com/z451047442-debug/swarmlo/issues
 - **NPM Package**: https://www.npmjs.com/package/claude-flow
 - **Community**: Discord server (link in repository)
 

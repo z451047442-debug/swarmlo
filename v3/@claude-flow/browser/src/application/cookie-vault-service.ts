@@ -81,7 +81,7 @@ export class CookieVaultService {
     this.witnessKey = options.witnessKey ?? resolveWitnessKey();
     this.scanner = options.scanner ?? getSecurityScanner();
     this.scannerInfo = options.scannerInfo ?? { name: 'aidefence-bundled', version: '2.3.0' };
-    this.projectId = options.projectId ?? process.env.RUFLO_PROJECT_ID ?? 'unknown';
+    this.projectId = options.projectId ?? process.env.SWARMLO_PROJECT_ID ?? 'unknown';
     this.persistPath = options.persistPath;
   }
 

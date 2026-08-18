@@ -54,12 +54,12 @@ function getSponsoredDowntimeOverride(now: Date): PromoRow | null {
 
   if (hasConsent('sponsored-downtime')) {
     return {
-      text: '⚡ Running on sponsored Cognitum capacity · manage: ruflo proxy sponsor-disable',
+      text: '⚡ Running on sponsored Cognitum capacity · manage: swarmlo proxy sponsor-disable',
       kind: 'promotional',
     };
   }
   return {
-    text: '⚡ Free Cognitum capacity while you wait · manage: ruflo proxy sponsor-enable',
+    text: '⚡ Free Cognitum capacity while you wait · manage: swarmlo proxy sponsor-enable',
     kind: 'promotional',
   };
 }

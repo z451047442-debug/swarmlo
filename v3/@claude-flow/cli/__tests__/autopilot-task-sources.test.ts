@@ -58,7 +58,7 @@ describe('autopilot task-source validation', () => {
     const config = autopilotCommand.subcommands?.find(command => command.name === 'config');
     expect(config?.action).toBeDefined();
 
-    const projectRoot = mkdtempSync(join(tmpdir(), 'ruflo-autopilot-invalid-'));
+    const projectRoot = mkdtempSync(join(tmpdir(), 'swarmlo-autopilot-invalid-'));
     const previousCwd = process.cwd();
     try {
       process.chdir(projectRoot);
@@ -93,7 +93,7 @@ describe('autopilot task-source validation', () => {
     });
 
     const config = autopilotCommand.subcommands?.find(command => command.name === 'config');
-    const projectRoot = mkdtempSync(join(tmpdir(), 'ruflo-autopilot-valid-'));
+    const projectRoot = mkdtempSync(join(tmpdir(), 'swarmlo-autopilot-valid-'));
     const previousCwd = process.cwd();
     try {
       process.chdir(projectRoot);

@@ -265,7 +265,7 @@ export function createCliCommands(
         if (entry === null) {
           console.error(
             `Node "${nodeId}" is not a registered federation peer. ` +
-            `Run "ruflo-federation peers add <endpoint>" first.`,
+            `Run "swarmlo-federation peers add <endpoint>" first.`,
           );
           process.exitCode = 1;
           return;

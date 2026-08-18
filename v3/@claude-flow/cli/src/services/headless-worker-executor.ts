@@ -970,7 +970,7 @@ export class HeadlessWorkerExecutor extends EventEmitter {
       configHash: hashWorkerConfig(headless),
     });
     const dedup = getAiJobDedupRegistry();
-    const envWindowSecs = Number.parseInt(process.env.RUFLO_AI_DEDUP_WINDOW_SECS || '', 10);
+    const envWindowSecs = Number.parseInt(process.env.SWARMLO_AI_DEDUP_WINDOW_SECS || '', 10);
     const freshnessMs = Number.isFinite(envWindowSecs) && envWindowSecs >= 0
       ? envWindowSecs * 1000
       : Math.max(baseConfig.intervalMs || 0, 10 * 60 * 1000);

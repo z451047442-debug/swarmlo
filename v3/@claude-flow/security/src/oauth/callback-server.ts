@@ -21,7 +21,7 @@ const SUCCESS_PAGE = `<html>
     display:flex; align-items:center; justify-content:center;
     height:100vh; margin:0;">
     <div style="text-align:center;">
-    <h1>&#10003; ruflo login successful</h1>
+    <h1>&#10003; swarmlo login successful</h1>
     <p>You can close this tab and return to your terminal.</p>
     </div>
 </body>

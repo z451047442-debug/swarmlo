@@ -1,5 +1,5 @@
 /**
- * Release and CI guard for the OAuth surface consumed by `ruflo auth`.
+ * Release and CI guard for the OAuth surface consumed by `swarmlo auth`.
  * This deliberately imports the built package entry point, rather than
  * source files, so a stale or incomplete npm artifact cannot pass.
  */

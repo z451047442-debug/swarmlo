@@ -33,7 +33,7 @@ describe('hook-handler.cjs — root/package artifact parity', () => {
 
 describe('hook-handler.cjs — resolveCliBinForHook validates a real dist, not just bin/cli.js', () => {
   // Claude Code's own plugin marketplace mechanism installs by git clone/pull
-  // with no build step, so ~/.claude/plugins/marketplaces/ruflo is a
+  // with no build step, so ~/.claude/plugins/marketplaces/swarmlo is a
   // source-only checkout by construction: bin/cli.js exists on disk, but
   // importing dist/src/index.js from it throws MODULE_NOT_FOUND on every
   // real command (confirmed live — only --version happens to survive it).

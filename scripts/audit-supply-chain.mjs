@@ -42,7 +42,7 @@ const REPO_ROOT = join(__dirname, '..');
 const ALLOWLIST_PATH = join(REPO_ROOT, '.github', 'supply-chain', 'allowed-deps.json');
 const ACCEPTED_PATH = join(REPO_ROOT, '.github', 'supply-chain', 'accepted-findings.json');
 const PACKAGES_TO_AUDIT = [
-  'plugins/ruflo-graph-intelligence',
+  'plugins/swarmlo-graph-intelligence',
   'v3/@claude-flow/browser',
   // Add more as supply-chain coverage expands. Existing packages with their
   // own already-passing CVE story (memory, hooks, etc.) can come online by
@@ -324,7 +324,7 @@ function runPublisherTrustAudit(allowlist) {
 // ---------------------------------------------------------------------------
 
 function main() {
-  log('=== ruflo supply-chain audit ===');
+  log('=== swarmlo supply-chain audit ===');
   log(`scope: ${SCOPE}`);
   const allowlist = loadAllowlist();
   const accepted = loadAcceptedFindings();

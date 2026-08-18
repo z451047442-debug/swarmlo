@@ -1541,13 +1541,13 @@ describe('Init System', () => {
     });
 
     // The CLAUDE.md generator was deliberately rewritten to a terser, more
-    // imperative schema (header "# Ruflo — Claude Code Configuration", section
+    // imperative schema (header "# Swarmlo — Claude Code Configuration", section
     // titles like "## Rules" / "## Swarm & Routing"). These tests were
     // originally written against the older verbose schema; updated below to
     // pin the *current* contract so future drift is caught.
-    it('should contain the Ruflo header', () => {
+    it('should contain the Swarmlo header', () => {
       const md = generateClaudeMd(DEFAULT_INIT_OPTIONS);
-      expect(md).toContain('# Ruflo');
+      expect(md).toContain('# Swarmlo');
     });
 
     it('should contain a Rules section (behavioral rules)', () => {
@@ -1586,7 +1586,7 @@ describe('Init System', () => {
     it('should retain the governed workflow in every template', () => {
       for (const template of CLAUDE_MD_TEMPLATES) {
         const md = generateClaudeMd(DEFAULT_INIT_OPTIONS, template.name);
-        expect(md).toContain('## Ruflo Capability Brain & Implementation Loop');
+        expect(md).toContain('## Swarmlo Capability Brain & Implementation Loop');
       }
     });
 

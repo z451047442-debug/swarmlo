@@ -74,7 +74,7 @@ const promotionMs = performance.now() - promotionStart;
 const ledger = verifyFlywheelLedger(root);
 
 console.log(JSON.stringify({
-  schema: 'ruflo.flywheel-benchmark/v1',
+  schema: 'swarmlo.flywheel-benchmark/v1',
   node: process.version,
   statistics: {
     rounds,

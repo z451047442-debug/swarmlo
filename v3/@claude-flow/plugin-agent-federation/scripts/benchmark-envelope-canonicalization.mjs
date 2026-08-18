@@ -11,7 +11,7 @@ const payload = {
     claimId: 'claim-136',
     owner: 'spiffe://cognitum.one/agent/coder-7',
     epoch: '42',
-    resource: 'ruflo://repo/ruvnet/ruflo/issues/136',
+    resource: 'swarmlo://repo/z451047442-debug/swarmlo/issues/136',
   },
   evidence: Array.from({ length: 8 }, (_, index) => ({
     id: `ev-${index}`,
@@ -20,7 +20,7 @@ const payload = {
   })),
   limits: {
     actions: ['work.handoff'],
-    resources: ['ruflo://repo/ruvnet/ruflo/issues/136'],
+    resources: ['swarmlo://repo/z451047442-debug/swarmlo/issues/136'],
     maxConcurrency: 1,
   },
 };

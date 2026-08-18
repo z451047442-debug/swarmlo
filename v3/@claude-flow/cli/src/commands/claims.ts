@@ -648,7 +648,7 @@ export const claimsCommand: Command = {
   ],
   action: async (): Promise<CommandResult> => {
     output.writeln();
-    output.writeln(output.bold('RuFlo Claims System'));
+    output.writeln(output.bold('Swarmlo Claims System'));
     output.writeln(output.dim('Fine-grained authorization and access control'));
     output.writeln();
     output.writeln('Subcommands:');

@@ -22,7 +22,7 @@
     "agentic-ai",
     "agentic-systems",
     "claude-flow",
-    "ruflo",
+    "swarmlo",
     "claude",
     "claude-code",
     "anthropic",
@@ -106,14 +106,14 @@
     "url": "https://github.com/ruvnet"
   },
   "license": "MIT",
-  "homepage": "https://github.com/ruvnet/ruflo",
+  "homepage": "https://github.com/z451047442-debug/swarmlo",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/ruflo.git",
+    "url": "https://github.com/z451047442-debug/swarmlo.git",
     "directory": "v3/@claude-flow/neural"
   },
   "bugs": {
-    "url": "https://github.com/ruvnet/ruflo/issues"
+    "url": "https://github.com/z451047442-debug/swarmlo/issues"
   },
   "files": [
     "dist/",

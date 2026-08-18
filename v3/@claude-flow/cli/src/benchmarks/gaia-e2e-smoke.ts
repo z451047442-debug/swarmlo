@@ -84,7 +84,7 @@ async function runE2ESmoke(): Promise<void> {
     process.exit(1);
   }
 
-  const cacheDir = path.join(os.homedir(), '.cache', 'ruflo', 'gaia', 'judgments');
+  const cacheDir = path.join(os.homedir(), '.cache', 'swarmlo', 'gaia', 'judgments');
   const judgeOpts: JudgeOptions = { judgeModel: JUDGE_MODEL, cacheDir };
 
   const questions = SMOKE_FIXTURE;

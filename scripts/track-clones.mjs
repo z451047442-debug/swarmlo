@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Clone tracker — fetches 14-day GitHub clone numbers for the ruflo
+ * Clone tracker — fetches 14-day GitHub clone numbers for the swarmlo
  * ecosystem repos and appends a snapshot to `data/clone-data.rvf`
  * (a RuVector RVF vector store).
  *
@@ -8,7 +8,7 @@
  * which is just inside GitHub's 14-day clone-data retention window.
  *
  * Each snapshot is a 10-dimensional vector:
- *   [ruflo_clones,      ruflo_uniques,
+ *   [swarmlo_clones,      swarmlo_uniques,
  *    agentdb_clones,    agentdb_uniques,
  *    agentic_clones,    agentic_uniques,
  *    ruvector_clones,   ruvector_uniques,
@@ -40,7 +40,7 @@ const LEDGER_PATH = path_resolve(DATA_DIR, 'clone-data.ledger.json');
 const PROOF_PATH = path_resolve(DATA_DIR, 'clone-data.proof.json');
 
 const REPOS = [
-  'ruvnet/ruflo',
+  'z451047442-debug/swarmlo',
   'ruvnet/agentdb',
   'ruvnet/agentic-flow',
   'ruvnet/ruvector',
@@ -49,7 +49,7 @@ const REPOS = [
 
 const NPM_PKGS_HEADLINE = [
   'claude-flow',
-  'ruflo',
+  'swarmlo',
   '@claude-flow/cli',
   '@claude-flow/memory',
   'agentdb',
@@ -114,11 +114,11 @@ async function loadOrCreateRvf() {
 function readLedger() {
   if (!existsSync(LEDGER_PATH)) {
     return {
-      schema: 'ruflo-clone-tracker-ledger/v1',
+      schema: 'swarmlo-clone-tracker-ledger/v1',
       created_at: new Date().toISOString(),
       repos: REPOS,
       vector_layout: [
-        'ruflo_clones', 'ruflo_uniques',
+        'swarmlo_clones', 'swarmlo_uniques',
         'agentdb_clones', 'agentdb_uniques',
         'agentic_flow_clones', 'agentic_flow_uniques',
         'ruvector_clones', 'ruvector_uniques',
@@ -221,7 +221,7 @@ async function main() {
   const ledgerBytes = readFileSync(LEDGER_PATH);
   const ledgerSha = createHash('sha256').update(ledgerBytes).digest('hex');
   const proof = {
-    schema: 'ruflo-ecosystem-proof/v2',
+    schema: 'swarmlo-ecosystem-proof/v2',
     generated_at: now,
     sources: {
       github_clones: 'https://api.github.com/repos/{owner}/{repo}/traffic/clones (14-day rolling window)',

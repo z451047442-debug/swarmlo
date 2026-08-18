@@ -37,7 +37,7 @@ const JSON_OUT = process.argv.includes('--json');
 const ROW_RE = /\(\s*'(default|patterns)'\s*,\s*'(?:default|patterns)'\s*,\s*(\d+)\s*\)/g;
 
 // Roots to scan. Skip build outputs / vendor dirs.
-const ROOTS = ['v3', 'ruflo'];
+const ROOTS = ['v3', 'swarmlo'];
 const SKIP_DIRS = new Set([
   'node_modules',
   'dist',

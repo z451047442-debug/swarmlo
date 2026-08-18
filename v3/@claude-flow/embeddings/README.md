@@ -4,7 +4,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/@claude-flow/embeddings.svg)](https://www.npmjs.com/package/@claude-flow/embeddings)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-[![Performance](https://img.shields.io/badge/Performance-<5ms-brightgreen.svg)](https://github.com/ruvnet/claude-flow)
+[![Performance](https://img.shields.io/badge/Performance-<5ms-brightgreen.svg)](https://github.com/z451047442-debug/swarmlo)
 
 > High-performance embedding generation module for Claude Flow V3 - multi-provider support with persistent caching, document chunking, normalization, hyperbolic embeddings, and neural substrate integration.
 
@@ -32,7 +32,7 @@
 npm install @claude-flow/embeddings
 ```
 
-## Standalone use (without the Ruflo CLI)
+## Standalone use (without the Swarmlo CLI)
 
 This package runs on its own — no `@claude-flow/cli`, no MCP server,
 no API key required for the recipes below (the `MockEmbeddingService`

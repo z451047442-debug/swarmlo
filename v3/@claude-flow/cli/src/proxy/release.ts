@@ -6,7 +6,7 @@
  *   cognitum-one/meta-proxy-dist. Source remains private; normal users need
  *   neither GitHub authentication nor access to the source repository.
  * - **Dev-only** (`downloadViaGhCli`): shells out to `gh release download`,
- *   gated behind `RUFLO_DEV_PROXY_INSTALL=1` so it is never reachable by
+ *   gated behind `SWARMLO_DEV_PROXY_INSTALL=1` so it is never reachable by
  *   accident, and always logs loudly that it is a developer path.
  *
  * @module proxy/release
@@ -54,8 +54,8 @@ export interface ReleaseAssets {
   sigBase64: string;
 }
 
-const DEV_INSTALL_ENV = 'RUFLO_DEV_PROXY_INSTALL';
-const RELEASE_SOURCE_ENV = 'RUFLO_PROXY_RELEASE_SOURCE';
+const DEV_INSTALL_ENV = 'SWARMLO_DEV_PROXY_INSTALL';
+const RELEASE_SOURCE_ENV = 'SWARMLO_PROXY_RELEASE_SOURCE';
 const GH_REPO = 'cognitum-one/meta-proxy';
 const PUBLIC_DIST_BASE = 'https://github.com/cognitum-one/meta-proxy-dist/releases/download';
 const MAX_ARCHIVE_BYTES = 32 * 1024 * 1024;
@@ -84,7 +84,7 @@ async function ghExecutor() {
  * Dev-only fallback: `gh release download` via SafeExecutor into `destDir`.
  * Requires the caller's environment to already have `gh` authenticated
  * against a GitHub account with access to the private meta-proxy repo — this
- * is NOT something a normal ruflo end user has, which is exactly why this
+ * is NOT something a normal swarmlo end user has, which is exactly why this
  * path is gated and logged, not the default.
  */
 export async function downloadViaGhCli(

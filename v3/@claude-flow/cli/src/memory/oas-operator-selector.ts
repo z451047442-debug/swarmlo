@@ -5,18 +5,18 @@
  * Findings from the OAS paper referenced in dream-cycle #2763: memory-
  * consolidation performance improves by +48% when the caller picks the
  * RIGHT operator for the current budget + workload, instead of always
- * applying the most-expensive one. Ruflo already has multiple
+ * applying the most-expensive one. Swarmlo already has multiple
  * consolidation operators (merge / summarize / compress / distill),
  * but has no cost-aware selector — every `memory consolidate` call
  * uses the same path.
  *
  * v1 MVP: rule-based selector. Cost-per-entry estimates are informed
- * by ruflo's own measured performance targets in v3/@claude-flow/cli/
+ * by swarmlo's own measured performance targets in v3/@claude-flow/cli/
  * CLAUDE.md — no external benchmark call needed. v2 will refine costs
  * from routing-outcomes trajectories.
  */
 
-/** The four consolidation operators ruflo can apply. */
+/** The four consolidation operators swarmlo can apply. */
 export type OperatorId = 'merge' | 'summarize' | 'compress' | 'distill';
 
 export interface OperatorSpec {

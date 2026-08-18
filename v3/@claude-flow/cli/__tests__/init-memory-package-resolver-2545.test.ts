@@ -1,5 +1,5 @@
 /**
- * #2545 — Documented `npx ruflo init` path leaves self-learning silently
+ * #2545 — Documented `npx swarmlo init` path leaves self-learning silently
  * non-functional because `@claude-flow/memory` (an optionalDependency of the
  * CLI) lands in the npx cache, unreachable by a node_modules walk-up from the
  * user's project. The SessionStart auto-memory hook then no-op'd with no signal.
@@ -40,7 +40,7 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const HOOK_SRC = path.resolve(__dirname, '../.claude/helpers/auto-memory-hook.mjs');
 
-/** Deploy the real init-copied hook into a temp project, like `ruflo init` does. */
+/** Deploy the real init-copied hook into a temp project, like `swarmlo init` does. */
 function scaffoldProject(root: string): string {
   const helpers = path.join(root, '.claude', 'helpers');
   mkdirSync(helpers, { recursive: true });

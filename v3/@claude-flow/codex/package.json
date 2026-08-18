@@ -1,7 +1,7 @@
 {
   "name": "@claude-flow/codex",
   "version": "3.0.3",
-  "description": "Codex CLI integration for Ruflo (claude-flow) - OpenAI Codex platform adapter",
+  "description": "Codex CLI integration for Swarmlo (claude-flow) - OpenAI Codex platform adapter",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -76,12 +76,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ruvnet/ruflo.git",
+    "url": "git+https://github.com/z451047442-debug/swarmlo.git",
     "directory": "v3/@claude-flow/codex"
   },
-  "homepage": "https://github.com/ruvnet/ruflo#readme",
+  "homepage": "https://github.com/z451047442-debug/swarmlo#readme",
   "bugs": {
-    "url": "https://github.com/ruvnet/ruflo/issues"
+    "url": "https://github.com/z451047442-debug/swarmlo/issues"
   },
   "engines": {
     "node": ">=18"

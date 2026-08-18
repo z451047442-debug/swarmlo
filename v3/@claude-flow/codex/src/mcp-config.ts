@@ -1,12 +1,12 @@
 /**
- * Shared Ruflo MCP configuration for Codex generators, migrations, and init.
+ * Shared Swarmlo MCP configuration for Codex generators, migrations, and init.
  */
 
 import type { McpServerConfig } from './types.js';
 
-export const RUFLO_MCP_SERVER_NAME = 'ruflo';
-export const RUFLO_MCP_PACKAGE = 'ruflo@latest';
-export const RUFLO_MCP_STARTUP_TIMEOUT_SEC = 120;
+export const SWARMLO_MCP_SERVER_NAME = 'swarmlo';
+export const SWARMLO_MCP_PACKAGE = 'swarmlo@latest';
+export const SWARMLO_MCP_STARTUP_TIMEOUT_SEC = 120;
 
 export interface CodexMcpRegistration {
   name?: unknown;
@@ -48,27 +48,27 @@ export function getCodexCliInvocation(
   return { command: commandShell, prefixArgs: ['/d', '/s', '/c', 'codex'] };
 }
 
-export function getRufloMcpServerConfig(
+export function getSwarmloMcpServerConfig(
   platform: NodeJS.Platform = process.platform,
   toolTimeout = 120,
 ): McpServerConfig {
-  const args = ['-y', RUFLO_MCP_PACKAGE, 'mcp', 'start'];
+  const args = ['-y', SWARMLO_MCP_PACKAGE, 'mcp', 'start'];
 
   return platform === 'win32'
     ? {
-        name: RUFLO_MCP_SERVER_NAME,
+        name: SWARMLO_MCP_SERVER_NAME,
         command: 'cmd',
         args: ['/c', 'npx', ...args],
         enabled: true,
-        startupTimeout: RUFLO_MCP_STARTUP_TIMEOUT_SEC,
+        startupTimeout: SWARMLO_MCP_STARTUP_TIMEOUT_SEC,
         toolTimeout,
       }
     : {
-        name: RUFLO_MCP_SERVER_NAME,
+        name: SWARMLO_MCP_SERVER_NAME,
         command: 'npx',
         args,
         enabled: true,
-        startupTimeout: RUFLO_MCP_STARTUP_TIMEOUT_SEC,
+        startupTimeout: SWARMLO_MCP_STARTUP_TIMEOUT_SEC,
         toolTimeout,
       };
 }
@@ -103,16 +103,16 @@ export function renderMcpServerToml(server: McpServerConfig): string[] {
   return lines;
 }
 
-export function getRufloMcpAddCommand(platform: NodeJS.Platform = process.platform): string {
-  const server = getRufloMcpServerConfig(platform);
-  return ['codex', 'mcp', 'add', RUFLO_MCP_SERVER_NAME, '--', server.command, ...(server.args ?? [])].join(' ');
+export function getSwarmloMcpAddCommand(platform: NodeJS.Platform = process.platform): string {
+  const server = getSwarmloMcpServerConfig(platform);
+  return ['codex', 'mcp', 'add', SWARMLO_MCP_SERVER_NAME, '--', server.command, ...(server.args ?? [])].join(' ');
 }
 
-export function hasExpectedRufloMcpTransport(
+export function hasExpectedSwarmloMcpTransport(
   registration: CodexMcpRegistration,
   platform: NodeJS.Platform = process.platform,
 ): boolean {
-  const expected = getRufloMcpServerConfig(platform);
+  const expected = getSwarmloMcpServerConfig(platform);
   const transport = registration.transport;
   if (!transport || transport.type !== 'stdio' || transport.command !== expected.command) {
     return false;
@@ -123,15 +123,15 @@ export function hasExpectedRufloMcpTransport(
     && transport.args.every((arg, index) => arg === expected.args?.[index]);
 }
 
-export function hasExpectedRufloMcpTimeout(registration: CodexMcpRegistration): boolean {
+export function hasExpectedSwarmloMcpTimeout(registration: CodexMcpRegistration): boolean {
   return typeof registration.startup_timeout_sec === 'number'
-    && registration.startup_timeout_sec >= RUFLO_MCP_STARTUP_TIMEOUT_SEC;
+    && registration.startup_timeout_sec >= SWARMLO_MCP_STARTUP_TIMEOUT_SEC;
 }
 
 export function upsertMcpServerStartupTimeout(
   config: string,
-  serverName = RUFLO_MCP_SERVER_NAME,
-  timeoutSec = RUFLO_MCP_STARTUP_TIMEOUT_SEC,
+  serverName = SWARMLO_MCP_SERVER_NAME,
+  timeoutSec = SWARMLO_MCP_STARTUP_TIMEOUT_SEC,
 ): string {
   const eol = config.includes('\r\n') ? '\r\n' : '\n';
   const lines = config.split(/\r?\n/);

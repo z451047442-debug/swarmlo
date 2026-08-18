@@ -7,7 +7,7 @@
  * In Phase 3+ this delegates to the project-level witness manifest key
  * (ADR-103) so trajectories carry the same root-of-trust as the fix manifest.
  * For Phase 1 we accept either an explicit key (tests, ephemeral) or a
- * project-keyed witness via the `RUFLO_BROWSER_WITNESS_KEY` env var.
+ * project-keyed witness via the `SWARMLO_BROWSER_WITNESS_KEY` env var.
  */
 
 import { createPrivateKey, createPublicKey, sign, verify, generateKeyPairSync } from 'node:crypto';
@@ -180,7 +180,7 @@ export function verifyTrajectory(
  * point this at the project witness manifest key.
  */
 export function resolveWitnessKey(): WitnessKey {
-  const envKey = process.env.RUFLO_BROWSER_WITNESS_KEY;
+  const envKey = process.env.SWARMLO_BROWSER_WITNESS_KEY;
   if (envKey) return loadWitnessKey(envKey);
   return generateWitnessKey();
 }

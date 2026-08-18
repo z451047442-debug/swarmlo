@@ -2,7 +2,7 @@
  * @claude-flow/browser - GOAP Preflight (ADR-122 Phase 5)
  *
  * Dry-run a planned trajectory BEFORE launching a real browser session.
- * Checks preconditions against ambient ruflo state:
+ * Checks preconditions against ambient swarmlo state:
  *   - Required cookie attestation present in the vault?
  *   - Origin known to have high-risk selectors from causal recovery?
  *   - URL passes AIDefence threat scan?

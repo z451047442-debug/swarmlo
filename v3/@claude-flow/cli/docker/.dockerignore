@@ -1,4 +1,4 @@
-# Ruflo Docker — Exclude dev files from build context
+# Swarmlo Docker — Exclude dev files from build context
 # This keeps the build context small and fast
 
 # Dependencies (installed fresh in Docker)

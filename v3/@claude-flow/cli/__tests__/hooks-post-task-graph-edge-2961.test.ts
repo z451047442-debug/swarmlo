@@ -1,5 +1,5 @@
 /**
- * #2961: `ruflo hooks post-task` (CLI) reliably dropped the ADR-130 Phase 3
+ * #2961: `swarmlo hooks post-task` (CLI) reliably dropped the ADR-130 Phase 3
  * "reinforced-by" graph edge that the identical `hooks_post-task` MCP tool
  * handler writes when invoked from a long-running MCP server.
  *
@@ -38,7 +38,7 @@ const CLI_BUILT = existsSync(CLI_BIN);
 
 describe.skipIf(!CLI_BUILT)('#2961 hooks post-task (CLI) writes the reinforced-by edge', () => {
   it('a successful CLI post-task call leaves a graph_edges row behind, not just a trajectory', async () => {
-    const cwd = mkdtempSync(join(tmpdir(), 'ruflo-2961-'));
+    const cwd = mkdtempSync(join(tmpdir(), 'swarmlo-2961-'));
     try {
       execFileSync(process.execPath, [CLI_BIN, 'memory', 'init'], { cwd, timeout: 30_000, stdio: 'pipe' });
       execFileSync(

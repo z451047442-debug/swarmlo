@@ -355,7 +355,7 @@ const initCommand: Command = {
     {
       // #2768 — dream-cycle SubagentPermissionDelegate. Ships a per-role
       // capability manifest to `.swarm/permissions.jsonl` + an append-only
-      // audit trail. Task-tool prompts can consult the manifest; ruflo
+      // audit trail. Task-tool prompts can consult the manifest; swarmlo
       // does NOT enforce at the syscall boundary (Claude Code owns that).
       name: 'with-permissions',
       description: 'Ship workspace-scoped permission manifest (preset: strict|standard|permissive) — dream-cycle #2768',
@@ -636,9 +636,9 @@ const startCommand: Command = {
       output.writeln(output.dim(`  Error: ${err instanceof Error ? err.message : String(err)}`));
       // #2370: the old hint referenced the deprecated `claude-flow@v3alpha`
       // dist-tag which now resolves to a pre-rename package. Use the current
-      // `ruflo@latest` and force a fresh fetch with `-y` so npx doesn't pick
+      // `swarmlo@latest` and force a fresh fetch with `-y` so npx doesn't pick
       // a stale local install.
-      output.writeln(output.dim('  The MCP server may not be running. Start it with: claude mcp add claude-flow -- npx -y ruflo@latest mcp start'));
+      output.writeln(output.dim('  The MCP server may not be running. Start it with: claude mcp add claude-flow -- npx -y swarmlo@latest mcp start'));
     }
 
     // Persist swarm state to disk so `swarm status` can read it

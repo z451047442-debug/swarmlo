@@ -30,7 +30,7 @@ let dbPath: string;
 const ORIGINAL_ENV = process.env.CLAUDE_FLOW_DISABLE_BRIDGE;
 
 beforeEach(async () => {
-  dir = mkdtempSync(path.join(tmpdir(), 'ruflo-2735-'));
+  dir = mkdtempSync(path.join(tmpdir(), 'swarmlo-2735-'));
   dbPath = path.join(dir, 'memory.db');
   process.env.CLAUDE_FLOW_DISABLE_BRIDGE = '1';
   // Reset the module registry so each test gets a fresh dynamic import —

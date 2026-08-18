@@ -4,7 +4,7 @@
  *
  * WHAT THIS SHIPS (and what it deliberately does NOT)
  * ---------------------------------------------------
- * This service turns ruflo's captured run transcripts into AUDITED TRAINING
+ * This service turns swarmlo's captured run transcripts into AUDITED TRAINING
  * DATA + a COST-PARETO measurement + a GPU TRAINING PLAN. It does NOT train a
  * model and it does NOT "reduce escalation":
  *   - `runExport`  → SFT (OpenAI chat) + DPO (TRL preference) JSONL + a guard
@@ -19,8 +19,8 @@
  *
  * HARD HONESTY RULE (do not overclaim): weight-eft's own `train` never spawns
  * (its README §Status), and no GPU tune has run here. `resolved` in the
- * captured archive is a PROXY (ruflo has no SWE-bench gold oracle) — the SFT
- * data-quality caveat stands. Nothing here claims ruflo "trains a model" as a
+ * captured archive is a PROXY (swarmlo has no SWE-bench gold oracle) — the SFT
+ * data-quality caveat stands. Nothing here claims swarmlo "trains a model" as a
  * $0/local capability.
  *
  * ADR-150 GRACEFUL DEGRADATION
@@ -135,7 +135,7 @@ export async function loadWeightEft(importer?: WeightEftImporter): Promise<Weigh
 }
 
 // ============================================================================
-// Archive-builder: ruflo run records → DarwinTrajectory[]  (unit-tested)
+// Archive-builder: swarmlo run records → DarwinTrajectory[]  (unit-tested)
 // ============================================================================
 
 export interface ArchiveBuildStats {
@@ -155,7 +155,7 @@ export interface ArchiveBuildResult {
 }
 
 /**
- * Map captured ruflo run transcripts to the DarwinTrajectory[] contract the
+ * Map captured swarmlo run transcripts to the DarwinTrajectory[] contract the
  * weight-eft exporter codes against. PURE + synchronous — this is the seam the
  * archive-builder unit test exercises.
  *
@@ -196,7 +196,7 @@ export function buildArchiveFromRecords(records: RunTranscriptRecord[]): Archive
 
   const proxyNote = hasGold
     ? 'resolved: some records carry gold-oracle status; others are proxies (see byResolvedSource).'
-    : 'resolved is a PROXY — ruflo has no SWE-bench gold oracle. `output-verifier`/`api-success` ' +
+    : 'resolved is a PROXY — swarmlo has no SWE-bench gold oracle. `output-verifier`/`api-success` ' +
       'labels are explicitly-marked proxies, NOT conformant gold eval. SFT/DPO quality is bounded by this.';
 
   return { trajectories, stats, proxyNote };
@@ -266,7 +266,7 @@ export async function runPlan(opts: {
   if (!api) return { degraded: true, reason: 'weight-eft-not-available' };
   const base = opts.base ?? DEFAULT_BASE_MODEL;
   try {
-    const plan = api.twoStagePlan(base, opts.sftPath, opts.dpoPath, opts.adapterPrefix ?? 'ruflo-weft');
+    const plan = api.twoStagePlan(base, opts.sftPath, opts.dpoPath, opts.adapterPrefix ?? 'swarmlo-weft');
     return { degraded: false, base, sft: plan.sft, dpo: plan.dpo };
   } catch (e) {
     return { degraded: true, reason: `plan-failed: ${(e as Error).message}` };
@@ -310,7 +310,7 @@ export interface RemoteTrainArgs {
   dpoPath: string;
   /** Local dir to fetch the trained LoRA adapter back into. Default .claude-flow/neural. */
   adapterDir?: string;
-  /** Remote working dir. Default ~/.ruflo-weft/<runId>. */
+  /** Remote working dir. Default ~/.swarmlo-weft/<runId>. */
   remoteWorkdir?: string;
   /** SSH user (default: current, i.e. no user@ prefix). */
   sshUser?: string;
@@ -318,7 +318,7 @@ export interface RemoteTrainArgs {
   sshPort?: number;
   /** Stable run id used in remote workdir + adapter names. Default derived. */
   runId?: string;
-  /** Adapter name prefix. Default 'ruflo-weft'. */
+  /** Adapter name prefix. Default 'swarmlo-weft'. */
   adapterPrefix?: string;
 }
 
@@ -364,8 +364,8 @@ export function buildRemoteTrainInvocation(args: RemoteTrainArgs): RemoteTrainPl
   const base = args.base ?? DEFAULT_BASE_MODEL.id;
   const port = args.sshPort ?? 22;
   const runId = args.runId ?? `weft-${Date.now().toString(36)}`;
-  const prefix = args.adapterPrefix ?? 'ruflo-weft';
-  const remoteWorkdir = args.remoteWorkdir ?? `~/.ruflo-weft/${runId}`;
+  const prefix = args.adapterPrefix ?? 'swarmlo-weft';
+  const remoteWorkdir = args.remoteWorkdir ?? `~/.swarmlo-weft/${runId}`;
   const adapterDir = args.adapterDir ?? '.claude-flow/neural';
   const target = sshTarget(args);
   const ssh = sshBase(port);

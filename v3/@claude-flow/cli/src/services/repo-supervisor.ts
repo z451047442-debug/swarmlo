@@ -82,7 +82,7 @@ export class RepoSupervisorRegistry {
 
   constructor(options?: { baseDir?: string }) {
     this.dir = options?.baseDir
-      ?? process.env.RUFLO_AI_BUDGET_DIR
+      ?? process.env.SWARMLO_AI_BUDGET_DIR
       ?? join(homedir(), '.claude-flow');
   }
 
@@ -231,7 +231,7 @@ export function getRepoSupervisorRegistry(): RepoSupervisorRegistry {
   return registryInstance;
 }
 
-/** Test hook: reset the singleton (e.g. after changing RUFLO_AI_BUDGET_DIR). */
+/** Test hook: reset the singleton (e.g. after changing SWARMLO_AI_BUDGET_DIR). */
 export function resetRepoSupervisorRegistryForTests(): void {
   registryInstance = null;
 }

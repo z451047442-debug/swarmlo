@@ -2,7 +2,7 @@
  * Pod template schema validator (ADR-164 §3.3 + ADR-164.1 §3.2).
  *
  * Defines the `PodTemplate` type that every business-pod JSON file under
- * `plugins/ruflo-business-pods/templates/` MUST conform to, and a hand-rolled
+ * `plugins/swarmlo-business-pods/templates/` MUST conform to, and a hand-rolled
  * validator that throws structured errors on invalid templates. No external
  * deps (no AJV, no zod) — the schema is small enough to validate by hand and
  * doing so keeps the cli's optional-dep surface unchanged.
@@ -15,7 +15,7 @@ export type PiiPolicy = 'soc2' | 'gdpr' | 'hipaa' | 'permissive';
 export interface PodAgent {
   /** Role label inside the pod, e.g. "lead-gen-agent". */
   role: string;
-  /** Must resolve to a known ruflo agent type (researcher / coder / ...). */
+  /** Must resolve to a known swarmlo agent type (researcher / coder / ...). */
   agentType: string;
   /** Human-readable description of what the agent does in this pod. */
   description: string;
@@ -279,7 +279,7 @@ export function validatePodTemplate(json: unknown): PodTemplate {
 }
 
 /**
- * Known ruflo agent types — kept in sync with src/commands/agent.ts AGENT_TYPES.
+ * Known swarmlo agent types — kept in sync with src/commands/agent.ts AGENT_TYPES.
  * The list is duplicated here intentionally so pod-tick.mjs can run without
  * importing the entire commands module.
  *
@@ -312,6 +312,6 @@ export const KNOWN_AGENT_TYPES = [
   'database-specialist',
   // ADR-164 Phase 3 — added for the marketing/hr pods (content drafting +
   // onboarding-template generation). Mirror this addition in the JS copy
-  // inside plugins/ruflo-business-pods/scripts/pod-tick.mjs.
+  // inside plugins/swarmlo-business-pods/scripts/pod-tick.mjs.
   'base-template-generator',
 ] as const;

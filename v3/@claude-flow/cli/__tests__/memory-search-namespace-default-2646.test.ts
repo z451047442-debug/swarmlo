@@ -60,8 +60,8 @@ const { searchEntries } = vi.hoisted(() => {
     const effectiveNamespace = opts.namespace || 'all';
 
     const allEntries = [
-      { id: 'a1', key: 'note/alpha', content: 'ruflo memory probe', score: 0.9, namespace: 'projetos' },
-      { id: 'a2', key: 'note/beta', content: 'ruflo memory probe', score: 0.8, namespace: 'patterns' },
+      { id: 'a1', key: 'note/alpha', content: 'swarmlo memory probe', score: 0.9, namespace: 'projetos' },
+      { id: 'a2', key: 'note/beta', content: 'swarmlo memory probe', score: 0.8, namespace: 'patterns' },
     ];
 
     if (effectiveNamespace === 'all') {
@@ -119,7 +119,7 @@ describe('memory_search namespace default (#2646, 3rd occurrence of #1123/#1131)
   });
 
   it('reproduces the issue #2646 repro end-to-end: omitting namespace returns hits from ALL namespaces', async () => {
-    const r = await tool!.handler({ query: 'ruflo memory probe' }) as { results: unknown[]; total: number };
+    const r = await tool!.handler({ query: 'swarmlo memory probe' }) as { results: unknown[]; total: number };
     // Pre-fix this was `{ results: [], total: 0 }` even though entries existed
     // in "projetos"/"patterns" — exactly the memory_stats-vs-memory_search
     // mismatch reported in the issue.

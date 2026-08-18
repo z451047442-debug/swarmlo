@@ -2,7 +2,7 @@
  * GAIA Dataset Loader — ADR-133-PR1
  *
  * Authenticates to Hugging Face, downloads the `gaia-benchmark/GAIA`
- * validation split, caches it under ~/.cache/ruflo/gaia/, and exposes
+ * validation split, caches it under ~/.cache/swarmlo/gaia/, and exposes
  * a typed `loadGaia()` API consumed by the capability-gaia subcommand.
  *
  * Token resolution order (mirrors performance-capability.ts ANTHROPIC_API_KEY pattern):
@@ -54,7 +54,7 @@ export interface LoadGaiaOptions {
   limit?: number;
   /** Skip HF download; use the built-in 5-question smoke fixture instead. */
   smokeOnly?: boolean;
-  /** Override the cache directory (default: ~/.cache/ruflo/gaia). */
+  /** Override the cache directory (default: ~/.cache/swarmlo/gaia). */
   cacheDir?: string;
 }
 
@@ -94,7 +94,7 @@ export function resolveHfToken(): string {
 // ---------------------------------------------------------------------------
 
 function defaultCacheDir(): string {
-  return path.join(os.homedir(), '.cache', 'ruflo', 'gaia');
+  return path.join(os.homedir(), '.cache', 'swarmlo', 'gaia');
 }
 
 /**
@@ -186,7 +186,7 @@ async function fetchJson(url: string, token: string): Promise<unknown> {
       {
         headers: {
           Authorization: `Bearer ${token}`,
-          'User-Agent': 'ruflo-gaia-loader/1.0',
+          'User-Agent': 'swarmlo-gaia-loader/1.0',
         },
       },
       (res) => {
@@ -317,7 +317,7 @@ async function downloadAttachment(
 
       const parsed = new url.URL(requestUrl);
       const headers: Record<string, string> = {
-        'User-Agent': 'ruflo-gaia-loader/1.0',
+        'User-Agent': 'swarmlo-gaia-loader/1.0',
       };
       if (parsed.hostname.includes('huggingface.co')) {
         headers['Authorization'] = `Bearer ${token}`;

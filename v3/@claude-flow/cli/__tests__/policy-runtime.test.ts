@@ -19,12 +19,12 @@ import { callMCPTool } from '../src/mcp-client.js';
 
 const roots: Array<{ root: string; trust: string }> = [];
 function project(): string {
-  const root = mkdtempSync(join(tmpdir(), 'ruflo-policy-runtime-'));
+  const root = mkdtempSync(join(tmpdir(), 'swarmlo-policy-runtime-'));
   mkdirSync(join(root, '.claude-flow'), { recursive: true });
   const projectId = createHash('sha256').update(root).digest('hex');
   roots.push({
     root,
-    trust: join(userInfo().homedir, '.config', 'ruflo', 'policy-trust', projectId),
+    trust: join(userInfo().homedir, '.config', 'swarmlo', 'policy-trust', projectId),
   });
   return root;
 }
@@ -95,7 +95,7 @@ describe('policy runtime compatibility and transactions', () => {
     writeFileSync(join(root, 'README.md'), 'policy worktree test\n');
     execFileSync('git', ['-C', root, 'add', 'README.md']);
     execFileSync('git', [
-      '-C', root, '-c', 'user.name=Ruflo Test', '-c', 'user.email=test@invalid',
+      '-C', root, '-c', 'user.name=Swarmlo Test', '-c', 'user.email=test@invalid',
       'commit', '-qm', 'initial',
     ]);
     await autoMigratePolicyStateIfNeeded(root);

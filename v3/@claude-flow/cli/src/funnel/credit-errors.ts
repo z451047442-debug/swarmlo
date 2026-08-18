@@ -97,13 +97,13 @@ export function renderCreditRecovery(authenticated: boolean): string {
     '',
   ];
   if (authenticated) {
-    lines.push('Start local proxy?', '  ruflo proxy enable');
+    lines.push('Start local proxy?', '  swarmlo proxy enable');
   } else {
-    lines.push('Sign in:', '  ruflo auth login');
+    lines.push('Sign in:', '  swarmlo auth login');
   }
   return lines.join('\n');
 }
 
 /** Single-line hint (non-TTY, CI, or repeat occurrences in a session). */
 export const CREDIT_RECOVERY_HINT =
-  'Hint: ruflo auth login enables the free local Meta LLM proxy';
+  'Hint: swarmlo auth login enables the free local Meta LLM proxy';

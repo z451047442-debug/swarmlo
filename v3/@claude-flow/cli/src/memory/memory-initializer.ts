@@ -225,7 +225,7 @@ async function walRefusalError(operation: 'write' | 'read/write'): Promise<strin
  * Vector embeddings enabled for semantic search
  */
 export const MEMORY_SCHEMA_V3 = `
--- RuFlo V3 Memory Database
+-- Swarmlo V3 Memory Database
 -- Version: 3.0.0
 -- Features: Pattern learning, vector embeddings, temporal decay, migration tracking
 
@@ -1549,7 +1549,7 @@ async function activateControllerRegistry(
  * When a repair IS needed and the DB is healthy: creates the table if absent,
  * seeds the fresh-install default rows, and backfills an accurate
  * `total_vectors` per namespace. Runs on the existing-DB path of
- * `initializeMemoryDatabase` (MCP start / `memory init`) and from `ruflo init`.
+ * `initializeMemoryDatabase` (MCP start / `memory init`) and from `swarmlo init`.
  *
  * Uses better-sqlite3 (WAL-safe, native). If the native module is unavailable
  * it is a silent no-op — the split statusline query already prevents the count
@@ -1762,7 +1762,7 @@ export async function repairVectorIndexes(
       if (opts.autoRecover) {
         // Auto-fix: rebuild the corrupt DB (backup + verify + atomic swap), then
         // provision vector_indexes on the clean rebuild. This is what makes any
-        // npx-deployed ruflo self-repair a corrupt memory DB on init / MCP start.
+        // npx-deployed swarmlo self-repair a corrupt memory DB on init / MCP start.
         const rec = await recoverMemoryDatabase(dbPath, { verbose: opts.verbose });
         if (rec.recovered) {
           const healed = await repairVectorIndexes(dbPath, { verbose: opts.verbose });
@@ -1886,7 +1886,7 @@ export async function initializeMemoryDatabase(options: {
     if (fs.existsSync(dbPath) && !force) {
       // #2568-followup: an existing DB may predate `vector_indexes` (or was
       // written by agentdb directly). Self-heal it here — this branch is hit on
-      // every MCP-server start and `memory init`, so any ruflo repairs itself.
+      // every MCP-server start and `memory init`, so any swarmlo repairs itself.
       // Idempotent + best-effort; never turns a healthy re-init into a failure.
       const heal = await repairVectorIndexes(dbPath, { verbose, autoRecover: true });
       return {

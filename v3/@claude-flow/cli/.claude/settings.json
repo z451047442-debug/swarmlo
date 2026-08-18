@@ -115,8 +115,8 @@
     ]
   },
   "attribution": {
-    "commit": "Co-Authored-By: ruflo-bot <ruflo-bot@users.noreply.github.com>",
-    "pr": "Generated with [claude-flow](https://github.com/ruvnet/claude-flow)"
+    "commit": "Co-Authored-By: swarmlo-bot <swarmlo-bot@users.noreply.github.com>",
+    "pr": "Generated with [claude-flow](https://github.com/z451047442-debug/swarmlo)"
   },
   "claudeFlow": {
     "version": "3.1.0",

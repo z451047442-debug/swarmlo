@@ -2,7 +2,7 @@
 /**
  * CLI ↔ MCP tool coverage audit — regression guard for #1916.
  *
- * The `ruflo agent logs <id>` CLI subcommand referenced an `agent_logs` MCP
+ * The `swarmlo agent logs <id>` CLI subcommand referenced an `agent_logs` MCP
  * tool that was never registered, so the command died with
  * `MCP tool not found: agent_logs`. There turned out to be ~20 more CLI
  * subcommands with the same shape (`callMCPTool('<name>', …)` where `<name>`

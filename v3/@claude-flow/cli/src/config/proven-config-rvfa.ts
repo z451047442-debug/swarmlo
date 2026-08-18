@@ -6,7 +6,7 @@
  * RVFA appliance binary. This adds a ruvnet-native transport + tamper-evident
  * envelope (RVFA's SHA256 footer + per-section hash) WITHOUT a second trust
  * root — adoption still verifies the inner manifest's Ed25519 signature against
- * RUFLO_CONFIG_PUBKEY (see adoptSignedConfig). Signed ≠ suitable is unchanged:
+ * SWARMLO_CONFIG_PUBKEY (see adoptSignedConfig). Signed ≠ suitable is unchanged:
  * unpack → verifyProvenConfig → isSuitable, fail-closed at every step.
  *
  * Pure Node (RvfaWriter/RvfaReader) — no LLM, no network, $0. Additive: a raw
@@ -33,7 +33,7 @@ export function packProvenConfigRvfa(signed: SignedProvenConfig): Buffer {
   const writer = new RvfaWriter({
     name: `proven-config:${m.policy?.ref ?? 'unknown'}`,
     // Carry the compat floor for humans/tools; the real gate is isSuitable.
-    appVersion: m.compatibility?.ruflo ?? '0',
+    appVersion: m.compatibility?.swarmlo ?? '0',
     platform: m.platform?.[0] ?? 'any',
     arch: 'any',
     profile: 'offline',

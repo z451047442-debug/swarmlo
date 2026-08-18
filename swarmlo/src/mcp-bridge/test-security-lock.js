@@ -24,7 +24,7 @@ import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const BRIDGES = [
-  path.join(HERE, "index.js"),                           // ruflo/src/mcp-bridge/index.js
+  path.join(HERE, "index.js"),                           // swarmlo/src/mcp-bridge/index.js
   path.join(HERE, "..", "ruvocal", "mcp-bridge", "index.js"), // ruvocal variant (deployed)
 ];
 const DOCKERFILES = [

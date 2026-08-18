@@ -34,8 +34,8 @@ await cp(join(repoRoot, 'README.md'), join(packageDir, 'README.md'));
 await rm(pluginsDir, { recursive: true, force: true });
 await mkdir(pluginsDir, { recursive: true });
 await cp(
-  join(repoRoot, 'plugins', 'ruflo-metaharness'),
-  join(pluginsDir, 'ruflo-metaharness'),
+  join(repoRoot, 'plugins', 'swarmlo-metaharness'),
+  join(pluginsDir, 'swarmlo-metaharness'),
   { recursive: true },
 );
 

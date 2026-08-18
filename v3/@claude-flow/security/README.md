@@ -4,7 +4,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/@claude-flow/security.svg)](https://www.npmjs.com/package/@claude-flow/security)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-[![Security Audit](https://img.shields.io/badge/Security-Audited-green.svg)](https://github.com/ruvnet/claude-flow)
+[![Security Audit](https://img.shields.io/badge/Security-Audited-green.svg)](https://github.com/z451047442-debug/swarmlo)
 
 > Comprehensive security module for Claude Flow V3 - CVE fixes, input validation, path security, and secure credential management.
 
@@ -24,7 +24,7 @@
 npm install @claude-flow/security
 ```
 
-## Standalone use (without the Ruflo CLI)
+## Standalone use (without the Swarmlo CLI)
 
 This is a plain library — every primitive (`PasswordHasher`,
 `PathValidator`, `SafeExecutor`, `InputValidator`, `CredentialGenerator`)

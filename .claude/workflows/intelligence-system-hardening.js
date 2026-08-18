@@ -10,7 +10,7 @@ export const meta = {
   ],
 }
 
-const REPO = '/Users/cohen/Projects/ruflo'
+const REPO = '/Users/cohen/Projects/swarmlo'
 const CLI = `${REPO}/v3/@claude-flow/cli`
 const RNG = 'an ' + 'RNG' + ' call (pseudo-random fabrication)'
 

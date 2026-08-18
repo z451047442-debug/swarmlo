@@ -16,8 +16,8 @@ import { performance } from 'node:perf_hooks';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const CLI_ROOT = resolve(SCRIPT_DIR, '..');
-const RUFLO_ROOT = resolve(SCRIPT_DIR, '../../../..');
-const RUNS_DIR = join(RUFLO_ROOT, 'docs', 'benchmarks', 'runs');
+const SWARMLO_ROOT = resolve(SCRIPT_DIR, '../../../..');
+const RUNS_DIR = join(SWARMLO_ROOT, 'docs', 'benchmarks', 'runs');
 
 const DATA_DIR = process.env.BEIR_DATA_DIR || '/tmp/beir-nfcorpus/nfcorpus';
 const BGE_MODEL = process.env.BGE_MODEL || 'Xenova/bge-base-en-v1.5';

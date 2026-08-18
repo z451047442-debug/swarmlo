@@ -12,7 +12,7 @@ function git(cwd: string, ...args: string[]): string {
 }
 
 function repo(): string {
-  const parent = mkdtempSync(join(tmpdir(), 'ruflo-codex-worktrees-'));
+  const parent = mkdtempSync(join(tmpdir(), 'swarmlo-codex-worktrees-'));
   roots.push(parent);
   const root = join(parent, 'repo');
   execFileSync('git', ['init', root]);

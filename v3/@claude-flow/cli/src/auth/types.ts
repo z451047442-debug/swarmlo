@@ -1,5 +1,5 @@
 /**
- * `ruflo auth` state shapes (ADR-306).
+ * `swarmlo auth` state shapes (ADR-306).
  *
  * `auth.json` holds identity metadata ONLY — never token material. The
  * access token lives exclusively in a process-lifetime in-memory singleton

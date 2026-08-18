@@ -22,7 +22,7 @@ export const backupCommand: Command = {
   examples: [
     { command: 'claude-flow memory backup', description: 'Snapshot to .swarm/backups, keep last 7' },
     { command: 'claude-flow memory backup --keep 30', description: 'Keep a month of nightly snapshots' },
-    { command: 'claude-flow memory backup --gcs gs://my-bucket/ruflo-backups', description: 'Also upload offsite to GCS' },
+    { command: 'claude-flow memory backup --gcs gs://my-bucket/swarmlo-backups', description: 'Also upload offsite to GCS' },
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     const r = await backupMemoryDb({

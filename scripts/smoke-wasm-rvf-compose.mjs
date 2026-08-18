@@ -6,7 +6,7 @@
  * Pre-P2: buildRvfFromTemplate silently dropped template.mcp_tools (the
  * field existed in GalleryTemplateDetail but was never passed to
  * WasmRvfBuilder.addMcpTools()).  No wasm_agent_compose tool existed.
- * WasmAgents were isolated from ruflo's 314 MCP tools.
+ * WasmAgents were isolated from swarmlo's 314 MCP tools.
  *
  * P2 fix:
  *   1. buildRvfContainer gains mcpTools parameter → builder.addMcpTools()

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as security from '../src/index.js';
 
 describe('OAuth public export surface', () => {
-  it('exports every primitive required by ruflo auth', () => {
+  it('exports every primitive required by swarmlo auth', () => {
     for (const name of [
       'authorizeUrl',
       'exchangeCode',

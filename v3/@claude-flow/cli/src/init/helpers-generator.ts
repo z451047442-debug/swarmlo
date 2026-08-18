@@ -12,7 +12,7 @@ import { generateStatuslineScript, generateStatuslineHook } from './statusline-g
 // PR body templates and release notes.  It is NEVER hard-wired into the
 // static command-file templates — those are user-owned content.
 export const ATTRIBUTION_FOOTER =
-  '🤖 Generated with [RuFlo](https://github.com/ruvnet/ruflo)';
+  '🤖 Generated with [Swarmlo](https://github.com/z451047442-debug/swarmlo)';
 
 /**
  * Detect whether a Claude Code PostToolUse payload represents a FAILED tool run.
@@ -69,12 +69,12 @@ const TOOL_FAILURE_EXPR =
  */
 export function generatePreCommitHook(): string {
   return `#!/bin/bash
-# Ruflo Pre-Commit Hook
+# Swarmlo Pre-Commit Hook
 # Validates code quality before commit
 
 set -e
 
-echo "🔍 Running Ruflo pre-commit checks..."
+echo "🔍 Running Swarmlo pre-commit checks..."
 
 # Get staged files
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
@@ -102,7 +102,7 @@ echo "✅ Pre-commit checks complete"
  */
 export function generatePostCommitHook(): string {
   return `#!/bin/bash
-# Ruflo Post-Commit Hook
+# Swarmlo Post-Commit Hook
 # Records commit metrics and trains patterns
 
 COMMIT_HASH=$(git rev-parse HEAD)
@@ -110,8 +110,8 @@ COMMIT_MSG=$(git log -1 --pretty=%B)
 
 echo "📊 Recording commit metrics..."
 
-# Notify ruflo of commit
-npx ruflo@latest hooks notify \\
+# Notify swarmlo of commit
+npx swarmlo@latest hooks notify \\
   --message "Commit: $COMMIT_MSG" \\
   --level info \\
   --metadata '{"hash": "'$COMMIT_HASH'"}' 2>/dev/null || true
@@ -126,7 +126,7 @@ echo "✅ Commit recorded"
 export function generateSessionManager(): string {
   return `#!/usr/bin/env node
 /**
- * Ruflo Session Manager
+ * Swarmlo Session Manager
  * Handles session lifecycle: start, restore, end
  */
 
@@ -260,7 +260,7 @@ module.exports = commands;
 export function generateAgentRouter(): string {
   return `#!/usr/bin/env node
 /**
- * Ruflo Agent Router
+ * Swarmlo Agent Router
  *
  * Static keyword router that suggests an agent for a task description.
  * NOTE: This is *not* a learned model. It is a heuristic table; "confidence"
@@ -356,7 +356,7 @@ module.exports = { routeTask, AGENT_CAPABILITIES, TASK_PATTERNS, buildPattern };
 export function generateMemoryHelper(): string {
   return `#!/usr/bin/env node
 /**
- * Ruflo Memory Helper
+ * Swarmlo Memory Helper
  * Simple key-value memory for cross-session context
  */
 
@@ -450,7 +450,7 @@ export function generateHookHandler(): string {
   const lines = [
     '#!/usr/bin/env node',
     '/**',
-    ' * Ruflo Hook Handler (Cross-Platform)',
+    ' * Swarmlo Hook Handler (Cross-Platform)',
     ' * Dispatches hook events to the appropriate helper modules.',
     ' */',
     '',
@@ -583,14 +583,14 @@ export function generateHookHandler(): string {
     '    // rate limit. Cheap local file reads only; never a network call or a',
     '    // child process, so it cannot add latency to prompt submission.',
     '    try {',
-    "      var rlFunnelEnv = process.env.RUFLO_FUNNEL;",
+    "      var rlFunnelEnv = process.env.SWARMLO_FUNNEL;",
     '      var rlDisabledByEnv = rlFunnelEnv !== undefined && /^(0|false|off|no)$/i.test(String(rlFunnelEnv).trim());',
     "      var rlCiVars = ['CI', 'GITHUB_ACTIONS', 'GITLAB_CI', 'CIRCLECI', 'TRAVIS', 'BUILDKITE', 'JENKINS_URL', 'TEAMCITY_VERSION', 'TF_BUILD'];",
     '      var rlIsCi = rlCiVars.some(function (v) {',
     '        var val = process.env[v];',
     "        return val !== undefined && val !== '' && val !== '0' && String(val).toLowerCase() !== 'false';",
     '      });',
-    "      var rlHome = path.join(os.homedir(), '.ruflo');",
+    "      var rlHome = path.join(os.homedir(), '.swarmlo');",
     '      var rlUserDisabled = false;',
     '      try {',
     "        var rlUserCfg = JSON.parse(fs.readFileSync(path.join(rlHome, 'funnel.json'), 'utf8'));",
@@ -622,7 +622,7 @@ export function generateHookHandler(): string {
     '            rlConsented = !!(rlReceipt && rlReceipt.granted === true && rlReceipt.at !== null && rlReceipt.policyVersion === 1);',
     '          } catch (e) { /* not consented */ }',
     '          if (!rlConsented) {',
-    "            console.log('[COGNITUM] Hit your Claude usage limit? Free sponsored capacity is available at cognitum.one/meta-llm -- run: ruflo proxy sponsor-enable --yes');",
+    "            console.log('[COGNITUM] Hit your Claude usage limit? Free sponsored capacity is available at cognitum.one/meta-llm -- run: swarmlo proxy sponsor-enable --yes');",
     '          }',
     '        }',
     '      }',
@@ -1032,7 +1032,7 @@ const dim = (msg) => console.log(\`  \${DIM}\${msg}\${RESET}\`);
 // unresolvable — self-learning imports are a no-op and the user must be told.
 function warnMemoryUnavailable() {
   const l1 = \`[AutoMemory] @claude-flow/memory not resolvable from \${PROJECT_ROOT} — self-learning imports are DISABLED.\`;
-  const l2 = '             Fix: npm i -D @claude-flow/memory   (or re-run: npx ruflo@latest init, then npx ruflo@latest doctor --fix)';
+  const l2 = '             Fix: npm i -D @claude-flow/memory   (or re-run: npx swarmlo@latest init, then npx swarmlo@latest doctor --fix)';
   console.log(\`\${YELLOW}\${l1}\${RESET}\`);
   console.log(\`\${YELLOW}\${l2}\${RESET}\`);
   process.stderr.write(\`\${l1}\\n\${l2}\\n\`);
@@ -1056,7 +1056,7 @@ async function loadMemoryPackage() {
   } catch { /* fall through */ }
 
   // Strategy 1: Use createRequire for CJS-style resolution (handles nested node_modules
-  // when installed as a transitive dependency via npx ruflo / npx claude-flow)
+  // when installed as a transitive dependency via npx swarmlo / npx claude-flow)
   try {
     const { createRequire } = await import('module');
     const require = createRequire(join(PROJECT_ROOT, 'package.json'));
@@ -1142,7 +1142,7 @@ process.exit(0);
  * Generate Windows PowerShell daemon manager
  */
 export function generateWindowsDaemonManager(): string {
-  return `# RuFlo V3 Daemon Manager for Windows
+  return `# Swarmlo V3 Daemon Manager for Windows
 # PowerShell script for managing background processes
 
 param(
@@ -1208,7 +1208,7 @@ function Stop-SwarmMonitor {
 
 function Show-Status {
     Write-Host ""
-    Write-Host "RuFlo V3 Daemon Status" -ForegroundColor Cyan
+    Write-Host "Swarmlo V3 Daemon Status" -ForegroundColor Cyan
     Write-Host "=============================" -ForegroundColor Cyan
 
     $swarmPid = Join-Path $PidDir 'swarm-monitor.pid'
@@ -1249,7 +1249,7 @@ switch ($Action) {
  */
 export function generateWindowsBatchWrapper(): string {
   return `@echo off
-REM RuFlo V3 - Windows Batch Wrapper
+REM Swarmlo V3 - Windows Batch Wrapper
 REM Routes to PowerShell daemon manager
 
 PowerShell -ExecutionPolicy Bypass -File "%~dp0daemon-manager.ps1" %*
@@ -1262,7 +1262,7 @@ PowerShell -ExecutionPolicy Bypass -File "%~dp0daemon-manager.ps1" %*
 export function generateCrossPlatformSessionManager(): string {
   return `#!/usr/bin/env node
 /**
- * Ruflo Cross-Platform Session Manager
+ * Swarmlo Cross-Platform Session Manager
  * Works on Windows, macOS, and Linux
  */
 
@@ -1415,22 +1415,22 @@ export function generateHelpers(options: InitOptions): Record<string, string> {
 }
 
 /**
- * Generate cross-platform Node.js port of ruflo-hook.sh (#2132).
+ * Generate cross-platform Node.js port of swarmlo-hook.sh (#2132).
  *
  * The bash shim works on Mac/Linux but fails on native Windows (exit 126).
  * This .cjs version is always deployed to .claude/helpers/ so:
  *   - Windows: settings.json overrides plugin bash hooks with node-based cmds
  *   - Mac/Linux: plugin hooks.json still uses .sh (faster, battle-tested)
- *   - Both: .claude/helpers/ruflo-hook.cjs available as a canonical cross-platform shim
+ *   - Both: .claude/helpers/swarmlo-hook.cjs available as a canonical cross-platform shim
  */
-export function generateRufloHookCjs(): string {
+export function generateSwarmloHookCjs(): string {
   return `#!/usr/bin/env node
 /**
- * ruflo-hook.cjs — cross-platform Node.js port of ruflo-hook.sh (#2132)
+ * swarmlo-hook.cjs — cross-platform Node.js port of swarmlo-hook.sh (#2132)
  *
- * Deployed to .claude/helpers/ during ruflo init. On Windows, the
+ * Deployed to .claude/helpers/ during swarmlo init. On Windows, the
  * generated .claude/settings.json hooks point here instead of the
- * plugin's bash-only ruflo-hook.sh.
+ * plugin's bash-only swarmlo-hook.sh.
  *
  * Always exits 0 — hook subcommands are best-effort telemetry and must
  * never block a Claude Code turn.
@@ -1476,9 +1476,9 @@ function main() {
 
   const hookArgs = ['hooks', subcommand, ...rest];
 
-  if (commandExists('ruflo')) { invokeHook('ruflo', [], hookArgs, stdinData); done(); }
+  if (commandExists('swarmlo')) { invokeHook('swarmlo', [], hookArgs, stdinData); done(); }
   if (commandExists('claude-flow')) { invokeHook('claude-flow', [], hookArgs, stdinData); done(); }
-  invokeHook('npx', ['--prefer-offline', '--yes', 'ruflo@latest'], hookArgs, stdinData);
+  invokeHook('npx', ['--prefer-offline', '--yes', 'swarmlo@latest'], hookArgs, stdinData);
   done();
 }
 

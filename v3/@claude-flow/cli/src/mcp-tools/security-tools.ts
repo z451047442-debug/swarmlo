@@ -122,7 +122,7 @@ async function getAIDefence(): Promise<AIDefenceInstance> {
       `This usually means npm installed the package somewhere Node's module resolver doesn't search ` +
       `(common with global installs of \`claude-flow\`). Recovery options:\n` +
       `  1. Run \`npm install --save @claude-flow/aidefence\` in your project's working directory.\n` +
-      `  2. Or run \`npx ruflo@latest mcp start\` from a directory whose node_modules contains the package.\n` +
+      `  2. Or run \`npx swarmlo@latest mcp start\` from a directory whose node_modules contains the package.\n` +
       `  3. Or restart the MCP server after the install completes.`
     );
   }

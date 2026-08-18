@@ -1,11 +1,11 @@
 /**
  * Sequential promotion evidence — family-wise error control for an ADAPTIVE
  * candidate stream (report item 2 / upstream @metaharness/flywheel 0.1.10
- * `withSequentialEvidence` interop, implemented in-house so ruflo keeps the
+ * `withSequentialEvidence` interop, implemented in-house so swarmlo keeps the
  * property with every MetaHarness package removed).
  *
- * THE GAP THIS CLOSES: every promotion gate ruflo runs (accept/v1+sig, the
- * ruflo.flywheel-gate/v1 bootstrap) spends a FRESH alpha per candidate. A
+ * THE GAP THIS CLOSES: every promotion gate swarmlo runs (accept/v1+sig, the
+ * swarmlo.flywheel-gate/v1 bootstrap) spends a FRESH alpha per candidate. A
  * flywheel proposes candidates adaptively — each new candidate is chosen after
  * looking at the last one's scores — so per-candidate alpha does not bound the
  * probability that ANY promotion in the stream is false. Published
@@ -36,7 +36,7 @@
  * Pure, $0, deterministic. Never throws on well-typed input.
  */
 
-export const SEQUENTIAL_EVIDENCE_VERSION = 'ruflo.sequential-evidence/v1';
+export const SEQUENTIAL_EVIDENCE_VERSION = 'swarmlo.sequential-evidence/v1';
 
 export const DEFAULT_ALPHA_TOTAL = 0.05;
 export const DEFAULT_LAMBDA = 0.5;

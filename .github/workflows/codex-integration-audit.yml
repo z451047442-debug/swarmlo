@@ -1,12 +1,12 @@
 name: codex-integration-audit
 
-# Guards the Codex ↔ Ruflo integration invariants (issue #1909):
+# Guards the Codex ↔ Swarmlo integration invariants (issue #1909):
 # - the `codex` MCP backend uses the real `mcp-server` subcommand
 # - @claude-flow/codex VERSION const tracks its package.json
 # - the dual-mode orchestrator / agent defs drive real `codex exec`
-# - CLI refs are standardized to `ruflo`, `dual run` exposes `--worker`,
+# - CLI refs are standardized to `swarmlo`, `dual run` exposes `--worker`,
 #   generated SKILL.md frontmatter is complete, config.toml emits a
-#   working `ruflo` MCP server.
+#   working `swarmlo` MCP server.
 # Pure-Node static checks — no install needed. Build + unit tests are
 # covered by the main CI workflow.
 
@@ -15,16 +15,16 @@ on:
     branches: [main]
     paths:
       - 'v3/@claude-flow/codex/**'
-      - 'ruflo/src/mcp-bridge/**'
-      - 'ruflo/src/ruvocal/mcp-bridge/**'
+      - 'swarmlo/src/mcp-bridge/**'
+      - 'swarmlo/src/ruvocal/mcp-bridge/**'
       - '.claude/agents/dual-mode/**'
       - 'scripts/audit-codex-integration.mjs'
       - '.github/workflows/codex-integration-audit.yml'
   pull_request:
     paths:
       - 'v3/@claude-flow/codex/**'
-      - 'ruflo/src/mcp-bridge/**'
-      - 'ruflo/src/ruvocal/mcp-bridge/**'
+      - 'swarmlo/src/mcp-bridge/**'
+      - 'swarmlo/src/ruvocal/mcp-bridge/**'
       - '.claude/agents/dual-mode/**'
       - 'scripts/audit-codex-integration.mjs'
       - '.github/workflows/codex-integration-audit.yml'

@@ -184,7 +184,7 @@ const REFLECT_SYSTEM_PROMPT = [
 ].join('\n');
 
 const ADVISOR_SYSTEM_PROMPT = [
-  "You are RuFlo's co-pilot advisor: ONE short, proactive, actionable tip for",
+  "You are Swarmlo's co-pilot advisor: ONE short, proactive, actionable tip for",
   'a developer, based on a single JSON object describing STRUCTURAL signals',
   'from their current coding session (security scan status, swarm/agent',
   'state, count of uncommitted files, context-window usage). There is no',
@@ -363,7 +363,7 @@ export class FableHarness {
   private async runBatch(systemPrompt: string, batch: readonly unknown[]): Promise<unknown[]> {
     const argv = this.buildArgv(systemPrompt);
     const stdinPrompt = JSON.stringify(batch);
-    const cwd = await mkdtemp(join(tmpdir(), 'ruflo-fable-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'swarmlo-fable-'));
     try {
       const res = await this.spawnClaude(argv, stdinPrompt, cwd, { timeoutMs: this.timeoutMs });
       // Account spend: prefer measured envelope cost, else the amortized estimate.

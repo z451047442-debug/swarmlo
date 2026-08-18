@@ -22,7 +22,7 @@ assert.equal(bundled.dependencies, undefined);
 assert.equal(bundled.optionalDependencies, undefined);
 assert.equal(bundled.peerDependencies, undefined);
 assert.equal(bundled.peerDependenciesMeta, undefined);
-assert.deepEqual(bundled.rufloBundledRuntime, {
+assert.deepEqual(bundled.swarmloBundledRuntime, {
   format: 1,
   sourceDependencies: {
     dependencies: source.dependencies,

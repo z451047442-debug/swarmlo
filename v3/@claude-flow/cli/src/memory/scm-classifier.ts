@@ -4,7 +4,7 @@
  * Dream-cycle #2760 (SCM routed memory 86% LongMemEval): agents perform
  * dramatically better on long-memory retrieval when the query is routed
  * to the RIGHT memory tier — episodic (session recall) vs semantic
- * (learned patterns) vs procedural (skills/recipes). Ruflo previously
+ * (learned patterns) vs procedural (skills/recipes). Swarmlo previously
  * had all these tiers writing to different namespaces but the search
  * command didn't discriminate — every query searched everything.
  *
@@ -55,7 +55,7 @@ const KEYWORDS: Record<Exclude<MemoryIntent, 'mixed'>, readonly string[]> = {
 };
 
 /**
- * Namespaces owned by each intent. These match ruflo's actual
+ * Namespaces owned by each intent. These match swarmlo's actual
  * memory-write conventions:
  *   episodic  → session/trajectory writes (hooks_post-task, session-checkpoints)
  *   semantic  → pattern/learning writes (patterns/, learned-*, adr-patterns)

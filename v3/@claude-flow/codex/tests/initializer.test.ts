@@ -32,7 +32,7 @@ describe('Codex full template canonical skills (#2634)', () => {
     expect(result.skillsGenerated.sort()).toEqual([...BUILT_IN_SKILL_NAMES].sort());
     expect(result.warnings).toContain(
       'Omitted 103 catalog skills without canonical packaged assets. ' +
-      'Install additional capabilities from the Ruflo plugin catalog.',
+      'Install additional capabilities from the Swarmlo plugin catalog.',
     );
 
     const installed = readdirSync(join(projectPath, '.agents', 'skills')).sort();
@@ -71,7 +71,7 @@ describe('Codex full template canonical skills (#2634)', () => {
     const gitignorePath = join(projectPath, '.gitignore');
     writeFileSync(
       gitignorePath,
-      '# Ruflo local secrets and runtime data\n.env\n.claude-flow/data/\n',
+      '# Swarmlo local secrets and runtime data\n.env\n.claude-flow/data/\n',
       'utf8',
     );
 

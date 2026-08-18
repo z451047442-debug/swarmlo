@@ -2,7 +2,7 @@
  * Power-saver notifier — ADR-314 §A out-of-band signal path.
  *
  * Structural mirror of rate-limit-notifier.ts, same self-reported/manual
- * constraint (ADR-312's detection gap applies unchanged — ruflo cannot read
+ * constraint (ADR-312's detection gap applies unchanged — swarmlo cannot read
  * "your account is at 20%" any more than it can read "you are rate
  * limited"). Deliberately a SEPARATE flag from rate-limited: "running low,
  * want to proactively conserve" (still have capacity) and "blocked" (zero
@@ -11,7 +11,7 @@
  * have conserved anything).
  *
  * State is cheap and durable:
- *   ~/.ruflo/quota-status.json = { low: bool, since: ISO, cleared: ISO|null, lastToggleAt: ISO|null }
+ *   ~/.swarmlo/quota-status.json = { low: bool, since: ISO, cleared: ISO|null, lastToggleAt: ISO|null }
  *
  * Same 6h TTL rationale as rate-limit-notifier.ts, and the same ADR-314 §D1
  * toggle cooldown (10 min) — a self-reported flag with zero server-side
@@ -92,9 +92,9 @@ export function quotaLowNotice(now: Date = new Date()): string | null {
   if (!status.low) return null;
   const since = status.since ? Date.parse(status.since) : NaN;
   if (Number.isNaN(since)) {
-    return 'Power saver mode active · manage: ruflo proxy power-saver-disable';
+    return 'Power saver mode active · manage: swarmlo proxy power-saver-disable';
   }
   const ageMin = Math.max(0, Math.round((now.getTime() - since) / (60 * 1000)));
   const when = ageMin < 1 ? 'just now' : ageMin < 60 ? `${ageMin}m ago` : `${Math.round(ageMin / 60)}h ago`;
-  return `Power saver mode active (${when}) · manage: ruflo proxy power-saver-disable`;
+  return `Power saver mode active (${when}) · manage: swarmlo proxy power-saver-disable`;
 }

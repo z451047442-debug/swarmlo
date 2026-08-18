@@ -2,7 +2,7 @@
  * weft-export.test.ts — ADR-150 weight-eft slice.
  *
  * Covers:
- *   1. Archive-builder: ruflo run records → DarwinTrajectory[] mapping + the
+ *   1. Archive-builder: swarmlo run records → DarwinTrajectory[] mapping + the
  *      honest resolved-proxy accounting.
  *   2. distill-export E2E: synthetic archive → weight-eft export produces
  *      sft.jsonl / dpo.jsonl / export-report.json (weight-eft installed in the
@@ -145,7 +145,7 @@ describe('run-transcript-recorder (the capture path)', () => {
 // --- 1. archive-builder -----------------------------------------------------
 
 describe('buildArchiveFromRecords', () => {
-  it('maps ruflo run records to DarwinTrajectory[] preserving the contract fields', () => {
+  it('maps swarmlo run records to DarwinTrajectory[] preserving the contract fields', () => {
     const { trajectories, stats } = buildArchiveFromRecords([
       rec({ instance_id: 'a', tier: 'cheap', resolved: true }),
       rec({ instance_id: 'b', tier: 'frontier', resolved: false, model: 'anthropic/claude-opus' }),
@@ -289,7 +289,7 @@ describe('buildRemoteTrainInvocation (pure command construction)', () => {
       host: 'gpu-box', base: 'Qwen/Qwen2.5-Coder-7B-Instruct',
       sftPath: '/local/sft.jsonl', dpoPath: '/local/dpo.jsonl',
       adapterDir: '/local/adapters', sshUser: 'ruv', sshPort: 2222,
-      runId: 'run42', adapterPrefix: 'ruflo-weft',
+      runId: 'run42', adapterPrefix: 'swarmlo-weft',
     });
     // ssh reachability probe targets user@host on the chosen port
     expect(plan.preflight[0].argv).toEqual(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', '-p', '2222', 'ruv@gpu-box', 'true']);
@@ -301,13 +301,13 @@ describe('buildRemoteTrainInvocation (pure command construction)', () => {
     // ruvllm sft uses the base model + writes an sft adapter
     const sftStep = plan.steps.find((s) => s.label.startsWith('ruvllm sft'))!;
     expect(sftStep.argv.join(' ')).toContain('ruvllm microlora sft --base Qwen/Qwen2.5-Coder-7B-Instruct --data sft.jsonl');
-    expect(sftStep.argv.join(' ')).toContain('ruflo-weft-run42-sft');
+    expect(sftStep.argv.join(' ')).toContain('swarmlo-weft-run42-sft');
     // ruvllm dpo initializes from the sft adapter (on-policy)
     const dpoStep = plan.steps.find((s) => s.label.startsWith('ruvllm dpo'))!;
-    expect(dpoStep.argv.join(' ')).toContain('ruvllm microlora dpo --base Qwen/Qwen2.5-Coder-7B-Instruct --init-from ruflo-weft-run42-sft');
+    expect(dpoStep.argv.join(' ')).toContain('ruvllm microlora dpo --base Qwen/Qwen2.5-Coder-7B-Instruct --init-from swarmlo-weft-run42-sft');
     // adapter fetched back into the local dir
     const back = plan.steps.find((s) => s.label === 'rsync adapter back')!;
-    expect(back.argv[back.argv.length - 1]).toContain('/local/adapters/ruflo-weft-run42-dpo');
+    expect(back.argv[back.argv.length - 1]).toContain('/local/adapters/swarmlo-weft-run42-dpo');
     expect(plan.humanCommands.length).toBe(plan.preflight.length + plan.steps.length);
   });
 

@@ -1,7 +1,7 @@
 /**
  * Control precedence resolver — ADR-305 (normative).
  *
- *   1. RUFLO_FUNNEL=0            (environment)
+ *   1. SWARMLO_FUNNEL=0            (environment)
  *   2. Enterprise managed policy
  *   3. User config (funnel.enabled — user-level and project-level)
  *   4. Package default
@@ -23,17 +23,17 @@ interface FunnelUserConfig {
 }
 
 function envDisabled(env: NodeJS.ProcessEnv): boolean {
-  const v = env.RUFLO_FUNNEL;
+  const v = env.SWARMLO_FUNNEL;
   return v !== undefined && /^(0|false|off|no)$/i.test(v.trim());
 }
 
 function enterprisePolicyDisabled(env: NodeJS.ProcessEnv): boolean {
   const candidates: string[] = [];
-  if (env.RUFLO_ENTERPRISE_POLICY) candidates.push(env.RUFLO_ENTERPRISE_POLICY);
+  if (env.SWARMLO_ENTERPRISE_POLICY) candidates.push(env.SWARMLO_ENTERPRISE_POLICY);
   if (process.platform === 'win32') {
-    if (env.ProgramData) candidates.push(path.join(env.ProgramData, 'ruflo', 'policy.json'));
+    if (env.ProgramData) candidates.push(path.join(env.ProgramData, 'swarmlo', 'policy.json'));
   } else {
-    candidates.push('/etc/ruflo/policy.json');
+    candidates.push('/etc/swarmlo/policy.json');
   }
   for (const p of candidates) {
     try {

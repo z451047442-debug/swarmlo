@@ -46,7 +46,7 @@ let workdir: string;
 
 beforeEach(() => {
   origCwd = process.cwd();
-  workdir = mkdtempSync(join(tmpdir(), 'ruflo-2786-'));
+  workdir = mkdtempSync(join(tmpdir(), 'swarmlo-2786-'));
   process.chdir(workdir);
   bridgeRecordFeedback.mockClear();
   bridgeStoreEntry.mockClear();

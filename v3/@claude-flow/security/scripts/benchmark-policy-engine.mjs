@@ -31,7 +31,7 @@ for (let i = 0; i < receiptIterations; i++) engine.evaluate({ ...request, reques
 const receiptMs = performance.now() - receiptStarted;
 
 const report = {
-  schema: 'ruflo.policy-benchmark/v1',
+  schema: 'swarmlo.policy-benchmark/v1',
   pure: {
     iterations,
     durationMs: Number(pureMs.toFixed(3)),

@@ -23,7 +23,7 @@ function envelope(overrides: Record<string, unknown> = {}): Record<string, unkno
   return {
     schemaVersion: 'cognitum.action.v1',
     eventId: 'event-01',
-    issuer: 'ruflo.policy',
+    issuer: 'swarmlo.policy',
     audience: 'meta-llm',
     subject: { namespace: 'firebase-subject', id: 'same-looking-id' },
     actor: { namespace: 'workload', id: 'spiffe://cognitum.example/agent/coder-1' },
@@ -98,12 +98,12 @@ describe('product action vocabulary', () => {
     });
 
     const base = envelope({
-      audience: 'ruflo.memory',
+      audience: 'swarmlo.memory',
       action: 'memory.commit-validated',
       authoritativeSource: {
-        authority: 'ruflo.memory',
+        authority: 'swarmlo.memory',
         tenantRef: { namespace: 'meta-llm-account', id: 'tenant-01' },
-        sourceType: 'ruflo.memory/validated-memory',
+        sourceType: 'swarmlo.memory/validated-memory',
         sourceId: 'memory-01',
         sourceVersion: '1',
         sourceDigest: DIGEST,
@@ -389,7 +389,7 @@ describe('signed product action envelope verifier', () => {
       now: () => now,
       maxAgeMs: 5 * 60_000,
       resolveKey: (issuer: string, keyId: string) => (
-        issuer === 'ruflo.policy' && keyId === 'issuer-key-01' ? keys.publicKey : undefined
+        issuer === 'swarmlo.policy' && keyId === 'issuer-key-01' ? keys.publicKey : undefined
       ),
       replayStore: {
         reserve: () => reservation,

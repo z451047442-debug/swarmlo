@@ -80,7 +80,7 @@ export class AiJobDedupRegistry {
 
   constructor(options?: { baseDir?: string }) {
     this.dir = options?.baseDir
-      ?? process.env.RUFLO_AI_BUDGET_DIR
+      ?? process.env.SWARMLO_AI_BUDGET_DIR
       ?? join(homedir(), '.claude-flow');
     this.file = join(this.dir, 'ai-jobs.json');
   }
@@ -91,7 +91,7 @@ export class AiJobDedupRegistry {
    * launch, never correctness.
    */
   isFresh(jobKey: string, freshnessMs: number): { fresh: boolean; lastRunAt?: number } {
-    if (process.env.RUFLO_AI_DEDUP_DISABLE === '1') return { fresh: false };
+    if (process.env.SWARMLO_AI_DEDUP_DISABLE === '1') return { fresh: false };
     try {
       const records = this.read();
       const rec = records[jobKey];
@@ -151,7 +151,7 @@ export function getAiJobDedupRegistry(): AiJobDedupRegistry {
   return registryInstance;
 }
 
-/** Test hook: reset the singleton (e.g. after changing RUFLO_AI_BUDGET_DIR). */
+/** Test hook: reset the singleton (e.g. after changing SWARMLO_AI_BUDGET_DIR). */
 export function resetAiJobDedupRegistryForTests(): void {
   registryInstance = null;
 }

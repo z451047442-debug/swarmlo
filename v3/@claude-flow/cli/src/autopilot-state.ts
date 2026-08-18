@@ -186,7 +186,7 @@ export function saveState(state: AutopilotState): void {
   if (state.history.length > MAX_HISTORY_ENTRIES) {
     state.history = state.history.slice(-MAX_HISTORY_ENTRIES);
   }
-  // ruvnet/ruflo#2782: use writeFileAtomic — its temp file is uniquified with
+  // z451047442-debug/swarmlo#2782: use writeFileAtomic — its temp file is uniquified with
   // pid + timestamp + random suffix, so two concurrent in-process saveState()
   // calls can no longer collide on a shared `.tmp` basename and race one
   // another's renameSync into ENOENT. Related to but distinct from #1637.
@@ -214,7 +214,7 @@ export function appendLog(entry: AutopilotLogEntry): void {
   }
   log.push(entry);
   if (log.length > MAX_LOG_ENTRIES) log = log.slice(-MAX_LOG_ENTRIES);
-  // ruvnet/ruflo#2782: same shared `.tmp`-basename race as saveState() above —
+  // z451047442-debug/swarmlo#2782: same shared `.tmp`-basename race as saveState() above —
   // concurrent appendLog() calls would collide their sentinel temp files and
   // renameSync into ENOENT. writeFileAtomic uses a uniquified temp so callers
   // cannot step on each other.

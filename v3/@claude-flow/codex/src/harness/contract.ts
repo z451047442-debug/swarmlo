@@ -2,7 +2,7 @@
  * Advisory repository-harness contract.
  *
  * Repository harnesses coordinate local ownership and collect evidence. They do
- * not grant Ruflo policy capabilities. Existing harnesses can implement only
+ * not grant Swarmlo policy capabilities. Existing harnesses can implement only
  * `describe`; omitted operations remain unavailable and the descriptor
  * normalizes to observe-only compatibility mode.
  */

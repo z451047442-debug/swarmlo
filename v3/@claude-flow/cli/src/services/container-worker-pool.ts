@@ -123,7 +123,7 @@ export interface ContainerPoolStatus {
 const DEFAULT_CONFIG: ContainerPoolConfig = {
   maxContainers: 3,
   minContainers: 1,
-  image: 'ghcr.io/ruvnet/claude-flow-headless:latest',
+  image: 'ghcr.io/z451047442-debug/swarmlo-headless:latest',
   resources: {
     cpus: '2',
     memory: '4g',
@@ -638,11 +638,11 @@ export class ContainerWorkerPool extends EventEmitter {
    * package, and (b) omitted `-y`, so npx could silently fall back to a
    * locally-installed stale `claude-flow` without fetching the published
    * version. Workers were running pre-autopilot / pre-browser builds.
-   * Use the current `ruflo@latest` and force a fresh resolution with `-y`.
+   * Use the current `swarmlo@latest` and force a fresh resolution with `-y`.
    */
   private buildWorkerCommand(options: ContainerExecutionOptions): string[] {
     return [
-      'npx', '-y', 'ruflo@latest',
+      'npx', '-y', 'swarmlo@latest',
       'daemon', 'trigger',
       '-w', options.workerType,
       '--headless',

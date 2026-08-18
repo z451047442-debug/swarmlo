@@ -1,0 +1,21 @@
+{
+  "name": "swarmlo-market-data",
+  "description": "Market data ingestion — feed normalization, OHLCV vectorization, and HNSW-indexed pattern matching",
+  "version": "0.2.1",
+  "author": {
+    "name": "ruvnet",
+    "url": "https://github.com/ruvnet"
+  },
+  "homepage": "https://github.com/z451047442-debug/swarmlo",
+  "license": "MIT",
+  "keywords": [
+    "swarmlo",
+    "market-data",
+    "ohlcv",
+    "time-series",
+    "patterns",
+    "mcp",
+    "candlestick-patterns",
+    "namespace-routing"
+  ]
+}

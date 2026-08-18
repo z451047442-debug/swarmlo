@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Codex ↔ Ruflo integration audit (issue #1909).
+ * Codex ↔ Swarmlo integration audit (issue #1909).
  *
  * Static invariants that must hold for the OpenAI Codex integration to work.
  * Build + unit tests are covered by the main CI; this guards the
@@ -24,11 +24,11 @@ const fail = (m) => { console.log(`  ${C.r}✗${C.x} ${m}`); failures++; };
 const check = (cond, passMsg, failMsg) => (cond ? ok(passMsg) : fail(failMsg ?? passMsg));
 const section = (t) => console.log(`\n${t}`);
 
-console.log('Codex ↔ Ruflo integration audit (#1909)\n' + '─'.repeat(48));
+console.log('Codex ↔ Swarmlo integration audit (#1909)\n' + '─'.repeat(48));
 
 // ── 1. Codex MCP backend uses the real `mcp-server` subcommand ──────────────
 section('MCP backend registration (`codex` group):');
-for (const p of ['ruflo/src/mcp-bridge/index.js', 'ruflo/src/ruvocal/mcp-bridge/index.js']) {
+for (const p of ['swarmlo/src/mcp-bridge/index.js', 'swarmlo/src/ruvocal/mcp-bridge/index.js']) {
   if (!existsSync(resolve(ROOT, p))) { fail(`${p}: file missing`); continue; }
   const src = read(p);
   const codexLine = (src.match(/.*@openai\/codex.*/g) ?? [])[0]?.trim() ?? '(no @openai/codex entry)';
@@ -74,7 +74,7 @@ for (const p of ['.claude/agents/dual-mode/codex-worker.md', '.claude/agents/dua
 }
 
 // ── 5. No stale claude-flow CLI refs left in the codex package source ───────
-section('CLI references standardized to ruflo:');
+section('CLI references standardized to swarmlo:');
 const walk = (dir) => readdirSync(dir).flatMap((e) => {
   const f = resolve(dir, e);
   return statSync(f).isDirectory() ? walk(f) : [f];
@@ -101,17 +101,17 @@ check(/version: "\$\{version\}"/.test(skillGen) && /author: \$\{author\}/.test(s
   `generateSkillMd emits version/author/tags frontmatter`,
   `generateSkillMd must emit version/author/tags so generated skills validate clean`);
 
-// ── 8. config.toml generator emits a working `ruflo` MCP server ────────────
+// ── 8. config.toml generator emits a working `swarmlo` MCP server ────────────
 section('config.toml generator MCP default:');
 const cfgGen = read('v3/@claude-flow/codex/src/generators/config-toml.ts');
 const mcpConfig = read('v3/@claude-flow/codex/src/mcp-config.ts');
-check(/getRufloMcpServerConfig/.test(cfgGen)
-    && /RUFLO_MCP_SERVER_NAME\s*=\s*'ruflo'/.test(mcpConfig)
-    && /RUFLO_MCP_PACKAGE\s*=\s*'ruflo@latest'/.test(mcpConfig)
+check(/getSwarmloMcpServerConfig/.test(cfgGen)
+    && /SWARMLO_MCP_SERVER_NAME\s*=\s*'swarmlo'/.test(mcpConfig)
+    && /SWARMLO_MCP_PACKAGE\s*=\s*'swarmlo@latest'/.test(mcpConfig)
     && /args:\s*\['\/c',\s*'npx',\s*\.\.\.args\]/.test(mcpConfig)
-    && /RUFLO_MCP_STARTUP_TIMEOUT_SEC\s*=\s*120/.test(mcpConfig),
-  `default MCP server is Windows-safe \`ruflo@latest mcp start\` with 120s startup timeout`,
-  `default MCP server must use the shared platform-aware Ruflo definition (cmd /c npx on Windows)`);
+    && /SWARMLO_MCP_STARTUP_TIMEOUT_SEC\s*=\s*120/.test(mcpConfig),
+  `default MCP server is Windows-safe \`swarmlo@latest mcp start\` with 120s startup timeout`,
+  `default MCP server must use the shared platform-aware Swarmlo definition (cmd /c npx on Windows)`);
 
 console.log('\n' + '─'.repeat(48));
 if (failures > 0) {

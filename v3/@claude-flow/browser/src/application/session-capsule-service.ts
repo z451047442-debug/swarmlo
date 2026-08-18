@@ -5,7 +5,7 @@
  * Builds on Phase 1's witness signer + Phase 3's AIDefence-gated scanning.
  *
  * The capsule itself is signed and policy-enforced. Mounting in a browser
- * session is delegated to ruflo-browexec (Phase 6.5+) — this module is the
+ * session is delegated to swarmlo-browexec (Phase 6.5+) — this module is the
  * **substrate** sessiond that owns lifecycle and policy.
  */
 
@@ -63,7 +63,7 @@ export class SessionCapsuleService {
     | { success: false; reason: string; piiCount: number; threatCount: number }
   > {
     const key = input.witnessKey ?? this.witnessKey;
-    const projectId = input.projectId ?? process.env.RUFLO_PROJECT_ID ?? 'unknown';
+    const projectId = input.projectId ?? process.env.SWARMLO_PROJECT_ID ?? 'unknown';
 
     // Inline state is scanned cookie-by-cookie + storage value by value
     if (input.inlineState) {

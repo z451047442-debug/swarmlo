@@ -69,7 +69,7 @@ export interface FederationStatus {
  *
  * - `spendReporter` — invoked by reportSpend() when present; persists
  *   the FederationSpendEvent to whatever backend the integrator wired
- *   (cost-tracker bus, ruflo memory federation-spend namespace, etc.)
+ *   (cost-tracker bus, swarmlo memory federation-spend namespace, etc.)
  * - `breakerService` — invoked by reportSpend() when present; calls
  *   recordOutcome() so the breaker's in-memory rolling buffer is fed
  *   without requiring the integrator to wire two parallel pipelines

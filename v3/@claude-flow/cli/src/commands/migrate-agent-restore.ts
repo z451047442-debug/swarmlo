@@ -1,11 +1,11 @@
 /**
- * ADR-382 Part B follow-up (#2985) — `ruflo migrate fix --agents`: actually
+ * ADR-382 Part B follow-up (#2985) — `swarmlo migrate fix --agents`: actually
  * restore the agents ADR-128 Phase 2 removed from the init template, instead
  * of only pointing at them.
  *
  * Content resolution order (first hit wins):
  *   1. The Claude Code marketplace clone, when present —
- *      ~/.claude/plugins/marketplaces/ruflo/plugins/<plugin>/agents/<basename>
+ *      ~/.claude/plugins/marketplaces/swarmlo/plugins/<plugin>/agents/<basename>
  *   2. A repo checkout at the project root (dogfood / development) —
  *      <cwd>/plugins/<plugin>/agents/<basename>
  *   3. GitHub raw, pinned to this CLI's own version tag (v<version>), falling
@@ -13,8 +13,8 @@
  *      failure message says so explicitly.
  *
  * npm-track consideration: plugin agent bodies reference the
- * `mcp__plugin_ruflo-core_ruflo__*` tool namespace, which only resolves when
- * ruflo-core is installed as a Claude Code marketplace plugin. A user
+ * `mcp__plugin_swarmlo-core_swarmlo__*` tool namespace, which only resolves when
+ * swarmlo-core is installed as a Claude Code marketplace plugin. A user
  * reaching for this command is on the npm track (otherwise the owning plugin
  * would cover the gap and no restore would be offered), so restored copies
  * are rewritten to the canonical `claude-flow` server key (#2206). The
@@ -38,7 +38,7 @@ function getPackageVersion(): string | undefined {
       const pkgPath = path.join(dir, depth, 'package.json');
       if (fs.existsSync(pkgPath)) {
         const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
-        if (pkg.name?.includes('claude-flow') || pkg.name === 'ruflo') {
+        if (pkg.name?.includes('claude-flow') || pkg.name === 'swarmlo') {
           return pkg.version;
         }
       }
@@ -50,7 +50,7 @@ function getPackageVersion(): string | undefined {
 }
 
 /** Marketplace plugin namespace prefix — resolves only under a marketplace install. */
-const PLUGIN_NAMESPACE_PREFIX = 'mcp__plugin_ruflo-core_ruflo__';
+const PLUGIN_NAMESPACE_PREFIX = 'mcp__plugin_swarmlo-core_swarmlo__';
 /** Canonical npm-track namespace for the same server (key `claude-flow`, #2206). */
 const CANONICAL_NAMESPACE_PREFIX = 'mcp__claude-flow__';
 
@@ -71,7 +71,7 @@ const RESTORE_CATEGORY: Record<string, string> = {
   'goal-planner.md': 'goal',
 };
 
-const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/ruvnet/ruflo';
+const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/z451047442-debug/swarmlo';
 
 export type RestoreSource = 'marketplace-clone' | 'repo-checkout' | 'github-tag' | 'github-main';
 
@@ -154,7 +154,7 @@ async function fetchGithubCandidate(
 function adaptForNpmTrack(content: string, plugin: string, source: RestoreSource): string {
   const rewritten = content.split(PLUGIN_NAMESPACE_PREFIX).join(CANONICAL_NAMESPACE_PREFIX);
   const provenance =
-    `<!-- restored by \`ruflo migrate fix --agents\` from plugins/${plugin} ` +
+    `<!-- restored by \`swarmlo migrate fix --agents\` from plugins/${plugin} ` +
     `(canonical per ADR-128; source: ${source}); MCP namespace rewritten to the ` +
     `canonical claude-flow server key (#2206, #2985) -->`;
   const fmClose = rewritten.indexOf('\n---', rewritten.startsWith('---') ? 3 : 0);
@@ -175,7 +175,7 @@ async function resolveContent(
   plugin: string,
   basename: string
 ): Promise<{ content: string; source: RestoreSource } | null> {
-  const marketplaceRoot = path.join(homeDir, '.claude', 'plugins', 'marketplaces', 'ruflo');
+  const marketplaceRoot = path.join(homeDir, '.claude', 'plugins', 'marketplaces', 'swarmlo');
   const fromMarketplace = readLocalCandidate(marketplaceRoot, plugin, basename);
   if (fromMarketplace !== null) return { content: fromMarketplace, source: 'marketplace-clone' };
 
@@ -226,7 +226,7 @@ export async function restoreRemovedAgents(
         error:
           'no local marketplace clone or repo checkout, and GitHub fetch failed ' +
           '(offline?) — install the owning plugin instead: ' +
-          `/plugin install ${gap.plugin}@ruflo`,
+          `/plugin install ${gap.plugin}@swarmlo`,
       });
       continue;
     }

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// pretrain-from-github.mjs — pretrain ruflo's self-learning system from its
+// pretrain-from-github.mjs — pretrain swarmlo's self-learning system from its
 // own GitHub history (commits + issues). Each commit/issue becomes one
 // trajectory through the SONA + EWC++ pipeline; Structured Distillation
 // (ADR-076) compresses each into the 4-field schema before embedding.
@@ -20,7 +20,7 @@
 //   BENCH_NO_WRITE=1 node scripts/pretrain-from-github.mjs  # don't write a run JSON
 //
 // Repro from a fresh checkout:
-//   git clone https://github.com/ruvnet/ruflo && cd ruflo
+//   git clone https://github.com/z451047442-debug/swarmlo && cd swarmlo
 //   npm install && ( cd v3/@claude-flow/cli && npx tsc -b )
 //   node v3/@claude-flow/cli/scripts/pretrain-from-github.mjs
 
@@ -32,14 +32,14 @@ import { performance } from 'node:perf_hooks';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const CLI_ROOT = resolve(SCRIPT_DIR, '..');
-const RUFLO_ROOT = resolve(SCRIPT_DIR, '../../../..');
-const RUNS_DIR = join(RUFLO_ROOT, 'docs', 'benchmarks', 'runs');
+const SWARMLO_ROOT = resolve(SCRIPT_DIR, '../../../..');
+const RUNS_DIR = join(SWARMLO_ROOT, 'docs', 'benchmarks', 'runs');
 
 // ADR-084 cross-repo support — REPO_ROOT and GH_REPO env-overridable so the
 // same script can pretrain on agentdb / agentic-flow / any other repo for
-// generalisation testing. Defaults preserve ruflo behaviour.
-const REPO_ROOT = process.env.REPO_ROOT ? resolve(process.env.REPO_ROOT) : RUFLO_ROOT;
-const GH_REPO   = process.env.GH_REPO   || 'ruvnet/ruflo';
+// generalisation testing. Defaults preserve swarmlo behaviour.
+const REPO_ROOT = process.env.REPO_ROOT ? resolve(process.env.REPO_ROOT) : SWARMLO_ROOT;
+const GH_REPO   = process.env.GH_REPO   || 'z451047442-debug/swarmlo';
 
 const COMMITS = Number(process.env.COMMITS) || 50;
 const ISSUES  = Number(process.env.ISSUES)  || 30;
@@ -209,7 +209,7 @@ async function main() {
   const harvestMs = performance.now() - tHarvest0;
 
   if (!process.env.BENCH_JSON) {
-    console.log(`# Pretrain from ruflo GitHub history`);
+    console.log(`# Pretrain from swarmlo GitHub history`);
     console.log(`Harvested: ${commits.length} commits + ${issues.length} issues = ${items.length} trajectories (${harvestMs.toFixed(0)} ms)`);
   }
 

@@ -53,7 +53,7 @@ const GIT_UNCOMMITTED_THRESHOLD = 20;
  * ahead of that consent groundwork would mean either faking data or wiring
  * a network call with no real signal behind it. This reads a local cache
  * file so the ticker is ready the moment that pipeline exists: whatever
- * populates ~/.ruflo/flywheel-status.json (a future detached, session-start
+ * populates ~/.swarmlo/flywheel-status.json (a future detached, session-start
  * refresh — same pattern as the funnel message cache fix) is immediately
  * picked up here with zero ticker-side changes needed.
  */
@@ -80,12 +80,12 @@ function securityInsight(ctx: LocalInsightContext): LocalInsight | null {
   if (s.status === 'ISSUES' || findings > 0) {
     return {
       id: 'insight-security-findings',
-      text: `⚠ ${findings} security finding${findings === 1 ? '' : 's'} — Review the latest ruflo security scan`,
+      text: `⚠ ${findings} security finding${findings === 1 ? '' : 's'} — Review the latest swarmlo security scan`,
       priority: 90,
     };
   }
   if (s.status === 'PENDING') {
-    return { id: 'insight-scan-pending', text: '🛡 Security scan pending — Run ruflo security scan --depth deep', priority: 70 };
+    return { id: 'insight-scan-pending', text: '🛡 Security scan pending — Run swarmlo security scan --depth deep', priority: 70 };
   }
   return null;
 }
@@ -117,7 +117,7 @@ function proxyModeInsight(now: Date): LocalInsight | null {
 }
 
 /**
- * ADR-316 — a co-pilot tip from ruflo's Fable Advisor Harness
+ * ADR-316 — a co-pilot tip from swarmlo's Fable Advisor Harness
  * (services/fable-harness.ts, ADR-172). Consent-gated (never surfaces a
  * stale cached tip after the user disables it, even though the cache file
  * itself isn't deleted on disable — this check is what actually enforces

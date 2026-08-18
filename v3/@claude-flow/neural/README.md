@@ -24,7 +24,7 @@ npm install @claude-flow/neural
 > used `"latest"` and broke on every fresh install. The pin will
 > stay until `@ruvector/sona@0.1.7+` ships with content.
 
-## Standalone use (without the Ruflo CLI)
+## Standalone use (without the Swarmlo CLI)
 
 ```typescript
 // route a task across 8 specialized experts (MoE) — no other deps
@@ -228,7 +228,7 @@ import type {
 
 The CLI's intelligence layer (`hooks_intelligence_*`, `neural_*` MCP tools, `/intelligence` dashboard) is the primary consumer. Phase 1 of the convergence (#1773) adds a thin bridge in `cli/src/memory/neural-package-bridge.ts` that lazy-loads `NeuralLearningSystem` so cli's intelligence handlers can call into the package surface alongside the existing local implementation. Future phases migrate cli's `LocalSonaCoordinator` and `LocalReasoningBank` to wrap this package's `SONALearningEngine` and `ReasoningBankAdapter`.
 
-If you're building a Ruflo plugin that wants neural learning, depend on `@claude-flow/neural` directly rather than reaching into cli internals.
+If you're building a Swarmlo plugin that wants neural learning, depend on `@claude-flow/neural` directly rather than reaching into cli internals.
 
 ## Dependencies
 

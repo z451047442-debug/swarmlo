@@ -854,7 +854,7 @@ export const workflowTools: MCPTool[] = [
     },
   },
   {
-    // #1916: `ruflo workflow stop <id>` referenced an unregistered
+    // #1916: `swarmlo workflow stop <id>` referenced an unregistered
     // `workflow_stop` tool. Equivalent to workflow_cancel but returns the
     // shape the CLI expects (`{ workflowId, stopped, stoppedAt }`).
     name: 'workflow_stop',
@@ -889,7 +889,7 @@ export const workflowTools: MCPTool[] = [
     },
   },
   {
-    // #1916: `ruflo workflow validate -f <file>` referenced an unregistered
+    // #1916: `swarmlo workflow validate -f <file>` referenced an unregistered
     // `workflow_validate` tool. Structural sanity check (JSON workflow files);
     // a full schema validator is a follow-up.
     name: 'workflow_validate',

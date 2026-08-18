@@ -1,6 +1,6 @@
 # Performance SOTA Report — 2026-05-30
 
-**TL;DR:** Five Grade A 2026 papers converge on the same gap in Ruflo: critical-path-aware scheduling cuts multi-agent wall-clock latency 38–46% (LAMaS), MV-HNSW achieves 14× memory-search speedup vs Ruflo's current ~1.9×, and structured memory distillation compresses agent context 11× — none yet implemented.
+**TL;DR:** Five Grade A 2026 papers converge on the same gap in Swarmlo: critical-path-aware scheduling cuts multi-agent wall-clock latency 38–46% (LAMaS), MV-HNSW achieves 14× memory-search speedup vs Swarmlo's current ~1.9×, and structured memory distillation compresses agent context 11× — none yet implemented.
 
 ## What's New in 2026
 
@@ -12,7 +12,7 @@
 | Hera step-level RL routing achieves 92.5% cloud-only accuracy at 46.3% cloud invocations (54% local offload) | arXiv:2605.24598, May 2026 | A |
 | SSD/Saguaro (ICLR 2026) reaches 5× faster-than-autoregressive throughput via parallelised draft+verify stages | arXiv:2603.03251, ICLR 2026 | A |
 
-## Ruflo Current Capability
+## Swarmlo Current Capability
 
 | Area | Status | Gap |
 |------|--------|-----|
@@ -29,7 +29,7 @@ Source: Pooya Golchian independent benchmark, 200 tasks/tier, Qwen3-32B, Apr 202
 
 | Framework | Simple Task | Medium Task | Complex Task | Token Overhead | Key 2026 Highlight |
 |-----------|------------|------------|-------------|---------------|-------------------|
-| **Ruflo v3.6** | Not benchmarked | Not benchmarked | Not benchmarked | Not published | 3-tier routing (ADR-026), SONA 0.0043ms |
+| **Swarmlo v3.6** | Not benchmarked | Not benchmarked | Not benchmarked | Not published | 3-tier routing (ADR-026), SONA 0.0043ms |
 | **LangGraph v1.0 GA** | 88% | 76% | 62% | ~5% | DeltaChannel beta (incremental checkpoint diff); ~1.2s avg on 10-step GPT-4o pipelines |
 | **AutoGen v0.4 / Magentic-One** | 79% | 68% | 58% | ~5–6× vs LangGraph on reasoning | Modular agentchat rewrite; better p99 latency on managed deploy |
 | **CrewAI** | 79% | 71% | 54% | ~18% vs LangGraph | 100K+ devs; 31,200 GitHub stars; fastest prototyping |

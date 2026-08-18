@@ -1,5 +1,5 @@
 /**
- * ADR-174 Milestone 4 — self-optimization harness ("ruflo tuning ruflo").
+ * ADR-174 Milestone 4 — self-optimization harness ("swarmlo tuning swarmlo").
  *
  * Proves `tuneDistillation`:
  *  - scores every grid point via runDistillation (M1, frozen) on isolated

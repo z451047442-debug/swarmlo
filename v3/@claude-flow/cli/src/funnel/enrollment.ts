@@ -7,7 +7,7 @@
  *   - funnel enabled under the ADR-305 precedence chain
  *   - never shown before (user-level record, not per-project)
  *
- * Accepting authorizes exactly ONE thing: a pointer to `ruflo auth login`.
+ * Accepting authorizes exactly ONE thing: a pointer to `swarmlo auth login`.
  * It does not install the proxy, does not enable telemetry, and does not
  * enable cloud routing (separate consent domains — ADR-302). The enrollment
  * outcome never affects init's exit code.
@@ -43,7 +43,7 @@ export const ENROLLMENT_SCREEN = [
   'Free account: https://cognitum.one',
 ].join('\n');
 
-export const ENROLLMENT_SKIP_TEXT = 'You can enable later:\n  ruflo auth login';
+export const ENROLLMENT_SKIP_TEXT = 'You can enable later:\n  swarmlo auth login';
 
 export interface EnrollmentGateContext {
   noSignup: boolean;

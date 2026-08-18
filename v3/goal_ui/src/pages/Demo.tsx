@@ -10,12 +10,12 @@ const Demo = () => {
   const [copied, setCopied] = useState(false);
   const [widgetLoaded, setWidgetLoaded] = useState(false);
 
-  const embedCode = `<!-- RuFlo Research Widget -->
-<div id="ruflo-research-widget-container"></div>
+  const embedCode = `<!-- Swarmlo Research Widget -->
+<div id="swarmlo-research-widget-container"></div>
 
 <!-- Optional: Configure widget appearance -->
 <script>
-  window.RufloResearchWidgetConfig = {
+  window.SwarmloResearchWidgetConfig = {
     primaryColor: "#8b5cf6",
     accentColor: "#22c55e",
     backgroundColor: "#1a1a1a",
@@ -34,7 +34,7 @@ const Demo = () => {
 
   useEffect(() => {
     // Configure widget before loading
-    (window as any).RufloResearchWidgetConfig = {
+    (window as any).SwarmloResearchWidgetConfig = {
       primaryColor: "#8b5cf6",
       accentColor: "#22c55e",
       backgroundColor: "#1a1a1a",
@@ -90,11 +90,11 @@ const Demo = () => {
           console.log("[Demo] Widget loaded successfully");
 
           // Check if widget initialized
-          if ((window as any).RufloResearchWidget) {
-            console.log("[Demo] Widget version:", (window as any).RufloResearchWidget.version);
+          if ((window as any).SwarmloResearchWidget) {
+            console.log("[Demo] Widget version:", (window as any).SwarmloResearchWidget.version);
             toast({
               title: "Widget Ready",
-              description: "RuFlo Research Widget loaded successfully",
+              description: "Swarmlo Research Widget loaded successfully",
             });
           }
         };
@@ -126,8 +126,8 @@ const Demo = () => {
           link.parentNode.removeChild(link);
         }
         // Clear widget config
-        delete (window as any).RufloResearchWidgetConfig;
-        delete (window as any).RufloResearchWidget;
+        delete (window as any).SwarmloResearchWidgetConfig;
+        delete (window as any).SwarmloResearchWidget;
       };
     };
 
@@ -253,7 +253,7 @@ const Demo = () => {
 
           {/* Widget Container */}
           <div
-            id="ruflo-research-widget-container"
+            id="swarmlo-research-widget-container"
             className="min-h-[600px] rounded-lg border border-border overflow-hidden"
             style={{
               background: widgetLoaded ? 'transparent' : 'repeating-linear-gradient(45deg, rgba(255,255,255,.05), rgba(255,255,255,.05) 10px, transparent 10px, transparent 20px)'

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Static guard for ruvnet/ruflo#2132 — plugin `hooks.json` commands must be
+ * Static guard for z451047442-debug/swarmlo#2132 — plugin `hooks.json` commands must be
  * cross-platform (work on Windows without WSL / Git Bash).
  *
  * The reporter ran the plugin hooks on native Windows and every `PostToolUse`
@@ -31,7 +31,7 @@
  *  2. All other files - strict cross-platform scan (original behaviour)
  *
  * Windows path check: for every POSIX-exempt file in a plugins/<name>/hooks/ dir,
- * verify that plugins/<name>/scripts/ruflo-hook.cjs exists (the Node shim that
+ * verify that plugins/<name>/scripts/swarmlo-hook.cjs exists (the Node shim that
  * init copies to `.claude/helpers/` on Windows). This proves the Windows path
  * is covered without requiring platform detection at audit time.
  *
@@ -43,7 +43,7 @@
  * entries is scanned. Comments, descriptions, and the top-level `_note`
  * field are ignored.
  *
- * ## Codex strict top-level-key guard (ruvnet/ruflo#2855)
+ * ## Codex strict top-level-key guard (z451047442-debug/swarmlo#2855)
  *
  * Codex's plugin hook-manifest loader accepts only `description` and
  * `hooks` at the top level and hard-fails ("unknown field `_note`,
@@ -52,7 +52,7 @@
  * marketplace-listed, Codex-facing `hooks.json` (see CODEX_FACING_PATHS
  * below) is checked for unknown top-level keys. Legacy, non-marketplace
  * manifests (`.claude-plugin/hooks/hooks.json`, `plugin/hooks/hooks.json`)
- * are intentionally out of scope — they are not fetched via the ruflo
+ * are intentionally out of scope — they are not fetched via the swarmlo
  * marketplace path Codex installs from.
  */
 
@@ -66,8 +66,8 @@ const REPO_ROOT = resolve(__dirname, '..');
 // Marketplace-listed hooks.json files Codex actually fetches and parses
 // with its strict `description`+`hooks`-only top-level schema (#2855).
 const CODEX_FACING_PATHS = new Set([
-  'plugins/ruflo-core/hooks/hooks.json',
-  'plugins/ruflo-cost-tracker/hooks/hooks.json',
+  'plugins/swarmlo-core/hooks/hooks.json',
+  'plugins/swarmlo-cost-tracker/hooks/hooks.json',
 ]);
 const CODEX_ALLOWED_TOP_LEVEL_KEYS = new Set(['description', 'hooks']);
 
@@ -170,21 +170,21 @@ for (const file of walkForHooksJson(REPO_ROOT)) {
 
     // Verify the Windows path (Node shim) exists alongside this hooks.json.
     // Convention: hooks.json lives in <plugin>/hooks/hooks.json
-    //             shim lives in <plugin>/scripts/ruflo-hook.cjs
+    //             shim lives in <plugin>/scripts/swarmlo-hook.cjs
     const pluginDir = resolve(join(file, '..', '..'));
-    const shimPath = join(pluginDir, 'scripts', 'ruflo-hook.cjs');
+    const shimPath = join(pluginDir, 'scripts', 'swarmlo-hook.cjs');
     if (!existsSync(shimPath)) {
       violations.push({
         file: relFile,
         line: 0,
         label: 'POSIX-exempt but Windows shim missing',
         cmd: `Expected ${relative(REPO_ROOT, shimPath)}`,
-        hint: 'Create plugins/<name>/scripts/ruflo-hook.cjs (cross-platform Node port of ruflo-hook.sh). See #2132.',
+        hint: 'Create plugins/<name>/scripts/swarmlo-hook.cjs (cross-platform Node port of swarmlo-hook.sh). See #2132.',
       });
       posixWindowsPathMissing = true;
     } else if (json._legacy_unaudited_shim !== true) {
       // #2721 — a sibling .cjs existing proves nothing on its own: #2721
-      // shipped with plugins/ruflo-cost-tracker/scripts/ruflo-hook.cjs
+      // shipped with plugins/swarmlo-cost-tracker/scripts/swarmlo-hook.cjs
       // present on disk but referenced NOWHERE, while hooks.json still
       // hard-coded `/bin/bash -c '...'`. Require at least one command in
       // this hooks.json to actually name the shim file.
@@ -193,7 +193,7 @@ for (const file of walkForHooksJson(REPO_ROOT)) {
       // valve — NOT a way to quietly bypass this check. It exists only for
       // .claude-plugin/hooks/hooks.json and plugin/hooks/hooks.json (the
       // older, separately-published "claude-flow" plugin, distinct from
-      // the ruflo-core/ruflo-cost-tracker plugins this file's #2721 fix
+      // the swarmlo-core/swarmlo-cost-tracker plugins this file's #2721 fix
       // covers): those use a much larger jq/xargs-based hook set that was
       // NOT audited or fixed as part of #2721 and needs its own pass. Any
       // NEW posix-exempt file must not set this flag — it must actually
@@ -201,7 +201,7 @@ for (const file of walkForHooksJson(REPO_ROOT)) {
       const referencesShim = Object.values(json?.hooks ?? {})
         .flat()
         .flatMap((entry) => (Array.isArray(entry?.hooks) ? entry.hooks : []))
-        .some((h) => typeof h?.command === 'string' && h.command.includes('ruflo-hook.cjs'));
+        .some((h) => typeof h?.command === 'string' && h.command.includes('swarmlo-hook.cjs'));
       if (!referencesShim) {
         violations.push({
           file: relFile,
@@ -275,7 +275,7 @@ for (const v of violations) {
   console.error(`     cmd: ${v.cmd}`);
   console.error(`     fix: ${v.hint}`);
 }
-console.error('\nReference: ruvnet/ruflo#2132 (plugin hooks broken on Windows).');
+console.error('\nReference: z451047442-debug/swarmlo#2132 (plugin hooks broken on Windows).');
 console.error('Cross-platform pattern: .claude/settings.json + .claude/helpers/hook-handler.cjs (node, no bash).');
-console.error('POSIX-exempt pattern: add "_platform": "posix" to hooks.json + create scripts/ruflo-hook.cjs sibling.');
+console.error('POSIX-exempt pattern: add "_platform": "posix" to hooks.json + create scripts/swarmlo-hook.cjs sibling.');
 process.exit(1);

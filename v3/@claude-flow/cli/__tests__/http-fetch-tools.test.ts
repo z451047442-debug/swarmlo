@@ -186,7 +186,7 @@ describe('http_fetch — execution path against a mock server', () => {
     process.env.CLAUDE_FLOW_HTTP_FETCH_ALLOW_PRIVATE = '1';
     lastUA = undefined;
     await httpFetchExecute({ url: `http://127.0.0.1:${port}/ok` });
-    expect(lastUA).toMatch(/^ruflo-http-fetch\//);
+    expect(lastUA).toMatch(/^swarmlo-http-fetch\//);
   });
 
   it('aborts on timeout', async () => {

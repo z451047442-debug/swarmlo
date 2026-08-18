@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * RuFlo V3 Statusline — delegation build (#2195)
+ * Swarmlo V3 Statusline — delegation build (#2195)
  *
- * Fix for ruvnet/ruflo#2195: the previous version re-implemented all data
+ * Fix for z451047442-debug/swarmlo#2195: the previous version re-implemented all data
  * readers locally using fragile file probes that missed AgentDB patterns,
  * the v3/docs/adr/ ADR directory, and the real vector count.
  *
@@ -30,16 +30,16 @@ const CONFIG = {
   maxAgents: 15,
   // Header identity defaults to project/repository name. Set `author` to
   // retain the previous `git config user.name` display (#2682).
-  identityMode: (process.env.RUFLO_STATUSLINE_IDENTITY || 'project').toLowerCase(),
+  identityMode: (process.env.SWARMLO_STATUSLINE_IDENTITY || 'project').toLowerCase(),
   // Session-cost display. Claude Code's cost.total_cost_usd is a client-side
   // estimate that "may differ from your actual bill" and reads as misleading on
   // subscription plans, where token usage is not billed per dollar. These let
   // each user pick what the segment means to them without changing the default.
-  //   RUFLO_STATUSLINE_COST_SYMBOL  override the leading '$' (e.g. ⚡, €, 🌱);
+  //   SWARMLO_STATUSLINE_COST_SYMBOL  override the leading '$' (e.g. ⚡, €, 🌱);
   //                                 set to an empty string for the number alone.
-  //   RUFLO_STATUSLINE_HIDE_COST    1/true/yes/on removes the segment entirely.
-  costSymbol: process.env.RUFLO_STATUSLINE_COST_SYMBOL ?? '$',
-  hideCost: /^(1|true|yes|on)$/i.test(process.env.RUFLO_STATUSLINE_HIDE_COST || ''),
+  //   SWARMLO_STATUSLINE_HIDE_COST    1/true/yes/on removes the segment entirely.
+  costSymbol: process.env.SWARMLO_STATUSLINE_COST_SYMBOL ?? '$',
+  hideCost: /^(1|true|yes|on)$/i.test(process.env.SWARMLO_STATUSLINE_HIDE_COST || ''),
 };
 
 const CWD = process.cwd();
@@ -55,7 +55,7 @@ const CWD = process.cwd();
 // reduce the flash rate 5x on Windows until the upstream fix ships.
 // Tradeoff: stat/git counters update every 5min instead of every 1min;
 // promo/insight row still rotates on its own tighter 20s promoFresh clock.
-const CACHE_FILE = path.join(os.tmpdir(), 'ruflo-statusline-cache-' + require('crypto').createHash('md5').update(CWD).digest('hex').slice(0, 8) + '.json');
+const CACHE_FILE = path.join(os.tmpdir(), 'swarmlo-statusline-cache-' + require('crypto').createHash('md5').update(CWD).digest('hex').slice(0, 8) + '.json');
 const CACHE_TTL_MS = 300000;
 
 // The promo/insight row is designed to rotate on a 20s cadence (funnel/
@@ -77,10 +77,10 @@ const PROMO_ROTATION_SLOT_MS = 20000;
 // survives a full cache wipe / cache write race / CLI failure combo. Written
 // every time we successfully render a promo; read as a last resort so the row
 // never blinks out mid-session (was: 'promo shows then hides' bug report).
-const PROMO_MEMO_FILE = path.join(os.homedir(), '.ruflo', 'statusline-promo.json');
+const PROMO_MEMO_FILE = path.join(os.homedir(), '.swarmlo', 'statusline-promo.json');
 const PROMO_MEMO_TTL_MS = 6 * 60 * 60 * 1000; // 6h — long enough to bridge any hiccup, short enough that a real disable takes effect fast.
 
-// #2337: resolve an already-installed @claude-flow/cli (or ruflo) bin so we
+// #2337: resolve an already-installed @claude-flow/cli (or swarmlo) bin so we
 // can invoke it directly via `node`. The previous version called
 // `npx --yes @claude-flow/cli@latest` on every uncached render, which forces
 // a registry resolution + cold-start of the entire CLI per render. With
@@ -106,9 +106,9 @@ function resolveCliBinCandidates() {
   try {
     const home = os.homedir();
     candidates.push(
-      path.join(home, '.claude', 'plugins', 'marketplaces', 'ruflo', 'bin', 'cli.js'),
+      path.join(home, '.claude', 'plugins', 'marketplaces', 'swarmlo', 'bin', 'cli.js'),
       path.join(CWD, 'node_modules', '@claude-flow', 'cli', 'bin', 'cli.js'),
-      path.join(CWD, 'node_modules', 'ruflo', 'bin', 'cli.js'),
+      path.join(CWD, 'node_modules', 'swarmlo', 'bin', 'cli.js'),
       path.join(CWD, 'v3', '@claude-flow', 'cli', 'bin', 'cli.js'),
     );
     try {
@@ -119,7 +119,7 @@ function resolveCliBinCandidates() {
       }
       for (const gm of globalModuleDirs) {
         candidates.push(
-          path.join(gm, 'ruflo', 'bin', 'cli.js'),
+          path.join(gm, 'swarmlo', 'bin', 'cli.js'),
           path.join(gm, '@claude-flow', 'cli', 'bin', 'cli.js'),
         );
       }
@@ -191,7 +191,7 @@ function readPromoMemo() {
  * Single source of truth: delegate to the CLI hooks statusline --json command.
  * Falls back to a minimal static object on failure so the statusline still renders.
  *
- * Fix for ruflo#2195: the previous local readers returned 0 for AgentDB patterns
+ * Fix for swarmlo#2195: the previous local readers returned 0 for AgentDB patterns
  * (missed the .swarm/memory.db → AgentDB path), computed dddProgress wrong,
  * and only counted ADRs in v3/implementation/adrs/ (missed v3/docs/adr/).
  */
@@ -268,7 +268,7 @@ function getStatuslineData() {
   return overlayMemoPromo(buildLocalFallback());
 }
 
-// Count ADRs from BOTH known directories (fix for ruflo#2195: old code missed
+// Count ADRs from BOTH known directories (fix for swarmlo#2195: old code missed
 // v3/docs/adr/ which holds ADR-088..ADR-137, i.e. 41 of the 128 total ADRs).
 function getLocalADRCount() {
   const adrDirs = [
@@ -319,7 +319,7 @@ function getLocalAgentDB() {
       // count was discarded too and the statusline showed Vectors 0 despite
       // thousands of real vectors. Split so a missing table can only zero the
       // HNSW flag, never the count. The init self-heal provisions the table so
-      // the flag recovers on the next ruflo init / MCP start.
+      // the flag recovers on the next swarmlo init / MCP start.
       const countSql = Q + 'SELECT COUNT(*) FROM memory_entries WHERE embedding IS NOT NULL;' + Q;
       const vc = safeExec("sqlite3 'file:" + memDb + "?mode=ro' " + countSql, 1500);
       if (vc) result.vectorCount = parseInt(vc, 10) || 0;
@@ -404,35 +404,35 @@ function getLocalIntegration() {
   return integration;
 }
 
-// ─── Security freshness overlay (ruvnet/ruflo#2776) ──────────────
+// ─── Security freshness overlay (z451047442-debug/swarmlo#2776) ──────────────
 // The shipped CLI producer (dist/src/funnel/local-signals.js getSecurityStatus)
 // only ever emits PENDING / CLEAN / ISSUES — it captures `scannedAt` but never
 // inspects it, so a year-old scan renders 🛡 ✓ forever and the renderer's
 // STALE / IN_PROGRESS branches are unreachable. Worse, when CLI delegation
 // fails, the stale-while-revalidate cache (readCache() below) keeps serving
 // the pre-scan PENDING pill indefinitely, so a user who runs the advertised
-// `ruflo security scan` sees no change — the pill freezes at "scan pending".
+// `swarmlo security scan` sees no change — the pill freezes at "scan pending".
 //
 // This overlay recomputes the security block from disk on EVERY render (same
 // pattern as adrs/agentdb/tests/hooks above), which:
 //   1) Makes STALE reachable — when the newest scan is older than
-//      RUFLO_SCAN_STALE_HOURS (default 24h — matches the CVE feed refresh
+//      SWARMLO_SCAN_STALE_HOURS (default 24h — matches the CVE feed refresh
 //      cadence), report STALE regardless of what the cached CLI JSON says.
 //   2) Makes IN_PROGRESS reachable — when a `scan-in-progress` marker file
 //      exists and is younger than SECURITY_IN_PROGRESS_MAX_MIN (guards against
 //      a crashed scan leaving the marker behind).
 //   3) Caps the "scan pending" display window — if PENDING has been shown for
-//      >RUFLO_SCAN_PENDING_CAP_MIN (default 30) without a completion write,
+//      >SWARMLO_SCAN_PENDING_CAP_MIN (default 30) without a completion write,
 //      switch to STALE and stop rendering the yellow indicator. The tracker
-//      lives in ~/.ruflo/statusline-scan-pending-since.json, keyed by CWD
+//      lives in ~/.swarmlo/statusline-scan-pending-since.json, keyed by CWD
 //      hash so multiple project checkouts don't collide.
 //   4) Since this runs AFTER readCache() serves stale data, it bypasses the
 //      "pill freezes at PENDING" freeze in defect 2 — the overlay reads
 //      fresh disk state even when the CLI delegation is broken.
-const SECURITY_STALE_HOURS = Math.max(1, parseInt(process.env.RUFLO_SCAN_STALE_HOURS || '24', 10) || 24);
-const SECURITY_PENDING_CAP_MIN = Math.max(1, parseInt(process.env.RUFLO_SCAN_PENDING_CAP_MIN || '30', 10) || 30);
+const SECURITY_STALE_HOURS = Math.max(1, parseInt(process.env.SWARMLO_SCAN_STALE_HOURS || '24', 10) || 24);
+const SECURITY_PENDING_CAP_MIN = Math.max(1, parseInt(process.env.SWARMLO_SCAN_PENDING_CAP_MIN || '30', 10) || 30);
 const SECURITY_IN_PROGRESS_MAX_MIN = 30; // marker older than this = crashed scan; treat as absent
-const PENDING_TRACK_FILE = path.join(os.homedir(), '.ruflo', 'statusline-scan-pending-since.json');
+const PENDING_TRACK_FILE = path.join(os.homedir(), '.swarmlo', 'statusline-scan-pending-since.json');
 const CWD_KEY = require('crypto').createHash('md5').update(CWD).digest('hex').slice(0, 12);
 
 function readPendingSince() {
@@ -836,9 +836,9 @@ function getPkgVersion() {
   try {
     const home = os.homedir();
     const pkgPaths = [
-      path.join(home, '.claude', 'plugins', 'marketplaces', 'ruflo', 'package.json'),
+      path.join(home, '.claude', 'plugins', 'marketplaces', 'swarmlo', 'package.json'),
       path.join(CWD, 'node_modules', '@claude-flow', 'cli', 'package.json'),
-      path.join(CWD, 'node_modules', 'ruflo', 'package.json'),
+      path.join(CWD, 'node_modules', 'swarmlo', 'package.json'),
       path.join(CWD, 'v3', '@claude-flow', 'cli', 'package.json'),
     ];
     // #2742: CWD is a linked git worktree with no node_modules of its own —
@@ -848,11 +848,11 @@ function getPkgVersion() {
     if (worktreeMainRoot) {
       pkgPaths.push(
         path.join(worktreeMainRoot, 'node_modules', '@claude-flow', 'cli', 'package.json'),
-        path.join(worktreeMainRoot, 'node_modules', 'ruflo', 'package.json'),
+        path.join(worktreeMainRoot, 'node_modules', 'swarmlo', 'package.json'),
         path.join(worktreeMainRoot, 'v3', '@claude-flow', 'cli', 'package.json'),
       );
     }
-    // #2221: global installs (npm i -g ruflo) live outside CWD/node_modules, so the
+    // #2221: global installs (npm i -g swarmlo) live outside CWD/node_modules, so the
     // probes above all miss and the version falls back to the hard-coded default.
     // Derive the global node_modules dir from the running node binary (no npm spawn —
     // statusline renders often). Covers nvm/mise (bin/../lib/node_modules) and Windows
@@ -868,7 +868,7 @@ function getPkgVersion() {
       }
       for (const gm of globalModuleDirs) {
         pkgPaths.push(
-          path.join(gm, 'ruflo', 'package.json'),
+          path.join(gm, 'swarmlo', 'package.json'),
           path.join(gm, '@claude-flow', 'cli', 'package.json'),
         );
       }
@@ -911,11 +911,11 @@ function generateStatusline() {
   const modelName = getModelFromStdin() || (d.user && d.user.modelName) || 'Claude Code';
   const ctxInfo = getContextFromStdin();
   const costInfo = getCostFromStdin();
-  // Named RUFLO_VERSION (not pkgVersion) so the #1951 regression guard
+  // Named SWARMLO_VERSION (not pkgVersion) so the #1951 regression guard
   // (scripts/audit-fix-invariants.mjs) can pin its presence in the emitted
   // .cjs artifact — without it the header silently reverts to a hard-coded
-  // "RuFlo V3.5" for anyone whose install doesn't match the first probe path.
-  const RUFLO_VERSION = getPkgVersion();
+  // "Swarmlo V3.5" for anyone whose install doesn't match the first probe path.
+  const SWARMLO_VERSION = getPkgVersion();
 
   const progress = d.v3Progress || {};
   const security = d.security || {};
@@ -952,12 +952,12 @@ function generateStatusline() {
 
   // 3-line design (fits Claude Code's visible statusline area — line 4+ gets
   // replaced by the system guidance / input prompt line):
-  //   Line 1 — Header (RuFlo version · git · model · timing · context · cost)
+  //   Line 1 — Header (Swarmlo version · git · model · timing · context · cost)
   //   Line 2 — Compressed ops (Swarm · Hooks · 🧠 · 💾 · Health)
   //   Line 3 — Promo / disclosure row (funnel surface, ADR-301)
 
   // ─── Line 1: header ────────────────────────────────────────────
-  let header = c.bold + c.brightPurple + '▊ RuFlo V' + RUFLO_VERSION + ' ' + c.reset;
+  let header = c.bold + c.brightPurple + '▊ Swarmlo V' + SWARMLO_VERSION + ' ' + c.reset;
   header += (coordinationActive ? c.brightCyan : c.dim) + '● ' + c.brightCyan + git.name + c.reset;
   if (git.gitBranch) {
     header += '  ' + c.dim + '│' + c.reset + '  ' + c.brightBlue + '⏇ ' + git.gitBranch + c.reset;
@@ -986,7 +986,7 @@ function generateStatusline() {
 
   // ─── Line 2: compressed ops ────────────────────────────────────
   // Everything actionable in one dense row. Show only what changes what you
-  // do next; diagnostic detail moves to `ruflo status --verbose`.
+  // do next; diagnostic detail moves to `swarmlo status --verbose`.
   const agentsColor = activeAgents > 0 ? c.brightGreen : c.dim;
   const hooksColor = hooksEnabled > 0 ? c.brightGreen : c.dim;
   const intellColor = intelligencePct >= 80 ? c.brightGreen : intelligencePct >= 40 ? c.brightYellow : c.dim;
@@ -1004,7 +1004,7 @@ function generateStatusline() {
   } else {
     // #2776: STALE gets dim/gray (distinct from the actionable yellow of
     // PENDING/IN_PROGRESS) so a stale pill visibly stops shouting for
-    // attention — the user can act on the "run ruflo security scan" prompt or
+    // attention — the user can act on the "run swarmlo security scan" prompt or
     // ignore it without a permanently-yellow indicator.
     if (secStatus === 'PENDING') opsParts.push(c.brightYellow + '🛡 scan pending' + c.reset);
     else if (secStatus === 'IN_PROGRESS') opsParts.push(c.brightYellow + '🛡 scanning…' + c.reset);
@@ -1067,8 +1067,8 @@ const PROMO_LINK_HOSTS = new Set([
 function terminalSupportsHyperlinks() {
   if (process.env.CI || process.env.GITHUB_ACTIONS) return false;
   if (process.env.TERM === 'dumb') return false;
-  if (/^(0|false|off|no)$/i.test(String(process.env.RUFLO_STATUSLINE_HYPERLINKS || ''))) return false;
-  if (process.env.TMUX && !process.env.RUFLO_STATUSLINE_HYPERLINKS_TMUX) return false;
+  if (/^(0|false|off|no)$/i.test(String(process.env.SWARMLO_STATUSLINE_HYPERLINKS || ''))) return false;
+  if (process.env.TMUX && !process.env.SWARMLO_STATUSLINE_HYPERLINKS_TMUX) return false;
   return true;
 }
 
@@ -1092,7 +1092,7 @@ function safeTerminalLink(label, url) {
 function getPromoRow(d) {
   try {
     if (process.env.CI || process.env.GITHUB_ACTIONS) return null;
-    if (/^(0|false|off|no)$/i.test(String(process.env.RUFLO_FUNNEL || ''))) return null;
+    if (/^(0|false|off|no)$/i.test(String(process.env.SWARMLO_FUNNEL || ''))) return null;
     const promo = d && d.promo;
     if (!promo || typeof promo.text !== 'string') return null;
     // Strip control chars / ANSI / bidi overrides — promo copy is data and
@@ -1106,11 +1106,11 @@ function getPromoRow(d) {
       ;
     const text = (sanitized.length > MAX_LEN ? sanitized.slice(0, MAX_LEN - 1).trimEnd() + '…' : sanitized).trim();
     if (text.length === 0) return null;
-    // Split the label from the trailing "· manage: ruflo settings" instruction
+    // Split the label from the trailing "· manage: swarmlo settings" instruction
     // so each part gets styling that matches what it actually IS:
     //   1. label   — OSC 8 hyperlink + underline. A real clickable link.
     //   2. "manage:" — dim. Just a connector word, no action implied.
-    //   3. "ruflo settings" — bold/bright, NOT underlined. This is a shell
+    //   3. "swarmlo settings" — bold/bright, NOT underlined. This is a shell
     //      command the user TYPES, not a link they CLICK — a terminal can
     //      never safely execute a command from a click (that would let any
     //      server-served message run arbitrary commands), so we deliberately

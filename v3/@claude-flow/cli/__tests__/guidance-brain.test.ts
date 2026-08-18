@@ -15,7 +15,7 @@ function decode(result: unknown): Record<string, any> {
   return JSON.parse(payload.content[0]!.text);
 }
 
-describe('Ruflo capability brain', () => {
+describe('Swarmlo capability brain', () => {
   it('classifies every live registered MCP tool without duplicates', () => {
     const tools = listMCPTools();
     const brain = buildCapabilityBrain(tools, new Date('2026-07-28T00:00:00.000Z'));

@@ -69,8 +69,8 @@ function writeProfile(name: string, keychainRef: string | null): void {
 }
 
 beforeEach(() => {
-  stateDir = mkdtempSync(join(tmpdir(), 'ruflo-auth-refresh-'));
-  process.env.RUFLO_STATE_DIR = stateDir;
+  stateDir = mkdtempSync(join(tmpdir(), 'swarmlo-auth-refresh-'));
+  process.env.SWARMLO_STATE_DIR = stateDir;
   secrets.clear();
   events.length = 0;
   refreshTokenMock.mockReset();
@@ -78,7 +78,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  delete process.env.RUFLO_STATE_DIR;
+  delete process.env.SWARMLO_STATE_DIR;
   rmSync(stateDir, { recursive: true, force: true });
 });
 

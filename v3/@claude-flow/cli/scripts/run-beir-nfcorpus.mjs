@@ -27,8 +27,8 @@ import { performance } from 'node:perf_hooks';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const CLI_ROOT = resolve(SCRIPT_DIR, '..');
-const RUFLO_ROOT = resolve(SCRIPT_DIR, '../../../..');
-const RUNS_DIR = join(RUFLO_ROOT, 'docs', 'benchmarks', 'runs');
+const SWARMLO_ROOT = resolve(SCRIPT_DIR, '../../../..');
+const RUNS_DIR = join(SWARMLO_ROOT, 'docs', 'benchmarks', 'runs');
 
 const DATA_DIR = process.env.BEIR_DATA_DIR || '/tmp/beir-nfcorpus/nfcorpus';
 const TOP_K = Number(process.env.TOP_K) || 100;     // top-100 for recall@100
@@ -197,7 +197,7 @@ async function main() {
   console.log(`  Avg query latency: ${(queryMs / N).toFixed(0)}ms`);
 
   console.log(`\n=== vs published NFCorpus nDCG@10 baselines ===`);
-  const ourEntry = { name: 'ruflo hybrid (3.10.25)', score: ndcg10, ours: true };
+  const ourEntry = { name: 'swarmlo hybrid (3.10.25)', score: ndcg10, ours: true };
   const ranking = [
     ...Object.entries(BASELINES_NDCG10).map(([name, score]) => ({ name, score, ours: false })),
     ourEntry,

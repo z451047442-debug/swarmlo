@@ -3,7 +3,7 @@
  *
  * The access token is never written to `auth.json` or any other disk file —
  * only the refresh token (via the OS keychain, or nowhere in session-only
- * mode) survives a process exit. Every fresh `ruflo` invocation starts with
+ * mode) survives a process exit. Every fresh `swarmlo` invocation starts with
  * an empty cache and re-derives an access token from the refresh token (or
  * asks the user to log in again, in session-only mode). This is a deliberate
  * ADR-306 usability cost, not something to "fix" by persisting the access

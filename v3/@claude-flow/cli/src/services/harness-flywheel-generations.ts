@@ -321,7 +321,7 @@ export interface DriftCheck { checked: boolean; rolledBack: boolean; reason: str
 
 /**
  * A real deployment-safety check on real (not fabricated) data: the store keeps
- * changing as ruflo is used, so a champion benchmarked at promotion time can
+ * changing as swarmlo is used, so a champion benchmarked at promotion time can
  * DRIFT. Each tick, re-score the currently-SERVED champion against its
  * predecessor on a FRESH harvest of the current store; if it now regresses
  * (self-retrieval OR the human anchor), automatically ROLL BACK the active policy

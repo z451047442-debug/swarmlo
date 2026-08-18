@@ -1,0 +1,22 @@
+{
+  "name": "swarmlo-observability",
+  "description": "Structured logging, distributed tracing, and metrics — correlate agent swarm activity with application telemetry",
+  "version": "0.2.1",
+  "author": {
+    "name": "ruvnet",
+    "url": "https://github.com/ruvnet"
+  },
+  "homepage": "https://github.com/z451047442-debug/swarmlo",
+  "license": "MIT",
+  "keywords": [
+    "swarmlo",
+    "observability",
+    "logging",
+    "tracing",
+    "metrics",
+    "telemetry",
+    "mcp",
+    "distributed-tracing",
+    "anomaly-detection"
+  ]
+}

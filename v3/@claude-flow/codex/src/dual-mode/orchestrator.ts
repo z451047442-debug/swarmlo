@@ -120,7 +120,7 @@ export class DualModeOrchestrator extends EventEmitter {
     // Initialize memory database
     await this.runCommand(
       'npx',
-      ['ruflo@latest', 'memory', 'init'],
+      ['swarmlo@latest', 'memory', 'init'],
       projectPath
     );
 
@@ -128,7 +128,7 @@ export class DualModeOrchestrator extends EventEmitter {
     await this.runCommand(
       'npx',
       [
-        'ruflo@latest', 'memory', 'store',
+        'swarmlo@latest', 'memory', 'store',
         '--key', 'task-context',
         '--value', taskContext,
         '--namespace', sharedNamespace
@@ -285,9 +285,9 @@ Working Directory: ${config.worktreePath ? path.resolve(config.worktreePath) : p
 Shared Memory Namespace: ${sharedNamespace}
 
 COLLABORATION PROTOCOL:
-1. Search shared memory for context: npx ruflo@latest memory search --query "<relevant terms>" --namespace ${sharedNamespace}
+1. Search shared memory for context: npx swarmlo@latest memory search --query "<relevant terms>" --namespace ${sharedNamespace}
 2. Complete your assigned task
-3. Store your results: npx ruflo@latest memory store --key "${config.id}-result" --value "<your summary>" --namespace ${sharedNamespace}
+3. Store your results: npx swarmlo@latest memory store --key "${config.id}-result" --value "<your summary>" --namespace ${sharedNamespace}
 
 YOUR TASK:
 ${config.prompt}
@@ -480,7 +480,7 @@ Remember: Other agents depend on your results in shared memory. Be concise and s
     try {
       const output = await this.runCommand(
         'npx',
-        ['ruflo@latest', 'memory', 'list', '--namespace', sharedNamespace, '--format', 'json'],
+        ['swarmlo@latest', 'memory', 'list', '--namespace', sharedNamespace, '--format', 'json'],
         projectPath
       );
       return JSON.parse(output);
@@ -535,7 +535,7 @@ Remember: Other agents depend on your results in shared memory. Be concise and s
     };
     const raw = await this.runCommand(
       'npx',
-      ['ruflo@latest', 'policy', 'evaluate', JSON.stringify(request)],
+      ['swarmlo@latest', 'policy', 'evaluate', JSON.stringify(request)],
       this.config.projectPath,
     );
     const decision = JSON.parse(raw) as { enforcedOutcome?: string; reason?: string };
@@ -604,7 +604,7 @@ Remember: Other agents depend on your results in shared memory. Be concise and s
     return env;
   }
 
-  /** Keep every Ruflo subprocess on the same collaboration database. */
+  /** Keep every Swarmlo subprocess on the same collaboration database. */
   private sharedEnvironment(): NodeJS.ProcessEnv {
     return {
       ...process.env,

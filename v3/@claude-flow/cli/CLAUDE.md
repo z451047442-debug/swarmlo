@@ -609,7 +609,7 @@ Run `npx @claude-flow/cli@latest doctor` to check:
 
 ```bash
 # Add MCP servers (auto-detects MCP mode when stdin is piped)
-claude mcp add claude-flow -- npx -y ruflo@latest mcp start
+claude mcp add claude-flow -- npx -y swarmlo@latest mcp start
 claude mcp add ruv-swarm -- npx -y ruv-swarm mcp start  # Optional
 claude mcp add flow-nexus -- npx -y flow-nexus@latest mcp start  # Optional
 
@@ -697,8 +697,8 @@ This includes:
 
 ## Support
 
-- Documentation: https://github.com/ruvnet/claude-flow
-- Issues: https://github.com/ruvnet/claude-flow/issues
+- Documentation: https://github.com/z451047442-debug/swarmlo
+- Issues: https://github.com/z451047442-debug/swarmlo/issues
 
 ---
 

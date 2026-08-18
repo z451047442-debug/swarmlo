@@ -1,5 +1,5 @@
 /**
- * `ruflo funnel` — user control surface for the Cognitum lifecycle funnel
+ * `swarmlo funnel` — user control surface for the Cognitum lifecycle funnel
  * (ADR-301/305/309/317).
  *
  *   funnel status     effective state and which precedence source decided it
@@ -115,14 +115,14 @@ const acceptSub: Command = {
     const decision = resolveFunnelEnabled();
     if (!decision.enabled) {
       output.printWarning(
-        `Funnel is currently disabled by: ${decision.decidedBy}. Run 'ruflo funnel enable' first, then re-run accept.`
+        `Funnel is currently disabled by: ${decision.decidedBy}. Run 'swarmlo funnel enable' first, then re-run accept.`
       );
       return { success: false, data: decision };
     }
     const current = getDisclosure();
     if (current.state === 'disclosed_disabled') {
       output.printWarning(
-        "Disclosure is in a declined state. Run 'ruflo funnel enable' first, then re-run accept."
+        "Disclosure is in a declined state. Run 'swarmlo funnel enable' first, then re-run accept."
       );
       return { success: false, data: current };
     }
@@ -141,7 +141,7 @@ const acceptSub: Command = {
 // the subcommand.
 function readCurrentPromo(): { text: string; url?: string; kind?: string } | null {
   try {
-    const memoPath = path.join(os.homedir(), '.ruflo', 'statusline-promo.json');
+    const memoPath = path.join(os.homedir(), '.swarmlo', 'statusline-promo.json');
     const raw = JSON.parse(fs.readFileSync(memoPath, 'utf-8'));
     if (raw && raw.promo && typeof raw.promo === 'object') return raw.promo;
   } catch { /* memo absent or corrupt — treat as "nothing shown yet" */ }
@@ -186,7 +186,7 @@ const openSub: Command = {
     const promo = readCurrentPromo();
     if (!promo) {
       output.printWarning(
-        "No promo has been shown yet. Wait for the statusline to render one, then re-run 'ruflo funnel open'."
+        "No promo has been shown yet. Wait for the statusline to render one, then re-run 'swarmlo funnel open'."
       );
       return { success: false };
     }
@@ -230,14 +230,14 @@ const enrollSub: Command = {
     const decision = resolveFunnelEnabled();
     if (!decision.enabled) {
       output.printWarning(
-        `Funnel is currently disabled by: ${decision.decidedBy}. Enable it (ruflo funnel enable) before enrolling — there's nothing to earn from until the funnel is on.`
+        `Funnel is currently disabled by: ${decision.decidedBy}. Enable it (swarmlo funnel enable) before enrolling — there's nothing to earn from until the funnel is on.`
       );
       return { success: false, data: decision };
     }
     const disclosure = getDisclosure();
     if (disclosure.state !== 'disclosed_enabled') {
       output.printWarning(
-        "The Cognitum disclosure hasn't been shown/accepted yet. Run 'ruflo funnel accept' first, then re-run enroll."
+        "The Cognitum disclosure hasn't been shown/accepted yet. Run 'swarmlo funnel accept' first, then re-run enroll."
       );
       return { success: false, data: disclosure };
     }
@@ -273,7 +273,7 @@ const earningsSub: Command = {
       earning_eligible: eligible,
       note: rec
         ? 'Earnings endpoint (funnel.ruv.io/v1/earnings) is not yet live — see ADR-317 Phase 1.'
-        : 'Not enrolled. Run `ruflo funnel enroll` to opt in.',
+        : 'Not enrolled. Run `swarmlo funnel enroll` to opt in.',
     };
     if (ctx.flags.json) {
       output.printJson(summary);
@@ -330,12 +330,12 @@ export const funnelCommand: Command = {
   description: 'Control the Cognitum lifecycle funnel surfaces (tips, enrollment, notices)',
   subcommands: [statusSub, disableSub, enableSub, acceptSub, openSub, enrollSub, earningsSub, unenrollSub, idSub],
   examples: [
-    { command: 'ruflo funnel status', description: 'Effective state + deciding source' },
-    { command: 'ruflo funnel accept', description: 'Skip the 24h grace so rotation starts now' },
-    { command: 'ruflo funnel open', description: 'Open the current promo URL in the browser' },
-    { command: 'ruflo funnel enroll', description: 'Opt in to 50/50 rev share (ADR-317)' },
-    { command: 'ruflo funnel earnings', description: 'Show accrued and paid balance' },
-    { command: 'ruflo funnel disable', description: 'Turn off every funnel surface' },
+    { command: 'swarmlo funnel status', description: 'Effective state + deciding source' },
+    { command: 'swarmlo funnel accept', description: 'Skip the 24h grace so rotation starts now' },
+    { command: 'swarmlo funnel open', description: 'Open the current promo URL in the browser' },
+    { command: 'swarmlo funnel enroll', description: 'Opt in to 50/50 rev share (ADR-317)' },
+    { command: 'swarmlo funnel earnings', description: 'Show accrued and paid balance' },
+    { command: 'swarmlo funnel disable', description: 'Turn off every funnel surface' },
   ],
   action: statusSub.action,
 };

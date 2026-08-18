@@ -6,7 +6,7 @@
  * existing users without a manual re-init. This test proves the stamp-and-
  * refresh path closes it: a stale-stamped project silently re-copies the
  * current helpers on the next CLI startup; a current one is a no-op; and a
- * non-ruflo directory is never touched.
+ * non-swarmlo directory is never touched.
  *
  * The successful-copy tests use an ISOLATED, throwaway-keypair-signed
  * fixture (`makeSignedSource()`) rather than this repo's own real
@@ -123,8 +123,8 @@ describe('autoRefreshHelpersIfStale', () => {
     expect(existsSync(join(helpersDir, HELPERS_STAMP_FILE))).toBe(true);
   });
 
-  it('is a safe no-op outside a ruflo project (never creates files)', async () => {
-    const cwd = mkdtempSync(join(tmpdir(), 'not-ruflo-'));
+  it('is a safe no-op outside a swarmlo project (never creates files)', async () => {
+    const cwd = mkdtempSync(join(tmpdir(), 'not-swarmlo-'));
     const r = await autoRefreshHelpersIfStale(cwd);
     expect(r.refreshed).toBe(false);
     expect(existsSync(join(cwd, '.claude'))).toBe(false); // did not scaffold anything
@@ -150,7 +150,7 @@ describe('autoRefreshHelpersIfStale', () => {
   });
 
   it('alsoRefreshGlobal:true refreshes ~/.claude/helpers under a redirected HOME (regression: pre-3.31.3 the global copy never refreshed, so the 2026-07-13 promo row never reached existing installs)', async () => {
-    const { cwd } = makeProject(); // project dir is a real ruflo project so the project pass has something to do
+    const { cwd } = makeProject(); // project dir is a real swarmlo project so the project pass has something to do
     const projectHelpers = join(cwd, '.claude', 'helpers');
     writeFileSync(join(projectHelpers, 'hook-handler.cjs'), 'intelligence.feedback(true); // OLD project\n');
     writeFileSync(join(projectHelpers, HELPERS_STAMP_FILE), '0.0.1-old');

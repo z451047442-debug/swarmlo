@@ -13,7 +13,7 @@
  * the previous entry's canonical bytes). Tampering with history requires
  * forging a chain of signatures with the operator's key.
  *
- * The periodic ruflo witness regen (plugins/ruflo-core/scripts/witness/)
+ * The periodic swarmlo witness regen (plugins/swarmlo-core/scripts/witness/)
  * includes wg-changes.log as one of its watched artifacts (operator wires
  * this via witness-fixes.json).
  *

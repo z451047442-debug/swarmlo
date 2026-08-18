@@ -8,7 +8,7 @@
  *
  * No SOTA web agent today distributes MCTS exploration across multiple
  * installations — every system is single-process. Federation primitives
- * (ADR-097/104) make this structurally available to ruflo only.
+ * (ADR-097/104) make this structurally available to swarmlo only.
  */
 
 import { z } from 'zod';

@@ -8,7 +8,7 @@
  * and exploration periodically reactivates a suspended agent.
  */
 
-export const APSC_SCHEMA = 'ruflo.apsc-state/v1';
+export const APSC_SCHEMA = 'swarmlo.apsc-state/v1';
 
 export interface ApscConfig {
   alpha: number;

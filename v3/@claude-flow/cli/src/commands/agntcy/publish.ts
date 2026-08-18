@@ -1,5 +1,5 @@
 /**
- * V3 CLI `ruflo agent publish` — ADR-380 §2.
+ * V3 CLI `swarmlo agent publish` — ADR-380 §2.
  *
  * Emits the AGNTCY-identified, OASF-described agent record (produced
  * build-time by the companion metaharness ADR-240 §2.1/2.2) to the
@@ -85,8 +85,8 @@ const publishCommand: Command = {
     },
   ],
   examples: [
-    { command: 'ruflo agent publish', description: 'Publish the local OASF agent record to the AGNTCY Directory' },
-    { command: 'ruflo agent publish --manifest ./out/agent.oasf.json', description: 'Publish a specific manifest' },
+    { command: 'swarmlo agent publish', description: 'Publish the local OASF agent record to the AGNTCY Directory' },
+    { command: 'swarmlo agent publish --manifest ./out/agent.oasf.json', description: 'Publish a specific manifest' },
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     const manifestPath = (ctx.flags.manifest as string) || DEFAULT_MANIFEST_PATH;

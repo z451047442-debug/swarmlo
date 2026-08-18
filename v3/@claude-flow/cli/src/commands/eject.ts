@@ -1,20 +1,20 @@
 /**
  * V3 CLI Eject Command — ADR-150 Phase-2 differentiator.
  *
- * Lifts the calling ruflo/claude-flow project into a renamed standalone
+ * Lifts the calling swarmlo/claude-flow project into a renamed standalone
  * harness using `metaharness --from-existing <dir>`. Attribution to
- * ruflo is preserved via the upstream's `<!-- ruflo-attribution-block -->`
+ * swarmlo is preserved via the upstream's `<!-- swarmlo-attribution-block -->`
  * convention.
  *
- *   npx ruflo eject --name my-harness                  # dry-run plan
- *   npx ruflo eject --name my-harness --confirm        # actually eject
- *   npx ruflo eject --name my-harness --target /abs/out --confirm
+ *   npx swarmlo eject --name my-harness                  # dry-run plan
+ *   npx swarmlo eject --name my-harness --confirm        # actually eject
+ *   npx swarmlo eject --name my-harness --target /abs/out --confirm
  *
  * SAFETY GATES (load-bearing)
  *   1. Dry-run by default. `--confirm` required for any disk write.
  *   2. `--target` MUST resolve OUTSIDE the calling repo root. Default
- *      is `/tmp/ruflo-eject-<ts>-<name>/`. Writing to the calling repo
- *      is refused with exit 2 — protects the user from `cwd: $ruflo`
+ *      is `/tmp/swarmlo-eject-<ts>-<name>/`. Writing to the calling repo
+ *      is refused with exit 2 — protects the user from `cwd: $swarmlo`
  *      eject accidents.
  *   3. Refuses existing target dirs (no overwrites).
  *   4. Subprocess + 10-minute hard timeout. No library import; no
@@ -22,7 +22,7 @@
  *
  * ADR-150 ARCHITECTURAL CONSTRAINT
  *   When metaharness is unavailable (offline, no network), the command
- *   exits 0 with a structured "feature not available" message. Ruflo
+ *   exits 0 with a structured "feature not available" message. Swarmlo
  *   continues to function — rule #3 (graceful degradation).
  *
  * Created with ruv.io
@@ -78,7 +78,7 @@ function runEject(targetDir: string, name: string): { exitCode: number; stderr: 
 export const ejectCommand: Command = {
   name: 'eject',
   description:
-    'Lift the calling ruflo project into a renamed standalone harness via metaharness --from-existing (ADR-150 Phase 2). Dry-run by default; --confirm required to write.',
+    'Lift the calling swarmlo project into a renamed standalone harness via metaharness --from-existing (ADR-150 Phase 2). Dry-run by default; --confirm required to write.',
   options: [
     {
       name: 'name',
@@ -88,7 +88,7 @@ export const ejectCommand: Command = {
     },
     {
       name: 'target',
-      description: 'Absolute output dir (default: /tmp/ruflo-eject-<ts>-<name>/); refused if inside the calling repo',
+      description: 'Absolute output dir (default: /tmp/swarmlo-eject-<ts>-<name>/); refused if inside the calling repo',
       type: 'string' as const,
     },
     {
@@ -105,13 +105,13 @@ export const ejectCommand: Command = {
     },
   ],
   examples: [
-    { command: 'npx ruflo eject --name my-harness', description: 'Dry-run; prints what would happen' },
+    { command: 'npx swarmlo eject --name my-harness', description: 'Dry-run; prints what would happen' },
     {
-      command: 'npx ruflo eject --name my-harness --confirm',
-      description: 'Eject to /tmp/ruflo-eject-<ts>-my-harness/',
+      command: 'npx swarmlo eject --name my-harness --confirm',
+      description: 'Eject to /tmp/swarmlo-eject-<ts>-my-harness/',
     },
     {
-      command: 'npx ruflo eject --name my-harness --target /abs/out --confirm',
+      command: 'npx swarmlo eject --name my-harness --target /abs/out --confirm',
       description: 'Eject to a specific dir (must be outside the calling repo)',
     },
   ],
@@ -136,7 +136,7 @@ export const ejectCommand: Command = {
     if (!opts.name) {
       output.writeln(output.error('eject: --name is required'));
       output.writeln('');
-      output.writeln('Example: npx ruflo eject --name my-harness');
+      output.writeln('Example: npx swarmlo eject --name my-harness');
       return { success: false, exitCode: 2, data: { error: 'name-required' } };
     }
 
@@ -144,7 +144,7 @@ export const ejectCommand: Command = {
     const repoRoot = resolvePath(process.cwd());
     const target = opts.target
       ? resolvePath(opts.target)
-      : resolvePath(tmpdir(), `ruflo-eject-${Date.now()}-${opts.name}`);
+      : resolvePath(tmpdir(), `swarmlo-eject-${Date.now()}-${opts.name}`);
     if (target === repoRoot || target.startsWith(repoRoot + '/')) {
       output.writeln(output.error(`eject: refusing to write to ${target}`));
       output.writeln(output.error(`This is inside the calling repo (${repoRoot}). Pick a --target OUTSIDE the repo.`));
@@ -167,7 +167,7 @@ export const ejectCommand: Command = {
       if (opts.format === 'json') {
         output.writeln(JSON.stringify({ ...plan, dryRun: true }, null, 2));
       } else {
-        output.writeln(output.bold('# ruflo eject (dry-run)'));
+        output.writeln(output.bold('# swarmlo eject (dry-run)'));
         output.writeln('');
         output.writeln(`name:       ${plan.name}`);
         output.writeln(`sourceRepo: ${plan.sourceRepo}`);
@@ -182,14 +182,14 @@ export const ejectCommand: Command = {
     }
 
     // Actually run.
-    output.writeln(output.bold('# ruflo eject — running'));
+    output.writeln(output.bold('# swarmlo eject — running'));
     output.writeln('');
     output.writeln(`Ejecting ${repoRoot} → ${target} as "${opts.name}"...`);
     output.writeln('');
     const r = runEject(target, opts.name);
     if (r.degraded) {
       output.writeln(output.warning('eject: metaharness binary unavailable — feature degraded'));
-      output.writeln(output.dim('(ADR-150 graceful degradation: ruflo runs without it; install with `npm i -D metaharness`.)'));
+      output.writeln(output.dim('(ADR-150 graceful degradation: swarmlo runs without it; install with `npm i -D metaharness`.)'));
       return { success: true, exitCode: 0, data: { ...plan, degraded: true, reason: 'metaharness-not-available' } };
     }
     if (r.exitCode !== 0) {

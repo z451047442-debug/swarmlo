@@ -1,7 +1,7 @@
 /**
  * Filesystem layout for the managed meta-proxy binary (ADR-307), all under
- * the same `~/.ruflo` state dir every other funnel/proxy/auth file uses
- * (src/funnel/state.ts's `funnelStateDir()` — respects RUFLO_STATE_DIR for
+ * the same `~/.swarmlo` state dir every other funnel/proxy/auth file uses
+ * (src/funnel/state.ts's `funnelStateDir()` — respects SWARMLO_STATE_DIR for
  * tests). Centralized here so doctor.ts, install.ts, and lifecycle.ts share
  * one definition instead of three copies drifting apart.
  */

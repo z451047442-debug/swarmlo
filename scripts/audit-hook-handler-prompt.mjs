@@ -28,7 +28,7 @@ const REPO_ROOT = process.cwd();
 const JSON_OUT = process.argv.includes('--json');
 
 // Files we audit. The deployed/tracked `.cjs` files + the TS template that
-// generates them at `ruflo init` time.
+// generates them at `swarmlo init` time.
 const TARGETS = [
   'v3/@claude-flow/cli/.claude/helpers/hook-handler.cjs',
   '.claude/helpers/hook-handler.cjs',

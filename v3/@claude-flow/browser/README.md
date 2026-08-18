@@ -715,16 +715,16 @@ MIT License - see [LICENSE](../../LICENSE) for details.
 
 ## Links
 
-- [GitHub Repository](https://github.com/ruvnet/claude-flow)
+- [GitHub Repository](https://github.com/z451047442-debug/swarmlo)
 - [agent-browser](https://github.com/AugmentCode/agent-browser)
-- [Claude-Flow Documentation](https://github.com/ruvnet/claude-flow#readme)
+- [Claude-Flow Documentation](https://github.com/z451047442-debug/swarmlo#readme)
 - [MCP Protocol](https://modelcontextprotocol.io)
 
 ---
 
 <div align="center">
 
-**Part of the [Claude-Flow](https://github.com/ruvnet/claude-flow) ecosystem**
+**Part of the [Claude-Flow](https://github.com/z451047442-debug/swarmlo) ecosystem**
 
 Made with ❤️ by [ruvnet](https://github.com/ruvnet)
 

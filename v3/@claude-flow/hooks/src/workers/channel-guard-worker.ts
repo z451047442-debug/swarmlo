@@ -13,7 +13,7 @@
  * ---------------------------------------
  * A CLI-only v1 already shipped directly to `main` (dream-cycle #2783,
  * commit 581cd2bf3) as `v3/@claude-flow/cli/src/security/channel-guard.ts`
- * — an on-demand `ruflo security channel-scan` command with its OWN
+ * — an on-demand `swarmlo security channel-scan` command with its OWN
  * injection-phrase catalog (`src/security/injection-catalog.ts`). This ADR
  * specifically asks for the inter-agent gate to "reuse the REAL
  * InputValidator (don't reinvent it)" — the CLI v1 predates that

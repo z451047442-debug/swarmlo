@@ -4,7 +4,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/@claude-flow/plugin-iot-cognitum.svg)](https://www.npmjs.com/package/@claude-flow/plugin-iot-cognitum)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-IoT Cognitum Seed device-agent bridge — treat every Seed as a Ruflo agent with hardware capabilities.
+IoT Cognitum Seed device-agent bridge — treat every Seed as a Swarmlo agent with hardware capabilities.
 
 ## Hardware
 

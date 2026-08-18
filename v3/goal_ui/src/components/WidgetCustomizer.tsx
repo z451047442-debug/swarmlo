@@ -48,14 +48,14 @@ export const WidgetCustomizer = ({ config, onConfigChange, onGenerate }: WidgetC
   };
 
   const generateEmbedCode = () => {
-    const embedCode = `<!-- RuFlo Research Widget -->
-<div id="ruflo-research-widget-container"></div>
+    const embedCode = `<!-- Swarmlo Research Widget -->
+<div id="swarmlo-research-widget-container"></div>
 <script>
-  window.RufloResearchWidgetConfig = ${JSON.stringify(config, null, 2)};
+  window.SwarmloResearchWidgetConfig = ${JSON.stringify(config, null, 2)};
 </script>
 <script src="${window.location.origin}/widget.js"></script>
 <style>
-  #ruflo-research-widget-container {
+  #swarmlo-research-widget-container {
     max-width: 100%;
     margin: 2rem auto;
   }

@@ -1,0 +1,22 @@
+{
+  "name": "swarmlo-aidefence",
+  "description": "AI safety scanning, PII detection, prompt injection defense, and adaptive threat learning",
+  "version": "0.2.1",
+  "author": {
+    "name": "ruvnet",
+    "url": "https://github.com/ruvnet"
+  },
+  "homepage": "https://github.com/z451047442-debug/swarmlo",
+  "license": "MIT",
+  "keywords": [
+    "swarmlo",
+    "aidefence",
+    "safety",
+    "pii",
+    "injection",
+    "security",
+    "prompt-injection",
+    "defense-in-depth",
+    "mcp"
+  ]
+}

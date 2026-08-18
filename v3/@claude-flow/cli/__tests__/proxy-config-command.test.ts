@@ -18,7 +18,7 @@ let savedEnv: NodeJS.ProcessEnv;
 beforeEach(() => {
   stateDir = fs.mkdtempSync(path.join(os.tmpdir(), 'proxy-config-cmd-test-'));
   savedEnv = { ...process.env };
-  process.env.RUFLO_STATE_DIR = stateDir;
+  process.env.SWARMLO_STATE_DIR = stateDir;
 });
 
 afterEach(() => {
@@ -257,7 +257,7 @@ describe('cloud routing disclosure', () => {
     const text = await disclosureShownOnUnconfirmedCloud();
 
     expect(text).toContain('instead of using the model');
-    expect(text).toContain('ruflo proxy config --routing-mode');
+    expect(text).toContain('swarmlo proxy config --routing-mode');
   });
 
   /**
@@ -268,8 +268,8 @@ describe('cloud routing disclosure', () => {
   it('offers both ways off the cloud plane, not just the local one', async () => {
     const text = await disclosureShownOnUnconfirmedCloud();
 
-    expect(text).toContain('ruflo proxy config --passthrough');
-    expect(text).toContain('ruflo proxy config --local-only');
+    expect(text).toContain('swarmlo proxy config --passthrough');
+    expect(text).toContain('swarmlo proxy config --local-only');
   });
 });
 
@@ -393,14 +393,14 @@ describe('plane guidance', () => {
     const text = await linesFrom({ cloud: true, yes: true });
 
     expect(text).toContain('Previous plane: passthrough');
-    expect(text).toContain('ruflo proxy config --passthrough');
+    expect(text).toContain('swarmlo proxy config --passthrough');
   });
 
   it('warns that --local-only does not use the Claude subscription', async () => {
     const text = await linesFrom({ localOnly: true });
 
     expect(text).toContain('NOT used on this plane');
-    expect(text).toContain('ruflo proxy config --passthrough');
+    expect(text).toContain('swarmlo proxy config --passthrough');
   });
 
   it('does not add that warning when landing on passthrough', async () => {

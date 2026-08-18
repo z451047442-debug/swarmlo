@@ -1,6 +1,6 @@
 /**
  * V3 CLI Main Entry Point
- * Modernized CLI for RuFlo V3
+ * Modernized CLI for Swarmlo V3
  *
  * Created with ❤️ by ruv.io
  */
@@ -58,8 +58,8 @@ export class CLI {
   private interactive: boolean;
 
   constructor(options: CLIOptions = {}) {
-    this.name = options.name || 'ruflo';
-    this.description = options.description || 'RuFlo V3 - AI Agent Orchestration Platform';
+    this.name = options.name || 'swarmlo';
+    this.description = options.description || 'Swarmlo V3 - AI Agent Orchestration Platform';
     this.version = options.version || VERSION;
     this.parser = commandParser;
     this.output = output;
@@ -165,7 +165,7 @@ export class CLI {
           // installs" bug where Claude Code's global settings.json falls back
           // to ~/.claude/helpers/statusline.cjs (executor.ts:460-462) and that
           // file was frozen at whatever version was current when the user
-          // last ran `ruflo init` — pre-3.31.3 nothing refreshed it, so any
+          // last ran `swarmlo init` — pre-3.31.3 nothing refreshed it, so any
           // helpers change (e.g. the 2026-07-13 Line-3 funnel row addition)
           // never reached existing installs. Same forward-only semver.gte
           // guard applies to the global pass.
@@ -208,14 +208,14 @@ export class CLI {
         // backup, …) are actually firing without a manual `daemon start`.
         // Single-instance (only spawns when none is alive; the spawned daemon
         // re-checks its own lock), bounded (TTL/idle self-shutdown), opt-out via
-        // RUFLO_DAEMON_AUTOSTART=0. Skipped for `daemon` (no recursion). Detached
+        // SWARMLO_DAEMON_AUTOSTART=0. Skipped for `daemon` (no recursion). Detached
         // + fire-and-forget, so it never blocks the command.
         if (commandPath[0] !== 'daemon') {
           try {
             const { ensureDaemonRunning } = await import('./services/daemon-autostart.js');
             const d = ensureDaemonRunning(process.cwd());
             if (d.started) {
-              this.output.printInfo(`Started Ruflo background daemon for ${process.cwd()} (stop: ruflo daemon stop)`);
+              this.output.printInfo(`Started Swarmlo background daemon for ${process.cwd()} (stop: swarmlo daemon stop)`);
             }
           } catch { /* silent */ }
         }

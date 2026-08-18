@@ -1,10 +1,10 @@
 /**
- * Embedding policy — "no more stubs" enforcement (RUFLO_REQUIRE_REAL_EMBEDDINGS).
+ * Embedding policy — "no more stubs" enforcement (SWARMLO_REQUIRE_REAL_EMBEDDINGS).
  */
 import { describe, it, expect, afterEach } from 'vitest';
 import { requireRealEmbeddings, enforceNoStub } from '../src/memory/embedding-policy.js';
 
-const KEY = 'RUFLO_REQUIRE_REAL_EMBEDDINGS';
+const KEY = 'SWARMLO_REQUIRE_REAL_EMBEDDINGS';
 afterEach(() => { delete process.env[KEY]; });
 
 describe('embedding policy (no-stub strict mode)', () => {

@@ -28,7 +28,7 @@ export const ReusePolicySchema = z.object({
   requireFreshMfa: z.boolean().default(false),
   /** Allow mounting on a different device than the one that captured. */
   allowCrossDevice: z.boolean().default(false),
-  /** Allow mounting on a different ruflo installation. */
+  /** Allow mounting on a different swarmlo installation. */
   allowCrossInstallation: z.boolean().default(false),
 });
 export type ReusePolicy = z.infer<typeof ReusePolicySchema>;

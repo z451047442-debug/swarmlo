@@ -30,7 +30,7 @@
 set -euo pipefail
 
 TAG="${1:-alpha}"
-WORK="$(mktemp -d -t ruflo-fed-check.XXXXXXXX)"
+WORK="$(mktemp -d -t swarmlo-fed-check.XXXXXXXX)"
 trap 'rm -rf "$WORK"' EXIT
 
 printf '[verify-federation] using temp dir: %s\n' "$WORK"
@@ -38,7 +38,7 @@ printf '[verify-federation] pinning cookies@0.9.0 to work around registry block 
 
 cat > "$WORK/package.json" <<'EOF'
 {
-  "name": "ruflo-federation-verify",
+  "name": "swarmlo-federation-verify",
   "private": true,
   "version": "0.0.0",
   "overrides": {

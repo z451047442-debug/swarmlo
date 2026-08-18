@@ -1,13 +1,13 @@
 /**
  * PluginIntegrityVerifier — install-layer security for plugin supply chain.
  *
- * Implements P1 of ADR-145 (ruvnet/ruflo#2254): Stage-1 Ed25519 signature
+ * Implements P1 of ADR-145 (z451047442-debug/swarmlo#2254): Stage-1 Ed25519 signature
  * verification at `plugins install`. Stage-2 (semantic-intent scan against
  * SCH attacks) lands in P2; per-namespace write ACLs land in P3-P4.
  *
  * Threat model
  * ------------
- * Ruflo's plugin install path fetches manifests from IPFS via Pinata with
+ * Swarmlo's plugin install path fetches manifests from IPFS via Pinata with
  * NO signature verification and NO intent analysis. Two attacks land today:
  *
  *   - DDIPE (arXiv:2604.03081): malicious logic embedded in plugin docs and

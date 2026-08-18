@@ -13,7 +13,7 @@ import { tmpdir } from 'node:os';
 // functions stop claiming HNSW acceleration that isn't in the request path.
 describe('#2922 getHNSWStatus() must not claim HNSW when the bridge (brute-force) path is active', () => {
   it('reports available=false and algorithm=brute-force-cosine once the bridge has loaded', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'ruflo-2922-'));
+    const root = mkdtempSync(join(tmpdir(), 'swarmlo-2922-'));
     const dbPath = join(root, 'memory.db');
 
     try {
@@ -46,7 +46,7 @@ describe('#2922 getHNSWStatus() must not claim HNSW when the bridge (brute-force
 
 describe('#2922 memory-bridge status/search functions are honestly named', () => {
   it('bridgeGetVectorSearchStatus reports algorithm=brute-force-cosine, not silence about acceleration', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'ruflo-2922-bridge-'));
+    const root = mkdtempSync(join(tmpdir(), 'swarmlo-2922-bridge-'));
     const dbPath = join(root, 'memory.db');
 
     try {

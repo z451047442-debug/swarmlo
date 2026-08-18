@@ -14,8 +14,8 @@ import {
 } from 'node:crypto';
 import { checkPairedOutcomesConsistency, type PairedTaskOutcome } from './flywheel-sequential-evidence.js';
 
-export const RECEIPT_SCHEMA = 'ruflo.flywheel-receipt/v1';
-export const RECEIPT_DOMAIN = 'ruflo/flywheel-receipt/v1';
+export const RECEIPT_SCHEMA = 'swarmlo.flywheel-receipt/v1';
+export const RECEIPT_DOMAIN = 'swarmlo/flywheel-receipt/v1';
 export const GENESIS_LEDGER_HEAD = `sha256:${'0'.repeat(64)}`;
 
 export type VerificationKind = 'recomputed' | 'signature-verified' | 'trusted-assertion';
@@ -39,7 +39,7 @@ export interface ResourceEvidence {
 }
 
 export interface PromotionStatistics {
-  ruleVersion: 'ruflo.flywheel-gate/v1';
+  ruleVersion: 'swarmlo.flywheel-gate/v1';
   relativeLift: string;
   pairedBootstrapProbability: string;
   pairedBootstrapDeltaCILow95: string;
@@ -265,7 +265,7 @@ export function computePromotionStatistics(input: {
   const metricEpsilon = input.metricEpsilon ?? 1e-12;
   const relativeLift = (input.candidateScore - input.baselineScore) / Math.max(Math.abs(input.baselineScore), metricEpsilon);
   const seeded = seedFrom([
-    'ruflo/bootstrap/v1',
+    'swarmlo/bootstrap/v1',
     input.corpusHash,
     input.candidateId,
     input.baselineRef,
@@ -294,7 +294,7 @@ export function computePromotionStatistics(input: {
   const significant = probability >= 0.95 && ciLow > 0;
   const accepted = relativeLift >= 0.02 && significant && input.frozenAnchorRegression <= 0;
   return {
-    ruleVersion: 'ruflo.flywheel-gate/v1',
+    ruleVersion: 'swarmlo.flywheel-gate/v1',
     relativeLift: decimal(relativeLift),
     pairedBootstrapProbability: decimal(probability),
     pairedBootstrapDeltaCILow95: decimal(ciLow),
@@ -344,7 +344,7 @@ export function createFlywheelReceipt(input: CreateReceiptInput): FlywheelEvalua
     expectedLedgerHead: input.expectedLedgerHead ?? GENESIS_LEDGER_HEAD,
     candidatePolicy: input.candidatePolicy,
     gateVersion: input.gateVersion ?? statistics.ruleVersion,
-    policySchemaVersion: input.policySchemaVersion ?? 'ruflo.retrieval-policy/v1',
+    policySchemaVersion: input.policySchemaVersion ?? 'swarmlo.retrieval-policy/v1',
     safetyEnvelopeRef: input.safetyEnvelopeRef,
     ...(input.anchorRef ? { anchorRef: input.anchorRef } : {}),
     requestedProposer: input.requestedProposer ?? 'local',

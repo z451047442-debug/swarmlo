@@ -131,7 +131,7 @@ function embed(task, label, dim) {
 }
 
 // ----------------------------------------------------------------------------
-// Run the INTEGRATED ruflo path with neural gate ON (ADR-148 in-tree)
+// Run the INTEGRATED swarmlo path with neural gate ON (ADR-148 in-tree)
 // ----------------------------------------------------------------------------
 async function runIntegratedNeural(test, dim) {
   process.env.CLAUDE_FLOW_ROUTER_NEURAL = '1';
@@ -167,7 +167,7 @@ async function runIntegratedNeural(test, dim) {
   // Unset to avoid leaking into later runs in same process
   delete process.env.CLAUDE_FLOW_ROUTER_NEURAL;
   return {
-    name: 'INTEGRATED ruflo path (CLAUDE_FLOW_ROUTER_NEURAL=1)',
+    name: 'INTEGRATED swarmlo path (CLAUDE_FLOW_ROUTER_NEURAL=1)',
     accuracy: correct / test.length,
     costAdjReward,
     latency: { mean: lat.reduce((a,b)=>a+b,0)/lat.length, p50: lat[Math.floor(lat.length*0.5)], p95: lat[Math.floor(lat.length*0.95)] },

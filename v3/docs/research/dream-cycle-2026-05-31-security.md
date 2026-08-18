@@ -1,6 +1,6 @@
 # Security SOTA Report — 2026-05-31
 
-**TL;DR:** Three Grade A papers published in the last 10 days define a new security layer Ruflo lacks — authorization propagation across agent delegation chains — distinct from the content-screening gap (ADR-131) filed five nights ago.
+**TL;DR:** Three Grade A papers published in the last 10 days define a new security layer Swarmlo lacks — authorization propagation across agent delegation chains — distinct from the content-screening gap (ADR-131) filed five nights ago.
 
 ---
 
@@ -17,7 +17,7 @@
 
 ---
 
-## Ruflo Current Capability
+## Swarmlo Current Capability
 
 | Control | Status | Gap |
 |---------|--------|-----|
@@ -34,7 +34,7 @@
 
 | Framework | MCP Auth Checking | Per-Action Privilege | Authorization Propagation | Provenance Graph |
 |-----------|------------------|---------------------|--------------------------|-----------------|
-| **Ruflo v3.6** | Not implemented | Not implemented | Not implemented | Not implemented |
+| **Swarmlo v3.6** | Not implemented | Not implemented | Not implemented | Not implemented |
 | **OpenAI Agents SDK** | Tool availability pre-check (March 2026) | Input + output + invocation guardrails | OAuth 2.0 token forwarding | OTEL spans built-in |
 | **LangGraph v0.4** | Via LangSmith observability | Conditional edges + HITL checkpoints | Partial (checkpoint-scoped) | LangSmith full graph |
 | **CrewAI Enterprise** | SOC 2 / HIPAA compliance | Role-scoped tool permissions | Partial (role inheritance) | Observability hooks |
@@ -70,6 +70,6 @@
 
 1. **Implement `AgentAuthorizationPropagator`** in `v3/@claude-flow/security/src/authorization/propagator.ts` — attach `scope` field to SendMessage envelope, validate each MCP tool call against the current delegation scope. ADR-144 (filed tonight) tracks this as an architectural decision.
 
-2. **Add MCP server authentication validator** in `v3/@claude-flow/cli/src/mcp/auth-validator.ts` — before any tool response enters agent reasoning, verify the server presented valid credentials. Even a simple allowlist check eliminates the 40.55% unauthenticated-server risk for Ruflo-managed MCP registrations.
+2. **Add MCP server authentication validator** in `v3/@claude-flow/cli/src/mcp/auth-validator.ts` — before any tool response enters agent reasoning, verify the server presented valid credentials. Even a simple allowlist check eliminates the 40.55% unauthenticated-server risk for Swarmlo-managed MCP registrations.
 
 3. **Add feasibility pre-check to the `route` hook** — before Tier-3 dispatch, verify all required MCP tools are registered and callable. Eliminates the 73.9% false-continue rate at near-zero cost (simple registry lookup). Implementation-level — no ADR needed.

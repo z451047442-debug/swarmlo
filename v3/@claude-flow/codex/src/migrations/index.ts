@@ -16,7 +16,7 @@ import type {
   ApprovalPolicy,
   SandboxMode,
 } from '../types.js';
-import { getRufloMcpServerConfig, renderMcpServerToml } from '../mcp-config.js';
+import { getSwarmloMcpServerConfig, renderMcpServerToml } from '../mcp-config.js';
 
 /**
  * Parsed CLAUDE.md structure
@@ -758,9 +758,9 @@ export function convertSettingsToToml(
   // MCP servers
   if (settings.mcpServers && typeof settings.mcpServers === 'object') {
     for (const [name, config] of Object.entries(settings.mcpServers as Record<string, unknown>)) {
-      // Claude Flow/Ruflo aliases are replaced with the dedicated MCP binary
+      // Claude Flow/Swarmlo aliases are replaced with the dedicated MCP binary
       // below. This avoids preserving the recursive `mcp start` CLI path.
-      if (name === 'claude-flow' || name === 'ruflo') {
+      if (name === 'claude-flow' || name === 'swarmlo') {
         continue;
       }
       const mcpConfig = config as { command?: string; args?: string[]; env?: Record<string, string> };
@@ -785,9 +785,9 @@ export function convertSettingsToToml(
     }
   }
 
-  // Ruflo is additive for every migrated installation. Unknown/custom MCP
+  // Swarmlo is additive for every migrated installation. Unknown/custom MCP
   // entries above are preserved.
-  lines.push(...renderMcpServerToml(getRufloMcpServerConfig(platform)));
+  lines.push(...renderMcpServerToml(getSwarmloMcpServerConfig(platform)));
   lines.push('');
 
   // Additive compatibility defaults. Enforcement and unattended fanout are
@@ -864,7 +864,7 @@ export function generateConfigTomlFromParsed(parsed: ParsedClaudeMd): string {
   // MCP servers
   if (parsed.mcpServers.length > 0) {
     for (const server of parsed.mcpServers) {
-      if (server.name === 'claude-flow' || server.name === 'ruflo') continue;
+      if (server.name === 'claude-flow' || server.name === 'swarmlo') continue;
       lines.push(`[mcp_servers.${server.name.replace(/-/g, '_')}]`);
       lines.push(`command = "${server.command}"`);
       if (server.args && server.args.length > 0) {
@@ -875,7 +875,7 @@ export function generateConfigTomlFromParsed(parsed: ParsedClaudeMd): string {
       lines.push('');
     }
   }
-  lines.push(...renderMcpServerToml(getRufloMcpServerConfig()));
+  lines.push(...renderMcpServerToml(getSwarmloMcpServerConfig()));
   lines.push('');
 
   lines.push('[policy]');

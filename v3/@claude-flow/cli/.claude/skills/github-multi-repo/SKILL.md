@@ -851,8 +851,8 @@ npx @claude-flow/cli@latest skill run github-multi-repo cross-team \
 
 ## Support and Resources
 
-- Documentation: https://github.com/ruvnet/claude-flow
-- Issues: https://github.com/ruvnet/claude-flow/issues
+- Documentation: https://github.com/z451047442-debug/swarmlo
+- Issues: https://github.com/z451047442-debug/swarmlo/issues
 - Examples: `.claude/examples/github-multi-repo/`
 
 ---

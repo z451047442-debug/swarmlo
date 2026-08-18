@@ -41,7 +41,7 @@ export function generateSettings(options: InitOptions): object {
     ],
   };
 
-  // #1670 — RuFlo attribution (Co-Authored-By trailer + PR footer) is now
+  // #1670 — Swarmlo attribution (Co-Authored-By trailer + PR footer) is now
   // OPT-IN. Default behavior no longer injects a third-party Co-Authored-By
   // line into the user's commits — that pattern silently inflated GitHub
   // contributor graphs and was hard to undo without rewriting history. Pass
@@ -50,17 +50,17 @@ export function generateSettings(options: InitOptions): object {
   // #2078 — when the user DOES opt in, write a no-reply bot email so GitHub
   // treats this as a tool, not a personal contribution. Personal emails get
   // added to user repos' contributor graphs even when the trailer is opt-in.
-  // `ruflo-bot@users.noreply.github.com` is GitHub's no-reply convention and
+  // `swarmlo-bot@users.noreply.github.com` is GitHub's no-reply convention and
   // is excluded from contributor graphs / mapped to a tool identity.
   if (options.attribution === true) {
     settings.attribution = {
-      commit: 'Co-Authored-By: ruflo-bot <ruflo-bot@users.noreply.github.com>',
-      pr: '🤖 Generated with [RuFlo](https://github.com/ruvnet/ruflo)',
+      commit: 'Co-Authored-By: swarmlo-bot <swarmlo-bot@users.noreply.github.com>',
+      pr: '🤖 Generated with [Swarmlo](https://github.com/z451047442-debug/swarmlo)',
     };
   }
 
   // Note: Claude Code expects 'model' to be a string, not an object
-  // Additional ruflo-specific model preferences live in claudeFlow.modelPreferences below
+  // Additional swarmlo-specific model preferences live in claudeFlow.modelPreferences below
   settings.model = 'claude-sonnet-5';
 
   // Add Agent Teams configuration (experimental feature)
@@ -175,7 +175,7 @@ const IS_WINDOWS = process.platform === 'win32';
 
 /**
  * Build a hook command that resolves to the right helpers dir on every
- * install layout. `ruflo init` can land helpers either project-locally
+ * install layout. `swarmlo init` can land helpers either project-locally
  * (`<project>/.claude/helpers/…`, when run from a project root) or globally
  * (`$HOME/.claude/helpers/…`, when settings.json gets merged into the
  * user-level Claude Code config). The earlier `${CLAUDE_PROJECT_DIR:-.}`
@@ -195,7 +195,7 @@ function hookCmd(script: string, subcommand: string): string {
     return `cmd /c "IF EXIST \"%CLAUDE_PROJECT_DIR%\\${script.replace(/\//g, '\\')}\" (node \"%CLAUDE_PROJECT_DIR%\\${script.replace(/\//g, '\\')}\" ${subcommand}) ELSE (node \"%USERPROFILE%\\${script.replace(/\//g, '\\')}\" ${subcommand})"`;
   }
   // POSIX sh: prefer project-local helpers, fall back to $HOME/.claude/.
-  // The fallback handles `ruflo init`'s global-install path where helpers
+  // The fallback handles `swarmlo init`'s global-install path where helpers
   // live at `$HOME/.claude/helpers/` but Claude Code still sets
   // `CLAUDE_PROJECT_DIR` to the *project* root (which has no helpers).
   // eslint-disable-next-line no-template-curly-in-string
@@ -224,7 +224,7 @@ function generateStatusLineConfig(_options: InitOptions): object {
   // Valid fields: type, command, padding (optional).
   // The script runs after each assistant message (debounced 300ms).
   //
-  // ruflo#1948 + #1973: the previous `sh -c 'D="${CLAUDE_PROJECT_DIR:-.}"; …'`
+  // swarmlo#1948 + #1973: the previous `sh -c 'D="${CLAUDE_PROJECT_DIR:-.}"; …'`
   // form requires a POSIX shell on PATH. On native Windows (no
   // Git-Bash / WSL), `sh` either isn't found or its quoting gets
   // mangled, producing weird artifacts like files named `0)` or

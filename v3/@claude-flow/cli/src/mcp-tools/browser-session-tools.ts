@@ -1,10 +1,10 @@
 /**
- * Browser Session Lifecycle MCP Tools (ADR-0001 ruflo-browser §7).
+ * Browser Session Lifecycle MCP Tools (ADR-0001 swarmlo-browser §7).
  *
  * Five lifecycle tools that wrap the 23 raw `browser_*` interaction tools
  * with RVF cognitive containers, ruvector trajectory recording, AgentDB
  * indexing, and AIDefence gates. Implements the contract from
- * `plugins/ruflo-browser/docs/adrs/0001-browser-skills-architecture.md`.
+ * `plugins/swarmlo-browser/docs/adrs/0001-browser-skills-architecture.md`.
  *
  * Design notes:
  *   - These tools orchestrate at the *primitive* level — they shell out to
@@ -30,7 +30,7 @@ import { validateIdentifier, validateText } from './validate-input.js';
 // against ruvector@0.2.27 --help: `rvf create/compact/status/derive/segments`
 // and `hooks trajectory-begin/step/end` all exist with the flags used below.
 const RUVECTOR_PIN = 'ruvector@0.2.27';
-const RVF_DIR_DEFAULT = '.ruflo/browser-sessions';
+const RVF_DIR_DEFAULT = '.swarmlo/browser-sessions';
 
 interface ShellResult {
   success: boolean;
@@ -152,7 +152,7 @@ export const browserSessionTools: MCPTool[] = [
         url: { type: 'string', description: 'Target URL to open' },
         task: { type: 'string', description: 'Human-readable task description (recorded in trajectory)' },
         session: { type: 'string', description: 'Optional explicit session id; otherwise auto-generated' },
-        rvf_dir: { type: 'string', description: 'Override the default .ruflo/browser-sessions directory' },
+        rvf_dir: { type: 'string', description: 'Override the default .swarmlo/browser-sessions directory' },
       },
       required: ['url', 'task'],
     },

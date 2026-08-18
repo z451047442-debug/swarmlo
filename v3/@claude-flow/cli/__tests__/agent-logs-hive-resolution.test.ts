@@ -1,7 +1,7 @@
 /**
- * Regression guard for ruvnet/ruflo#1916.
+ * Regression guard for z451047442-debug/swarmlo#1916.
  *
- *  (a) `agent_logs` MCP tool must be registered — the `ruflo agent logs <id>`
+ *  (a) `agent_logs` MCP tool must be registered — the `swarmlo agent logs <id>`
  *      CLI subcommand called `callMCPTool('agent_logs', …)` against a tool
  *      that didn't exist → `MCP tool not found: agent_logs`.
  *  (b) `agent_status` / `agent_list` / `agent_logs` must resolve hive-mind-
@@ -27,7 +27,7 @@ describe('#1916 — agent_logs registered + hive-worker resolution', () => {
   let prevCwd: string | undefined;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'ruflo-1916-'));
+    dir = mkdtempSync(join(tmpdir(), 'swarmlo-1916-'));
     prevCwd = process.env.CLAUDE_FLOW_CWD;
     process.env.CLAUDE_FLOW_CWD = dir;
     // hive-mind_spawn writes here:

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // tune-distill.mjs — ADR-174 Milestone 4 self-optimization harness
-// ("ruflo tuning ruflo"). Grid-searches the memory-distillation config
+// ("swarmlo tuning swarmlo"). Grid-searches the memory-distillation config
 // (batchSize x dedupDistance x promoteThreshold) and prints the grid table +
 // winner + held-out score.
 //

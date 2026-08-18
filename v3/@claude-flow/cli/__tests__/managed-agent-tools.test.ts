@@ -1,6 +1,6 @@
 /**
  * Guard for ADR-115 — the managed_agent_* MCP tools (Claude Managed Agents
- * cloud runtime, in the `ruflo-agent` plugin). No-network: every handler must
+ * cloud runtime, in the `swarmlo-agent` plugin). No-network: every handler must
  * short-circuit with a structured "needs ANTHROPIC_API_KEY → use wasm_agent_*"
  * error when no key is set, so the CLI/MCP server stays up offline.
  */

@@ -55,7 +55,7 @@ export const signedTrajectoryTools: MCPTool[] = [
           additionalProperties: { type: 'string' },
         },
         outputPath: { type: 'string', description: 'If set, write the signed envelope to this path' },
-        privateKeyPem: { type: 'string', description: 'Optional Ed25519 PEM private key (else env RUFLO_BROWSER_WITNESS_KEY or ephemeral)' },
+        privateKeyPem: { type: 'string', description: 'Optional Ed25519 PEM private key (else env SWARMLO_BROWSER_WITNESS_KEY or ephemeral)' },
         parentTrajectoryId: { type: 'string', description: 'If this is a replay-delta, the parent trajectory ID' },
       },
       required: ['trajectory'],
@@ -191,7 +191,7 @@ export const signedTrajectoryTools: MCPTool[] = [
   {
     name: 'browser/generate-witness-key',
     description:
-      'Generate a fresh Ed25519 witness keypair for signing trajectories. Returns publicKeyHex + PEM-encoded private key. Store the private key securely (e.g. RUFLO_BROWSER_WITNESS_KEY env var).',
+      'Generate a fresh Ed25519 witness keypair for signing trajectories. Returns publicKeyHex + PEM-encoded private key. Store the private key securely (e.g. SWARMLO_BROWSER_WITNESS_KEY env var).',
     category: 'browser-trajectory',
     inputSchema: {
       type: 'object',
@@ -206,7 +206,7 @@ export const signedTrajectoryTools: MCPTool[] = [
         publicKeyHex: key.publicKeyHex,
         privateKeyPem,
         publicKeyPem,
-        envVarHint: 'set RUFLO_BROWSER_WITNESS_KEY to the privateKeyPem value',
+        envVarHint: 'set SWARMLO_BROWSER_WITNESS_KEY to the privateKeyPem value',
       };
     },
   },

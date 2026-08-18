@@ -39,7 +39,7 @@
  *   node scripts/benchmark-intelligence.mjs --queries 50 --dims 384
  *   node scripts/benchmark-intelligence.mjs --json-only
  *
- * Created for the ruflo intelligence stack. Co-Authored-By: RuFlo <ruv@ruv.net>
+ * Created for the swarmlo intelligence stack. Co-Authored-By: Swarmlo <ruv@ruv.net>
  */
 
 import { fileURLToPath } from 'node:url';

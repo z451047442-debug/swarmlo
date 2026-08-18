@@ -93,7 +93,7 @@ export function isValidMessage(msg: unknown, now: Date = new Date()): msg is Fun
   // Disclosure messages MUST carry the exact ADR-301 manage-instruction tail
   // — losing that on a truncated/malformed remote message is an invariant
   // violation, not a cosmetic issue. Never repaired; dropped instead.
-  if (m.class === 'disclosure' && !m.text.includes(' · manage: ruflo settings')) return false;
+  if (m.class === 'disclosure' && !m.text.includes(' · manage: swarmlo settings')) return false;
   if (m.url !== undefined) {
     if (typeof m.url !== 'string' || !isAllowedUrl(m.url)) return false;
   }
@@ -126,69 +126,69 @@ export const MESSAGES: FunnelMessage[] = [
     schemaVersion: 1,
     id: 'local.disclosure.v1',
     class: 'disclosure',
-    text: 'Ruflo shows occasional tips and sponsor notes here · manage: ruflo settings',
+    text: 'Swarmlo shows occasional tips and sponsor notes here · manage: swarmlo settings',
   },
   {
     schemaVersion: 1,
     id: 'local.edu.status-watch',
     class: 'educational',
-    text: '📊 ruflo status watch — real-time system + swarm health dashboard',
+    text: '📊 swarmlo status watch — real-time system + swarm health dashboard',
     url: 'https://cognitum.one/docs/statusline',
   },
   {
     schemaVersion: 1,
     id: 'local.edu.memory-search',
     class: 'educational',
-    text: '🧠 ruflo memory search — semantic search over your project decisions',
+    text: '🧠 swarmlo memory search — semantic search over your project decisions',
     url: 'https://cognitum.one/docs/memory',
   },
   {
     schemaVersion: 1,
     id: 'local.edu.swarm-init',
     class: 'educational',
-    text: '🐝 ruflo swarm init — hierarchical anti-drift multi-agent coordination',
+    text: '🐝 swarmlo swarm init — hierarchical anti-drift multi-agent coordination',
     url: 'https://cognitum.one/docs/swarm',
   },
   {
     schemaVersion: 1,
     id: 'local.edu.security-scan',
     class: 'educational',
-    text: '🔒 ruflo security scan --depth deep — audits dependencies and config',
+    text: '🔒 swarmlo security scan --depth deep — audits dependencies and config',
     url: 'https://cognitum.one/docs/security',
   },
   {
     schemaVersion: 1,
     id: 'local.edu.doctor',
     class: 'educational',
-    text: '🩺 ruflo doctor --fix — diagnose and auto-repair install issues',
+    text: '🩺 swarmlo doctor --fix — diagnose and auto-repair install issues',
     url: 'https://cognitum.one/docs/doctor',
   },
   {
     schemaVersion: 1,
     id: 'local.edu.hooks-route',
     class: 'educational',
-    text: '🪝 ruflo hooks route — 3-tier model routing cuts token cost 30–75%',
+    text: '🪝 swarmlo hooks route — 3-tier model routing cuts token cost 30–75%',
     url: 'https://cognitum.one/docs/hooks',
   },
   {
     schemaVersion: 1,
     id: 'local.edu.adr-index',
     class: 'educational',
-    text: '📚 ruflo adr index — every architecture decision indexed and searchable',
-    url: 'https://github.com/ruvnet/ruflo/tree/main/docs/adr',
+    text: '📚 swarmlo adr index — every architecture decision indexed and searchable',
+    url: 'https://github.com/z451047442-debug/swarmlo/tree/main/docs/adr',
   },
   {
     schemaVersion: 1,
     id: 'local.edu.agent-spawn',
     class: 'educational',
-    text: '⚡ ruflo agent spawn -t coder — background agents with anti-drift topology',
+    text: '⚡ swarmlo agent spawn -t coder — background agents with anti-drift topology',
     url: 'https://cognitum.one/docs/agents',
   },
   {
     schemaVersion: 1,
     id: 'local.promo.cognitum',
     class: 'promotional',
-    text: '✨ Cognitum • sponsored capacity for community jobs · manage: ruflo settings',
+    text: '✨ Cognitum • sponsored capacity for community jobs · manage: swarmlo settings',
     url: 'https://cognitum.one',
   },
 ];

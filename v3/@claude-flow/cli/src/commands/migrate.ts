@@ -23,18 +23,18 @@ const MIGRATION_TARGETS = [
 
 // ADR-128 Phase 2 deleted these 9 forked agents from the init template,
 // making each plugin canonical — but ADR-128's own Consequences section
-// promised "`ruflo migrate` should detect removed agents and print install
+// promised "`swarmlo migrate` should detect removed agents and print install
 // suggestions," which never shipped until ADR-382 Part B (issue #2971).
 const REMOVED_AGENTS: RemovedAgentMapping[] = [
-  { basename: 'coder.md', plugin: 'ruflo-core' },
-  { basename: 'researcher.md', plugin: 'ruflo-core' },
-  { basename: 'reviewer.md', plugin: 'ruflo-core' },
-  { basename: 'tester.md', plugin: 'ruflo-testgen' },
-  { basename: 'memory-specialist.md', plugin: 'ruflo-rag-memory' },
-  { basename: 'security-auditor.md', plugin: 'ruflo-security-audit' },
-  { basename: 'sparc-orchestrator.md', plugin: 'ruflo-sparc' },
-  { basename: 'goal-planner.md', plugin: 'ruflo-goals' },
-  { basename: 'adr-architect.md', plugin: 'ruflo-adr' },
+  { basename: 'coder.md', plugin: 'swarmlo-core' },
+  { basename: 'researcher.md', plugin: 'swarmlo-core' },
+  { basename: 'reviewer.md', plugin: 'swarmlo-core' },
+  { basename: 'tester.md', plugin: 'swarmlo-testgen' },
+  { basename: 'memory-specialist.md', plugin: 'swarmlo-rag-memory' },
+  { basename: 'security-auditor.md', plugin: 'swarmlo-security-audit' },
+  { basename: 'sparc-orchestrator.md', plugin: 'swarmlo-sparc' },
+  { basename: 'goal-planner.md', plugin: 'swarmlo-goals' },
+  { basename: 'adr-architect.md', plugin: 'swarmlo-adr' },
 ];
 
 // Status command
@@ -190,7 +190,7 @@ const statusCommand: Command = {
         `${removedAgentGaps.length} agent(s) removed by ADR-128 are missing from .claude/agents/ and not covered by an installed plugin.`
       );
       output.printInfo(
-        'Run "ruflo migrate fix --agents" to restore them from their canonical plugin content, or install the owning plugin.'
+        'Run "swarmlo migrate fix --agents" to restore them from their canonical plugin content, or install the owning plugin.'
       );
     }
 
@@ -823,7 +823,7 @@ const fixCommand: Command = {
     if (failed.length > 0) {
       output.printWarning(`${failed.length} agent(s) could not be restored — install the owning plugin instead (see table).`);
     } else if (!dryRun) {
-      output.printSuccess(`${results.filter(r => r.status === 'restored').length} agent(s) restored. Re-run "ruflo migrate status" to verify.`);
+      output.printSuccess(`${results.filter(r => r.status === 'restored').length} agent(s) restored. Re-run "swarmlo migrate status" to verify.`);
     }
 
     return { success: failed.length === 0, data: { dryRun, results } };

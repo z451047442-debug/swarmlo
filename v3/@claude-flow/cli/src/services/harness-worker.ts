@@ -3,7 +3,7 @@
  *
  * Runs runHarnessLoop() on the daemon's schedule — but strictly bounded, given
  * the runaway-resource posture:
- *   - OPT-IN: no-op unless RUFLO_HARNESS_LOOP is truthy. The self-optimizing
+ *   - OPT-IN: no-op unless SWARMLO_HARNESS_LOOP is truthy. The self-optimizing
  *     loop never runs autonomously without an explicit opt-in.
  *   - $0: with no optimizer/verifier/canary wired (the default), runHarnessLoop
  *     qualifies + benchmarks but promotes nothing (fail-closed). No LLM, no
@@ -38,7 +38,7 @@ export interface HarnessWorkerResult {
 }
 
 export function harnessLoopOptedIn(): boolean {
-  return /^(1|true|yes|on)$/i.test(process.env.RUFLO_HARNESS_LOOP ?? '');
+  return /^(1|true|yes|on)$/i.test(process.env.SWARMLO_HARNESS_LOOP ?? '');
 }
 
 /**
@@ -51,7 +51,7 @@ export async function runHarnessLoopWorker(
 ): Promise<HarnessWorkerResult> {
   try {
     const optedIn = opts.optInOverride ?? harnessLoopOptedIn();
-    if (!optedIn) return { ran: false, reason: 'opt-in required (RUFLO_HARNESS_LOOP=1)' };
+    if (!optedIn) return { ran: false, reason: 'opt-in required (SWARMLO_HARNESS_LOOP=1)' };
 
     const input = (opts.loadInput ?? defaultLoadInput)(projectRoot);
     if (!input) return { ran: false, reason: 'no harness input (corpus/optimizer) configured' };

@@ -71,7 +71,7 @@ function writeJsonAtomic(file: string, value: unknown): void {
 }
 
 function trustPaths(projectRoot: string): { key: string; anchor: string } {
-  const trustRoot = join(userInfo().homedir, '.config', 'ruflo', 'policy-trust');
+  const trustRoot = join(userInfo().homedir, '.config', 'swarmlo', 'policy-trust');
   const projectId = createHash('sha256').update(realpathSync(projectRoot)).digest('hex');
   const dir = join(trustRoot, projectId);
   return { key: join(dir, 'anchor.key'), anchor: join(dir, 'state.anchor.json') };
@@ -191,8 +191,8 @@ export async function autoMigratePolicyStateIfNeeded(projectRoot = process.cwd()
     }
     return { migrated: false, statePath: target.state, mode: loadPolicyState(projectRoot).mode };
   }
-  // Only upgrade existing Ruflo installations. A random directory should not
-  // acquire policy state merely because `ruflo --version` ran there.
+  // Only upgrade existing Swarmlo installations. A random directory should not
+  // acquire policy state merely because `swarmlo --version` ran there.
   if (!existsSync(join(resolve(projectRoot), '.claude-flow'))
     && !existsSync(join(resolve(projectRoot), '.swarm'))) return { migrated: false };
   mkdirSync(target.dir, { recursive: true, mode: 0o700 });
@@ -354,7 +354,7 @@ export async function authorizeMcpTool(
       type: attributes.actionType ?? 'mcp.tool.call',
       resource: toolName,
       tool: toolName,
-      server: typeof context.serverId === 'string' ? context.serverId : 'ruflo',
+      server: typeof context.serverId === 'string' ? context.serverId : 'swarmlo',
       namespace: typeof input.namespace === 'string' ? input.namespace : undefined,
       environment: typeof context.environment === 'string' ? context.environment : undefined,
       costUsd: attributes.costUsd,

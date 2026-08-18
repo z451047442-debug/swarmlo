@@ -1,7 +1,7 @@
 /**
  * Credit-exhaustion notifier — writes a marker file so the ADR-303 recovery
  * surface fires on the next appropriate command render, and keeps a short
- * user-visible notification in `~/.ruflo/credit-status.json`.
+ * user-visible notification in `~/.swarmlo/credit-status.json`.
  *
  * This is NOT the ADR-303 credit-error classifier — that lives in
  * `credit-errors.ts` and reads provider error codes to decide when a
@@ -11,10 +11,10 @@
  * warn the user asynchronously.
  *
  * State is cheap and durable:
- *   ~/.ruflo/credit-status.json = { exhausted: bool, since: ISO, cleared: ISO|null }
+ *   ~/.swarmlo/credit-status.json = { exhausted: bool, since: ISO, cleared: ISO|null }
  *
  * Cleared automatically when the user opens the enrollment / signup
- * surface, or explicitly via `ruflo funnel credit-clear`.
+ * surface, or explicitly via `swarmlo funnel credit-clear`.
  */
 
 import { readStateJson, writeStateJson } from './state.js';
@@ -54,7 +54,7 @@ export function markCreditExhausted(now: Date = new Date()): void {
 
 /**
  * Clear credit-exhaustion status. Called when the user completes signup or
- * runs `ruflo funnel credit-clear`. `cleared` is stamped so the previous
+ * runs `swarmlo funnel credit-clear`. `cleared` is stamped so the previous
  * `since` remains inspectable for one recovery cycle.
  */
 export function clearCreditStatus(now: Date = new Date()): void {
@@ -75,9 +75,9 @@ export function creditExhaustedNotice(now: Date = new Date()): string | null {
   if (!status.exhausted) return null;
   const since = status.since ? Date.parse(status.since) : NaN;
   if (Number.isNaN(since)) {
-    return 'Cognitum credits exhausted · run: ruflo funnel signup';
+    return 'Cognitum credits exhausted · run: swarmlo funnel signup';
   }
   const ageHours = Math.max(0, Math.round((now.getTime() - since) / (60 * 60 * 1000)));
   const when = ageHours < 1 ? 'just now' : ageHours < 24 ? `${ageHours}h ago` : `${Math.round(ageHours / 24)}d ago`;
-  return `Cognitum credits exhausted (${when}) · run: ruflo funnel signup`;
+  return `Cognitum credits exhausted (${when}) · run: swarmlo funnel signup`;
 }

@@ -2,7 +2,7 @@
 
 This checklist covers governance and safety gates for teams running Claude Code / Codex-style agent workflows through a shared gateway or proxy. It supersedes ad-hoc runbooks and is enforced by the before-merge CI gates listed below.
 
-Related: [#2058](https://github.com/ruvnet/ruflo/issues/2058)
+Related: [#2058](https://github.com/z451047442-debug/swarmlo/issues/2058)
 
 ---
 
@@ -16,13 +16,13 @@ Run these checks before every merge to main:
 | Type-check | `npx tsc --noEmit` | Any TypeScript error |
 | Unit tests | `npm test` | Fewer than 1999 passing |
 | Smoke tests | `node scripts/smoke-*.mjs` | Any exit code != 0 |
-| Witness manifest | `npx ruflo@latest verify` | Checksum mismatch |
+| Witness manifest | `npx swarmlo@latest verify` | Checksum mismatch |
 | Semver bump | `npm version <patch\|minor\|major>` | No version bump on API change |
 
 Every merge to main **must** record a new witness manifest entry. Generate it with:
 
 ```bash
-npx ruflo@latest sign --message "merge: <PR title>"
+npx swarmlo@latest sign --message "merge: <PR title>"
 ```
 
 ---
@@ -77,13 +77,13 @@ Rules:
 
 ## 4. Witness Manifest Entry Per Merge
 
-Each merge to main must include a signed witness manifest entry so `npx ruflo@latest verify` can confirm the installed dist matches the audited fix footprint.
+Each merge to main must include a signed witness manifest entry so `npx swarmlo@latest verify` can confirm the installed dist matches the audited fix footprint.
 
 ### Generating a manifest entry
 
 ```bash
 # Sign the current dist with a descriptive message
-npx ruflo@latest sign --message "merge: <PR-number> — <one-line description>"
+npx swarmlo@latest sign --message "merge: <PR-number> — <one-line description>"
 
 # Commit the updated manifest alongside code changes
 git add verification.md verification.md.json
@@ -93,8 +93,8 @@ git commit -m "chore: update witness manifest for <PR-number>"
 ### Verifying an installation
 
 ```bash
-# After npm install / npx ruflo@latest
-npx ruflo@latest verify
+# After npm install / npx swarmlo@latest
+npx swarmlo@latest verify
 # Expected output: "Verification passed — dist matches audited footprint"
 ```
 

@@ -453,7 +453,7 @@ export const sessionTools: MCPTool[] = [
     },
   },
   {
-    // #1916: `ruflo session current` referenced an unregistered
+    // #1916: `swarmlo session current` referenced an unregistered
     // `session_current` tool. Returns the most-recently-saved session.
     name: 'session_current',
     description: 'Return the most-recently-saved session (id, name, stats) — the de-facto "current" one. Use when native conversation memory is wrong because you need to know which durable session is active before exporting/restoring it. For in-session continuation only, no tool needed. Pair with session_export / session_restore.',
@@ -482,7 +482,7 @@ export const sessionTools: MCPTool[] = [
     },
   },
   {
-    // #1916: `ruflo session export <id> -o <file>` referenced an unregistered
+    // #1916: `swarmlo session export <id> -o <file>` referenced an unregistered
     // `session_export` tool. Writes the session JSON to a file (if given) and
     // returns the session payload.
     name: 'session_export',
@@ -513,7 +513,7 @@ export const sessionTools: MCPTool[] = [
     },
   },
   {
-    // #1916: `ruflo session import <file>` referenced an unregistered
+    // #1916: `swarmlo session import <file>` referenced an unregistered
     // `session_import` tool. Reads a session JSON and re-saves it locally.
     name: 'session_import',
     description: 'Import a session JSON file (produced by session_export) into the local session store and optionally activate it. Use when native Read is wrong because the file is a structured session record that must be re-registered (new id, stats recomputed) rather than just read. For reading the file, native Read is fine. Pair with session_export on the source.',

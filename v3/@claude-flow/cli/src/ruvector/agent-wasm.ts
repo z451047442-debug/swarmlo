@@ -149,7 +149,7 @@ export async function createWasmAgent(config: WasmAgentConfig = {}): Promise<Was
  *
  * The callback bridges the JsModelProvider JSON contract to
  * callAnthropicMessages, which already handles Anthropic / OpenRouter /
- * Ollama routing via RUFLO_PROVIDER + key-presence precedence (#2042).
+ * Ollama routing via SWARMLO_PROVIDER + key-presence precedence (#2042).
  *
  * Called once at agent-creation time; the provider stays attached for the
  * agent's lifetime.  No-op (returns false) when no provider keys are
@@ -162,7 +162,7 @@ async function attachJsModelProvider(agent: any, config: WasmAgentConfig): Promi
   const mod = await import('@ruvector/rvagent-wasm');
   const { callAnthropicMessages, resolveAnthropicModel } = await import('../mcp-tools/agent-execute-core.js');
   const model = resolveAnthropicModel(config.model);
-  const systemPrompt = config.instructions || 'You are a helpful coding assistant running in a Ruflo WASM agent sandbox.';
+  const systemPrompt = config.instructions || 'You are a helpful coding assistant running in a Swarmlo WASM agent sandbox.';
 
   const provider = new mod.JsModelProvider(async (messagesJson: string) => {
     const messages: Array<{ role: string; content: string }> = JSON.parse(messagesJson);
@@ -223,7 +223,7 @@ export async function promptWasmAgent(agentId: string, input: string): Promise<s
     // recovery.
     const { callAnthropicMessages, resolveAnthropicModel } = await import('../mcp-tools/agent-execute-core.js');
     const model = resolveAnthropicModel(entry.info.config.model);
-    const systemPrompt = entry.info.config.instructions || 'You are a helpful coding assistant running in a Ruflo WASM agent sandbox.';
+    const systemPrompt = entry.info.config.instructions || 'You are a helpful coding assistant running in a Swarmlo WASM agent sandbox.';
     const result = await callAnthropicMessages({ prompt: input, systemPrompt, model, maxTokens: 2048 });
     if (!result.success) {
       return `${wasmResult}\n[NOTE: bundled WASM agent has no LLM; provider fallback failed: ${result.error}]`;
@@ -440,7 +440,7 @@ export interface McpToolDescriptor {
  * Uses the high-level RVF builder API (addPrompt, addTool, addSkill, addMcpTools).
  *
  * ADR-129 P2: mcpTools parameter wires builder.addMcpTools() so that
- * composed agents can declare which of ruflo's 314 MCP tools they need.
+ * composed agents can declare which of swarmlo's 314 MCP tools they need.
  */
 export async function buildRvfContainer(opts: {
   prompts?: Array<{ name: string; system_prompt: string; version: string }>;

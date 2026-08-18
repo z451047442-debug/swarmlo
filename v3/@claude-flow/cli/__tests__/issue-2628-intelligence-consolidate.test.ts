@@ -37,7 +37,7 @@ function writeStore(root: string, entries: Entry[]): string {
 
 describe('#2628 session-end intelligence consolidation', () => {
   it('deduplicates identical content with fresh IDs and persists the compacted store', () => {
-    const root = mkdtempSync(join(tmpdir(), 'ruflo-2628-dedup-'));
+    const root = mkdtempSync(join(tmpdir(), 'swarmlo-2628-dedup-'));
     const unique = Array.from({ length: 10 }, (_, i) => ({
       content: `unique memory section ${i} with stable semantic content`,
       namespace: 'auto-memory',
@@ -65,7 +65,7 @@ describe('#2628 session-end intelligence consolidation', () => {
   });
 
   it('preserves temporal and similarity graph behavior for stores within the pair budget', () => {
-    const root = mkdtempSync(join(tmpdir(), 'ruflo-2628-small-'));
+    const root = mkdtempSync(join(tmpdir(), 'swarmlo-2628-small-'));
     const entries: Entry[] = [
       {
         id: 'a',
@@ -100,7 +100,7 @@ describe('#2628 session-end intelligence consolidation', () => {
   });
 
   it('bounds large unique stores while retaining their linear temporal graph', () => {
-    const root = mkdtempSync(join(tmpdir(), 'ruflo-2628-bound-'));
+    const root = mkdtempSync(join(tmpdir(), 'swarmlo-2628-bound-'));
     const entries: Entry[] = Array.from({ length: 600 }, (_, i) => ({
       id: `entry-${i}`,
       content: `distinct project fact number ${i} token-${i.toString(36)}`,

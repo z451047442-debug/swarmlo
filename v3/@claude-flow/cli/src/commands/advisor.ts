@@ -1,5 +1,5 @@
 /**
- * `ruflo advisor` — Fable co-pilot advisor tip in the statusline insight
+ * `swarmlo advisor` — Fable co-pilot advisor tip in the statusline insight
  * ticker (ADR-316).
  *
  * Client-side only — unlike `proxy.ts`'s sponsored-downtime/power-saver/
@@ -20,14 +20,14 @@ import { readAdvisorTip, ADVISOR_DEFAULT_BUDGET_USD } from '../funnel/advisor-ti
 const ADVISOR_DISCLOSURE = [
   'Enabling the co-pilot advisor tip.',
   '',
-  'At most once per day, ruflo will send a small STRUCTURAL snapshot of your',
+  'At most once per day, swarmlo will send a small STRUCTURAL snapshot of your',
   'session — security scan status, swarm/agent state, git uncommitted-file',
   'COUNT — never raw prompts, file contents, or commands — to a headless',
   'Fable model (via `claude -p`) and cache one short, actionable tip for the',
   'statusline insight ticker.',
   '',
   `This is a real, metered API call (~$${ADVISOR_DEFAULT_BUDGET_USD.toFixed(2)} budget cap per`,
-  'refresh, at most once/day). Disable anytime: ruflo advisor disable',
+  'refresh, at most once/day). Disable anytime: swarmlo advisor disable',
 ].join('\n');
 
 const enableSub: Command = {
@@ -44,14 +44,14 @@ const enableSub: Command = {
     output.writeln(ADVISOR_DISCLOSURE);
     output.writeln('');
     if (!ctx.flags.yes) {
-      output.writeln('Re-run with --yes to confirm: ruflo advisor enable --yes');
+      output.writeln('Re-run with --yes to confirm: swarmlo advisor enable --yes');
       return { success: true, data: { confirmed: false } };
     }
     recordConsent('advisor-tips', true, 'advisor-enable');
     recordFunnelEvent('advisor_tip_enabled', 'statusline', getInstalledCliVersion());
     output.printSuccess('Advisor tip enabled.');
     output.writeln('It refreshes at most once/day, in the background, on session-restore.');
-    output.writeln('Disable anytime: ruflo advisor disable');
+    output.writeln('Disable anytime: swarmlo advisor disable');
     return { success: true, data: { confirmed: true } };
   },
 };
@@ -89,9 +89,9 @@ export const advisorCommand: Command = {
   description: 'Fable co-pilot advisor tip in the statusline insight ticker (ADR-316)',
   subcommands: [enableSub, disableSub, statusSub],
   examples: [
-    { command: 'ruflo advisor enable --yes', description: 'Opt into the co-pilot advisor tip' },
-    { command: 'ruflo advisor status', description: 'Show consent state + current cached tip' },
-    { command: 'ruflo advisor disable', description: 'Revoke consent and stop generating tips' },
+    { command: 'swarmlo advisor enable --yes', description: 'Opt into the co-pilot advisor tip' },
+    { command: 'swarmlo advisor status', description: 'Show consent state + current cached tip' },
+    { command: 'swarmlo advisor disable', description: 'Revoke consent and stop generating tips' },
   ],
   action: statusSub.action,
 };

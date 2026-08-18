@@ -83,13 +83,13 @@ Each host now has cross-coherent staged configs in `/tmp/adr-111-stage/`.
 Before activating, inspect each staged file:
 
 ```bash
-cat /tmp/adr-111-stage/ruflo-fed.conf
-cat /tmp/adr-111-stage/ruflo-fed.nft     # linux only
-cat /tmp/adr-111-stage/ruflo-fed.pf      # macos only
+cat /tmp/adr-111-stage/swarmlo-fed.conf
+cat /tmp/adr-111-stage/swarmlo-fed.nft     # linux only
+cat /tmp/adr-111-stage/swarmlo-fed.pf      # macos only
 ```
 
 Checklist:
-- [ ] `ruflo-fed.conf` has exactly one `[Peer]` block (per peer expected)
+- [ ] `swarmlo-fed.conf` has exactly one `[Peer]` block (per peer expected)
 - [ ] The `[Peer]` block's `PublicKey` matches the OTHER host's emitted pubkey
 - [ ] `AllowedIPs` lists ONLY the peer's mesh IP — no broader CIDR
 - [ ] `ListenPort` is what you expect (default `51820`)
@@ -97,7 +97,7 @@ Checklist:
 - [ ] Default policy is `drop` (nftables) / not affecting main pf ruleset (pf anchor-scoped)
 - [ ] No mention of UNTRUSTED peers anywhere
 
-If anything looks off, **stop and re-stage** with corrected inputs — `ruflo-fed.conf` is what `wg-quick up` parses, and a misconfigured rule can drop ssh.
+If anything looks off, **stop and re-stage** with corrected inputs — `swarmlo-fed.conf` is what `wg-quick up` parses, and a misconfigured rule can drop ssh.
 
 ## Step 4 — Activate (per host)
 
@@ -105,16 +105,16 @@ After the checklist passes:
 
 ```bash
 # Install the wg-quick config
-sudo install -m 0600 /tmp/adr-111-stage/ruflo-fed.conf /etc/wireguard/ruflo-fed.conf
+sudo install -m 0600 /tmp/adr-111-stage/swarmlo-fed.conf /etc/wireguard/swarmlo-fed.conf
 
 # Load the firewall rules (atomic, scoped to the WG interface or pf anchor)
 # Linux:
-sudo nft -f /tmp/adr-111-stage/ruflo-fed.nft
+sudo nft -f /tmp/adr-111-stage/swarmlo-fed.nft
 # macOS:
-sudo pfctl -a ruflo-fed -f /tmp/adr-111-stage/ruflo-fed.pf
+sudo pfctl -a swarmlo-fed -f /tmp/adr-111-stage/swarmlo-fed.pf
 
 # Bring up the WG interface
-sudo wg-quick up ruflo-fed
+sudo wg-quick up swarmlo-fed
 ```
 
 ## Step 5 — Verify reachability
@@ -122,7 +122,7 @@ sudo wg-quick up ruflo-fed
 On host A:
 
 ```bash
-sudo wg show ruflo-fed
+sudo wg show swarmlo-fed
 # Expected: [Peer] section shows ruvultra's pubkey, last handshake timestamp,
 # transfer counters update after activity.
 
@@ -132,7 +132,7 @@ ping 10.50.242.138       # ruvultra's mesh IP — should respond
 On host B (mirror):
 
 ```bash
-sudo wg show ruflo-fed
+sudo wg show swarmlo-fed
 ping 10.50.119.95
 ```
 
@@ -142,11 +142,11 @@ Trigger an operator-initiated evict on host A and confirm L3 isolation propagate
 
 ```bash
 # On host A, evict ruvultra at the federation layer
-ruflo federation evict --node-id ruvultra
+swarmlo federation evict --node-id ruvultra
 # Or via MCP: federation_evict
 
 # Confirm WG layer responded
-sudo wg show ruflo-fed     # ruvultra peer's [Peer] line should be gone
+sudo wg show swarmlo-fed     # ruvultra peer's [Peer] line should be gone
 
 # From host A:
 ping 10.50.242.138         # NOW unreachable — L3 followed L7 trust eviction
@@ -155,10 +155,10 @@ ping 10.50.242.138         # NOW unreachable — L3 followed L7 trust eviction
 To restore:
 
 ```bash
-ruflo federation reactivate --node-id ruvultra
-# A wg set ruflo-fed peer ... allowed-ips ... command is emitted via the
+swarmlo federation reactivate --node-id ruvultra
+# A wg set swarmlo-fed peer ... allowed-ips ... command is emitted via the
 # wgCommandSink the operator wired during plugin init.
-sudo wg show ruflo-fed     # ruvultra back in [Peer] list
+sudo wg show swarmlo-fed     # ruvultra back in [Peer] list
 ping 10.50.242.138         # responsive again
 ```
 
@@ -168,7 +168,7 @@ If `WgWitnessService` is wired into your federation plugin lifecycle (Phase 5 in
 
 ```bash
 cat .claude-flow/federation/wg-changes.log   # append-only chain
-node plugins/ruflo-core/scripts/witness/verify.mjs \
+node plugins/swarmlo-core/scripts/witness/verify.mjs \
   --manifest .claude-flow/federation/wg-witness.md.json
 # Expected: Ed25519 signature valid, chain link verified end-to-end
 ```
@@ -176,16 +176,16 @@ node plugins/ruflo-core/scripts/witness/verify.mjs \
 ## Rollback
 
 ```bash
-sudo wg-quick down ruflo-fed
+sudo wg-quick down swarmlo-fed
 
 # Linux:
-sudo nft delete table inet ruflo_fed
+sudo nft delete table inet swarmlo_fed
 
 # macOS:
-sudo pfctl -a ruflo-fed -F all
+sudo pfctl -a swarmlo-fed -F all
 ```
 
-The configs in `/tmp/adr-111-stage/` and `/etc/wireguard/ruflo-fed.conf` stay on disk — re-run `wg-quick up ruflo-fed` to reactivate. To fully tear down also delete `/etc/wireguard/ruflo-fed.conf` (private key inside).
+The configs in `/tmp/adr-111-stage/` and `/etc/wireguard/swarmlo-fed.conf` stay on disk — re-run `wg-quick up swarmlo-fed` to reactivate. To fully tear down also delete `/etc/wireguard/swarmlo-fed.conf` (private key inside).
 
 ## Known limitations (v1)
 

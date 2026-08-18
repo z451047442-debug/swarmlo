@@ -74,7 +74,7 @@ describe('parseWorkerSpecs', () => {
 
 describe('loadWorkerConfig', () => {
   it('loads a relative JSON config without import assertions (#2766)', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'ruflo-dual-config-'));
+    const root = mkdtempSync(join(tmpdir(), 'swarmlo-dual-config-'));
     writeFileSync(join(root, 'workers.json'), JSON.stringify({
       taskContext: 'JSON collaboration',
       workers: [{ id: 'reader', platform: 'codex', role: 'reader', prompt: 'inspect' }],
@@ -86,7 +86,7 @@ describe('loadWorkerConfig', () => {
   });
 
   it('rejects configs without a workers array', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'ruflo-dual-config-invalid-'));
+    const root = mkdtempSync(join(tmpdir(), 'swarmlo-dual-config-invalid-'));
     writeFileSync(join(root, 'workers.json'), '{}');
     await expect(loadWorkerConfig('workers.json', root)).rejects.toThrow('workers array');
   });
@@ -140,7 +140,7 @@ describe('dual command wiring', () => {
 
 describe('DualModeOrchestrator', () => {
   it('loads enforceable swarm automation ceilings from config.toml', () => {
-    const root = mkdtempSync(join(tmpdir(), 'ruflo-codex-config-'));
+    const root = mkdtempSync(join(tmpdir(), 'swarmlo-codex-config-'));
     mkdirSync(join(root, '.agents'));
     writeFileSync(join(root, '.agents', 'config.toml'), [
       '[swarm.automation]',
@@ -163,7 +163,7 @@ describe('DualModeOrchestrator', () => {
   });
 
   it('loads existing Codex project configuration from .codex', () => {
-    const root = mkdtempSync(join(tmpdir(), 'ruflo-codex-config-'));
+    const root = mkdtempSync(join(tmpdir(), 'swarmlo-codex-config-'));
     mkdirSync(join(root, '.codex'));
     writeFileSync(join(root, '.codex', 'config.toml'), [
       '[swarm.automation]',
@@ -203,7 +203,7 @@ describe('DualModeOrchestrator', () => {
   });
 
   it('pins bootstrap and workers to one shared memory database (#2766)', () => {
-    const root = mkdtempSync(join(tmpdir(), 'ruflo-dual-memory-'));
+    const root = mkdtempSync(join(tmpdir(), 'swarmlo-dual-memory-'));
     const memoryDbPath = join(root, 'state', 'shared.db');
     const orchestrator = new DualModeOrchestrator({
       projectPath: root,
@@ -226,7 +226,7 @@ describe('DualModeOrchestrator', () => {
 
   it('preserves an existing CLAUDE_FLOW_DB_PATH by default', () => {
     const previous = process.env.CLAUDE_FLOW_DB_PATH;
-    const root = mkdtempSync(join(tmpdir(), 'ruflo-dual-memory-env-'));
+    const root = mkdtempSync(join(tmpdir(), 'swarmlo-dual-memory-env-'));
     const configured = join(root, 'existing.db');
     process.env.CLAUDE_FLOW_DB_PATH = configured;
     try {

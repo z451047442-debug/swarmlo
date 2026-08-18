@@ -4,21 +4,21 @@
  *
  * Run at publish time WHENEVER a critical helper changes. NEVER commit the
  * private key. The public half is baked into src/init/helper-signing.ts
- * (RUFLO_HELPERS_PUBKEY).
+ * (SWARMLO_HELPERS_PUBKEY).
  *
  * Private-key resolution (first that is set wins):
  *   1. GCP Secret Manager (PREFERRED for CI/publish):
- *        RUFLO_HELPERS_SIGNING_SECRET=<secret-name>   (e.g. ruflo-helpers-signing-key)
- *        RUFLO_HELPERS_SIGNING_PROJECT=<gcp-project>  (optional; defaults to the
+ *        SWARMLO_HELPERS_SIGNING_SECRET=<secret-name>   (e.g. swarmlo-helpers-signing-key)
+ *        SWARMLO_HELPERS_SIGNING_PROJECT=<gcp-project>  (optional; defaults to the
  *                                                       active gcloud project)
  *      Fetched via `gcloud secrets versions access latest`.
- *   2. RUFLO_HELPERS_SIGNING_KEY=<pem-file-path>       (local / air-gapped)
- *   3. ~/.ruflo/helpers-signing.key                    (dev default)
+ *   2. SWARMLO_HELPERS_SIGNING_KEY=<pem-file-path>       (local / air-gapped)
+ *   3. ~/.swarmlo/helpers-signing.key                    (dev default)
  *
  * Stdin fallback (the PEM never appears in shell output or argv):
  *   gcloud secrets versions access latest --secret=... | node scripts/sign-helpers.mjs --stdin-key
  *
- * Usage:  RUFLO_HELPERS_SIGNING_SECRET=ruflo-helpers-signing-key node scripts/sign-helpers.mjs
+ * Usage:  SWARMLO_HELPERS_SIGNING_SECRET=swarmlo-helpers-signing-key node scripts/sign-helpers.mjs
  */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { createHash, createPrivateKey, sign as edSign } from 'node:crypto';
@@ -38,7 +38,7 @@ function loadPrivateKey() {
     if (process.stdin.isTTY) {
       console.error(
         '[sign-helpers] --stdin-key requires piped stdin; refusing interactive key entry. ' +
-        'Pipe Secret Manager output directly or use RUFLO_HELPERS_SIGNING_KEY=<pem-file-path>.',
+        'Pipe Secret Manager output directly or use SWARMLO_HELPERS_SIGNING_KEY=<pem-file-path>.',
       );
       process.exit(1);
     }
@@ -50,10 +50,10 @@ function loadPrivateKey() {
     return key;
   }
 
-  const secret = process.env.RUFLO_HELPERS_SIGNING_SECRET;
+  const secret = process.env.SWARMLO_HELPERS_SIGNING_SECRET;
   if (secret) {
     const args = ['secrets', 'versions', 'access', 'latest', '--secret', secret];
-    const project = process.env.RUFLO_HELPERS_SIGNING_PROJECT;
+    const project = process.env.SWARMLO_HELPERS_SIGNING_PROJECT;
     if (project) args.push('--project', project);
     try {
       const gcloudBin = process.platform === 'win32' ? 'gcloud.cmd' : 'gcloud';
@@ -68,11 +68,11 @@ function loadPrivateKey() {
       process.exit(1);
     }
   }
-  const keyPath = process.env.RUFLO_HELPERS_SIGNING_KEY || join(homedir(), '.ruflo', 'helpers-signing.key');
+  const keyPath = process.env.SWARMLO_HELPERS_SIGNING_KEY || join(homedir(), '.swarmlo', 'helpers-signing.key');
   if (!existsSync(keyPath)) {
     console.error(
-      `[sign-helpers] no signing key. Set RUFLO_HELPERS_SIGNING_SECRET (GCP) ` +
-      `or RUFLO_HELPERS_SIGNING_KEY (PEM path); tried ${keyPath}.`,
+      `[sign-helpers] no signing key. Set SWARMLO_HELPERS_SIGNING_SECRET (GCP) ` +
+      `or SWARMLO_HELPERS_SIGNING_KEY (PEM path); tried ${keyPath}.`,
     );
     process.exit(1);
   }

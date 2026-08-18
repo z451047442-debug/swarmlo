@@ -22,8 +22,8 @@ import { performance } from 'node:perf_hooks';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const CLI_ROOT = resolve(SCRIPT_DIR, '..');
-const RUFLO_ROOT = resolve(SCRIPT_DIR, '../../../..');
-const RUNS_DIR = join(RUFLO_ROOT, 'docs', 'benchmarks', 'runs');
+const SWARMLO_ROOT = resolve(SCRIPT_DIR, '../../../..');
+const RUNS_DIR = join(SWARMLO_ROOT, 'docs', 'benchmarks', 'runs');
 
 const DATA_DIR = process.env.BEIR_DATA_DIR || '/tmp/beir-nfcorpus/nfcorpus';
 // BUG-FIX (ADR-087): CACHE_DIR was hardcoded to /tmp/beir-nfcorpus/bge-cache,
@@ -288,7 +288,7 @@ async function main() {
   console.log(`  Avg query latency: ${(queryMs / n).toFixed(0)}ms`);
 
   console.log(`\n=== vs published NFCorpus baselines (nDCG@10) ===`);
-  const ourLabel = `ruflo + ${BGE_MODEL.replace('Xenova/', '')}`;
+  const ourLabel = `swarmlo + ${BGE_MODEL.replace('Xenova/', '')}`;
   const ranking = [
     ...Object.entries(BASELINES_NDCG10).map(([name, score]) => ({ name, score, ours: false })),
     { name: ourLabel, score: ndcg10, ours: true },

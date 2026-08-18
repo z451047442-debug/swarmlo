@@ -1,15 +1,15 @@
 [workspace]
 resolver = "2"
 members = [
-  "v3/crates/ruflo-federation-peer",
-  "v3/crates/ruflo-agntcy",
+  "v3/crates/swarmlo-federation-peer",
+  "v3/crates/swarmlo-agntcy",
 ]
 exclude = [
   "v3/plugins/gastown-bridge",
 ]
 
-# ruflo is primarily TypeScript; this workspace manifest exists so the
-# repo-scorecard analyzer sees ruflo's Rust components (federation peer
+# swarmlo is primarily TypeScript; this workspace manifest exists so the
+# repo-scorecard analyzer sees swarmlo's Rust components (federation peer
 # binary, gastown-bridge plugin) without traversing deep subdirs.
 #
 # `v3/plugins/gastown-bridge` is deliberately in `exclude`, not `members`:

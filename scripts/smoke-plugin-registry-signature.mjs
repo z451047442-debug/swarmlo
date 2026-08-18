@@ -2,7 +2,7 @@
 /**
  * CWE-347 regression smoke — plugin registry Ed25519 verification.
  *
- * Reference: ruvnet/ruflo PR #1922 / aaronjmars's disclosure.
+ * Reference: z451047442-debug/swarmlo PR #1922 / aaronjmars's disclosure.
  *
  * The historical bug: `verifyRegistrySignature` in
  * v3/@claude-flow/cli/src/plugins/store/discovery.ts was a stub that

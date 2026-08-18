@@ -1,6 +1,6 @@
 # Security SOTA Report — 2026-07-06
 
-**TL;DR**: 2026 research proves that "safe" LLMs become 40–75% exploitable when deployed as agents with tool access — and Ruflo's current security module lacks Verifiable Memory Governance (VMG) and Representation Engineering (RepE) IPI detection, both now SOTA requirements for production agent deployments.
+**TL;DR**: 2026 research proves that "safe" LLMs become 40–75% exploitable when deployed as agents with tool access — and Swarmlo's current security module lacks Verifiable Memory Governance (VMG) and Representation Engineering (RepE) IPI detection, both now SOTA requirements for production agent deployments.
 
 ---
 
@@ -18,7 +18,7 @@
 
 ---
 
-## Ruflo Current Capability
+## Swarmlo Current Capability
 
 | Capability | Status | Gap |
 |-----------|--------|-----|
@@ -43,7 +43,7 @@
 | **AutoGen 1.0 GA** | Memory scoping controls | Docker/gVisor/Firecracker sandboxes | AutoJack vuln disclosed | Not implemented |
 | **CrewAI 0.95** | Memory backend abstraction (pluggable) | None dedicated | IMA attack 89% success (vuln) | Not implemented |
 | **OpenAI Agents SDK** | Session-scoped only | Explicit handoff model | None published | Handoff as trust boundary |
-| **Ruflo 3.6.10** | AgentDB hybrid (SQLite+HNSW) | `@claude-flow/security` | None | SendMessage (no signing) |
+| **Swarmlo 3.6.10** | AgentDB hybrid (SQLite+HNSW) | `@claude-flow/security` | None | SendMessage (no signing) |
 
 ---
 

@@ -7,13 +7,13 @@
 #   - lower-precedence source re-enabling a higher disable: 0
 #   - credit recovery on anything but COGNITUM_CREDIT_EXHAUSTED: 0
 #   - funnel events without telemetry consent: 0
-#   - RUFLO_FUNNEL=0 suppresses every funnel surface
+#   - SWARMLO_FUNNEL=0 suppresses every funnel surface
 #
 # Two jobs:
 #   1. invariants — the vitest suite mapping 1:1 to the gates above
 #   2. runtime-suppression — builds the CLI and proves, in a real CI
 #      environment, that `hooks statusline --json` emits promo: null and
-#      that RUFLO_FUNNEL=0 / user opt-out hold end-to-end
+#      that SWARMLO_FUNNEL=0 / user opt-out hold end-to-end
 
 name: funnel-gates
 
@@ -101,34 +101,34 @@ jobs:
       - name: Promo suppressed under CI (promo must be null)
         working-directory: v3/@claude-flow/cli
         run: |
-          export RUFLO_STATE_DIR="$(mktemp -d)"
+          export SWARMLO_STATE_DIR="$(mktemp -d)"
           PROMO=$(node bin/cli.js hooks statusline --json 2>/dev/null | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const j=JSON.parse(d);process.stdout.write(String(j.promo))})")
           echo "promo=$PROMO"
           test "$PROMO" = "null"
 
-      # Gate: RUFLO_FUNNEL=0 suppresses every surface even outside CI env vars.
-      - name: RUFLO_FUNNEL=0 suppresses promo (CI vars cleared)
+      # Gate: SWARMLO_FUNNEL=0 suppresses every surface even outside CI env vars.
+      - name: SWARMLO_FUNNEL=0 suppresses promo (CI vars cleared)
         working-directory: v3/@claude-flow/cli
         run: |
-          export RUFLO_STATE_DIR="$(mktemp -d)"
-          PROMO=$(env -u CI -u GITHUB_ACTIONS RUFLO_FUNNEL=0 RUFLO_STATE_DIR="$RUFLO_STATE_DIR" node bin/cli.js hooks statusline --json 2>/dev/null | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const j=JSON.parse(d);process.stdout.write(String(j.promo))})")
+          export SWARMLO_STATE_DIR="$(mktemp -d)"
+          PROMO=$(env -u CI -u GITHUB_ACTIONS SWARMLO_FUNNEL=0 SWARMLO_STATE_DIR="$SWARMLO_STATE_DIR" node bin/cli.js hooks statusline --json 2>/dev/null | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const j=JSON.parse(d);process.stdout.write(String(j.promo))})")
           echo "promo=$PROMO"
           test "$PROMO" = "null"
 
-      # Gate: user opt-out (`ruflo funnel disable`) holds and reports its source.
+      # Gate: user opt-out (`swarmlo funnel disable`) holds and reports its source.
       - name: funnel disable persists and wins over re-enable attempts below it
         working-directory: v3/@claude-flow/cli
         run: |
-          export RUFLO_STATE_DIR="$(mktemp -d)"
+          export SWARMLO_STATE_DIR="$(mktemp -d)"
           node bin/cli.js funnel disable
-          STATUS=$(env -u CI -u GITHUB_ACTIONS RUFLO_STATE_DIR="$RUFLO_STATE_DIR" node bin/cli.js funnel status --json 2>/dev/null | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const j=JSON.parse(d);process.stdout.write(j.enabled+':'+j.decidedBy)})")
+          STATUS=$(env -u CI -u GITHUB_ACTIONS SWARMLO_STATE_DIR="$SWARMLO_STATE_DIR" node bin/cli.js funnel status --json 2>/dev/null | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const j=JSON.parse(d);process.stdout.write(j.enabled+':'+j.decidedBy)})")
           echo "status=$STATUS"
           test "$STATUS" = "false:user-config"
 
       # Gate: init in CI never prompts (enrollment suppressed, exit 0).
       - name: init --minimal in CI runs non-interactively with no enrollment prompt
         run: |
-          export RUFLO_STATE_DIR="$(mktemp -d)"
+          export SWARMLO_STATE_DIR="$(mktemp -d)"
           WORKDIR="$(mktemp -d)"
           cd "$WORKDIR"
           node "$GITHUB_WORKSPACE/v3/@claude-flow/cli/bin/cli.js" init --minimal --force < /dev/null | tee init.log

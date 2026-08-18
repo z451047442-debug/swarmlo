@@ -336,7 +336,7 @@ export interface InitOptions {
   /** Embeddings configuration */
   embeddings: EmbeddingsConfig;
   /**
-   * Skip the user-global ~/.claude/CLAUDE.md "Ruflo Integration" pointer block.
+   * Skip the user-global ~/.claude/CLAUDE.md "Swarmlo Integration" pointer block.
    * Defaults to false (current behavior — block is appended once, idempotent).
    * Set true via --no-global to keep the global Claude rules file pristine (#1744).
    */

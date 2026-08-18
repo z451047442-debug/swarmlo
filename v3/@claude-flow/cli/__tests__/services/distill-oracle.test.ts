@@ -264,15 +264,15 @@ describe('helpers', () => {
   });
 
   describe('resolveRemote', () => {
-    const saved = process.env.RUFLO_DISTILL_REMOTE;
-    beforeEach(() => { delete process.env.RUFLO_DISTILL_REMOTE; });
-    afterEach(() => { if (saved === undefined) delete process.env.RUFLO_DISTILL_REMOTE; else process.env.RUFLO_DISTILL_REMOTE = saved; });
+    const saved = process.env.SWARMLO_DISTILL_REMOTE;
+    beforeEach(() => { delete process.env.SWARMLO_DISTILL_REMOTE; });
+    afterEach(() => { if (saved === undefined) delete process.env.SWARMLO_DISTILL_REMOTE; else process.env.SWARMLO_DISTILL_REMOTE = saved; });
 
     it('prefers explicit opt, then env, then null', () => {
       expect(resolveRemote('explicit')).toBe('explicit');
-      process.env.RUFLO_DISTILL_REMOTE = 'from-env';
+      process.env.SWARMLO_DISTILL_REMOTE = 'from-env';
       expect(resolveRemote()).toBe('from-env');
-      delete process.env.RUFLO_DISTILL_REMOTE;
+      delete process.env.SWARMLO_DISTILL_REMOTE;
       expect(resolveRemote()).toBeNull();
     });
   });

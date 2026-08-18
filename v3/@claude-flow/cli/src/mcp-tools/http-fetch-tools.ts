@@ -26,7 +26,7 @@ const DEFAULT_TIMEOUT_MS = 30_000;
 const MAX_TIMEOUT_MS = 60_000;
 const DEFAULT_MAX_RESPONSE_BYTES = 256 * 1024; // 256 KB
 const MAX_RESPONSE_BYTES = 1024 * 1024; // 1 MB
-const DEFAULT_USER_AGENT = 'ruflo-http-fetch/1.0';
+const DEFAULT_USER_AGENT = 'swarmlo-http-fetch/1.0';
 
 const FORBIDDEN_HEADER_PREFIXES = ['x-auth-', 'x-api-key'] as const;
 const FORBIDDEN_HEADERS_EXACT = ['authorization', 'cookie', 'set-cookie', 'proxy-authorization'] as const;
@@ -315,7 +315,7 @@ export async function httpFetchExecute(input: Record<string, unknown>): Promise<
 export const httpFetchTools: MCPTool[] = [
   {
     name: 'http_fetch',
-    description: 'ADR-164 §5.1.8 — HTTP probe primitive for business-pod ops benches (synthetic 200/500 endpoint checks, third-party status pages). Default-secure: blocks file://, ftp://, RFC-1918 / loopback / link-local hosts unless CLAUDE_FLOW_HTTP_FETCH_ALLOW_PRIVATE=1, and rejects Authorization / Cookie / X-Auth-* headers unless CLAUDE_FLOW_HTTP_FETCH_ALLOW_AUTH=1. Hard 30s timeout (60s ceiling), response truncated to 256 KB (1 MB ceiling), default User-Agent ruflo-http-fetch/1.0. Use when a pod or smoke contract needs a guarded HTTP probe — calling Node fetch() directly is wrong because it skips the URL allowlist and header sanitization that ADR-164 mandates for autopilot mode. Pair with the ops-pod bench in plugins/ruflo-business-pods/templates/ops.json (the §4.4 synthetic-endpoint test).',
+    description: 'ADR-164 §5.1.8 — HTTP probe primitive for business-pod ops benches (synthetic 200/500 endpoint checks, third-party status pages). Default-secure: blocks file://, ftp://, RFC-1918 / loopback / link-local hosts unless CLAUDE_FLOW_HTTP_FETCH_ALLOW_PRIVATE=1, and rejects Authorization / Cookie / X-Auth-* headers unless CLAUDE_FLOW_HTTP_FETCH_ALLOW_AUTH=1. Hard 30s timeout (60s ceiling), response truncated to 256 KB (1 MB ceiling), default User-Agent swarmlo-http-fetch/1.0. Use when a pod or smoke contract needs a guarded HTTP probe — calling Node fetch() directly is wrong because it skips the URL allowlist and header sanitization that ADR-164 mandates for autopilot mode. Pair with the ops-pod bench in plugins/swarmlo-business-pods/templates/ops.json (the §4.4 synthetic-endpoint test).',
     category: 'business-pods',
     tags: ['business-pods', 'http', 'fetch', 'adr-164', 'security', 'ops-pod'],
     inputSchema: {

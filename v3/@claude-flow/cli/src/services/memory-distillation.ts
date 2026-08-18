@@ -1,7 +1,7 @@
 /**
  * Memory Distillation Service (ADR-174)
  *
- * Turns raw `memory_entries` (what ruflo has been RECORDING for thousands of
+ * Turns raw `memory_entries` (what swarmlo has been RECORDING for thousands of
  * commits) into the structured intelligence substrate it has never populated:
  * `episodes` (+ `episode_embeddings`) → `reasoning_patterns`
  * (+ `pattern_embeddings`) → `causal_edges`.

@@ -3,7 +3,7 @@
  *
  * A proven champion adopted by the propagation channel (ADR-177,
  * proven-config-refresh.ts writes `.claude/proven-config.json`) is inert until
- * something *applies* it to what ruflo actually runs. This applier promotes the
+ * something *applies* it to what swarmlo actually runs. This applier promotes the
  * adopted champion to the ACTIVE harness policy that routing/agents consume —
  * reversibly (keeps the previous pointer) and provenance-tagged (ADR-171), so
  * it composes with the promote-gate discipline rather than bypassing it. It only

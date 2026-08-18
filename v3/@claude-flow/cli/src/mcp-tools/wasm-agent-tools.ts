@@ -70,7 +70,7 @@ interface PluginManifest {
 function loadPluginManifest(pluginName: string): PluginManifest | null {
   const candidateDirs = [
     resolve(process.cwd(), 'plugins', pluginName, '.claude-plugin', 'plugin.json'),
-    resolve(process.cwd(), 'plugins', `ruflo-${pluginName}`, '.claude-plugin', 'plugin.json'),
+    resolve(process.cwd(), 'plugins', `swarmlo-${pluginName}`, '.claude-plugin', 'plugin.json'),
     resolve(process.cwd(), 'v3', 'plugins', pluginName, '.claude-plugin', 'plugin.json'),
   ];
   for (const p of candidateDirs) {
@@ -375,9 +375,9 @@ export const wasmAgentTools: MCPTool[] = [
         // Build MCP tool descriptors from the allowlist
         const mcpToolDescriptors = requestedTools.map(name => ({
           name,
-          description: SAFE_MCP_TOOLS.has(name) ? `Ruflo MCP tool: ${name}` : `MCP tool: ${name}`,
+          description: SAFE_MCP_TOOLS.has(name) ? `Swarmlo MCP tool: ${name}` : `MCP tool: ${name}`,
           input_schema: {},
-          group: 'ruflo',
+          group: 'swarmlo',
         }));
 
         // ADR-129 P4: auto-wire plugin skills

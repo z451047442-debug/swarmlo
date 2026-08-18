@@ -1,4 +1,4 @@
-/** ADR-318 access-token-only bridge from ruflo auth to meta-proxy. */
+/** ADR-318 access-token-only bridge from swarmlo auth to meta-proxy. */
 
 import * as fs from 'node:fs';
 import { dirname } from 'node:path';
@@ -12,8 +12,8 @@ function configureInjectedTokenPath(): void {
   const target = proxyConfigPath();
   fs.mkdirSync(dirname(target), { recursive: true, mode: 0o700 });
   const raw = fs.existsSync(target) ? fs.readFileSync(target, 'utf8') : '';
-  const line = `ruflo_injected_token_path = ${JSON.stringify(proxyInjectedTokenPath())}`;
-  const pattern = /^ruflo_injected_token_path\s*=.*$/m;
+  const line = `swarmlo_injected_token_path = ${JSON.stringify(proxyInjectedTokenPath())}`;
+  const pattern = /^swarmlo_injected_token_path\s*=.*$/m;
   const next = pattern.test(raw) ? raw.replace(pattern, line) : `${raw}${raw && !raw.endsWith('\n') ? '\n' : ''}${line}\n`;
   const tmp = `${target}.tmp-${process.pid}`;
   fs.writeFileSync(tmp, next, { encoding: 'utf8', mode: 0o600 });

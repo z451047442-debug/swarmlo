@@ -34,7 +34,7 @@ export {
   classifyCapabilityTool,
   IMPLEMENTATION_LOOP,
   recommendCapabilities,
-  RUFLO_CLI_COMMANDS,
+  SWARMLO_CLI_COMMANDS,
 } from './capability-brain.js';
 export type {
   AvailabilityState,

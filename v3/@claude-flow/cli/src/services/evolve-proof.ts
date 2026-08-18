@@ -177,7 +177,7 @@ function mean(xs: number[]): number { return xs.length ? xs.reduce((a, b) => a +
 
 function mkManifest(policyValue: Record<string, number>, layer = 'synthetic/proof', corpus = 'synthetic-proof-v1'): ProvenConfigManifest {
   const ref = sha256(canon(policyValue));
-  return { schema: 'ruflo.proven-config/v1', policy: { ref, value: policyValue }, layer, benchmark: { corpus, corpusHash: sha256(corpus) } };
+  return { schema: 'swarmlo.proven-config/v1', policy: { ref, value: policyValue }, layer, benchmark: { corpus, corpusHash: sha256(corpus) } };
 }
 
 export interface AssembleOpts {

@@ -25,13 +25,13 @@ function behavioralRules(): string {
 }
 
 function policyGovernedWorkflow(): string {
-  return `## Ruflo Capability Brain & Implementation Loop
+  return `## Swarmlo Capability Brain & Implementation Loop
 
-Ruflo is the coordination ledger and policy decision point. Claude Code is the
-executor: after a Ruflo coordination call, continue implementing the task.
+Swarmlo is the coordination ledger and policy decision point. Claude Code is the
+executor: after a Swarmlo coordination call, continue implementing the task.
 
 When it is registered, call
-\`guidance_brain({ mode: "recommend", task: "..." })\` before complex Ruflo
+\`guidance_brain({ mode: "recommend", task: "..." })\` before complex Swarmlo
 work. Use its live registry instead of guessing tool names. Treat
 \`registered\`, \`configured\`, \`reachable\`, \`healthy\`, and \`authorized\`
 as separate facts. If the brain is unavailable, continue with the compatible
@@ -228,13 +228,13 @@ function setupAndBoundary(): string {
   return `## Setup
 
 \`\`\`bash
-claude mcp add claude-flow -- npx -y ruflo@latest mcp start
-npx ruflo@latest doctor --fix
+claude mcp add claude-flow -- npx -y swarmlo@latest mcp start
+npx swarmlo@latest doctor --fix
 \`\`\`
 
 > The background \`daemon\` is optional. It runs interval workers that each spawn
 > a headless \`claude\` session, so it consumes tokens continuously. Start it only
-> if you want those sweeps: \`npx ruflo@latest daemon start\` (self-stops after 12h
+> if you want those sweeps: \`npx swarmlo@latest daemon start\` (self-stops after 12h
 > by default; \`--ttl 0\` to disable, \`daemon status --all\` to audit running daemons).
 
 **Agent tool** handles execution (agents, files, code, git). **MCP tools** handle coordination (swarm, memory, hooks). **CLI** is the same via Bash.`;
@@ -423,7 +423,7 @@ export function generateClaudeMd(options: InitOptions, template?: ClaudeMdTempla
   const tmpl = template ?? options.runtime.claudeMdTemplate ?? 'standard';
   const sections = TEMPLATE_SECTIONS[tmpl] ?? TEMPLATE_SECTIONS.standard;
 
-  const header = `# Ruflo — Claude Code Configuration\n`;
+  const header = `# Swarmlo — Claude Code Configuration\n`;
   const body = sections.map(fn => fn(options)).join('\n\n');
 
   return `${header}\n${body}\n`;

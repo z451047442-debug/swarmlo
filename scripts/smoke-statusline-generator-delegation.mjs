@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Regression guard for ruvnet/ruflo#2195.
+ * Regression guard for z451047442-debug/swarmlo#2195.
  *
  * The statusline generator previously re-implemented all data readers
  * locally with fragile file probes that returned wrong values:
@@ -32,7 +32,7 @@ const GENERATOR_DIST = join(REPO_ROOT, 'v3/@claude-flow/cli/dist/src/init/status
 // the generator just needs to still be reading it. This constant is the
 // source-of-truth helper used by the static-source contract below.
 const HELPER_SRC = join(REPO_ROOT, 'v3/@claude-flow/cli/.claude/helpers/statusline.cjs');
-const CJS_PATH = join(tmpdir(), 'ruflo-smoke-statusline.cjs');
+const CJS_PATH = join(tmpdir(), 'swarmlo-smoke-statusline.cjs');
 
 let passed = 0;
 let failed = 0;

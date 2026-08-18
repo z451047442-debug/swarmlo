@@ -1,5 +1,5 @@
 /**
- * Ruflo capability brain.
+ * Swarmlo capability brain.
  *
  * This module is deliberately data-only: it describes the complete MCP surface
  * without importing the MCP registry. The registry injects its live tool list
@@ -92,7 +92,7 @@ export interface CapabilityDomain extends CapabilityDomainDefinition {
 }
 
 export interface CapabilityBrain {
-  schemaVersion: 'ruflo.capability-brain/v1';
+  schemaVersion: 'swarmlo.capability-brain/v1';
   generatedAt: string;
   truthModel: {
     catalogued: string;
@@ -115,7 +115,7 @@ export interface CapabilityBrain {
 }
 
 /** Top-level commands from the CLI command loader. Kept as a checked manifest. */
-export const RUFLO_CLI_COMMANDS = [
+export const SWARMLO_CLI_COMMANDS = [
   'init', 'start', 'status', 'task', 'session', 'agent', 'swarm', 'memory',
   'mcp', 'config', 'migrate', 'hooks', 'workflow', 'hive-mind', 'process',
   'daemon', 'version', 'neural', 'security', 'performance', 'providers',
@@ -140,7 +140,7 @@ export const IMPLEMENTATION_LOOP: readonly ImplementationLoopStep[] = [
   {
     id: 'recall',
     name: 'Recall',
-    purpose: 'Search Ruflo memory and relevant ADRs before choosing an approach.',
+    purpose: 'Search Swarmlo memory and relevant ADRs before choosing an approach.',
     preferredTools: ['memory_search', 'guidance_brain', 'guidance_recommend'],
     requiredEvidence: 'Relevant patterns and constraints, or an explicit no-match result.',
     mutation: 'none',
@@ -246,14 +246,14 @@ export const CAPABILITY_DOMAINS: readonly CapabilityDomainDefinition[] = [
     name: 'Capability Guidance',
     prefixes: ['guidance_'],
     description: 'Live capability inventory, task routing, workflow guidance, and system discovery.',
-    taskSignals: ['guidance', 'discover', 'capability', 'what can ruflo do'],
+    taskSignals: ['guidance', 'discover', 'capability', 'what can swarmlo do'],
     commands: ['guidance compile', 'guidance retrieve', 'guidance gates', 'guidance optimize'],
     skills: [],
     agents: [],
     maturity: 'stable',
     authority: 'advisory',
     risk: 'read-only',
-    useWhen: 'Choosing Ruflo capabilities or checking whether a claimed MCP function is actually registered.',
+    useWhen: 'Choosing Swarmlo capabilities or checking whether a claimed MCP function is actually registered.',
     verifyBeforeUse: ['Treat configured, reachable, healthy, and authorized as unknown until probed.'],
   },
   {
@@ -347,7 +347,7 @@ export const CAPABILITY_DOMAINS: readonly CapabilityDomainDefinition[] = [
     riskFlags: ['local-write', 'process-exec', 'network', 'spend', 'promotion'],
     loopPhases: ['branch-propose', 'validate-critique', 'observe'],
     useWhen: 'Exploring or evaluating candidate improvements under a separate promotion authority.',
-    verifyBeforeUse: ['Darwin proposes; the Ruflo promotion gate decides.', 'Degraded/fallback runs are evaluation-only unless policy explicitly permits promotion.'],
+    verifyBeforeUse: ['Darwin proposes; the Swarmlo promotion gate decides.', 'Degraded/fallback runs are evaluation-only unless policy explicitly permits promotion.'],
   },
   {
     id: 'memory-knowledge',
@@ -480,7 +480,7 @@ export const CAPABILITY_DOMAINS: readonly CapabilityDomainDefinition[] = [
     id: 'test-generation',
     name: 'TDD Test Generation',
     prefixes: ['testgen_'],
-    description: 'TDD repair and test-generation capability exported by Ruflo but intentionally reported as unregistered until the MCP registry enables it.',
+    description: 'TDD repair and test-generation capability exported by Swarmlo but intentionally reported as unregistered until the MCP registry enables it.',
     exactTools: ['testgen_tdd_repair'],
     taskSignals: ['generate tests', 'tdd repair', 'test generation'],
     commands: [],
@@ -576,7 +576,7 @@ export const CAPABILITY_DOMAINS: readonly CapabilityDomainDefinition[] = [
     authority: 'control-plane',
     risk: 'privileged',
     riskFlags: ['read', 'local-write', 'credential-pii', 'destructive'],
-    useWhen: 'Inspecting configuration or moving Ruflo state between installations.',
+    useWhen: 'Inspecting configuration or moving Swarmlo state between installations.',
     verifyBeforeUse: ['Redact secrets and validate destination compatibility before mutation.'],
   },
   {
@@ -592,7 +592,7 @@ export const CAPABILITY_DOMAINS: readonly CapabilityDomainDefinition[] = [
     authority: 'control-plane',
     risk: 'privileged',
     riskFlags: ['read', 'local-write', 'process-exec', 'credential-pii', 'destructive', 'approval'],
-    useWhen: 'Diagnosing Ruflo or using an MCP execution surface that policy explicitly permits.',
+    useWhen: 'Diagnosing Swarmlo or using an MCP execution surface that policy explicitly permits.',
     verifyBeforeUse: ['Prefer native executor tools for ordinary shell/file work.', 'Validate command, cwd, environment, timeout, and destructive scope.'],
   },
   {
@@ -660,24 +660,24 @@ const TOOL_OWNERSHIP: ReadonlyArray<{
   packageOwner: string;
   pluginOwner?: string;
 }> = [
-  { prefixes: ['policy_'], packageOwner: '@claude-flow/security', pluginOwner: 'ruflo-security-audit' },
-  { prefixes: ['aidefence_', 'security_'], packageOwner: '@claude-flow/aidefence', pluginOwner: 'ruflo-aidefence' },
-  { prefixes: ['claims_'], packageOwner: '@claude-flow/claims', pluginOwner: 'ruflo-core' },
-  { prefixes: ['memory_'], packageOwner: '@claude-flow/memory', pluginOwner: 'ruflo-rag-memory' },
-  { prefixes: ['agentdb_'], packageOwner: 'agentdb', pluginOwner: 'ruflo-agentdb' },
-  { prefixes: ['embeddings_'], packageOwner: '@claude-flow/embeddings', pluginOwner: 'ruflo-rag-memory' },
-  { prefixes: ['swarm_', 'coordination_'], packageOwner: '@claude-flow/swarm', pluginOwner: 'ruflo-swarm' },
-  { prefixes: ['hooks_', 'coverage_'], packageOwner: '@claude-flow/hooks', pluginOwner: 'ruflo-loop-workers' },
-  { prefixes: ['neural_'], packageOwner: '@claude-flow/neural', pluginOwner: 'ruflo-intelligence' },
-  { prefixes: ['ruvllm_'], packageOwner: '@ruvector/ruvllm', pluginOwner: 'ruflo-ruvllm' },
-  { prefixes: ['browser_'], packageOwner: '@claude-flow/browser', pluginOwner: 'ruflo-browser' },
-  { prefixes: ['metaharness_'], packageOwner: 'metaharness', pluginOwner: 'ruflo-metaharness' },
-  { prefixes: ['agenticow_'], packageOwner: 'agenticow', pluginOwner: 'ruflo-rvf' },
-  { prefixes: ['federation_bbs_'], packageOwner: '@claude-flow/plugin-agent-federation', pluginOwner: 'ruflo-bbs-federation' },
-  { prefixes: ['business_pod_'], packageOwner: '@claude-flow/cli', pluginOwner: 'ruflo-business-pods' },
-  { prefixes: ['testgen_'], packageOwner: '@claude-flow/cli', pluginOwner: 'ruflo-testgen' },
-  { prefixes: ['managed_agent_', 'wasm_agent_', 'wasm_gallery_'], packageOwner: '@claude-flow/cli', pluginOwner: 'ruflo-agent' },
-  { prefixes: ['guidance_'], packageOwner: '@claude-flow/guidance', pluginOwner: 'ruflo-core' },
+  { prefixes: ['policy_'], packageOwner: '@claude-flow/security', pluginOwner: 'swarmlo-security-audit' },
+  { prefixes: ['aidefence_', 'security_'], packageOwner: '@claude-flow/aidefence', pluginOwner: 'swarmlo-aidefence' },
+  { prefixes: ['claims_'], packageOwner: '@claude-flow/claims', pluginOwner: 'swarmlo-core' },
+  { prefixes: ['memory_'], packageOwner: '@claude-flow/memory', pluginOwner: 'swarmlo-rag-memory' },
+  { prefixes: ['agentdb_'], packageOwner: 'agentdb', pluginOwner: 'swarmlo-agentdb' },
+  { prefixes: ['embeddings_'], packageOwner: '@claude-flow/embeddings', pluginOwner: 'swarmlo-rag-memory' },
+  { prefixes: ['swarm_', 'coordination_'], packageOwner: '@claude-flow/swarm', pluginOwner: 'swarmlo-swarm' },
+  { prefixes: ['hooks_', 'coverage_'], packageOwner: '@claude-flow/hooks', pluginOwner: 'swarmlo-loop-workers' },
+  { prefixes: ['neural_'], packageOwner: '@claude-flow/neural', pluginOwner: 'swarmlo-intelligence' },
+  { prefixes: ['ruvllm_'], packageOwner: '@ruvector/ruvllm', pluginOwner: 'swarmlo-ruvllm' },
+  { prefixes: ['browser_'], packageOwner: '@claude-flow/browser', pluginOwner: 'swarmlo-browser' },
+  { prefixes: ['metaharness_'], packageOwner: 'metaharness', pluginOwner: 'swarmlo-metaharness' },
+  { prefixes: ['agenticow_'], packageOwner: 'agenticow', pluginOwner: 'swarmlo-rvf' },
+  { prefixes: ['federation_bbs_'], packageOwner: '@claude-flow/plugin-agent-federation', pluginOwner: 'swarmlo-bbs-federation' },
+  { prefixes: ['business_pod_'], packageOwner: '@claude-flow/cli', pluginOwner: 'swarmlo-business-pods' },
+  { prefixes: ['testgen_'], packageOwner: '@claude-flow/cli', pluginOwner: 'swarmlo-testgen' },
+  { prefixes: ['managed_agent_', 'wasm_agent_', 'wasm_gallery_'], packageOwner: '@claude-flow/cli', pluginOwner: 'swarmlo-agent' },
+  { prefixes: ['guidance_'], packageOwner: '@claude-flow/guidance', pluginOwner: 'swarmlo-core' },
 ] as const;
 
 function ownershipForTool(
@@ -767,10 +767,10 @@ export function buildCapabilityBrain(
   const uniqueToolCount = seen.size;
   const classifiedToolCount = uniqueToolCount;
   return {
-    schemaVersion: 'ruflo.capability-brain/v1',
+    schemaVersion: 'swarmlo.capability-brain/v1',
     generatedAt: now.toISOString(),
     truthModel: {
-      catalogued: 'Described by this version of Ruflo; it does not prove runtime presence.',
+      catalogued: 'Described by this version of Swarmlo; it does not prove runtime presence.',
       registered: 'Present in this process MCP registry; it does not prove configuration or health.',
       configured: 'Required providers and settings are present.',
       reachable: 'Dependencies answer a non-mutating probe.',
@@ -778,7 +778,7 @@ export function buildCapabilityBrain(
       authorized: 'Current subject is allowed to perform the exact action on the exact resource.',
     },
     domains,
-    cliCommands: [...RUFLO_CLI_COMMANDS],
+    cliCommands: [...SWARMLO_CLI_COMMANDS],
     implementationLoop: IMPLEMENTATION_LOOP.map((step) => ({
       ...step,
       preferredTools: [...step.preferredTools],
@@ -850,7 +850,7 @@ export function recommendCapabilities(brain: CapabilityBrain, task: string): Cap
     })),
     guardrails: [
       'Registered, configured, reachable, healthy, and authorized are independent facts.',
-      'Ruflo coordinates and records; the executor performs implementation.',
+      'Swarmlo coordinates and records; the executor performs implementation.',
       'Learning, optimization, consensus, and claims are capability-plane inputs, never self-authorizing promotion.',
       'External publication requires explicit authority and exact source/build evidence.',
     ],

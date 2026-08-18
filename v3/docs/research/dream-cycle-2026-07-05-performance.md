@@ -1,6 +1,6 @@
 # Performance SOTA Report — 2026-07-05
 
-**TL;DR:** PolyKV (arXiv:2604.24971, Grade A) proves a shared asymmetrically-compressed KV pool slashes multi-agent memory by 97.7% at 15 concurrent agents — Ruflo has no cross-agent shared KV pool and this is the single highest-leverage performance gap for 2026.
+**TL;DR:** PolyKV (arXiv:2604.24971, Grade A) proves a shared asymmetrically-compressed KV pool slashes multi-agent memory by 97.7% at 15 concurrent agents — Swarmlo has no cross-agent shared KV pool and this is the single highest-leverage performance gap for 2026.
 
 ---
 
@@ -16,7 +16,7 @@
 
 ---
 
-## Ruflo Current Capability
+## Swarmlo Current Capability
 
 | Capability | Current State | Gap |
 |---|---|---|
@@ -36,7 +36,7 @@
 | **AutoGen (AG2)** | ~56,700 tokens / 4-agent 5-round debate; 4–5x overhead vs LangChain on complex tasks; GA Feb 2026 | f3fundit.com; secondtalent.com 2026 | C |
 | **CrewAI** | 43/100 token efficiency score; ~32s/run; 44% task failure rate in Rust framework benchmark | dev.to audit; aimultiple.com 2026 | C |
 | **OpenAI Agents SDK** | "Fastest latency and highest token efficiency" in one enterprise benchmark; Swarm deprecated Mar 2026 | qubittool.com; selecthub.com 2026 | B |
-| **Ruflo (claude-flow)** | HNSW 1.9x–4.7x measured; SONA 0.0043ms/adapt | CLAUDE.md / benchmark-intelligence.mjs | A |
+| **Swarmlo (claude-flow)** | HNSW 1.9x–4.7x measured; SONA 0.0043ms/adapt | CLAUDE.md / benchmark-intelligence.mjs | A |
 
 ---
 
@@ -60,10 +60,10 @@
 ## Scan Findings
 
 ### Security (Grade A)
-MESA (arXiv:2606.30602, Li et al., Jun 2026): a single compromised agent-to-agent communication edge accounts for up to **75% of total attack success** in multi-agent systems. AgentFlow (arXiv:2607.01640, Wang et al., Jul 2026) introduces static taint analysis via Agent Dependency Graphs covering MCP server pipelines. AI-Infra-Guard provides 75+ AI component rules and LLM-driven MCP server auditing. The 2025 OWASP LLM Top 10 "Excessive Agency" threat is now operationalized through supply-chain and memory-poisoning benchmarks. **Ruflo gap:** no static taint analysis or agent-to-agent channel integrity verification.
+MESA (arXiv:2606.30602, Li et al., Jun 2026): a single compromised agent-to-agent communication edge accounts for up to **75% of total attack success** in multi-agent systems. AgentFlow (arXiv:2607.01640, Wang et al., Jul 2026) introduces static taint analysis via Agent Dependency Graphs covering MCP server pipelines. AI-Infra-Guard provides 75+ AI component rules and LLM-driven MCP server auditing. The 2025 OWASP LLM Top 10 "Excessive Agency" threat is now operationalized through supply-chain and memory-poisoning benchmarks. **Swarmlo gap:** no static taint analysis or agent-to-agent channel integrity verification.
 
 ### Hive-Mind / Byzantine Consensus (Grade B)
-arXiv:2602.02170 (Rodriguez & Díaz, Feb 2026) evaluates six BFT protocols under f < n/3 and confirms bounded self-modification of coordination protocols is formally auditable. Broader collective-intelligence work for LLM hive-mind systems has not yet appeared at scale — the field is mapping BFT theory to practice. Ruflo's existing `byzantine-coordinator` and `raft-manager` are ahead of most published work.
+arXiv:2602.02170 (Rodriguez & Díaz, Feb 2026) evaluates six BFT protocols under f < n/3 and confirms bounded self-modification of coordination protocols is formally auditable. Broader collective-intelligence work for LLM hive-mind systems has not yet appeared at scale — the field is mapping BFT theory to practice. Swarmlo's existing `byzantine-coordinator` and `raft-manager` are ahead of most published work.
 
 ---
 
@@ -82,4 +82,4 @@ arXiv:2602.02170 (Rodriguez & Díaz, Feb 2026) evaluates six BFT protocols under
 
 2. **Implement disaggregated prefill/decode scheduling (ConServe pattern)** — Add a serving-layer scheduler that separates prefill (prompt processing) from decode (token generation) across the agent pool. Expected: 50%+ p95 TTFT reduction. Implementation path: new `PerformanceScheduler` module in `@claude-flow/cli`; gate behind `CLAUDE_FLOW_SCHED_DISAGGREGATE=1` flag.
 
-3. **Agent-to-agent channel security audit against MESA threat model** — Run AI-Infra-Guard's 75+ rules against Ruflo's MCP server pipelines and SendMessage pathways. A single compromised edge = 75% attack success. Immediate action: label all agent-to-agent edges as attack surface in `@claude-flow/security` threat model; add static taint gate to pre-task hook.
+3. **Agent-to-agent channel security audit against MESA threat model** — Run AI-Infra-Guard's 75+ rules against Swarmlo's MCP server pipelines and SendMessage pathways. A single compromised edge = 75% attack success. Immediate action: label all agent-to-agent edges as attack surface in `@claude-flow/security` threat model; add static taint gate to pre-task hook.

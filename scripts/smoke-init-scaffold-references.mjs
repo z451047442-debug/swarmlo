@@ -23,15 +23,15 @@
  *
  *   3. PLUGIN MCP-LAUNCH PINNING REGRESSION — any plugins/*\/.mcp.json whose
  *      server launches a bare `npx ... <pkg>@latest` with no local-bin-first
- *      resolver in front of it (ADR-382 Part A fixes this for ruflo-core by
+ *      resolver in front of it (ADR-382 Part A fixes this for swarmlo-core by
  *      mirroring resolveCliBinForHook() in .claude/helpers/hook-handler.cjs;
  *      this check guards the fix from regressing and catches any other
  *      plugin with the same unpinned pattern).
  *
  *   4. MARKETPLACE COMPLETENESS — every directory under plugins/ has a
  *      matching entry in .claude-plugin/marketplace.json. Guards the
- *      regression that let ruflo-agntcy / ruflo-bbs-federation /
- *      ruflo-business-pods silently go unlisted (ADR-382 Gap 4).
+ *      regression that let swarmlo-agntcy / swarmlo-bbs-federation /
+ *      swarmlo-business-pods silently go unlisted (ADR-382 Gap 4).
  *
  * Ships in WARN-ONLY mode: violations are always printed, but the process
  * exits 0 unless `--strict` is passed, in which case it exits 1 on any
@@ -231,7 +231,7 @@ function checkDeadToolReferences(files) {
 // Matches an npx arg that is a bare `@latest`-tagged launch of one of the
 // three public release-train packages (root CLAUDE.md), with no local-bin
 // resolver indirection in front of it.
-const UNPINNED_LATEST_ARG = /^(?:@claude-flow\/cli|claude-flow|ruflo)@latest$/;
+const UNPINNED_LATEST_ARG = /^(?:@claude-flow\/cli|claude-flow|swarmlo)@latest$/;
 
 function findPluginMcpJsonFiles() {
   if (!existsSync(PLUGINS_DIR)) return [];
@@ -349,8 +349,8 @@ for (const { id, name, violations } of results) {
 
 console.log();
 console.log(`total: ${totalViolations} violation(s) across 4 checks`);
-console.log('ADR-382: https://github.com/ruvnet/ruflo/blob/main/v3/docs/adr/ADR-382-init-scaffold-content-drift-remediation.md');
-console.log('Issue: https://github.com/ruvnet/ruflo/issues/2971');
+console.log('ADR-382: https://github.com/z451047442-debug/swarmlo/blob/main/v3/docs/adr/ADR-382-init-scaffold-content-drift-remediation.md');
+console.log('Issue: https://github.com/z451047442-debug/swarmlo/issues/2971');
 
 if (totalViolations > 0 && !STRICT) {
   console.log('\nwarn-only mode: exiting 0 despite violations above. Pass --strict to make this blocking.');

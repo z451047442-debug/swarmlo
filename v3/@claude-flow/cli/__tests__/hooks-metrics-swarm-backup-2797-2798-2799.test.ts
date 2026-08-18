@@ -36,7 +36,7 @@ function run(args: string[], cwd: string, env: NodeJS.ProcessEnv = {}): { stdout
 
 describe('#2797 hooks metrics Pattern Learning counts real writes', () => {
   it('Pattern Learning total is non-zero after a store-results post-task', () => {
-    const wd = mkdtempSync(join(tmpdir(), 'ruflo-2797-'));
+    const wd = mkdtempSync(join(tmpdir(), 'swarmlo-2797-'));
     try {
       run(['memory', 'init'], wd);
       run(['hooks', 'post-task', '-i', 't1', '--success', 'true', '-q', '0.95', '--task', 'some task', '--agent', 'coder', '--store-results'], wd);
@@ -60,7 +60,7 @@ describe('#2797 hooks metrics Pattern Learning counts real writes', () => {
 
 describe('#2798 memory backup falls back to byte-copy under encryption', () => {
   it('produces a snapshot when CLAUDE_FLOW_ENCRYPT_AT_REST=1 (RFE1 blob)', () => {
-    const wd = mkdtempSync(join(tmpdir(), 'ruflo-2798-'));
+    const wd = mkdtempSync(join(tmpdir(), 'swarmlo-2798-'));
     const key = randomBytes(32).toString('hex');
     const env = { CLAUDE_FLOW_ENCRYPT_AT_REST: '1', CLAUDE_FLOW_ENCRYPTION_KEY: key };
     try {
@@ -83,7 +83,7 @@ describe('#2798 memory backup falls back to byte-copy under encryption', () => {
 
 describe('#2799 swarm status reflects spawned agents', () => {
   it('swarm status agent total matches agent spawn count (via swarm-activity.json)', () => {
-    const wd = mkdtempSync(join(tmpdir(), 'ruflo-2799-'));
+    const wd = mkdtempSync(join(tmpdir(), 'swarmlo-2799-'));
     try {
       run(['swarm', 'init', '--topology', 'mesh', '--max-agents', '5'], wd);
       for (const a of ['coder', 'reviewer', 'researcher', 'tester']) {

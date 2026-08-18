@@ -5,7 +5,7 @@
  * Writes one JSON-line per PAIR of routing decisions (Thompson bandit pick
  * + SelfEvolvingRouter pick + measured outcome) to a shared
  * `.swarm/router-parallel.jsonl`. Designed to be matched by
- * `plugins/ruflo-metaharness/scripts/router-parallel-analyze.mjs` which
+ * `plugins/swarmlo-metaharness/scripts/router-parallel-analyze.mjs` which
  * computes the 3-criteria AND-gate from ADR-150 review-round-1:
  *
  *   (a) qualityScore improvement > 2%

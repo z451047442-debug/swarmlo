@@ -2,11 +2,11 @@
  * Version-stamped critical-helper auto-refresh.
  *
  * The Claude Code hooks run the PROJECT-LOCAL `.claude/helpers/*.cjs` copies,
- * not the installed npm package — so `npx ruflo@latest` does NOT update them,
+ * not the installed npm package — so `npx swarmlo@latest` does NOT update them,
  * and users don't know to re-run `init`. This module stamps the helpers with
  * the installed CLI version and, on the next CLI command, silently re-copies
  * them when the stamp is stale. Hook fixes (e.g. the ADR-174 failure-capture
- * change) then propagate to every user on their next `ruflo` command with zero
+ * change) then propagate to every user on their next `swarmlo` command with zero
  * action required.
  *
  * This file is intentionally LIGHTWEIGHT — it is imported on every CLI startup,
@@ -56,7 +56,7 @@ function findPackageRoot(startDir: string, maxUp = 6): string | null {
 
 export const HELPERS_STAMP_FILE = '.helpers-version';
 /**
- * ruflo-owned helpers that carry hook logic (or the render surface for the
+ * swarmlo-owned helpers that carry hook logic (or the render surface for the
  * funnel disclosure row) and must track the package version. Adding to this
  * list REQUIRES re-signing `helpers.manifest.json` at publish time — the
  * integrity gate below refuses any file it doesn't have a signed hash for.
@@ -66,7 +66,7 @@ export const CRITICAL_HELPERS = [
   'hook-handler.cjs',
   'intelligence.cjs',
   // statusline.cjs is here so the funnel disclosure row (ADR-301) reaches
-  // existing installs on the next `ruflo` command, not only fresh `ruflo init`.
+  // existing installs on the next `swarmlo` command, not only fresh `swarmlo init`.
   'statusline.cjs',
 ];
 
@@ -106,7 +106,7 @@ function findPackageHelpersDir(): string | null {
  * Re-copy the critical helpers into `helpersDir` and stamp `version`.
  *
  * SECURITY (fail-closed): when copying from the installed package, every source
- * helper is verified against ruflo's Ed25519-signed manifest FIRST — nothing is
+ * helper is verified against swarmlo's Ed25519-signed manifest FIRST — nothing is
  * copied unless the manifest signature is valid AND each helper's SHA-256
  * matches. A tampered helper or manifest (e.g. a sibling package's postinstall
  * overwriting on-disk hook code) is REFUSED, not propagated. The generator
@@ -168,10 +168,10 @@ async function writeCriticalHelpers(
     'hook-handler.cjs': gen.generateHookHandler(),
     'intelligence.cjs': gen.generateIntelligenceStub(),
     'auto-memory-hook.mjs': gen.generateAutoMemoryHook(),
-    // Fallback needs the same generator inputs `ruflo init` uses. We match the
+    // Fallback needs the same generator inputs `swarmlo init` uses. We match the
     // hardcoded default (maxAgents 15) because the fallback fires when the
     // installed package is unresolvable — no way to read the user's project
-    // config from here. Fresh `ruflo init` still generates a per-project value.
+    // config from here. Fresh `swarmlo init` still generates a per-project value.
     'statusline.cjs': statusGen.generateStatuslineScript({
       statusline: { enabled: true, style: 'compact' },
       runtime: { maxAgents: 15 },
@@ -194,7 +194,7 @@ async function writeCriticalHelpers(
  * On CLI startup: if an initialized project's critical helpers are stamped older
  * than the installed CLI version, silently re-copy them. Fast path is a single
  * stamp read + string compare (sub-ms); the copy runs at most once per version
- * bump. Best-effort, never throws. No-op outside a ruflo project (requires an
+ * bump. Best-effort, never throws. No-op outside a swarmlo project (requires an
  * existing hook-handler.cjs — never creates files in an unrelated directory).
  *
  * FORWARD-ONLY (never downgrades): refreshing on any mere INEQUALITY, rather
@@ -226,7 +226,7 @@ async function refreshOneHelpersDir(
 ): Promise<{ refreshed: boolean; from?: string; to?: string; blocked?: string }> {
   if (!fs.existsSync(path.join(helpersDir, 'hook-handler.cjs'))) return { refreshed: false };
 
-  // .LOCKED marker: users developing ruflo itself (or any project with
+  // .LOCKED marker: users developing swarmlo itself (or any project with
   // hand-maintained helpers) can place a `.LOCKED` file at
   // `.claude/helpers/.LOCKED` to opt out of auto-refresh entirely. Fixes the
   // observed-live concurrent-session clobber where a sibling Claude Code
@@ -263,14 +263,14 @@ async function refreshOneHelpersDir(
  *    original behavior; project statuslines pin to a stamp per repo.
  *
  * 2. **Global pass** — `~/.claude/helpers/`. Opt-in via `alsoRefreshGlobal`.
- *    Fixes the "promo row missing on remote installs" bug: `ruflo init`
+ *    Fixes the "promo row missing on remote installs" bug: `swarmlo init`
  *    writes helpers to `~/.claude/helpers/` too so Claude Code's global
  *    settings.json statusLine can fall back to them (executor.ts:460-462),
  *    but nothing ever REFRESHED that global copy — so any install predating
  *    a helpers change (e.g. the 2026-07-13 funnel/promo Line-3 addition)
  *    stayed frozen at the pre-feature statusline forever, even after `npm
  *    i -g @claude-flow/cli@latest`. The global pass fixes that on the next
- *    `ruflo <anything>` invocation. Same forward-only `semver.gte` guard
+ *    `swarmlo <anything>` invocation. Same forward-only `semver.gte` guard
  *    protects against downgrade by a stale cached CLI.
  *
  *    `alsoRefreshGlobal` defaults FALSE so tests don't touch the developer's
@@ -323,8 +323,8 @@ export async function autoRefreshHelpersIfStale(
 }> {
   try {
     // Env-level opt-out — applies to BOTH project and global passes.
-    if (/^(1|true|on|yes)$/i.test(String(process.env.RUFLO_HELPERS_LOCKED || ''))) {
-      return { refreshed: false, blocked: 'RUFLO_HELPERS_LOCKED env — refresh skipped' };
+    if (/^(1|true|on|yes)$/i.test(String(process.env.SWARMLO_HELPERS_LOCKED || ''))) {
+      return { refreshed: false, blocked: 'SWARMLO_HELPERS_LOCKED env — refresh skipped' };
     }
 
     const version = opts.versionOverride ?? getInstalledCliVersion();
@@ -335,8 +335,8 @@ export async function autoRefreshHelpersIfStale(
     // touching the developer's real ~/.claude/helpers.
     if (opts.alsoRefreshGlobal) {
       const globalDir = path.join(os.homedir(), '.claude', 'helpers');
-      // Skip if project === global (e.g. someone invoked ruflo from $HOME
-      // and $HOME happens to be a ruflo project — refreshing twice is
+      // Skip if project === global (e.g. someone invoked swarmlo from $HOME
+      // and $HOME happens to be a swarmlo project — refreshing twice is
       // redundant AND could second-guess the first pass's result).
       if (path.resolve(globalDir) !== path.resolve(projectDir)) {
         const globalResult = await refreshOneHelpersDir(globalDir, version, opts);

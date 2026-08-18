@@ -210,7 +210,7 @@ export function resolvePageAgentLLMConfig(env: NodeJS.ProcessEnv = process.env):
 // the proxy's 127.0.0.1 URL + a placeholder string ever reach page context.
 // ============================================================================
 
-export const PLACEHOLDER_API_KEY = 'ruflo-proxied-key';
+export const PLACEHOLDER_API_KEY = 'swarmlo-proxied-key';
 
 export interface LLMProxyHandle {
   url: string;
@@ -316,7 +316,7 @@ export function stripDemoAutoInit(iifeSource: string): string {
   return idx === -1 ? iifeSource : iifeSource.slice(0, idx);
 }
 
-export const BROWSER_ACT_RESULT_GLOBAL = '__ruflo_browser_act_result__';
+export const BROWSER_ACT_RESULT_GLOBAL = '__swarmlo_browser_act_result__';
 
 export interface PageAgentPageConfig {
   baseURL: string;
@@ -357,7 +357,7 @@ export function buildPageAgentInjection(
       return;
     }
     var agent = new window.PageAgent(${cfgJson});
-    window.__ruflo_pageAgent__ = agent;
+    window.__swarmlo_pageAgent__ = agent;
     agent.execute(${taskJson}).then(function(r){
       window.${BROWSER_ACT_RESULT_GLOBAL} = { success: true, result: r };
     }).catch(function(e){
@@ -367,7 +367,7 @@ export function buildPageAgentInjection(
     window.${BROWSER_ACT_RESULT_GLOBAL} = { success: false, error: String((e && e.message) || e) };
   }
 })();
-'ruflo-browser-act-injected'`;
+'swarmlo-browser-act-injected'`;
 }
 
 // ============================================================================

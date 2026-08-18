@@ -45,10 +45,10 @@
     "url": "https://github.com/ruvnet"
   },
   "license": "MIT",
-  "homepage": "https://github.com/ruvnet/ruflo",
+  "homepage": "https://github.com/z451047442-debug/swarmlo",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/ruflo.git",
+    "url": "https://github.com/z451047442-debug/swarmlo.git",
     "directory": "v3/@claude-flow/cli-core"
   },
   "publishConfig": {

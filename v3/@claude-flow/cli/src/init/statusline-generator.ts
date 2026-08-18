@@ -67,7 +67,7 @@ function compareVersionsLocal(a: string, b: string): number {
 /**
  * Generate optimized statusline script
  * Output format:
- * ▊ RuFlo V3.6 ● user  │  ⎇ branch  │  Opus 4.7
+ * ▊ Swarmlo V3.6 ● user  │  ⎇ branch  │  Opus 4.7
  * ─────────────────────────────────────────────────────
  * 🏗️  DDD Domains    [●●○○○]  2/5    ⚡ HNSW 150x
  * 🤖 Swarm  ◉ [ 5/15]  👥 2    🪝 10/17    🟢 CVE 3/3    💾 4MB    🧠  63%
@@ -170,7 +170,7 @@ export function generateStatuslineHook(options: InitOptions): string {
   }
 
   return `#!/bin/bash
-# RuFlo V3 Statusline Hook
+# Swarmlo V3 Statusline Hook
 # Source this in your .bashrc/.zshrc for terminal statusline
 
 # Function to get statusline

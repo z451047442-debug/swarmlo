@@ -1,6 +1,6 @@
 /**
  * Managed Agent MCP tools — Anthropic Claude Managed Agents as a *cloud*
- * agent runtime alongside ruflo's local WASM-sandboxed agents (`rvagent` /
+ * agent runtime alongside swarmlo's local WASM-sandboxed agents (`rvagent` /
  * `wasm_agent_*`). See ADR-115.
  *
  * Wraps the Managed Agents REST API (beta, `anthropic-beta:
@@ -155,7 +155,7 @@ export const managedAgentTools: MCPTool[] = [
         title: { type: 'string', description: 'Session title' },
         mcpServers: {
           type: 'array',
-          description: 'MCP servers to expose to the agent — each {type:"url", url, name, authorization_token?}. NOTE: the cloud agent must be able to *reach* the URL (a local `ruflo mcp start` is not reachable from Anthropic\'s cloud — deploy/tunnel it).',
+          description: 'MCP servers to expose to the agent — each {type:"url", url, name, authorization_token?}. NOTE: the cloud agent must be able to *reach* the URL (a local `swarmlo mcp start` is not reachable from Anthropic\'s cloud — deploy/tunnel it).',
           items: { type: 'object' },
         },
         skills: { type: 'array', description: 'Skills to attach to the agent', items: { type: 'object' } },
@@ -169,7 +169,7 @@ export const managedAgentTools: MCPTool[] = [
 
       // 1. Agent
       const agentBody: Record<string, unknown> = {
-        name: maName('ruflo-managed', input.name),
+        name: maName('swarmlo-managed', input.name),
         model: typeof input.model === 'string' && input.model ? input.model : DEFAULT_MODEL,
         tools: [{ type: 'agent_toolset_20260401' }],
       };
@@ -182,7 +182,7 @@ export const managedAgentTools: MCPTool[] = [
       // 2. Environment
       const net = (input.networking as string) || 'unrestricted';
       const envBody: Record<string, unknown> = {
-        name: maName('ruflo-managed-env', input.name),
+        name: maName('swarmlo-managed-env', input.name),
         config: { type: 'cloud', networking: { type: net } },
       };
       if (input.packages && typeof input.packages === 'object') (envBody.config as Record<string, unknown>).packages = { type: 'packages', ...(input.packages as object) };
@@ -194,7 +194,7 @@ export const managedAgentTools: MCPTool[] = [
       const s = await maRequest<MaSession>('POST', '/sessions', {
         agent: a.data.id,
         environment_id: e.data.id,
-        title: maName('ruflo-managed session', input.title),
+        title: maName('swarmlo-managed session', input.title),
       });
       if (!s.ok) return { success: false, stage: 'session', agentId: a.data.id, environmentId: e.data.id, error: s.error };
 

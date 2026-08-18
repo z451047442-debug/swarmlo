@@ -4,7 +4,7 @@
  * no LLM > 50% workspace-permission precision as team lead).
  *
  * SCOPE (honest): this is a METADATA + AUDIT layer, not a runtime sandbox.
- * Claude Code's Task tool owns the actual subprocess sandbox; ruflo cannot
+ * Claude Code's Task tool owns the actual subprocess sandbox; swarmlo cannot
  * enforce at the syscall boundary. What we CAN do:
  *   1. Publish a per-role capability manifest that Task-tool prompts can
  *      consult ("your workspace-scoped tools are X, Y, Z; you may not use W").
@@ -20,7 +20,7 @@ import type { PathValidator } from '@claude-flow/security';
 
 /** A single agent role's capability envelope. */
 export interface PermissionSet {
-  /** Symbolic role name — matches ruflo agent-type names (coder, tester, reviewer, …). */
+  /** Symbolic role name — matches swarmlo agent-type names (coder, tester, reviewer, …). */
   role: string;
   /** Tools this role MAY use. Empty array = deny-all-tools. */
   allowedTools: string[];

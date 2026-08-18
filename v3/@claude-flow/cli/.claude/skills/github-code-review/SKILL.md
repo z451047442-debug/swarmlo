@@ -1105,7 +1105,7 @@ npx ruv-swarm github review-init --pr 123 --parallel --cache-results
 ### Documentation
 - [GitHub CLI Documentation](https://cli.github.com/manual/)
 - [RUV Swarm Guide](https://github.com/ruvnet/ruv-swarm)
-- [Claude Flow Integration](https://github.com/ruvnet/claude-flow)
+- [Claude Flow Integration](https://github.com/z451047442-debug/swarmlo)
 
 ### Support
 - GitHub Issues: Report bugs and request features

@@ -10,12 +10,12 @@
  * second one. Skipped by default (network + a live GCP dependency neither CI
  * nor most local runs should require) — opt in with:
  *
- *   RUFLO_FUNNEL_LIVE_E2E=1 npx vitest run __tests__/funnel-e2e-live.test.ts
+ *   SWARMLO_FUNNEL_LIVE_E2E=1 npx vitest run __tests__/funnel-e2e-live.test.ts
  *
  * Every event this test posts uses messageId 'e2e-smoke-test' specifically so
  * it's trivially identifiable and never collides with a real rotation-pool
  * message id (real ids come from the seeded message pool, see
- * ruflo-funnel-api/seed-messages.mjs). The afterAll hook best-effort deletes
+ * swarmlo-funnel-api/seed-messages.mjs). The afterAll hook best-effort deletes
  * everything this test wrote, using the SAME Firestore REST endpoint gcloud
  * ADC already authenticates against — if ADC isn't available the cleanup is
  * skipped with a console.warn (never fails the run), same fail-open discipline
@@ -25,7 +25,7 @@ import { describe, it, expect, afterAll } from 'vitest';
 import { randomUUID } from 'crypto';
 import { execSync } from 'child_process';
 
-const LIVE = process.env.RUFLO_FUNNEL_LIVE_E2E === '1';
+const LIVE = process.env.SWARMLO_FUNNEL_LIVE_E2E === '1';
 const PROJECT_ID = 'cognitum-20260110';
 const TEST_MESSAGE_ID = 'e2e-smoke-test';
 
@@ -95,7 +95,7 @@ describe.skipIf(!LIVE)('funnel analytics — LIVE end-to-end (real funnel.ruv.io
       headers: {
         'Content-Type': 'application/json',
         'Idempotency-Key': batchId,
-        'User-Agent': 'ruflo-funnel/3.25.6',
+        'User-Agent': 'swarmlo-funnel/3.25.6',
       },
       body: JSON.stringify(batch),
     });

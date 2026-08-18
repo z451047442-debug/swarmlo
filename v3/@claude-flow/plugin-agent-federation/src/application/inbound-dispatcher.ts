@@ -56,7 +56,7 @@ export type EnvelopeVerifier = (
   peerPublicKeyHex: string,
 ) => boolean;
 
-export const JCS_SIGNATURE_PROTOCOL = 'ruflo-signature-jcs-v1' as const;
+export const JCS_SIGNATURE_PROTOCOL = 'swarmlo-signature-jcs-v1' as const;
 export type EnvelopeSignatureVersion = 'legacy-v1' | 'jcs-v1';
 export type EnvelopeSignatureMode = 'legacy' | 'prefer-jcs' | 'require-jcs';
 /**

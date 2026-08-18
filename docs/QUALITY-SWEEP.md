@@ -1,9 +1,9 @@
-# Ruflo Project-Wide Quality Sweep
+# Swarmlo Project-Wide Quality Sweep
 
 **Branch**: `chore/project-wide-quality-sweep`  
-**Cut from**: `cdd5308d8` (main @ ruflo@3.10.2 / @claude-flow/cli@3.10.1)  
+**Cut from**: `cdd5308d8` (main @ swarmlo@3.10.2 / @claude-flow/cli@3.10.1)  
 **Test baseline**: 1999 passing | 46 skipped  
-**Do not regress**: ruflo@3.10.2, @claude-flow/cli@3.10.1, claude-flow@3.10.1  
+**Do not regress**: swarmlo@3.10.2, @claude-flow/cli@3.10.1, claude-flow@3.10.1  
 **Target release**: 3.11.0 (unpublished until explicit user approval)
 
 ---
@@ -38,7 +38,7 @@ Draft PR: #2139
 - T7 (done): All 46 skips documented. Removed the one `expect(true).toBe(true)` trivial assertion in coverage-router.test.ts.
 - T8 (done): All file paths cited in ADR-120 through ADR-130 verified to exist. No drift.
 - T9 (done): STATUS.md updated — MCP 300→323, CLI 49→45, plugins 32→33, agents 43→45. All counts match HEAD.
-- T10 (done): Added `overrides.protobufjs = >=7.5.6` to cli/package.json. Tightened ruflo/package.json from >=7.5.5 to >=7.5.6 (covers all 3 protobufjs CVEs). All 25 high vulns traced to optional/dev transitive deps — production paths clean.
+- T10 (done): Added `overrides.protobufjs = >=7.5.6` to cli/package.json. Tightened swarmlo/package.json from >=7.5.5 to >=7.5.6 (covers all 3 protobufjs CVEs). All 25 high vulns traced to optional/dev transitive deps — production paths clean.
 - T11 (done): Witness regen ran at ff685013a — 117 verified, 0 missing, 0 drifted.
 
 **Counts verified:**
@@ -222,7 +222,7 @@ Draft PR: #2139
 - IMPROVEMENT-ROADMAP.md: references specific issue numbers (#1872, #2030, #2032, etc.)
 - USERGUIDE.md: lists every CLI command
 
-**Note**: STATUS.md is outdated (references "branch fix/issues-may-1-3", ruflo@3.6.24) — needs update to reflect 3.10.x reality.
+**Note**: STATUS.md is outdated (references "branch fix/issues-may-1-3", swarmlo@3.6.24) — needs update to reflect 3.10.x reality.
 
 **Acceptance criteria**:
 - [ ] MCP tool count verified against actual registered tools
@@ -284,6 +284,6 @@ None — first iteration, starting clean.
 ## Remaining work (3.11.0 release prep)
 
 - [ ] T1 remaining: Open dedicated PR to remove 66 unused `export default` lines (tracked in #2141). Each line is in commands/*, production/*, mcp-tools/*, ruvector/* files confirmed by grep to have zero default-import callers. Small scope, easy review.
-- [ ] Version bump: bump @claude-flow/cli and ruflo to 3.11.0 (minor — new MCP tools added since 3.10.x)
+- [ ] Version bump: bump @claude-flow/cli and swarmlo to 3.11.0 (minor — new MCP tools added since 3.10.x)
 - [ ] Publish 3.11.0 artifacts (requires explicit user approval per hard constraints)
 - [ ] Open final PR for `chore/project-wide-quality-sweep` → main (draft PR #2139 already exists)

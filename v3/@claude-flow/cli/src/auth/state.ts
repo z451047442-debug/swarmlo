@@ -1,5 +1,5 @@
 /**
- * `auth.json` persistence — atomic tmp+rename, 0600, under ~/.ruflo (ADR-306).
+ * `auth.json` persistence — atomic tmp+rename, 0600, under ~/.swarmlo (ADR-306).
  * Reuses the exact same primitives `proxy-config.toml`'s consent mirror and
  * every other funnel state file already use (src/funnel/state.ts).
  */

@@ -46,15 +46,15 @@ function getProcessMemoryUsage(): number {
 // Check if project is initialized
 //
 // #2120 — the old check required `.claude-flow/config.yaml`, which
-// missed projects that were initialized via `ruflo memory init` (writes
+// missed projects that were initialized via `swarmlo memory init` (writes
 // `.swarm/memory.db` but no config.yaml) or via the auto-memory bridge.
 // Reporter @alexandrelealbess on WSL2 had a 251-entry `.swarm/memory.db`
-// and a running MCP, yet `ruflo status` reported "not initialized".
+// and a running MCP, yet `swarmlo status` reported "not initialized".
 //
 // Now: any of these signals counts as initialized:
-//   - `.claude-flow/config.yaml`   (the canonical `ruflo init` output)
+//   - `.claude-flow/config.yaml`   (the canonical `swarmlo init` output)
 //   - `.claude-flow/config.json`   (same, alt format)
-//   - `.swarm/memory.db`           (the `ruflo memory init` output)
+//   - `.swarm/memory.db`           (the `swarmlo memory init` output)
 //   - `.claude/settings.json`      (the Claude Code hook surface)
 function isInitialized(cwd: string): boolean {
   const candidates = [
@@ -239,7 +239,7 @@ function displayStatus(status: Awaited<ReturnType<typeof getSystemStatus>>): voi
   const statusIcon = status.running
     ? output.success('[RUNNING]')
     : output.warning('[STOPPED]');
-  output.writeln(`${output.bold('RuFlo V3')} ${statusIcon}`);
+  output.writeln(`${output.bold('Swarmlo V3')} ${statusIcon}`);
   output.writeln();
 
   // Swarm section
@@ -360,8 +360,8 @@ const statusAction = async (ctx: CommandContext): Promise<CommandResult> => {
 
   // Check initialization
   if (!isInitialized(cwd)) {
-    output.printError('RuFlo is not initialized in this directory');
-    output.printInfo('Run "ruflo init" to initialize');
+    output.printError('Swarmlo is not initialized in this directory');
+    output.printInfo('Run "swarmlo init" to initialize');
     return { success: false, exitCode: 1 };
   }
 

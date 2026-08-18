@@ -5,7 +5,7 @@
  * Pins the cost-tracker consumer contract:
  *   1. Namespace defaults to `federation-spend` (override accepted)
  *   2. Key shape EXACTLY `fed-spend-<peerId>-<ts>` (drift here breaks
- *      the consumer in plugins/ruflo-cost-tracker/scripts/federation.mjs)
+ *      the consumer in plugins/swarmlo-cost-tracker/scripts/federation.mjs)
  *   3. TTL defaults to 7 days (override accepted)
  *   4. Stored value round-trips every field of FederationSpendEvent
  *   5. Memory backend errors bubble up (no swallow)

@@ -3,7 +3,7 @@
  *
  * Asserts the "works without AGNTCY installed" smoke contract each command
  * must satisfy (mirroring ADR-150's CI-gate precedent, §1 of ADR-380):
- * with no `RUFLO_AGNTCY_SLIM_ENDPOINT` set (the default, real-world state
+ * with no `SWARMLO_AGNTCY_SLIM_ENDPOINT` set (the default, real-world state
  * today since no runtime package exists to install), every command must
  * run to completion without throwing, exit 0, and print the documented
  * "not configured" fallback message.
@@ -105,7 +105,7 @@ describe('agntcy command scaffold (ADR-380) — not-configured fallback', () => 
     });
   });
 
-  describe('ruflo transport use slim', () => {
+  describe('swarmlo transport use slim', () => {
     it('exposes a "use" subcommand on the transport command tree', () => {
       expect(transportCommand.name).toBe('transport');
       expect(transportCommand.subcommands?.map((c) => c.name)).toContain('use');
@@ -141,7 +141,7 @@ describe('agntcy command scaffold (ADR-380) — not-configured fallback', () => 
     });
   });
 
-  describe('ruflo agent publish', () => {
+  describe('swarmlo agent publish', () => {
     let tmpDir: string;
     let manifestPath: string;
 
@@ -198,7 +198,7 @@ describe('agntcy command scaffold (ADR-380) — not-configured fallback', () => 
     });
   });
 
-  describe('ruflo swarm join <namespace>', () => {
+  describe('swarmlo swarm join <namespace>', () => {
     it('validateNamespace accepts slash-delimited alphanumeric namespaces', () => {
       expect(validateNamespace('cognitum/research/security').valid).toBe(true);
       expect(validateNamespace('single-segment').valid).toBe(true);

@@ -50,7 +50,7 @@ import { ruvllmWasmTools } from './mcp-tools/ruvllm-tools.js';
 import { wasmAgentTools } from './mcp-tools/wasm-agent-tools.js';
 // ADR-115: Anthropic Claude Managed Agents — a cloud agent runtime alongside
 // the local WASM-sandboxed `wasm_agent_*` (rvagent) tools. Lives in the
-// `ruflo-agent` plugin.
+// `swarmlo-agent` plugin.
 import { managedAgentTools } from './mcp-tools/managed-agent-tools.js';
 import {
   configureGuidanceToolProvider,
@@ -75,7 +75,7 @@ import { businessPodTools } from './mcp-tools/business-pod-tools.js';
 // + auth headers; opt-in via CLAUDE_FLOW_HTTP_FETCH_ALLOW_PRIVATE / _AUTH=1.
 import { httpFetchTools } from './mcp-tools/http-fetch-tools.js';
 // #1916: coverage-aware routing tools — defined in ruvector/coverage-tools.ts
-// but were never registered, so the `ruflo hooks coverage-*` CLI subcommands
+// but were never registered, so the `swarmlo hooks coverage-*` CLI subcommands
 // failed with `Tool not found: hooks_coverage-route`.
 import { coverageRouterTools } from './ruvector/coverage-tools.js';
 
@@ -94,8 +94,8 @@ function getBrowserTools(): MCPTool[] {
 }
 
 /**
- * Lifecycle MCP tools for ruflo-browser session-as-skill architecture
- * (ADR-0001 ruflo-browser §7). Always registered: their handlers shell out
+ * Lifecycle MCP tools for swarmlo-browser session-as-skill architecture
+ * (ADR-0001 swarmlo-browser §7). Always registered: their handlers shell out
  * to ruvector + agent-browser + claude-flow memory and degrade gracefully
  * when those CLIs are missing.
  */

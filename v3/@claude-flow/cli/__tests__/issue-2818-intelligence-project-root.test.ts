@@ -8,7 +8,7 @@ const HELPER = resolve(__dirname, '../.claude/helpers/intelligence.cjs');
 
 describe('#2818 intelligence helper project-root storage', () => {
   it('writes at CLAUDE_PROJECT_DIR and recovers legacy nested pending insights', () => {
-    const root = mkdtempSync(join(tmpdir(), 'ruflo-2818-'));
+    const root = mkdtempSync(join(tmpdir(), 'swarmlo-2818-'));
     const nested = join(root, 'src');
     const legacyDir = join(nested, '.claude-flow', 'data');
     mkdirSync(join(root, '.claude-flow'), { recursive: true });

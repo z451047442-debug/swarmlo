@@ -1,0 +1,22 @@
+{
+  "name": "swarmlo-sparc",
+  "description": "SPARC methodology — Specification, Pseudocode, Architecture, Refinement, Completion phases with gate checks",
+  "version": "0.2.1",
+  "author": {
+    "name": "ruvnet",
+    "url": "https://github.com/ruvnet"
+  },
+  "homepage": "https://github.com/z451047442-debug/swarmlo",
+  "license": "MIT",
+  "keywords": [
+    "swarmlo",
+    "sparc",
+    "methodology",
+    "specification",
+    "architecture",
+    "refinement",
+    "mcp",
+    "phase-gates",
+    "quality-gates"
+  ]
+}

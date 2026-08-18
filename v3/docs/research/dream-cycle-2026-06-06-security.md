@@ -1,6 +1,6 @@
 # Security SOTA Report — 2026-06-06
 
-**TL;DR:** Memory write poisoning (4 attack channels, 9 structural flaws; arXiv:2606.04329) and 9.93% MCP description-code inconsistency (arXiv:2606.04769) are the 2026 agentic security frontier; Ruflo ADR-144/145/146 cover supply chain and output guardrails but leave memory integrity validation and inter-agent message signing unguarded.
+**TL;DR:** Memory write poisoning (4 attack channels, 9 structural flaws; arXiv:2606.04329) and 9.93% MCP description-code inconsistency (arXiv:2606.04769) are the 2026 agentic security frontier; Swarmlo ADR-144/145/146 cover supply chain and output guardrails but leave memory integrity validation and inter-agent message signing unguarded.
 
 ---
 
@@ -18,7 +18,7 @@
 
 ---
 
-## Ruflo Current Capability
+## Swarmlo Current Capability
 
 | Capability | Status | ADR |
 |-----------|--------|-----|
@@ -41,9 +41,9 @@
 | **CrewAI** | Role-based per agent | None native | Role-driven task delegation | None native | v1.14+ |
 | **AG2 (AutoGen)** | GroupChat manager | Docker container native | Manager-mediated conversation | None native | v0.12+ |
 | **OpenAI Agents SDK** | Approval callbacks in harness | Sandbox execution (Apr 2026) | Sequential handoff + transfer validation | None documented | Apr 2026 |
-| **Ruflo** | ADR-144 propagation | ADR-145 supply chain | Hive-mind Byzantine BFT | No memory integrity | 3.6.10 |
+| **Swarmlo** | ADR-144 propagation | ADR-145 supply chain | Hive-mind Byzantine BFT | No memory integrity | 3.6.10 |
 
-**Grade B — vendor claims cross-checked:** All five frameworks — including Ruflo — lack native memory integrity validation despite Memory & Context Poisoning being OWASP ASI06:2026. OpenAI Agents SDK leads on sandboxing; Ruflo leads on inter-agent consensus (Byzantine BFT) but has no Membrane-equivalent guardrail.
+**Grade B — vendor claims cross-checked:** All five frameworks — including Swarmlo — lack native memory integrity validation despite Memory & Context Poisoning being OWASP ASI06:2026. OpenAI Agents SDK leads on sandboxing; Swarmlo leads on inter-agent consensus (Byzantine BFT) but has no Membrane-equivalent guardrail.
 
 ---
 
@@ -63,18 +63,18 @@
 ## Scan Findings: Intelligence (2026-06-06)
 
 **Source:** arXiv:2606.05670 (Jun 2026) — "Do More Agents Help? Controlled Evaluation of LLM Agent Workflows"
-**Finding (Grade A):** Under normalized conditions, most multi-agent systems underperform single-agent baselines by **2.56–11.29 percentage points** despite higher compute cost. Ruflo's multi-agent value must be justified by coordination quality, not headcount.
+**Finding (Grade A):** Under normalized conditions, most multi-agent systems underperform single-agent baselines by **2.56–11.29 percentage points** despite higher compute cost. Swarmlo's multi-agent value must be justified by coordination quality, not headcount.
 
-**Competitive signal:** Economy of Minds (arXiv:2606.02859) shows market-based self-organization of weak agents outperforms centralized coordination — contrasts with Ruflo's fixed-hierarchical queen topology.
+**Competitive signal:** Economy of Minds (arXiv:2606.02859) shows market-based self-organization of weak agents outperforms centralized coordination — contrasts with Swarmlo's fixed-hierarchical queen topology.
 
 ---
 
 ## Scan Findings: Swarm (2026-06-06)
 
 **Source:** arXiv:2605.10052 (May 2026) — "Swarm Skills: A Portable, Self-Evolving Multi-Agent System Specification"
-**Finding (Grade A):** Portable, distributable multi-agent specs act as first-class assets enabling workflow distribution independent of runtime — Ruflo has no equivalent portable swarm-spec format.
+**Finding (Grade A):** Portable, distributable multi-agent specs act as first-class assets enabling workflow distribution independent of runtime — Swarmlo has no equivalent portable swarm-spec format.
 
-**Competitive signal (Grade B):** LangGraph v0.4 (May 2026) adds per-node timeouts, error recovery, and graceful shutdown — Ruflo's swarm lacks per-agent circuit breakers (ADR-146 scope covers tool output only, not agent lifecycle).
+**Competitive signal (Grade B):** LangGraph v0.4 (May 2026) adds per-node timeouts, error recovery, and graceful shutdown — Swarmlo's swarm lacks per-agent circuit breakers (ADR-146 scope covers tool output only, not agent lifecycle).
 
 ---
 

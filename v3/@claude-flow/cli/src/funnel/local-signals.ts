@@ -13,7 +13,7 @@ import { execSync } from 'child_process';
 
 export interface SecurityStatus {
   status: 'CLEAN' | 'ISSUES' | 'PENDING';
-  /** Generic code-pattern findings from `ruflo security scan` (not CVEs). */
+  /** Generic code-pattern findings from `swarmlo security scan` (not CVEs). */
   findings: number;
   scannedAt?: string;
   /** @deprecated Retained as a zero-valued compatibility field. */

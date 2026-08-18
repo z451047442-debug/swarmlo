@@ -17,7 +17,7 @@
 // `[]` findings and audit-trend's introduced/cleared diff returns to
 // dead code (the iter-49 latent bug).
 //
-// This script runs `harness mcp-scan` against ruflo itself and asserts
+// This script runs `harness mcp-scan` against swarmlo itself and asserts
 // BOTH format invariants hold. CI fails the workflow if either drifts.
 //
 // USAGE
@@ -64,7 +64,7 @@ async function main() {
   // Resolve repo root (one level up from scripts/)
   const repoRoot = join(SCRIPT_DIR, '..');
 
-  // 1. Run `harness mcp-scan` against ruflo. ~5s on warm cache.
+  // 1. Run `harness mcp-scan` against swarmlo. ~5s on warm cache.
   const r = spawnSync('npx', [
     '-y', '-p', 'metaharness@latest', 'harness', 'mcp-scan', repoRoot,
   ], { encoding: 'utf-8', timeout: 90_000 });
@@ -110,7 +110,7 @@ async function main() {
   //    any drift the regex above might miss but the parser depends on.
   let parser;
   try {
-    parser = await import(join(repoRoot, 'plugins', 'ruflo-metaharness', 'scripts', '_harness.mjs'));
+    parser = await import(join(repoRoot, 'plugins', 'swarmlo-metaharness', 'scripts', '_harness.mjs'));
   } catch (e) {
     results.push({
       check: 'parseMcpScanText module loadable',

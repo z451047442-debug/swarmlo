@@ -22,7 +22,7 @@ const roots: string[] = [];
 const D = (value: string): string => `sha256:${createHash('sha256').update(value).digest('hex')}`;
 
 function repository(): string {
-  const root = mkdtempSync(join(tmpdir(), 'ruflo-harness-authority-'));
+  const root = mkdtempSync(join(tmpdir(), 'swarmlo-harness-authority-'));
   roots.push(root);
   execFileSync('git', ['init', '--quiet', root]);
   execFileSync('git', ['-C', root, 'config', 'user.email', 'test@example.com']);

@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * Static guard for ruvnet/ruflo#2151 — enforce three-way version lockstep
+ * Static guard for z451047442-debug/swarmlo#2151 — enforce three-way version lockstep
  * across the umbrella packages that ship together:
  *
  *   - @claude-flow/cli  (v3/@claude-flow/cli/package.json)
  *   - claude-flow       (root package.json — umbrella)
- *   - ruflo             (ruflo/package.json — thin user-facing wrapper)
+ *   - swarmlo             (swarmlo/package.json — thin user-facing wrapper)
  *
- * Why: when these drift (e.g. ruflo@3.10.2 but cli@3.10.1, observed in
- * #2151), `npx ruflo --version` prints the bundled CLI's version (3.10.1),
+ * Why: when these drift (e.g. swarmlo@3.10.2 but cli@3.10.1, observed in
+ * #2151), `npx swarmlo --version` prints the bundled CLI's version (3.10.1),
  * not the wrapper's package.json version (3.10.2). Users see the "wrong"
  * version and reasonably assume the install is broken.
  *
@@ -16,7 +16,7 @@
  * version. This audit enforces that locally so a drift can't reach a
  * release. Wired into v3-ci.yml as `umbrella-version-lockstep-audit`.
  *
- * Also asserts ruflo's @claude-flow/cli dep range INCLUDES the cli's
+ * Also asserts swarmlo's @claude-flow/cli dep range INCLUDES the cli's
  * actual version (overlap with audit-wrapper-dep-ranges.mjs is intentional;
  * this audit is about identity, that one is about inclusion).
  *
@@ -36,7 +36,7 @@ const REPO_ROOT = resolve(__dirname, '..');
 const TARGETS = [
   { label: '@claude-flow/cli', path: 'v3/@claude-flow/cli/package.json' },
   { label: 'claude-flow',       path: 'package.json' },
-  { label: 'ruflo',             path: 'ruflo/package.json' },
+  { label: 'swarmlo',             path: 'swarmlo/package.json' },
 ];
 
 function readPkg(rel) {
@@ -70,34 +70,34 @@ if (unique.size > 1) {
     `    Bump all three to the same version per CLAUDE.md "Publishing Rules" before shipping:\n` +
     `      v3/@claude-flow/cli/package.json   ← ${versions['@claude-flow/cli'] ?? '?'}\n` +
     `      package.json (claude-flow)         ← ${versions['claude-flow'] ?? '?'}\n` +
-    `      ruflo/package.json                 ← ${versions['ruflo'] ?? '?'}`
+    `      swarmlo/package.json                 ← ${versions['swarmlo'] ?? '?'}`
   );
 }
 
-// Cross-check: ruflo's dep range must include cli's actual version.
-const rufloPkg = readPkg('ruflo/package.json');
+// Cross-check: swarmlo's dep range must include cli's actual version.
+const swarmloPkg = readPkg('swarmlo/package.json');
 const cliVersion = versions['@claude-flow/cli'];
-if (rufloPkg && cliVersion) {
-  const range = rufloPkg.dependencies?.['@claude-flow/cli'];
+if (swarmloPkg && cliVersion) {
+  const range = swarmloPkg.dependencies?.['@claude-flow/cli'];
   if (range) {
     if (!semver.satisfies(cliVersion, range, { includePrerelease: true })) {
       violations.push(
-        `ruflo "@claude-flow/cli": "${range}" does NOT include cli's actual version ${cliVersion}.\n` +
-        `    Update ruflo/package.json dependencies to "^${cliVersion}".`
+        `swarmlo "@claude-flow/cli": "${range}" does NOT include cli's actual version ${cliVersion}.\n` +
+        `    Update swarmlo/package.json dependencies to "^${cliVersion}".`
       );
     } else {
-      console.log(`  ruflo dep "@claude-flow/cli": "${range}" covers ${cliVersion} ✓`);
+      console.log(`  swarmlo dep "@claude-flow/cli": "${range}" covers ${cliVersion} ✓`);
     }
   }
 }
 
 if (violations.length === 0) {
-  console.log('\n  ok: all three umbrella packages at identical version, ruflo dep covers cli');
+  console.log('\n  ok: all three umbrella packages at identical version, swarmlo dep covers cli');
   process.exit(0);
 }
 
 console.error('\nviolations:');
 for (const v of violations) console.error(`  ✗ ${v}`);
 console.error(`\n${violations.length} violation(s).`);
-console.error('Reference: ruvnet/ruflo#2151 (version mismatch — ruflo@3.10.2 + cli@3.10.1).');
+console.error('Reference: z451047442-debug/swarmlo#2151 (version mismatch — swarmlo@3.10.2 + cli@3.10.1).');
 process.exit(1);

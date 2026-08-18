@@ -20,7 +20,7 @@ let savedEnv: NodeJS.ProcessEnv;
 beforeEach(() => {
   stateDir = fs.mkdtempSync(path.join(os.tmpdir(), 'proxy-install-cmd-test-'));
   savedEnv = { ...process.env };
-  process.env.RUFLO_STATE_DIR = stateDir;
+  process.env.SWARMLO_STATE_DIR = stateDir;
   vi.resetModules();
 });
 

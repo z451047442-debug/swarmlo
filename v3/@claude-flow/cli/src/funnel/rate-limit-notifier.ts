@@ -5,11 +5,11 @@
  * — ADR-312 established that Claude Code does not currently expose any way
  * to detect its own usage-limit state from outside its process (verified
  * against the actual installed CLI source, not assumed). This module is the
- * MANUAL, self-reported alternative: the user tells ruflo they've hit a
- * limit, ruflo remembers it, and the funnel promo row can react.
+ * MANUAL, self-reported alternative: the user tells swarmlo they've hit a
+ * limit, swarmlo remembers it, and the funnel promo row can react.
  *
  * State is cheap and durable:
- *   ~/.ruflo/rate-limit-status.json = { limited: bool, since: ISO, cleared: ISO|null }
+ *   ~/.swarmlo/rate-limit-status.json = { limited: bool, since: ISO, cleared: ISO|null }
  *
  * A TTL (default 6h) auto-expires a forgotten flag so a stale manual mark
  * doesn't linger indefinitely if the user forgets to clear it — Claude
@@ -74,7 +74,7 @@ export function markRateLimited(now: Date = new Date()): boolean {
 }
 
 /**
- * Clear rate-limited status. Called via `ruflo settings notices
+ * Clear rate-limited status. Called via `swarmlo settings notices
  * rate-limited --clear`, automatically by the TTL, or once a real Phase 1/2
  * signal (ADR-312) confirms the limit has reset. Refuses to flip true→false
  * inside the cooldown window (returns false); clearing an already-clear
@@ -103,9 +103,9 @@ export function rateLimitNotice(now: Date = new Date()): string | null {
   if (!status.limited) return null;
   const since = status.since ? Date.parse(status.since) : NaN;
   if (Number.isNaN(since)) {
-    return 'Claude usage limit flagged · run: ruflo proxy sponsor-enable';
+    return 'Claude usage limit flagged · run: swarmlo proxy sponsor-enable';
   }
   const ageMin = Math.max(0, Math.round((now.getTime() - since) / (60 * 1000)));
   const when = ageMin < 1 ? 'just now' : ageMin < 60 ? `${ageMin}m ago` : `${Math.round(ageMin / 60)}h ago`;
-  return `Claude usage limit flagged (${when}) · run: ruflo proxy sponsor-enable`;
+  return `Claude usage limit flagged (${when}) · run: swarmlo proxy sponsor-enable`;
 }

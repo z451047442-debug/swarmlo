@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.swarmlo/
+*.tsbuildinfo
+# Lockfile is regenerated inside the swarmlo workspace; an isolated install pulls peer deps.
+package-lock.json

@@ -28,7 +28,7 @@ describe('ADR-111 Phase 4 — WgFirewallService nftables projection', () => {
     const { content } = svc.projectRules([]);
     expect(content).toContain('#!/usr/sbin/nft -f');
     expect(content).toContain('policy drop');
-    expect(content).toContain('table inet ruflo_fed');
+    expect(content).toContain('table inet swarmlo_fed');
   });
 
   it('scopes input chain to the WG interface', () => {
@@ -75,9 +75,9 @@ describe('ADR-111 Phase 4 — WgFirewallService nftables projection', () => {
   });
 
   it('emits loadCmd = nft -f <rulePath>', () => {
-    const svc = new WgFirewallService({ platform: 'linux-nftables', rulePath: '/tmp/ruflo.nft' });
+    const svc = new WgFirewallService({ platform: 'linux-nftables', rulePath: '/tmp/swarmlo.nft' });
     const { loadCmd } = svc.projectRules([]);
-    expect(loadCmd).toBe('nft -f /tmp/ruflo.nft');
+    expect(loadCmd).toBe('nft -f /tmp/swarmlo.nft');
   });
 });
 
@@ -113,7 +113,7 @@ describe('ADR-111 Phase 4 — WgFirewallService pf projection', () => {
     const { content } = svc.projectRules([
       peer('full-trust', TrustLevel.PRIVILEGED, '10.50.7.7/32'),
     ]);
-    expect(content).toMatch(/pass in on ruflo-fed from 10\.50\.7\.7 to any keep state/);
+    expect(content).toMatch(/pass in on swarmlo-fed from 10\.50\.7\.7 to any keep state/);
   });
 });
 

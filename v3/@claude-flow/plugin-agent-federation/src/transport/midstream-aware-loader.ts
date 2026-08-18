@@ -327,7 +327,7 @@ async function probeMidstreamerTransport(
 /**
  * Top-level loader for federation transport. Identical signature to
  * agentic-flow's `loadQuicTransport`, but with the midstreamer-first
- * preference. Use this from `plugins/ruflo-federation` in place of
+ * preference. Use this from `plugins/swarmlo-federation` in place of
  * the bare `loadQuicTransport`.
  *
  * Failure mode: if midstreamer is requested but rejects (stub, init

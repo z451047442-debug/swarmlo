@@ -1,7 +1,7 @@
 /**
  * Flywheel runtime wiring (ADR-176) — binds runFlywheelTick to the LIVE neural
  * store + retrieval so the daemon can self-optimize on real data. Opt-in
- * (RUFLO_HARNESS_LOOP) and bounded; lazily imports neural-tools so the daemon
+ * (SWARMLO_HARNESS_LOOP) and bounded; lazily imports neural-tools so the daemon
  * pays the ONNX cost only when actually running a tick. Never throws.
  */
 import { harnessLoopOptedIn } from './harness-worker.js';
@@ -54,7 +54,7 @@ export function retrievalSafetyEnvelope(ref?: string): SafetyEnvelope {
   };
   return {
     ref: ref ?? sha256Ref(JSON.stringify({
-      schema: 'ruflo.retrieval-safety-envelope/v2',
+      schema: 'swarmlo.retrieval-safety-envelope/v2',
       allowedPolicyKeys,
       numericBounds,
     })),
@@ -72,7 +72,7 @@ export function retrievalSafetyEnvelope(ref?: string): SafetyEnvelope {
 
 /**
  * Run one live flywheel tick against `projectRoot`. Opt-in + $0 default: with
- * RUFLO_HARNESS_LOOP unset it is a no-op. Best-effort; never throws.
+ * SWARMLO_HARNESS_LOOP unset it is a no-op. Best-effort; never throws.
  */
 export async function runFlywheelWorker(
   projectRoot: string,
@@ -96,7 +96,7 @@ export async function runFlywheelWorker(
   } = {},
 ): Promise<FlywheelResult> {
   try {
-    if (!(opts.optInOverride ?? harnessLoopOptedIn())) return { ran: false, reason: 'opt-in required (RUFLO_HARNESS_LOOP=1)' };
+    if (!(opts.optInOverride ?? harnessLoopOptedIn())) return { ran: false, reason: 'opt-in required (SWARMLO_HARNESS_LOOP=1)' };
     const policy = await evaluatePolicyRequest({
       identity: { id: process.env.CLAUDE_FLOW_PRINCIPAL_ID ?? 'metaharness-local', type: 'agent', roles: ['optimizer'] },
       action: {
@@ -120,13 +120,13 @@ export async function runFlywheelWorker(
     };
     const safetyEnvelope = retrievalSafetyEnvelope(opts.safetyEnvelopeRef);
     const anchor = loadEffectiveFlywheelAnchor(projectRoot, {
-      anchorPath: opts.anchorPath ?? process.env.RUFLO_FLYWHEEL_ANCHOR_PATH,
-      anchorHash: opts.anchorHash ?? process.env.RUFLO_FLYWHEEL_ANCHOR_HASH,
-      manifestPath: opts.anchorManifestPath ?? process.env.RUFLO_FLYWHEEL_ANCHOR_MANIFEST,
+      anchorPath: opts.anchorPath ?? process.env.SWARMLO_FLYWHEEL_ANCHOR_PATH,
+      anchorHash: opts.anchorHash ?? process.env.SWARMLO_FLYWHEEL_ANCHOR_HASH,
+      manifestPath: opts.anchorManifestPath ?? process.env.SWARMLO_FLYWHEEL_ANCHOR_MANIFEST,
     });
-    // CLI flag opts.proposer takes precedence over RUFLO_FLYWHEEL_PROPOSER.
+    // CLI flag opts.proposer takes precedence over SWARMLO_FLYWHEEL_PROPOSER.
     const proposerMode = opts.proposer
-      ?? ((process.env.RUFLO_FLYWHEEL_PROPOSER as ProposerMode | undefined) ?? 'auto');
+      ?? ((process.env.SWARMLO_FLYWHEEL_PROPOSER as ProposerMode | undefined) ?? 'auto');
     if (!['auto', 'local', 'darwin'].includes(proposerMode)) {
       return { ran: false, reason: `invalid proposer mode: ${proposerMode}` };
     }
@@ -202,14 +202,14 @@ export async function runFlywheelGenerationWorker(
   } = {},
 ): Promise<GenerationResult> {
   try {
-    if (!(opts.optInOverride ?? harnessLoopOptedIn())) return { ran: false, reason: 'opt-in required (RUFLO_HARNESS_LOOP=1)', generation: 0 };
+    if (!(opts.optInOverride ?? harnessLoopOptedIn())) return { ran: false, reason: 'opt-in required (SWARMLO_HARNESS_LOOP=1)', generation: 0 };
     const neural = await import('../mcp-tools/neural-tools.js');
     const tool = neural.neuralTools.find((t) => t.name === 'neural_patterns');
     if (!tool) return { ran: false, reason: 'neural_patterns tool unavailable', generation: 0 };
     const anchor = loadEffectiveFlywheelAnchor(projectRoot, {
-      anchorPath: opts.anchorPath ?? process.env.RUFLO_FLYWHEEL_ANCHOR_PATH,
-      anchorHash: opts.anchorHash ?? process.env.RUFLO_FLYWHEEL_ANCHOR_HASH,
-      manifestPath: opts.anchorManifestPath ?? process.env.RUFLO_FLYWHEEL_ANCHOR_MANIFEST,
+      anchorPath: opts.anchorPath ?? process.env.SWARMLO_FLYWHEEL_ANCHOR_PATH,
+      anchorHash: opts.anchorHash ?? process.env.SWARMLO_FLYWHEEL_ANCHOR_HASH,
+      manifestPath: opts.anchorManifestPath ?? process.env.SWARMLO_FLYWHEEL_ANCHOR_MANIFEST,
     });
     const deps: GenerationDeps = {
       getPatterns: () => neural.getStorePatterns(),

@@ -98,7 +98,7 @@ function ensureEmbeddings(): Promise<void> {
   embeddingsPromise = (async () => {
     try {
       // Tier -1 (PRIMARY): optional WASM embedder — a pluggable real embedder
-      // ahead of everything. OPT-IN (RUFLO_EMBED_WASM_PKG) + FAIL-CLOSED: unset
+      // ahead of everything. OPT-IN (SWARMLO_EMBED_WASM_PKG) + FAIL-CLOSED: unset
       // or absent/init-fail ⇒ fall straight through to the existing
       // ruvector-ONNX → hash tiers with zero regression.
       try {

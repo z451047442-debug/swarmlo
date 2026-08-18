@@ -86,14 +86,14 @@ let stateDir: string;
 let savedEnv: NodeJS.ProcessEnv;
 
 const CLEAN_ENV_KEYS = [
-  'RUFLO_FUNNEL', 'RUFLO_ENTERPRISE_POLICY', 'CI', 'GITHUB_ACTIONS', 'GITLAB_CI',
+  'SWARMLO_FUNNEL', 'SWARMLO_ENTERPRISE_POLICY', 'CI', 'GITHUB_ACTIONS', 'GITLAB_CI',
   'CIRCLECI', 'TRAVIS', 'BUILDKITE', 'JENKINS_URL', 'TEAMCITY_VERSION', 'TF_BUILD',
 ];
 
 beforeEach(() => {
   stateDir = fs.mkdtempSync(path.join(os.tmpdir(), 'funnel-test-'));
   savedEnv = { ...process.env };
-  process.env.RUFLO_STATE_DIR = stateDir;
+  process.env.SWARMLO_STATE_DIR = stateDir;
   for (const k of CLEAN_ENV_KEYS) delete process.env[k];
 });
 
@@ -112,9 +112,9 @@ function seedRemoteMessages(messages: unknown[]): void {
 }
 
 const TEST_DISCLOSURE_POOL = [
-  { id: 'disclosure-1', schemaVersion: 1, class: 'disclosure', text: '✨ Tips, features and Cognitum updates here · manage: ruflo settings', url: 'https://cognitum.one/ruflo' },
-  { id: 'disclosure-2', schemaVersion: 1, class: 'disclosure', text: '✨ Additional AI capabilities from Cognitum · manage: ruflo settings', url: 'https://cognitum.one/ruflo' },
-  { id: 'disclosure-3', schemaVersion: 1, class: 'disclosure', text: '✨ Tips and Cognitum updates appear here · manage: ruflo settings', url: 'https://cognitum.one/ruflo' },
+  { id: 'disclosure-1', schemaVersion: 1, class: 'disclosure', text: '✨ Tips, features and Cognitum updates here · manage: swarmlo settings', url: 'https://cognitum.one/swarmlo' },
+  { id: 'disclosure-2', schemaVersion: 1, class: 'disclosure', text: '✨ Additional AI capabilities from Cognitum · manage: swarmlo settings', url: 'https://cognitum.one/swarmlo' },
+  { id: 'disclosure-3', schemaVersion: 1, class: 'disclosure', text: '✨ Tips and Cognitum updates appear here · manage: swarmlo settings', url: 'https://cognitum.one/swarmlo' },
 ];
 
 const TEST_ROTATION_POOL = [
@@ -181,7 +181,7 @@ describe('message content boundaries (ADR-301)', () => {
 
   it('URL allowlist: exact hosts only, https only, no lookalikes', () => {
     expect(isAllowedUrl('https://cognitum.one/routing')).toBe(true);
-    expect(isAllowedUrl('https://github.com/ruvnet/ruflo')).toBe(true);
+    expect(isAllowedUrl('https://github.com/z451047442-debug/swarmlo')).toBe(true);
     expect(isAllowedUrl('http://cognitum.one')).toBe(false); // not https
     expect(isAllowedUrl('https://cognitum.one.evil.com')).toBe(false); // lookalike
     expect(isAllowedUrl('https://evilcognitum.one')).toBe(false);
@@ -202,7 +202,7 @@ describe('message content boundaries (ADR-301)', () => {
   it('a disclosure-class message without the manage tail is rejected, never repaired', () => {
     const base = { id: 'disclosure-x', schemaVersion: 1 as const, class: 'disclosure' as const };
     expect(isValidMessage({ ...base, text: '✨ Missing the tail entirely' })).toBe(false);
-    expect(isValidMessage({ ...base, text: '✨ Has it · manage: ruflo settings' })).toBe(true);
+    expect(isValidMessage({ ...base, text: '✨ Has it · manage: swarmlo settings' })).toBe(true);
   });
 
   it('selectDisclosureMessage uses the local seed disclosure on cold start', () => {
@@ -280,23 +280,23 @@ describe('control precedence (ADR-305)', () => {
     expect(resolveFunnelEnabled(stateDir)).toEqual({ enabled: true, decidedBy: 'package-default' });
   });
 
-  it('RUFLO_FUNNEL=0 disables at the top of the chain', () => {
+  it('SWARMLO_FUNNEL=0 disables at the top of the chain', () => {
     for (const v of ['0', 'false', 'off', 'no', 'FALSE']) {
-      expect(resolveFunnelEnabled(stateDir, { ...process.env, RUFLO_FUNNEL: v }).decidedBy).toBe('env');
+      expect(resolveFunnelEnabled(stateDir, { ...process.env, SWARMLO_FUNNEL: v }).decidedBy).toBe('env');
     }
   });
 
   it('enterprise policy disables below env', () => {
     const policyFile = path.join(stateDir, 'policy.json');
     fs.writeFileSync(policyFile, JSON.stringify({ funnel: { enabled: false } }));
-    const decision = resolveFunnelEnabled(stateDir, { ...process.env, RUFLO_ENTERPRISE_POLICY: policyFile });
+    const decision = resolveFunnelEnabled(stateDir, { ...process.env, SWARMLO_ENTERPRISE_POLICY: policyFile });
     expect(decision).toEqual({ enabled: false, decidedBy: 'enterprise-policy' });
   });
 
   it('a lower-precedence source never re-enables a higher-precedence disable', () => {
     // user config says enabled=true, env says off → env wins
     fs.writeFileSync(path.join(stateDir, 'funnel.json'), JSON.stringify({ enabled: true }));
-    const decision = resolveFunnelEnabled(stateDir, { ...process.env, RUFLO_FUNNEL: '0' });
+    const decision = resolveFunnelEnabled(stateDir, { ...process.env, SWARMLO_FUNNEL: '0' });
     expect(decision.enabled).toBe(false);
     expect(decision.decidedBy).toBe('env');
   });
@@ -359,7 +359,7 @@ describe('promo orchestrator (getFunnelPromo)', () => {
   });
 
   it('renders nothing when disabled by any precedence source', () => {
-    expect(getFunnelPromo({ interactive: true, env: { ...process.env, RUFLO_FUNNEL: '0' } })).toBeNull();
+    expect(getFunnelPromo({ interactive: true, env: { ...process.env, SWARMLO_FUNNEL: '0' } })).toBeNull();
   });
 
   it('first render uses the local seed disclosure when no remote pool is cached', () => {
@@ -367,7 +367,7 @@ describe('promo orchestrator (getFunnelPromo)', () => {
     expect(row).not.toBeNull();
     expect(row!.kind).toBe('disclosure');
     expect(row!.text).toBe(
-      'Ruflo shows occasional tips and sponsor notes here · manage: ruflo settings',
+      'Swarmlo shows occasional tips and sponsor notes here · manage: swarmlo settings',
     );
   });
 
@@ -380,15 +380,15 @@ describe('promo orchestrator (getFunnelPromo)', () => {
     // Row text is one of the seeded disclosure variants.
     expect(TEST_DISCLOSURE_POOL.map((m) => m.text)).toContain(row!.text);
     // The URL is click-tracked (routes through the server redirect) — the
-    // real cognitum.one/ruflo target rides in the `to` query param.
+    // real cognitum.one/swarmlo target rides in the `to` query param.
     expect(row!.url).toBeDefined();
     const outer = new URL(row!.url!);
     expect(outer.pathname).toMatch(/^\/v1\/click\/disclosure-\d+$/);
     const to = outer.searchParams.get('to');
     expect(to).toBeTruthy();
     const parsed = new URL(to!);
-    expect(parsed.origin + parsed.pathname).toBe('https://cognitum.one/ruflo');
-    expect(parsed.searchParams.get('utm_source')).toBe('ruflo');
+    expect(parsed.origin + parsed.pathname).toBe('https://cognitum.one/swarmlo');
+    expect(parsed.searchParams.get('utm_source')).toBe('swarmlo');
     expect(parsed.searchParams.get('utm_medium')).toBe('statusline');
     expect(parsed.searchParams.get('utm_campaign')).toBe('disclosure');
     expect(parsed.searchParams.get('utm_content')).toMatch(/^disclosure-\d+$/);
@@ -556,8 +556,8 @@ describe('credit-error classifier (ADR-303, fail-closed)', () => {
   });
 
   it('recovery screen distinguishes signed-in vs signed-out', () => {
-    expect(renderCreditRecovery(false)).toContain('ruflo auth login');
-    expect(renderCreditRecovery(true)).toContain('ruflo proxy enable');
+    expect(renderCreditRecovery(false)).toContain('swarmlo auth login');
+    expect(renderCreditRecovery(true)).toContain('swarmlo proxy enable');
   });
 });
 
@@ -602,7 +602,7 @@ describe('enrollment gates (ADR-302)', () => {
     expect(shouldOfferEnrollment({ noSignup: true, cwd: stateDir })).toBe(false);
     expect(shouldOfferEnrollment({ noSignup: false, cwd: stateDir, env: { ...process.env, CI: '1' } })).toBe(false);
     expect(
-      shouldOfferEnrollment({ noSignup: false, cwd: stateDir, env: { ...process.env, RUFLO_FUNNEL: '0' } }),
+      shouldOfferEnrollment({ noSignup: false, cwd: stateDir, env: { ...process.env, SWARMLO_FUNNEL: '0' } }),
     ).toBe(false);
   });
 
@@ -640,10 +640,10 @@ describe('generated statusline promo row', () => {
     statusline: { enabled: true },
   } as never);
 
-  it('embeds the promo renderer with CI and RUFLO_FUNNEL gates', () => {
+  it('embeds the promo renderer with CI and SWARMLO_FUNNEL gates', () => {
     expect(script).toContain('getPromoRow');
     expect(script).toContain('process.env.CI');
-    expect(script).toContain('RUFLO_FUNNEL');
+    expect(script).toContain('SWARMLO_FUNNEL');
   });
 
   it('re-sanitizes promo text at render time (control chars stripped, capped)', () => {
@@ -672,7 +672,7 @@ describe('generated statusline promo row', () => {
 
   it('validates a resolved CLI bin candidate actually has a compiled dist, not just a bin/cli.js on disk', () => {
     // Claude Code's own plugin marketplace mechanism installs by git clone/pull
-    // with no build step, so ~/.claude/plugins/marketplaces/ruflo is a
+    // with no build step, so ~/.claude/plugins/marketplaces/swarmlo is a
     // source-only checkout by construction: bin/cli.js exists but importing
     // dist/src/index.js throws MODULE_NOT_FOUND on every real command
     // (confirmed live). Without checking for the compiled entrypoint too,
@@ -699,12 +699,12 @@ describe('attributionUrl (ADR-305 measurement, no runtime network)', () => {
   });
 
   it('appends UTM params and preserves any query already on the base URL', () => {
-    const out = attributionUrl('https://cognitum.one/ruflo?foo=1', {
+    const out = attributionUrl('https://cognitum.one/swarmlo?foo=1', {
       medium: 'statusline', campaign: 'disclosure', content: 'test-1',
     });
     const parsed = new URL(out);
     expect(parsed.searchParams.get('foo')).toBe('1');
-    expect(parsed.searchParams.get('utm_source')).toBe('ruflo');
+    expect(parsed.searchParams.get('utm_source')).toBe('swarmlo');
     expect(parsed.searchParams.get('utm_medium')).toBe('statusline');
     expect(parsed.searchParams.get('utm_campaign')).toBe('disclosure');
     expect(parsed.searchParams.get('utm_content')).toBe('test-1');
@@ -712,7 +712,7 @@ describe('attributionUrl (ADR-305 measurement, no runtime network)', () => {
 
   it('does NOT append fid when telemetry consent is absent (privacy default)', () => {
     // Default test state has no consent grants. fid must not appear.
-    const out = attributionUrl('https://cognitum.one/ruflo', {
+    const out = attributionUrl('https://cognitum.one/swarmlo', {
       medium: 'statusline', campaign: 'disclosure', content: 'x',
     });
     expect(new URL(out).searchParams.has('fid')).toBe(false);
@@ -724,7 +724,7 @@ describe('attributionUrl (ADR-305 measurement, no runtime network)', () => {
     // test will still pass but the *design* is documented.
     const before = Date.now();
     for (let i = 0; i < 1000; i++) {
-      attributionUrl('https://cognitum.one/ruflo', {
+      attributionUrl('https://cognitum.one/swarmlo', {
         medium: 'statusline', campaign: 'disclosure', content: String(i),
       });
     }
@@ -740,10 +740,10 @@ describe('getFunnelPromo — API-down fallback discipline', () => {
     // show it as a clickable link even when the OSC 8 hyperlink itself isn't
     // supported.
     //
-    // "manage: ruflo settings" is a shell command, not a URL -- a terminal can
+    // "manage: swarmlo settings" is a shell command, not a URL -- a terminal can
     // never safely execute a command from a click (that would let any
     // server-served message run arbitrary commands), so it must NEVER be
-    // underlined or OSC-8-wrapped. Instead "ruflo settings" renders bold so it
+    // underlined or OSC-8-wrapped. Instead "swarmlo settings" renders bold so it
     // visually reads as "the important bit to copy/type", not a dead link.
     const script = generateStatuslineScript({
       statusline: { enabled: true, style: 'compact' as const },
@@ -768,7 +768,7 @@ describe('getFunnelPromo — API-down fallback discipline', () => {
 
   it('generated statusline emits exactly 3 lines: header, ops, promo', () => {
     // Claude Code truncates statusline past line 4 with the system guidance
-    // line. The 3-line design puts RuFlo header on line 1, then ops, then
+    // line. The 3-line design puts Swarmlo header on line 1, then ops, then
     // promo — sequence matches order of pushes in the generator source.
     const script = generateStatuslineScript({
       statusline: { enabled: true, style: 'compact' as const },
@@ -912,7 +912,7 @@ describe('credit-notifier (ADR-303 out-of-band signal)', () => {
     const notice = creditExhaustedNotice(new Date('2026-07-10T15:00:00.000Z'));
     expect(notice).not.toBeNull();
     expect(notice).toContain('Cognitum credits exhausted');
-    expect(notice).toContain('ruflo funnel signup');
+    expect(notice).toContain('swarmlo funnel signup');
     expect(notice).toContain('3h ago');
   });
 
@@ -968,7 +968,7 @@ describe('rate-limit notifier (ADR-312 Phase 0 — manual, self-reported)', () =
     markRateLimited(t0);
     const notice = rateLimitNotice(new Date(t0.getTime() + 5 * 60 * 1000));
     expect(notice).toContain('5m ago');
-    expect(notice).toContain('ruflo proxy sponsor-enable');
+    expect(notice).toContain('swarmlo proxy sponsor-enable');
   });
 });
 
@@ -1062,7 +1062,7 @@ describe('power-saver notifier (ADR-314 §A — manual, self-reported, mirrors r
     markQuotaLow(t0);
     const notice = quotaLowNotice(new Date(t0.getTime() + 5 * 60 * 1000));
     expect(notice).toContain('5m ago');
-    expect(notice).toContain('ruflo proxy power-saver-disable');
+    expect(notice).toContain('swarmlo proxy power-saver-disable');
   });
 
   it('mark→clear inside the cooldown window is refused, same as rate-limit', () => {
@@ -1081,7 +1081,7 @@ describe('sponsored-downtime priority override (ADR-313)', () => {
     const after = new Date(t0.getTime() + DISCLOSURE_GRACE_MS + 60_000);
     const row = getFunnelPromo({ interactive: true, cwd: stateDir, now: after });
     expect(row).not.toBeNull();
-    expect(row!.text).not.toContain('ruflo proxy sponsor');
+    expect(row!.text).not.toContain('swarmlo proxy sponsor');
   });
 
   it('shows the enable-CTA when rate-limited without sponsored consent', () => {
@@ -1093,7 +1093,7 @@ describe('sponsored-downtime priority override (ADR-313)', () => {
     const row = getFunnelPromo({ interactive: true, cwd: stateDir, now: after });
     expect(row).not.toBeNull();
     expect(row!.text).toContain('Free Cognitum capacity');
-    expect(row!.text).toContain('manage: ruflo proxy sponsor-enable');
+    expect(row!.text).toContain('manage: swarmlo proxy sponsor-enable');
     expect(displayWidth(row!.text)).toBeLessThanOrEqual(MAX_MESSAGE_COLUMNS);
   });
 
@@ -1107,7 +1107,7 @@ describe('sponsored-downtime priority override (ADR-313)', () => {
     const row = getFunnelPromo({ interactive: true, cwd: stateDir, now: after });
     expect(row).not.toBeNull();
     expect(row!.text).toContain('Running on sponsored Cognitum capacity');
-    expect(row!.text).toContain('manage: ruflo proxy sponsor-disable');
+    expect(row!.text).toContain('manage: swarmlo proxy sponsor-disable');
     expect(displayWidth(row!.text)).toBeLessThanOrEqual(MAX_MESSAGE_COLUMNS);
   });
 

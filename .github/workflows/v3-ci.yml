@@ -8,27 +8,27 @@ on:
       - '.github/workflows/v3-ci.yml'
       # Witness-verify + plugin-hooks-smoke depend on these scripts;
       # path filter keeps CI in sync with their changes.
-      - 'plugins/ruflo-core/scripts/witness/**'
-      - 'plugins/ruflo-core/scripts/test-hooks.mjs'
-      - 'plugins/ruflo-cost-tracker/scripts/test-hooks.mjs'
+      - 'plugins/swarmlo-core/scripts/witness/**'
+      - 'plugins/swarmlo-core/scripts/test-hooks.mjs'
+      - 'plugins/swarmlo-cost-tracker/scripts/test-hooks.mjs'
       - 'verification/**'
       # scripts/*.mjs audits (tool-descriptions, plugin-packages, hook-commands)
       - 'scripts/**'
       # hook-command audit (#1921, #2721) — every plugin hooks.json + the
-      # cross-platform ruflo-hook.cjs shims (ruflo-hook.sh is legacy/unused
+      # cross-platform swarmlo-hook.cjs shims (swarmlo-hook.sh is legacy/unused
       # as of #2721 but kept for reference; no longer referenced by hooks.json)
       - '**/hooks/hooks.json'
-      - '**/scripts/ruflo-hook.cjs'
-      - '**/scripts/ruflo-hook.sh'
+      - '**/scripts/swarmlo-hook.cjs'
+      - '**/scripts/swarmlo-hook.sh'
       # pre-bash hook safety (#2017) — both handler copies trigger the smoke
       - '**/.claude/helpers/hook-handler.cjs'
-      # ruflo-browser rvf create flag (#2015) — TS source, plugin shell
+      # swarmlo-browser rvf create flag (#2015) — TS source, plugin shell
       # scripts, agent-facing recipes all guarded by the same smoke.
       - 'v3/@claude-flow/cli/src/mcp-tools/browser-session-tools.ts'
-      - 'plugins/ruflo-browser/**'
-      # ruflo-graph-intelligence (#2044, ADR-123) — outside v3 workspace,
+      - 'plugins/swarmlo-browser/**'
+      # swarmlo-graph-intelligence (#2044, ADR-123) — outside v3 workspace,
       # has its own lockfile + tests; needs to be CI-guarded on every change.
-      - 'plugins/ruflo-graph-intelligence/**'
+      - 'plugins/swarmlo-graph-intelligence/**'
       # Supply-chain hardening (#2046) — every package.json + lockfile +
       # allowlist edit triggers the supply-chain audit.
       - '**/package.json'
@@ -39,38 +39,38 @@ on:
       # Knowledge-graph plugin (#2049) — kg-extract type-import classifier
       # + kg-traverse controller wiring drift fast when SKILL.md edits
       # silently revert the bug-fix shape.
-      - 'plugins/ruflo-knowledge-graph/**'
+      - 'plugins/swarmlo-knowledge-graph/**'
       - 'scripts/smoke-kg-extract-type-imports.mjs'
       # Neural-trader portfolio CG (#2068, ADR-126 Phase 3) — drift fast
       # when the adapter, skill, or runtime mirror diverge from the
       # ADR-123 Wedge 8 contract.
-      - 'plugins/ruflo-neural-trader/src/sublinear-adapter.ts'
-      - 'plugins/ruflo-neural-trader/src/sublinear-adapter.mjs'
-      - 'plugins/ruflo-neural-trader/skills/trader-portfolio-cg/**'
+      - 'plugins/swarmlo-neural-trader/src/sublinear-adapter.ts'
+      - 'plugins/swarmlo-neural-trader/src/sublinear-adapter.mjs'
+      - 'plugins/swarmlo-neural-trader/skills/trader-portfolio-cg/**'
       - 'scripts/smoke-neural-trader-portfolio-cg.mjs'
       # Neural-trader backtest signing (#2068, ADR-126 Phase 4) — Ed25519
       # tamper-evidence for paper→live promotion; verifier MUST pin to a
       # trusted key (CWE-347 / #1922 pattern).
-      - 'plugins/ruflo-neural-trader/src/signed-artifact.ts'
-      - 'plugins/ruflo-neural-trader/src/signed-artifact.mjs'
-      - 'plugins/ruflo-neural-trader/skills/trader-backtest/**'
-      - 'plugins/ruflo-neural-trader/skills/trader-cloud-backtest/**'
+      - 'plugins/swarmlo-neural-trader/src/signed-artifact.ts'
+      - 'plugins/swarmlo-neural-trader/src/signed-artifact.mjs'
+      - 'plugins/swarmlo-neural-trader/skills/trader-backtest/**'
+      - 'plugins/swarmlo-neural-trader/skills/trader-cloud-backtest/**'
       - 'scripts/smoke-neural-trader-backtest-signing.mjs'
       # Neural-trader SendMessage risk-gate pipeline (#2068, ADR-126 Phase 5) —
       # structural gate: trading-strategist refuses --broker without an
       # explicit risk-analyst RiskDecision approval.
-      - 'plugins/ruflo-neural-trader/src/pipeline-messages.ts'
-      - 'plugins/ruflo-neural-trader/agents/market-analyst.md'
-      - 'plugins/ruflo-neural-trader/agents/trading-strategist.md'
-      - 'plugins/ruflo-neural-trader/agents/risk-analyst.md'
-      - 'plugins/ruflo-neural-trader/agents/backtest-engineer.md'
+      - 'plugins/swarmlo-neural-trader/src/pipeline-messages.ts'
+      - 'plugins/swarmlo-neural-trader/agents/market-analyst.md'
+      - 'plugins/swarmlo-neural-trader/agents/trading-strategist.md'
+      - 'plugins/swarmlo-neural-trader/agents/risk-analyst.md'
+      - 'plugins/swarmlo-neural-trader/agents/backtest-engineer.md'
       - 'scripts/smoke-neural-trader-pipeline.mjs'
       # Neural-trader feature attribution (#2068, ADR-126 Phase 6) —
       # regulator-grade interpretability via single-entry PageRank.
       # Same signing scheme as Phase 4; ranking is seed-reproducible.
-      - 'plugins/ruflo-neural-trader/src/signed-attribution.ts'
-      - 'plugins/ruflo-neural-trader/src/signed-attribution.mjs'
-      - 'plugins/ruflo-neural-trader/skills/trader-explain/**'
+      - 'plugins/swarmlo-neural-trader/src/signed-attribution.ts'
+      - 'plugins/swarmlo-neural-trader/src/signed-attribution.mjs'
+      - 'plugins/swarmlo-neural-trader/skills/trader-explain/**'
       - 'scripts/smoke-neural-trader-feature-attribution.mjs'
       # Plugin-registry CWE-347 regression smoke (#1922) — `discovery.ts`
       # signature verifier + the smoke fixture must stay in lockstep.
@@ -141,7 +141,7 @@ on:
       - 'v3/@claude-flow/cli/src/memory/graph-edge-writer.ts'
       - 'v3/@claude-flow/cli/src/mcp-tools/agentdb-tools.ts'
       - 'v3/@claude-flow/cli/src/mcp-tools/hooks-tools.ts'
-      - 'plugins/ruflo-graph-intelligence/src/adapters/knowledge-graph-adapter.ts'
+      - 'plugins/swarmlo-graph-intelligence/src/adapters/knowledge-graph-adapter.ts'
       - 'scripts/smoke-graph-schema-migration.mjs'
       - 'scripts/smoke-graph-query-dispatch.mjs'
       - 'scripts/smoke-trajectory-graph-edges.mjs'
@@ -160,19 +160,19 @@ on:
     branches: [main, develop]
     paths:
       - 'v3/**'
-      - 'plugins/ruflo-core/scripts/witness/**'
-      - 'plugins/ruflo-core/scripts/test-hooks.mjs'
-      - 'plugins/ruflo-cost-tracker/scripts/test-hooks.mjs'
+      - 'plugins/swarmlo-core/scripts/witness/**'
+      - 'plugins/swarmlo-core/scripts/test-hooks.mjs'
+      - 'plugins/swarmlo-cost-tracker/scripts/test-hooks.mjs'
       - 'scripts/**'
       - '**/hooks/hooks.json'
-      - '**/scripts/ruflo-hook.cjs'
-      - '**/scripts/ruflo-hook.sh'
+      - '**/scripts/swarmlo-hook.cjs'
+      - '**/scripts/swarmlo-hook.sh'
       - '**/.claude/helpers/hook-handler.cjs'
-      # ruflo-browser rvf create flag (#2015)
+      # swarmlo-browser rvf create flag (#2015)
       - 'v3/@claude-flow/cli/src/mcp-tools/browser-session-tools.ts'
-      - 'plugins/ruflo-browser/**'
-      # ruflo-graph-intelligence (#2044, ADR-123)
-      - 'plugins/ruflo-graph-intelligence/**'
+      - 'plugins/swarmlo-browser/**'
+      # swarmlo-graph-intelligence (#2044, ADR-123)
+      - 'plugins/swarmlo-graph-intelligence/**'
       # Supply-chain hardening (#2046) — every dep + lockfile change is
       # CVE-audited, allowlist-checked, integrity-checked.
       - '**/package.json'
@@ -181,30 +181,30 @@ on:
       - '.github/supply-chain/**'
       - 'scripts/audit-supply-chain.mjs'
       # Knowledge-graph plugin (#2049)
-      - 'plugins/ruflo-knowledge-graph/**'
+      - 'plugins/swarmlo-knowledge-graph/**'
       - 'scripts/smoke-kg-extract-type-imports.mjs'
       # Neural-trader portfolio CG (#2068, ADR-126 Phase 3)
-      - 'plugins/ruflo-neural-trader/src/sublinear-adapter.ts'
-      - 'plugins/ruflo-neural-trader/src/sublinear-adapter.mjs'
-      - 'plugins/ruflo-neural-trader/skills/trader-portfolio-cg/**'
+      - 'plugins/swarmlo-neural-trader/src/sublinear-adapter.ts'
+      - 'plugins/swarmlo-neural-trader/src/sublinear-adapter.mjs'
+      - 'plugins/swarmlo-neural-trader/skills/trader-portfolio-cg/**'
       - 'scripts/smoke-neural-trader-portfolio-cg.mjs'
       # Neural-trader backtest signing (#2068, ADR-126 Phase 4)
-      - 'plugins/ruflo-neural-trader/src/signed-artifact.ts'
-      - 'plugins/ruflo-neural-trader/src/signed-artifact.mjs'
-      - 'plugins/ruflo-neural-trader/skills/trader-backtest/**'
-      - 'plugins/ruflo-neural-trader/skills/trader-cloud-backtest/**'
+      - 'plugins/swarmlo-neural-trader/src/signed-artifact.ts'
+      - 'plugins/swarmlo-neural-trader/src/signed-artifact.mjs'
+      - 'plugins/swarmlo-neural-trader/skills/trader-backtest/**'
+      - 'plugins/swarmlo-neural-trader/skills/trader-cloud-backtest/**'
       - 'scripts/smoke-neural-trader-backtest-signing.mjs'
       # Neural-trader SendMessage risk-gate pipeline (#2068, ADR-126 Phase 5)
-      - 'plugins/ruflo-neural-trader/src/pipeline-messages.ts'
-      - 'plugins/ruflo-neural-trader/agents/market-analyst.md'
-      - 'plugins/ruflo-neural-trader/agents/trading-strategist.md'
-      - 'plugins/ruflo-neural-trader/agents/risk-analyst.md'
-      - 'plugins/ruflo-neural-trader/agents/backtest-engineer.md'
+      - 'plugins/swarmlo-neural-trader/src/pipeline-messages.ts'
+      - 'plugins/swarmlo-neural-trader/agents/market-analyst.md'
+      - 'plugins/swarmlo-neural-trader/agents/trading-strategist.md'
+      - 'plugins/swarmlo-neural-trader/agents/risk-analyst.md'
+      - 'plugins/swarmlo-neural-trader/agents/backtest-engineer.md'
       - 'scripts/smoke-neural-trader-pipeline.mjs'
       # Neural-trader feature attribution (#2068, ADR-126 Phase 6)
-      - 'plugins/ruflo-neural-trader/src/signed-attribution.ts'
-      - 'plugins/ruflo-neural-trader/src/signed-attribution.mjs'
-      - 'plugins/ruflo-neural-trader/skills/trader-explain/**'
+      - 'plugins/swarmlo-neural-trader/src/signed-attribution.ts'
+      - 'plugins/swarmlo-neural-trader/src/signed-attribution.mjs'
+      - 'plugins/swarmlo-neural-trader/skills/trader-explain/**'
       - 'scripts/smoke-neural-trader-feature-attribution.mjs'
       # Plugin-registry CWE-347 regression (#1922)
       - 'v3/@claude-flow/cli/src/plugins/store/discovery.ts'
@@ -466,7 +466,7 @@ jobs:
           path: v3/@claude-flow/*/dist/
 
   smoke-install-no-bsqlite:
-    # Regression guard for ruvnet/ruflo#1867 — ensures @claude-flow/memory
+    # Regression guard for z451047442-debug/swarmlo#1867 — ensures @claude-flow/memory
     # installs and loads when better-sqlite3 fails to build (e.g. Node 26
     # without prebuilds). Reproduces the user-visible failure mode by
     # installing with --omit=optional.
@@ -509,7 +509,7 @@ jobs:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Guard #2590 — onnxruntime-node postinstall must be skipped
-        # Regression guard for ruvnet/ruflo#2590 — onnxruntime-node's postinstall
+        # Regression guard for z451047442-debug/swarmlo#2590 — onnxruntime-node's postinstall
         # fetches a GPU nupkg from nuget.org that ETIMEDOUTs from GitHub runners,
         # taking `pnpm install --frozen-lockfile` down. The fix requires BOTH:
         #   1) v3/package.json → pnpm.neverBuiltDependencies contains "onnxruntime-node"
@@ -574,8 +574,8 @@ jobs:
           node smoke-no-bsqlite.mjs
 
   plugin-hooks-smoke:
-    # Regression guard for ruvnet/ruflo#1859 + #1862 — drives each PostToolUse
-    # hook from plugins/ruflo-core/hooks/hooks.json with synthetic Claude-Code
+    # Regression guard for z451047442-debug/swarmlo#1859 + #1862 — drives each PostToolUse
+    # hook from plugins/swarmlo-core/hooks/hooks.json with synthetic Claude-Code
     # JSON against the locally built CLI. Catches:
     #   - hooks calling flags the CLI doesn't accept (#1862's --format true)
     #   - CLI parser ambiguity recording the wrong value (#1859's "true" filename)
@@ -589,7 +589,7 @@ jobs:
       matrix:
         # #2721 — windows-latest included: hooks.json no longer wraps
         # commands in `/bin/bash -c '...'`, it invokes `node -e "..."`
-        # directly (see plugins/ruflo-core/hooks/hooks.json), which needs
+        # directly (see plugins/swarmlo-core/hooks/hooks.json), which needs
         # no POSIX shell at all. test-hooks.mjs drives the exact command
         # string from hooks.json via `shell: true`, so this is a genuine
         # regression guard against the #2721 shape recurring, not just a
@@ -635,16 +635,16 @@ jobs:
       - name: Run plugin hooks smoke against local CLI build
         shell: bash
         run: |
-          node plugins/ruflo-core/scripts/test-hooks.mjs \
+          node plugins/swarmlo-core/scripts/test-hooks.mjs \
             "node $GITHUB_WORKSPACE/v3/@claude-flow/cli/bin/cli.js"
 
       - name: Run cost-tracker Stop hook smoke against local CLI build
         shell: bash
         run: |
-          node plugins/ruflo-cost-tracker/scripts/test-hooks.mjs
+          node plugins/swarmlo-cost-tracker/scripts/test-hooks.mjs
 
   browser-rvf-create-flags-smoke:
-    # Regression guard for ruvnet/ruflo#2015 — the ruflo-browser
+    # Regression guard for z451047442-debug/swarmlo#2015 — the swarmlo-browser
     # `browser_session_record` MCP tool wraps `ruvector rvf create`.
     # ruvector@0.2.25 makes `-d, --dimension <n>` required, so before
     # this fix every session-record call failed with
@@ -691,13 +691,13 @@ jobs:
         run: node scripts/smoke-browser-rvf-create-flags.mjs
 
   graph-intelligence-build-smoke:
-    # Regression guard for #2044 / ADR-123 — the ruflo-graph-intelligence
+    # Regression guard for #2044 / ADR-123 — the swarmlo-graph-intelligence
     # plugin lives outside the v3 pnpm workspace (it has its own
     # package-lock.json) so it does not pick up the workspace's
     # frozen-lockfile / -r build path. This job installs + builds + tests
     # the plugin in isolation so the eleven sublinear wedges are verified
     # on every push and PR.
-    name: ruflo-graph-intelligence build + test smoke (#2044, ADR-123)
+    name: swarmlo-graph-intelligence build + test smoke (#2044, ADR-123)
     runs-on: ubuntu-latest
 
     steps:
@@ -712,19 +712,19 @@ jobs:
       - name: Install plugin dependencies (npm — plugin is outside v3 workspace)
         uses: ./.github/actions/npm-ci-retry
         with:
-          working-directory: plugins/ruflo-graph-intelligence
+          working-directory: plugins/swarmlo-graph-intelligence
           args: --no-audit --no-fund --legacy-peer-deps
 
       - name: Type-check
-        working-directory: plugins/ruflo-graph-intelligence
+        working-directory: plugins/swarmlo-graph-intelligence
         run: npx tsc --noEmit
 
       - name: Build
-        working-directory: plugins/ruflo-graph-intelligence
+        working-directory: plugins/swarmlo-graph-intelligence
         run: npx tsc
 
       - name: Run vitest
-        working-directory: plugins/ruflo-graph-intelligence
+        working-directory: plugins/swarmlo-graph-intelligence
         run: npx vitest run
 
   supply-chain-audit:
@@ -759,10 +759,10 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install ruflo-graph-intelligence deps (for npm audit)
+      - name: Install swarmlo-graph-intelligence deps (for npm audit)
         uses: ./.github/actions/npm-ci-retry
         with:
-          working-directory: plugins/ruflo-graph-intelligence
+          working-directory: plugins/swarmlo-graph-intelligence
           args: --no-audit --no-fund --legacy-peer-deps
 
       - name: Install @claude-flow/browser deps (for npm audit)
@@ -783,7 +783,7 @@ jobs:
     #
     # **Setup requirement**: this action needs GitHub's Dependency Graph
     # feature enabled at the repo level. Toggle at
-    # https://github.com/ruvnet/ruflo/settings/security_analysis under
+    # https://github.com/z451047442-debug/swarmlo/settings/security_analysis under
     # "Dependency graph". Until that toggle is on, the action errors
     # with "Dependency review is not supported on this repository" — so
     # this job is marked continue-on-error to keep the CVE/audit/codeowner
@@ -818,7 +818,7 @@ jobs:
           deny-packages: pkg:npm/event-stream@3.3.6, pkg:npm/flatmap-stream, pkg:npm/ua-parser-js@0.7.29, pkg:npm/ua-parser-js@0.8.0, pkg:npm/ua-parser-js@1.0.0, pkg:npm/colors@1.4.1, pkg:npm/faker@6.6.6
 
   witness-marker-drift-smoke:
-    # Regression guard for ruvnet/ruflo#2021 — the slow witness-verify
+    # Regression guard for z451047442-debug/swarmlo#2021 — the slow witness-verify
     # job below catches marker drift but only as a post-build check on
     # cross-platform matrix. Direct pushes to main (e.g. the alpha.43
     # release chain) bypass PR-time gating and a bad marker can sneak
@@ -848,7 +848,7 @@ jobs:
         run: node scripts/smoke-witness-marker-drift.mjs
 
   witness-verify-precondition-smoke:
-    # Regression guard for ruvnet/ruflo#1880 — the 12h scheduled witness
+    # Regression guard for z451047442-debug/swarmlo#1880 — the 12h scheduled witness
     # verification runs in a source-only checkout (no `npm ci`, no
     # `npm run build`). Before this fix, that environment exited 1
     # (real verification failure) because `@noble/ed25519` wasn't
@@ -887,14 +887,14 @@ jobs:
         run: node scripts/smoke-witness-verify-precondition.mjs
 
   kg-extract-type-imports-smoke:
-    # Regression guard for ruvnet/ruflo#2049 — `kg-extract` previously
+    # Regression guard for z451047442-debug/swarmlo#2049 — `kg-extract` previously
     # treated TypeScript `import type` and value imports as the same edge
     # type, producing phantom runtime cycles in the knowledge graph (a
     # 51-service codebase reported a non-existent `findings ⇄ finding-actions`
     # cycle driven entirely by a one-way type-only import).
     #
     # This smoke runs two layers:
-    #   1. Static contract check on plugins/ruflo-knowledge-graph/skills/{kg-extract,kg-traverse}/SKILL.md
+    #   1. Static contract check on plugins/swarmlo-knowledge-graph/skills/{kg-extract,kg-traverse}/SKILL.md
     #      — assert kg-extract declares `type-depends-on` as a separate relation
     #        with weight ≤ 0.1, and that neither skill references the
     #        compiled-out `agentdb_semantic-route` controller.
@@ -921,7 +921,7 @@ jobs:
         run: node scripts/smoke-kg-extract-type-imports.mjs
 
   neural-trader-portfolio-cg-smoke:
-    # Regression guard for ruvnet/ruflo#2068 — ADR-126 Phase 3.
+    # Regression guard for z451047442-debug/swarmlo#2068 — ADR-126 Phase 3.
     #
     # Phase 3 wires the Conjugate-Gradient portfolio path that ADR-123
     # Wedge 8 promises a 40-60× speedup over the legacy Neumann series.
@@ -933,7 +933,7 @@ jobs:
     #   2. `src/sublinear-adapter.mjs` — the runtime mirror that the
     #      smoke + bench import directly (the plugin has no build step).
     #   3. `skills/trader-portfolio-cg/SKILL.md` — frontmatter must
-    #      declare `mcp__ruflo-sublinear__solve` in allowed-tools and
+    #      declare `mcp__swarmlo-sublinear__solve` in allowed-tools and
     #      write to the canonical `trading-risk` namespace.
     #
     # The smoke runs three layers:
@@ -964,7 +964,7 @@ jobs:
         run: node scripts/smoke-neural-trader-portfolio-cg.mjs
 
   neural-trader-backtest-signing-smoke:
-    # Regression guard for ruvnet/ruflo#2068 — ADR-126 Phase 4.
+    # Regression guard for z451047442-debug/swarmlo#2068 — ADR-126 Phase 4.
     #
     # Phase 4 wires Ed25519-signed backtest artifacts so the paper→live
     # promotion gate has cryptographic tamper evidence. The signing scheme
@@ -990,7 +990,7 @@ jobs:
     #   [3/3] CALL-SITE BYTE check — trader-cloud-backtest/SKILL.md calls
     #         verifyBacktestArtifact AND documents the fail-closed branch;
     #         trader-backtest/SKILL.md references the signer + degraded
-    #         warning + RUFLO_WITNESS_KEY_PATH env var.
+    #         warning + SWARMLO_WITNESS_KEY_PATH env var.
     #
     # If a future PR drops the verify call, reverts to pinning the served
     # field, or removes the fail-closed branch, this smoke catches it
@@ -1014,7 +1014,7 @@ jobs:
         run: node scripts/smoke-neural-trader-backtest-signing.mjs
 
   neural-trader-pipeline-smoke:
-    # Regression guard for ruvnet/ruflo#2068 — ADR-126 Phase 5.
+    # Regression guard for z451047442-debug/swarmlo#2068 — ADR-126 Phase 5.
     #
     # Phase 5 refactors the four neural-trader agents (market-analyst,
     # trading-strategist, risk-analyst, backtest-engineer) into a typed
@@ -1068,13 +1068,13 @@ jobs:
         run: node scripts/smoke-neural-trader-pipeline.mjs
 
   neural-trader-feature-attribution-smoke:
-    # Regression guard for ruvnet/ruflo#2068 — ADR-126 Phase 6.
+    # Regression guard for z451047442-debug/swarmlo#2068 — ADR-126 Phase 6.
     #
     # Phase 6 ships regulator-grade feature attribution for LSTM /
     # Transformer trading signals. Given a `signalId`, the `trader-explain`
     # skill builds a feature-contribution graph, runs single-entry forward-
     # push PageRank from the signal output node (via
-    # `mcp__ruflo-sublinear__page-rank-entry` when registered, local seeded
+    # `mcp__swarmlo-sublinear__page-rank-entry` when registered, local seeded
     # power-iteration fallback otherwise), and stores the top-K ranked
     # features as a `SignedAttributionArtifact` (the Phase 4 signing
     # scheme — same Ed25519 + CWE-347 trusted-pin pattern).
@@ -1124,7 +1124,7 @@ jobs:
         run: node scripts/smoke-neural-trader-feature-attribution.mjs
 
   plugin-registry-signature-smoke:
-    # Regression guard for ruvnet/ruflo#1922 (CWE-347 — improper verification
+    # Regression guard for z451047442-debug/swarmlo#1922 (CWE-347 — improper verification
     # of cryptographic signature). The plugin-registry signature verifier in
     # v3/@claude-flow/cli/src/plugins/store/discovery.ts used to be a stub
     # that returned `true` whenever the served `registryPublicKey` field
@@ -1168,7 +1168,7 @@ jobs:
         run: node scripts/smoke-plugin-registry-signature.mjs
 
   ruvllm-wasm-auto-init-smoke:
-    # Regression guard for ruvnet/ruflo#2086 — ruvllm WASM bootstrap not
+    # Regression guard for z451047442-debug/swarmlo#2086 — ruvllm WASM bootstrap not
     # exposed via MCP. Reporter: @seo-yas. Every `ruvllm_*` MCP tool that
     # touches the WASM runtime calls `loadRuvllmWasm()` in
     # `v3/@claude-flow/cli/src/mcp-tools/ruvllm-tools.ts`. That helper used
@@ -1207,7 +1207,7 @@ jobs:
         run: node scripts/smoke-ruvllm-wasm-auto-init.mjs
 
   agent-execute-providers-smoke:
-    # Regression guard for ruvnet/ruflo#2042 — agent_execute hardcoded
+    # Regression guard for z451047442-debug/swarmlo#2042 — agent_execute hardcoded
     # the Anthropic SDK and ignored the v3 provider system. Reporter:
     # @ummcke00. Fix routes executeAgentTask through callAnthropicMessages
     # which dispatches Anthropic / OpenRouter / Ollama by env var.
@@ -1227,7 +1227,7 @@ jobs:
         run: node scripts/smoke-agent-execute-providers.mjs
 
   memory-stats-legacy-db-smoke:
-    # Regression guard for ruvnet/ruflo#2120 — `ruflo memory stats` and
+    # Regression guard for z451047442-debug/swarmlo#2120 — `swarmlo memory stats` and
     # `listEntries` returned 0 entries against a populated
     # `.swarm/memory.db` on WSL2 (reporter: @alexandrelealbess on
     # alpha.81). Root cause: the `WHERE status = 'active'` filter
@@ -1332,7 +1332,7 @@ jobs:
         run: node scripts/smoke-memory-no-stray-db.mjs
 
   github-safe-injection-smoke:
-    # Regression guard for ruvnet/ruflo#2089 — ADR-127 Phase 1.
+    # Regression guard for z451047442-debug/swarmlo#2089 — ADR-127 Phase 1.
     #
     # Drives adversarial PR/issue bodies (backticks, $(), semicolons,
     # >256KB, empty) through github-safe.js and asserts the body lands in a
@@ -1361,7 +1361,7 @@ jobs:
         run: node scripts/smoke-github-safe-injection.mjs
 
   github-actions-pins-smoke:
-    # Static contract guard for ruvnet/ruflo#2089 — ADR-127 Phase 1.
+    # Static contract guard for z451047442-debug/swarmlo#2089 — ADR-127 Phase 1.
     #
     # Scans every `uses:` line in:
     #   .claude/agents/github/*.md
@@ -1391,7 +1391,7 @@ jobs:
         run: node scripts/smoke-github-actions-pins.mjs
 
   github-deprecated-actions-smoke:
-    # Regression guard for ruvnet/ruflo#2089 — ADR-127 Phase 3.
+    # Regression guard for z451047442-debug/swarmlo#2089 — ADR-127 Phase 3.
     #
     # Scans every `uses:` line in the same scope as the pins smoke and
     # fails if any deprecated action ref is still present:
@@ -1420,7 +1420,7 @@ jobs:
         run: node scripts/smoke-deprecated-actions.mjs
 
   github-attribution-opt-in-smoke:
-    # Regression guard for ruvnet/ruflo#2089 — ADR-127 Phase 4.
+    # Regression guard for z451047442-debug/swarmlo#2089 — ADR-127 Phase 4.
     #
     # Phase 4 removes hardcoded "Generated with Claude Code" attribution
     # strings from the static github command templates. Attribution is now
@@ -1448,7 +1448,7 @@ jobs:
         run: node scripts/smoke-attribution-opt-in.mjs
 
   pre-bash-hook-smoke:
-    # Regression guard for ruvnet/ruflo#2017 — the `pre-bash` PreToolUse hook
+    # Regression guard for z451047442-debug/swarmlo#2017 — the `pre-bash` PreToolUse hook
     # in `.claude/helpers/hook-handler.cjs` is a security gate that refuses to
     # run dangerous commands (`rm -rf /`, fork bombs, etc.). In 3.6.30 it
     # silently exited 0 on every dangerous payload because the handler read
@@ -1483,7 +1483,7 @@ jobs:
         run: node scripts/smoke-pre-bash-hook.mjs
 
   mcp-protocol-smoke:
-    # Regression guard for ruvnet/ruflo#1874 — boots the HTTP MCP server,
+    # Regression guard for z451047442-debug/swarmlo#1874 — boots the HTTP MCP server,
     # sends a real `initialize` request, and validates the response wire
     # format against the MCP spec (YYYY-MM-DD protocolVersion string,
     # not a {major,minor,patch} object). This was the missing layer that
@@ -1522,10 +1522,10 @@ jobs:
 
       - name: Run MCP protocol-shape compliance scan
         shell: bash
-        run: node plugins/ruflo-core/scripts/test-mcp-protocol.mjs
+        run: node plugins/swarmlo-core/scripts/test-mcp-protocol.mjs
 
   memory-import-smoke:
-    # Regression guard for ruvnet/ruflo#1883 + #1884 — drives the import-side
+    # Regression guard for z451047442-debug/swarmlo#1883 + #1884 — drives the import-side
     # invariants that single-component tests missed:
     #   #1883 — memory_import_claude(allProjects=false) failed on WSL because
     #           project-hash derivation was POSIX-only. Verified via candidate
@@ -1571,10 +1571,10 @@ jobs:
 
       - name: Run memory-import regression guards (#1883 + #1884)
         shell: bash
-        run: node plugins/ruflo-core/scripts/test-memory-import.mjs
+        run: node plugins/swarmlo-core/scripts/test-memory-import.mjs
 
   mcp-roundtrip-smoke:
-    # Regression guard for ruvnet/ruflo#1889 — paired MCP tool round-trip.
+    # Regression guard for z451047442-debug/swarmlo#1889 — paired MCP tool round-trip.
     # When two MCP tools form a store/search pair, the contract is that
     # data written by one MUST be retrievable by the other. The original
     # bug: pattern-store wrote to memory-store-fallback while pattern-search
@@ -1610,7 +1610,7 @@ jobs:
 
       - name: Run #1889 round-trip smoke
         shell: bash
-        run: node plugins/ruflo-core/scripts/test-mcp-roundtrips.mjs
+        run: node plugins/swarmlo-core/scripts/test-mcp-roundtrips.mjs
 
       - name: Run #1863 cli-no-crash smoke
         shell: bash
@@ -1618,7 +1618,7 @@ jobs:
         # and asserts none crash with an unhandled exception. Catches the
         # class where callMCPTool<{...}>() types a response field as
         # non-optional but the server omits it → `.join()` on undefined.
-        run: node plugins/ruflo-core/scripts/test-cli-no-crash.mjs
+        run: node plugins/swarmlo-core/scripts/test-cli-no-crash.mjs
 
       - name: Run ADR-095 G2 consensus-transport guard
         shell: bash
@@ -1626,11 +1626,11 @@ jobs:
         # (not the implicit single-process EventEmitter): required exports
         # present, LocalTransport round-trip works, Ed25519 sign/verify is
         # real (no `return true` stub regression). ADR-095 G2.
-        run: node plugins/ruflo-core/scripts/test-consensus-transport.mjs
+        run: node plugins/swarmlo-core/scripts/test-consensus-transport.mjs
 
   tool-descriptions-audit:
     # ADR-112 — gate: every MCP tool description must include "Use when …"
-    # guidance so Claude knows when to pick Ruflo's tool over native
+    # guidance so Claude knows when to pick Swarmlo's tool over native
     # (Bash, Read, Grep, Glob, Task, TodoWrite, WebFetch). Baseline lives
     # in verification/mcp-tool-baseline.json and is monotone-decreasing —
     # the script fails the build if the no-guidance count goes UP. Run
@@ -1653,7 +1653,7 @@ jobs:
         run: node scripts/audit-tool-descriptions.mjs
 
       - name: Run CLI ↔ MCP tool coverage audit (#1916)
-        # Fails if a `ruflo <cmd>` subcommand callMCPTool()s a tool that isn't
+        # Fails if a `swarmlo <cmd>` subcommand callMCPTool()s a tool that isn't
         # registered in src/mcp-tools/*.ts (it would die with `MCP tool not
         # found`). Monotone-decreasing baseline at verification/cli-mcp-tool-
         # baseline.json — new dangling references fail; fixing one and running
@@ -1720,9 +1720,9 @@ jobs:
         run: node scripts/audit-package-dep-overlap.mjs
 
       - name: Run wrapper dep-range audit (#2127)
-        # Catches stale alpha-tagged dep ranges in the ruflo wrapper and the
+        # Catches stale alpha-tagged dep ranges in the swarmlo wrapper and the
         # claude-flow umbrella that point at sibling packages we publish.
-        # #2127 shipped with `ruflo → @claude-flow/cli@^3.7.0-alpha.11` even
+        # #2127 shipped with `swarmlo → @claude-flow/cli@^3.7.0-alpha.11` even
         # after cli moved to stable 3.10.0 — a pre-release range against a
         # stable dep widens arborist's dedupe walk and can surface as the
         # "Invalid Version: (empty)" crash on some npm/Node combos.
@@ -1730,9 +1730,9 @@ jobs:
         run: node scripts/audit-wrapper-dep-ranges.mjs
 
       - name: Run umbrella version-lockstep audit (#2151)
-        # Asserts @claude-flow/cli, claude-flow, and ruflo all share the
-        # same version. #2151 reported ruflo@3.10.2 + cli@3.10.1 drift —
-        # `npx ruflo --version` printed the bundled CLI's 3.10.1, not the
+        # Asserts @claude-flow/cli, claude-flow, and swarmlo all share the
+        # same version. #2151 reported swarmlo@3.10.2 + cli@3.10.1 drift —
+        # `npx swarmlo --version` printed the bundled CLI's 3.10.1, not the
         # wrapper's 3.10.2. CLAUDE.md publish rules already require lockstep;
         # this audit enforces it so drift can't reach a release.
         shell: bash
@@ -1742,7 +1742,7 @@ jobs:
         # agentdb pins better-sqlite3 as an OPTIONAL dep at ^11.8.1, which has
         # no Node 24/25/26 prebuild → the optional native build fails silently
         # on those runtimes and AgentDB drops to a non-persistent backend
-        # (silent write loss). Asserts both the root umbrella and the ruflo
+        # (silent write loss). Asserts both the root umbrella and the swarmlo
         # wrapper override better-sqlite3 to >=12.8.0 (which ships Node 20–26
         # prebuilds). Root overrides do NOT reach the published wrapper (#2112),
         # so both must carry it.
@@ -1754,7 +1754,7 @@ jobs:
         # and .sh script invocations in plugin hooks.json files — patterns
         # that fail on native Windows (exit 126).
         # Files with "_platform": "posix" are exempt (Mac/Linux-only, verified
-        # to have a companion ruflo-hook.cjs Windows shim). New hooks.json
+        # to have a companion swarmlo-hook.cjs Windows shim). New hooks.json
         # files without the marker are scanned strictly.
         # Strict (no continue-on-error) — fixed in PR fix/2132-windows-hooks.
         shell: bash
@@ -1763,7 +1763,7 @@ jobs:
       - name: Run env-var-precedence audit (ADR-125 / ADR-130)
         # Guards the "CLI flag > ENV var > default" precedence rule added in
         # ADR-125 (rvagent integration) and ADR-130 (graph intelligence).
-        # Scans v3/cli/src and plugins/ for any CLAUDE_FLOW_* / RUFLO_* env
+        # Scans v3/cli/src and plugins/ for any CLAUDE_FLOW_* / SWARMLO_* env
         # var read that lacks a documented CLI-flag override path or is not
         # registered as an intentional escape hatch (CI/credential/process
         # signal). Fails closed (exit 1) — prevents future contributors from
@@ -1773,7 +1773,7 @@ jobs:
         run: node scripts/audit-env-var-precedence.mjs
 
   cli-npx-install-smoke:
-    # Regression guard for ruvnet/ruflo#1147 and #2018 — both report:
+    # Regression guard for z451047442-debug/swarmlo#1147 and #2018 — both report:
     #   $ npx @claude-flow/cli@latest …
     #   npm error Invalid Version:
     # Caused by an optionalDependencies/peerDependencies overlap deep in the
@@ -1820,9 +1820,9 @@ jobs:
         run: node scripts/smoke-cli-npx-install.mjs
 
   windows-hook-shim-smoke:
-    # Smoke test for ruvnet/ruflo#2132 — ruflo-hook.cjs cross-platform shim.
-    # Proves that plugins/ruflo-core/scripts/ruflo-hook.cjs can be invoked
-    # via `node ruflo-hook.cjs <subcommand>`, always exits 0, and accepts
+    # Smoke test for z451047442-debug/swarmlo#2132 — swarmlo-hook.cjs cross-platform shim.
+    # Proves that plugins/swarmlo-core/scripts/swarmlo-hook.cjs can be invoked
+    # via `node swarmlo-hook.cjs <subcommand>`, always exits 0, and accepts
     # stdin JSON input without crashing.
     # Runs on all 3 OS to prove cross-platform behaviour.
     name: Windows hook shim smoke (#2132) / ${{ matrix.os }}
@@ -1841,16 +1841,16 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Run ruflo-hook.cjs smoke
+      - name: Run swarmlo-hook.cjs smoke
         shell: bash
-        run: node scripts/smoke-ruflo-hook-cjs.mjs
+        run: node scripts/smoke-swarmlo-hook-cjs.mjs
 
   windows-init-hooks-smoke:
-    # Smoke test for ruvnet/ruflo#2132 — init-time platform detection.
-    # Proves ruflo init generates correct hook commands per platform:
+    # Smoke test for z451047442-debug/swarmlo#2132 — init-time platform detection.
+    # Proves swarmlo init generates correct hook commands per platform:
     #   - windows-latest: node-based (no /bin/bash, no | jq)
     #   - ubuntu/macos: POSIX-compatible (sh-based, no cmd.exe patterns)
-    # Also verifies ruflo-hook.cjs is always deployed to .claude/helpers/.
+    # Also verifies swarmlo-hook.cjs is always deployed to .claude/helpers/.
     name: Windows init hooks smoke (#2132) / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -1890,7 +1890,7 @@ jobs:
         run: node scripts/smoke-windows-init-hooks.mjs
 
   windows-hook-execution-smoke:
-    # End-to-end validation for ruvnet/ruflo#2132 — simulates a Claude Code
+    # End-to-end validation for z451047442-debug/swarmlo#2132 — simulates a Claude Code
     # PostToolUse hook firing. Asserts exit code != 126 ("cannot execute
     # binary file") and no POSIX-only pipeline patterns in the generated
     # settings.json hook commands.
@@ -1933,7 +1933,7 @@ jobs:
   hook-command-audit:
     # Regression guard for #1921 (and #1147) — plugin hooks.json must not
     # invoke a bare `npx <pkg>@alpha hooks …` per fire. The fix is
-    # scripts/ruflo-hook.sh (prefers a local `ruflo`/`claude-flow` binary,
+    # scripts/swarmlo-hook.sh (prefers a local `swarmlo`/`claude-flow` binary,
     # falls back to `npx --prefer-offline`, always exits 0).
     name: Hook-command install safety (#1921)
     runs-on: ubuntu-latest
@@ -1963,14 +1963,14 @@ jobs:
         shell: bash
         run: node scripts/audit-neural-trader-safety.mjs
 
-      - name: Lint the ruflo-hook shims
+      - name: Lint the swarmlo-hook shims
         shell: bash
         run: |
           # Every shim must be valid bash and exit 0 even when no CLI is
           # reachable (the #1921 contract). Probe with an empty PATH (invoke
           # bash by full path since PATH= can't find it otherwise).
           BASH="$(command -v bash)"
-          for sh in $(git ls-files '**/scripts/ruflo-hook.sh'); do
+          for sh in $(git ls-files '**/scripts/swarmlo-hook.sh'); do
             echo "checking $sh"
             bash -n "$sh"
             PATH= "$BASH" "$sh" modify-bash </dev/null || { echo "::error::$sh did not exit 0 with no CLI on PATH"; exit 1; }
@@ -1999,7 +1999,7 @@ jobs:
         run: node scripts/audit-vector-dim.mjs
 
   tool-output-guardrail-smoke:
-    # Smoke test for ADR-131 / ruvnet/ruflo#2149 — ToolOutputGuardrail
+    # Smoke test for ADR-131 / z451047442-debug/swarmlo#2149 — ToolOutputGuardrail
     # detects the four canonical OWASP ASI01 (Agent Goal Hijacking) attack
     # shapes (instruction override, ChatML/Llama frame injection, exfiltration)
     # and enforces the documented default policy (critical→reject,
@@ -2042,7 +2042,7 @@ jobs:
         run: node scripts/smoke-tool-output-guardrail.mjs
 
   witness-verify:
-    # Cryptographic regression guard: runs `ruflo verify --manifest` against
+    # Cryptographic regression guard: runs `swarmlo verify --manifest` against
     # the local build to confirm every documented fix in verification.md.json
     # still has its marker present. Catches silent regression of any of the
     # 81+ fixes without requiring per-fix smoke tests.
@@ -2100,7 +2100,7 @@ jobs:
         # works across all 3 OSes. RUNNER_TEMP is set on every runner.
         shell: bash
         run: |
-          # Use the project-agnostic verifier from ruflo-core plugin. This
+          # Use the project-agnostic verifier from swarmlo-core plugin. This
           # is the same script external adopters use — dogfooding ensures
           # the plugin pathway works and avoids CI-specific cli build
           # issues (e.g. missing @ruvector/sona, sharp native postinstall).
@@ -2118,7 +2118,7 @@ jobs:
           MANIFEST="verification/$OS_DIR/manifest.md.json"
           echo "verifying: $MANIFEST"
           set +e
-          node plugins/ruflo-core/scripts/witness/verify.mjs \
+          node plugins/swarmlo-core/scripts/witness/verify.mjs \
             --manifest "$MANIFEST" \
             --json > "$RUNNER_TEMP/witness-result.json" 2> "$RUNNER_TEMP/witness-result.err"
           VERIFY_EXIT=$?
@@ -2155,7 +2155,7 @@ jobs:
             macOS)   OS_DIR=macos ;;
             Windows) OS_DIR=windows ;;
           esac
-          node plugins/ruflo-core/scripts/witness/perf.mjs \
+          node plugins/swarmlo-core/scripts/witness/perf.mjs \
             --output "verification/$OS_DIR/performance.jsonl" \
             --capabilities install_pack,memory_load,witness_verify \
             --baseline || echo "perf bench errored — non-blocking"
@@ -2173,7 +2173,7 @@ jobs:
           esac
           HISTORY="verification/$OS_DIR/history.jsonl"
           if [ -f "$HISTORY" ]; then
-            node plugins/ruflo-core/scripts/witness/history.mjs \
+            node plugins/swarmlo-core/scripts/witness/history.mjs \
               --history "$HISTORY" \
               summary
           else
@@ -2218,7 +2218,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   init-bundle-invariants-smoke:
-    # Regression guard for ruvnet/ruflo#2095 — ADR-128 Phase 5.
+    # Regression guard for z451047442-debug/swarmlo#2095 — ADR-128 Phase 5.
     #
     # Statically asserts three invariants of the @claude-flow/cli init bundle:
     #
@@ -2250,7 +2250,7 @@ jobs:
         run: node scripts/smoke-init-bundle-invariants.mjs
 
   init-scaffold-references-smoke:
-    # Regression guard for ruvnet/ruflo#2971 — ADR-382 Part C.
+    # Regression guard for z451047442-debug/swarmlo#2971 — ADR-382 Part C.
     #
     # Statically scans the @claude-flow/cli init scaffold and the
     # plugin/marketplace surface for four content-drift classes:
@@ -2550,7 +2550,7 @@ jobs:
         run: node scripts/benchmark-graph.mjs
 
   statusline-generator-delegation-smoke:
-    # Regression guard for ruvnet/ruflo#2195 — the statusline generator
+    # Regression guard for z451047442-debug/swarmlo#2195 — the statusline generator
     # previously re-implemented all data readers locally with fragile file
     # probes that returned wrong values (DDD 0/5, intelligence 1%, ADR 87/87).
     #
@@ -2636,27 +2636,27 @@ jobs:
         run: node scripts/smoke-statusline-generator-delegation.mjs
 
   wizard-init-regression-guard:
-    # Regression guard for ruvnet/ruflo#2206 #2207 #2208 — three init-wizard
+    # Regression guard for z451047442-debug/swarmlo#2206 #2207 #2208 — three init-wizard
     # bugs that collectively broke every new user install:
     #
-    # #2206: mcp-generator registered the server under key 'ruflo', causing all
-    #        33 ruflo plugins to fail with "Unknown tool mcp__claude-flow__*".
-    #        The key must be 'claude-flow'; the command args (ruflo@latest) are
+    # #2206: mcp-generator registered the server under key 'swarmlo', causing all
+    #        33 swarmlo plugins to fail with "Unknown tool mcp__claude-flow__*".
+    #        The key must be 'claude-flow'; the command args (swarmlo@latest) are
     #        correct and must NOT change.
     #
-    # #2207: detectExistingRufloMCP only checked for 'ruflo' in mcpServers.
+    # #2207: detectExistingSwarmloMCP only checked for 'swarmlo' in mcpServers.
     #        After #2206, the key becomes 'claude-flow', so the detector would
     #        NEVER recognise a prior install. Both keys must be accepted. Also
     #        guarded: bare .claude/settings.json must NOT be a false positive.
     #
     # #2208: init --force silently destroyed existing CLAUDE.md without backup,
-    #        causing data loss. A .pre-ruflo backup must be created before
+    #        causing data loss. A .pre-swarmlo backup must be created before
     #        any overwrite; timestamped fallback when a backup already exists.
     #
     # Three guards (static + runtime each):
     #   [1/3] STATIC #2206 — mcp-generator source must write 'claude-flow' key
     #   [2/3] RUNTIME #2206 + #2208 — build CLI, run init in tmp dir, assert
-    #         .mcp.json has 'claude-flow' key and CLAUDE.md.pre-ruflo was created
+    #         .mcp.json has 'claude-flow' key and CLAUDE.md.pre-swarmlo was created
     #   [3/3] RUNTIME #2207 — bare .claude/settings.json must NOT trigger
     #         the duplicate-detection guard (false-positive check)
     name: wizard init regression guard (#2206 #2207 #2208)
@@ -2682,16 +2682,16 @@ jobs:
             || { echo "::error::mcp-generator no longer writes 'claude-flow' server key — #2206 regression"; exit 1; }
           echo "ok: 'claude-flow' key found"
 
-          echo "Checking mcp-generator does NOT use bare 'ruflo' as the server key..."
-          ! grep -qE "mcpServers\['ruflo'\]|mcpServers\[\"ruflo\"\]" \
+          echo "Checking mcp-generator does NOT use bare 'swarmlo' as the server key..."
+          ! grep -qE "mcpServers\['swarmlo'\]|mcpServers\[\"swarmlo\"\]" \
             v3/@claude-flow/cli/src/init/mcp-generator.ts \
-            || { echo "::error::mcp-generator writes 'ruflo' server key — breaks mcp__claude-flow__* tool naming (#2206)"; exit 1; }
-          echo "ok: bare 'ruflo' server key absent"
+            || { echo "::error::mcp-generator writes 'swarmlo' server key — breaks mcp__claude-flow__* tool naming (#2206)"; exit 1; }
+          echo "ok: bare 'swarmlo' server key absent"
 
-          echo "Checking command args still invoke ruflo@latest (must NOT change)..."
-          grep -q "ruflo@latest" v3/@claude-flow/cli/src/init/mcp-generator.ts \
-            || { echo "::error::mcp-generator no longer invokes ruflo@latest — command args must be preserved (#2206)"; exit 1; }
-          echo "ok: ruflo@latest invocation present"
+          echo "Checking command args still invoke swarmlo@latest (must NOT change)..."
+          grep -q "swarmlo@latest" v3/@claude-flow/cli/src/init/mcp-generator.ts \
+            || { echo "::error::mcp-generator no longer invokes swarmlo@latest — command args must be preserved (#2206)"; exit 1; }
+          echo "ok: swarmlo@latest invocation present"
 
           echo "Guard 1 passed."
 
@@ -2739,20 +2739,20 @@ jobs:
             console.log('ok: claude-flow key present in .mcp.json');
           " || { echo "::error::generated .mcp.json missing 'claude-flow' server key (#2206)"; exit 1; }
 
-          # #2206: stray 'ruflo' key must NOT exist
+          # #2206: stray 'swarmlo' key must NOT exist
           node -e "
             const cfg = JSON.parse(require('fs').readFileSync('.mcp.json','utf-8'));
-            if (cfg.mcpServers && 'ruflo' in cfg.mcpServers) {
-              console.error('FAIL: .mcp.json has stray ruflo server key (#2206)');
+            if (cfg.mcpServers && 'swarmlo' in cfg.mcpServers) {
+              console.error('FAIL: .mcp.json has stray swarmlo server key (#2206)');
               process.exit(1);
             }
-            console.log('ok: stray ruflo key absent');
-          " || { echo "::error::generated .mcp.json has stray 'ruflo' server key (#2206)"; exit 1; }
+            console.log('ok: stray swarmlo key absent');
+          " || { echo "::error::generated .mcp.json has stray 'swarmlo' server key (#2206)"; exit 1; }
 
-          # #2208: CLAUDE.md.pre-ruflo backup must exist with sentinel content
-          BACKUP=$(ls CLAUDE.md.pre-ruflo* 2>/dev/null | head -1)
+          # #2208: CLAUDE.md.pre-swarmlo backup must exist with sentinel content
+          BACKUP=$(ls CLAUDE.md.pre-swarmlo* 2>/dev/null | head -1)
           if [ -z "$BACKUP" ]; then
-            echo "::error::init --force did not create CLAUDE.md.pre-ruflo backup (#2208)"
+            echo "::error::init --force did not create CLAUDE.md.pre-swarmlo backup (#2208)"
             exit 1
           fi
           echo "ok: backup file created: $BACKUP"
@@ -2770,7 +2770,7 @@ jobs:
           TMP=$(mktemp -d)
           cd "$TMP"
 
-          # Simulate Claude Code's own project settings.json with NO ruflo registration
+          # Simulate Claude Code's own project settings.json with NO swarmlo registration
           mkdir -p .claude
           echo '{"env": {}, "hooks": {}}' > .claude/settings.json
 
@@ -2784,7 +2784,7 @@ jobs:
           echo "$OUT"
 
           # The init must NOT claim "already initialized" due to the bare settings.json
-          if echo "$OUT" | grep -qi "existing 'ruflo' MCP registration\|existing 'claude-flow' MCP registration"; then
+          if echo "$OUT" | grep -qi "existing 'swarmlo' MCP registration\|existing 'claude-flow' MCP registration"; then
             echo "::error::init false-positives on bare .claude/settings.json (#2207)"
             exit 1
           fi

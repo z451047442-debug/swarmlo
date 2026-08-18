@@ -6,12 +6,12 @@
  * A TypeScript port of meta-proxy's `src/oauth/client.rs`
  * (cognitum-one/meta-proxy) — same base URL, same endpoints, same
  * form/query parameter names, confirmed live 2026-07-16 (a real
- * `GET /oauth/authorize?...&client_id=meta-proxy&redirect_uri=<ruflo-controlled
+ * `GET /oauth/authorize?...&client_id=meta-proxy&redirect_uri=<swarmlo-controlled
  * loopback>` returns a working consent page, not a redirect_uri-mismatch
  * error — so this client reuses meta-proxy's registered `client_id` rather
  * than requiring a new one).
  *
- * Deliberately NOT `api.cognitum.one/v1/auth/*` — that's what ruflo's own
+ * Deliberately NOT `api.cognitum.one/v1/auth/*` — that's what swarmlo's own
  * checked-in OpenAPI spec (v3/docs/api/cognitum-v1.openapi.yaml, ADR-308)
  * describes, but it does not match what the real identity server serves.
  * This client targets the proven, live surface instead.

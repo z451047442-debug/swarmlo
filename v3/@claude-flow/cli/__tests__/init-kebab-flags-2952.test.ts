@@ -45,8 +45,8 @@ function countAgentFiles(cwd: string): number {
 
 describe.skipIf(!CLI_BUILT)('#2952 init reads the parser\'s actual (camelCase) flag keys', () => {
   it('--all-agents installs strictly more agents than the curated default', () => {
-    const defaultCwd = mkdtempSync(join(tmpdir(), 'ruflo-2952-default-'));
-    const allAgentsCwd = mkdtempSync(join(tmpdir(), 'ruflo-2952-all-'));
+    const defaultCwd = mkdtempSync(join(tmpdir(), 'swarmlo-2952-default-'));
+    const allAgentsCwd = mkdtempSync(join(tmpdir(), 'swarmlo-2952-all-'));
     try {
       execFileSync(process.execPath, [CLI_BIN, 'init', '--force'], {
         cwd: defaultCwd,

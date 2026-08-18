@@ -27,7 +27,7 @@ describe('validatePath (#2352)', () => {
     });
 
     it('accepts mixed separators', () => {
-      const r = validatePath('C:\\Users\\ruv/Projects\\ruflo/file.ts', 'filePath');
+      const r = validatePath('C:\\Users\\ruv/Projects\\swarmlo/file.ts', 'filePath');
       expect(r.valid).toBe(true);
     });
   });

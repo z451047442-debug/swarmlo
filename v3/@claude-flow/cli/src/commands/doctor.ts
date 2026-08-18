@@ -147,9 +147,9 @@ async function checkConfigFile(): Promise<HealthCheck> {
  * registry round-trip. On the reporter's 48 GB macOS box this produced
  * load average 49, jetsam, and a kernel watchdog panic two minutes after
  * boot. Severity is CRITICAL when present; users who installed before #2337
- * and never re-ran `ruflo init` still have it.
+ * and never re-ran `swarmlo init` still have it.
  *
- * Detection only — does not modify settings. Fix path is `ruflo init` (the
+ * Detection only — does not modify settings. Fix path is `swarmlo init` (the
  * executor's migration logic, also patched in #2448, will now regenerate
  * the broken commands).
  */
@@ -217,7 +217,7 @@ async function checkStaleSettingsNpx(): Promise<HealthCheck> {
     name: 'Stale npx@latest in settings (#2448)',
     status: 'fail',
     message: `CRITICAL — runaway \`npx @claude-flow/cli@latest\` commands detected: ${summary}`,
-    fix: 'Re-run `npx ruflo init` to migrate (the v3.13.3+ init migrator regenerates these to local-helper form). On macOS this prevents the process-storm / kernel-panic class reported in #2448.',
+    fix: 'Re-run `npx swarmlo init` to migrate (the v3.13.3+ init migrator regenerates these to local-helper form). On macOS this prevents the process-storm / kernel-panic class reported in #2448.',
   };
 }
 
@@ -665,7 +665,7 @@ async function checkMemoryContent(): Promise<HealthCheck> {
 // can find them) AND undistillable (ADR-174's distill skips rows with no
 // parseable vector). Same 95% threshold + fail-with-ratio pattern as check 2.
 //
-// Embedding storage varies across ruflo installs (agentdb migrations, HNSW
+// Embedding storage varies across swarmlo installs (agentdb migrations, HNSW
 // index vs inline vector column). Discovers the shape via schema probes,
 // falls back to warn if the schema is unrecognized (better than a false
 // pass, per "UNKNOWN is never PASS").
@@ -814,7 +814,7 @@ async function checkMemoryCritiqueCoverage(): Promise<HealthCheck> {
 }
 
 // #2545: Check that the self-learning bridge can actually load @claude-flow/memory
-// the SAME way the SessionStart auto-memory hook does. On the documented `npx ruflo`
+// the SAME way the SessionStart auto-memory hook does. On the documented `npx swarmlo`
 // path the package lands in the npx cache — unreachable from the project — so the
 // hook silently no-op'd with no signal anywhere. This surfaces it.
 async function checkLearningBridge(): Promise<HealthCheck> {
@@ -826,7 +826,7 @@ async function checkLearningBridge(): Promise<HealthCheck> {
     return {
       name: 'Learning Bridge',
       status: 'pass',
-      message: 'auto-memory hook not installed (run: npx ruflo@latest init)',
+      message: 'auto-memory hook not installed (run: npx swarmlo@latest init)',
     };
   }
 
@@ -1010,7 +1010,7 @@ async function checkFederationBreaker(): Promise<HealthCheck> {
 async function checkMcpServers(): Promise<HealthCheck> {
   const home = process.env.HOME || process.env.USERPROFILE || '';
   // #1842: ~/.claude.json holds project-scoped registrations under
-  // parsed.projects[<projectPath>].mcpServers.ruflo, in addition to any
+  // parsed.projects[<projectPath>].mcpServers.swarmlo, in addition to any
   // top-level mcpServers. Check both shapes plus the legacy desktop and
   // local .mcp.json paths.
   const mcpConfigPaths = [
@@ -1020,15 +1020,15 @@ async function checkMcpServers(): Promise<HealthCheck> {
     '.mcp.json',
   ];
 
-  const isRufloKey = (k: string) =>
-    k === 'ruflo' || k === 'ruflo_alpha' || k === 'claude-flow' || k === 'claude-flow_alpha';
+  const isSwarmloKey = (k: string) =>
+    k === 'swarmlo' || k === 'swarmlo_alpha' || k === 'claude-flow' || k === 'claude-flow_alpha';
   // Canonical MCP-server key is `claude-flow` — matches the `mcp__claude-flow__*`
-  // prefix that ~166 plugin tool references depend on (#2206). A `ruflo`-keyed
+  // prefix that ~166 plugin tool references depend on (#2206). A `swarmlo`-keyed
   // entry pointing at the same binary is the legacy duplicate created by
   // pre-rename setup docs that #2612 tracks; doctor treats it as removable.
-  const isCurrentRufloKey = (k: string) => k === 'claude-flow' || k === 'claude-flow_alpha';
-  const isLegacyRufloKey = (k: string) => k === 'ruflo' || k === 'ruflo_alpha';
-  const isRufloServer = (server: unknown): boolean => {
+  const isCurrentSwarmloKey = (k: string) => k === 'claude-flow' || k === 'claude-flow_alpha';
+  const isLegacySwarmloKey = (k: string) => k === 'swarmlo' || k === 'swarmlo_alpha';
+  const isSwarmloServer = (server: unknown): boolean => {
     if (!server || typeof server !== 'object') return false;
     const entry = server as { command?: unknown; args?: unknown };
     const command = typeof entry.command === 'string' ? entry.command : '';
@@ -1036,11 +1036,11 @@ async function checkMcpServers(): Promise<HealthCheck> {
       ? entry.args.filter((arg): arg is string => typeof arg === 'string')
       : [];
     const haystack = [command, ...args].join(' ');
-    return /\b(?:ruflo|claude-flow|@claude-flow\/cli)(?:@[\w.-]+)?\b/.test(haystack);
+    return /\b(?:swarmlo|claude-flow|@claude-flow\/cli)(?:@[\w.-]+)?\b/.test(haystack);
   };
 
   let totalServersSeen = 0;
-  const rufloLocations: string[] = [];
+  const swarmloLocations: string[] = [];
   const duplicateLocations: string[] = [];
   const legacyLocations: string[] = [];
   const currentLocations: string[] = [];
@@ -1048,26 +1048,26 @@ async function checkMcpServers(): Promise<HealthCheck> {
   const inspectServers = (
     servers: unknown,
     location: string
-  ): { total: number; hasRuflo: boolean } => {
-    if (!servers || typeof servers !== 'object') return { total: 0, hasRuflo: false };
+  ): { total: number; hasSwarmlo: boolean } => {
+    if (!servers || typeof servers !== 'object') return { total: 0, hasSwarmlo: false };
 
     const entries = Object.entries(servers as Record<string, unknown>);
-    const activeRufloEntries = entries.filter(([key, server]) => isRufloKey(key) && isRufloServer(server));
-    const hasLegacy = activeRufloEntries.some(([key]) => isLegacyRufloKey(key));
-    const hasCurrent = activeRufloEntries.some(([key]) => isCurrentRufloKey(key));
+    const activeSwarmloEntries = entries.filter(([key, server]) => isSwarmloKey(key) && isSwarmloServer(server));
+    const hasLegacy = activeSwarmloEntries.some(([key]) => isLegacySwarmloKey(key));
+    const hasCurrent = activeSwarmloEntries.some(([key]) => isCurrentSwarmloKey(key));
 
-    if (activeRufloEntries.length > 0) {
-      rufloLocations.push(`${location}: ${activeRufloEntries.map(([key]) => key).join(', ')}`);
+    if (activeSwarmloEntries.length > 0) {
+      swarmloLocations.push(`${location}: ${activeSwarmloEntries.map(([key]) => key).join(', ')}`);
     }
     if (hasLegacy && hasCurrent) {
-      duplicateLocations.push(`${location}: ${activeRufloEntries.map(([key]) => key).join(' + ')}`);
+      duplicateLocations.push(`${location}: ${activeSwarmloEntries.map(([key]) => key).join(' + ')}`);
     }
-    for (const [key] of activeRufloEntries) {
-      if (isLegacyRufloKey(key)) legacyLocations.push(`${location}: ${key}`);
-      if (isCurrentRufloKey(key)) currentLocations.push(`${location}: ${key}`);
+    for (const [key] of activeSwarmloEntries) {
+      if (isLegacySwarmloKey(key)) legacyLocations.push(`${location}: ${key}`);
+      if (isCurrentSwarmloKey(key)) currentLocations.push(`${location}: ${key}`);
     }
 
-    return { total: entries.length, hasRuflo: activeRufloEntries.length > 0 };
+    return { total: entries.length, hasSwarmlo: activeSwarmloEntries.length > 0 };
   };
 
   for (const configPath of mcpConfigPaths) {
@@ -1078,7 +1078,7 @@ async function checkMcpServers(): Promise<HealthCheck> {
       const topResult = inspectServers(content.mcpServers || content.servers || {}, `${configPath} top-level`);
       totalServersSeen += topResult.total;
 
-      // Project-scoped (Claude Code shape): projects[*].mcpServers.ruflo
+      // Project-scoped (Claude Code shape): projects[*].mcpServers.swarmlo
       if (content.projects && typeof content.projects === 'object') {
         for (const [projectKey, projectVal] of Object.entries(content.projects)) {
           const pm = (projectVal as { mcpServers?: Record<string, unknown> })?.mcpServers;
@@ -1100,16 +1100,16 @@ async function checkMcpServers(): Promise<HealthCheck> {
     return {
       name: 'MCP Servers',
       status: 'warn',
-      message: `Duplicate Ruflo MCP registrations found (${locations}) — Claude Code will start both tool schemas`,
-      fix: 'Remove the legacy `ruflo`-keyed MCP registration (pre-rename duplicate) and keep the canonical `claude-flow` entry: `claude mcp add claude-flow -- npx -y ruflo@latest mcp start`. The canonical key stays `claude-flow` so the ~166 `mcp__claude-flow__*` plugin tool references keep resolving (#2206).',
+      message: `Duplicate Swarmlo MCP registrations found (${locations}) — Claude Code will start both tool schemas`,
+      fix: 'Remove the legacy `swarmlo`-keyed MCP registration (pre-rename duplicate) and keep the canonical `claude-flow` entry: `claude mcp add claude-flow -- npx -y swarmlo@latest mcp start`. The canonical key stays `claude-flow` so the ~166 `mcp__claude-flow__*` plugin tool references keep resolving (#2206).',
     };
   }
 
-  if (rufloLocations.length > 0) {
+  if (swarmloLocations.length > 0) {
     return {
       name: 'MCP Servers',
       status: 'pass',
-      message: `${totalServersSeen} servers (ruflo configured: ${rufloLocations.join('; ')})`,
+      message: `${totalServersSeen} servers (swarmlo configured: ${swarmloLocations.join('; ')})`,
     };
   }
 
@@ -1117,8 +1117,8 @@ async function checkMcpServers(): Promise<HealthCheck> {
     return {
       name: 'MCP Servers',
       status: 'warn',
-      message: `${totalServersSeen} servers (ruflo not found)`,
-      fix: 'claude mcp add claude-flow -- npx -y ruflo@latest mcp start',
+      message: `${totalServersSeen} servers (swarmlo not found)`,
+      fix: 'claude mcp add claude-flow -- npx -y swarmlo@latest mcp start',
     };
   }
 
@@ -1126,7 +1126,7 @@ async function checkMcpServers(): Promise<HealthCheck> {
     name: 'MCP Servers',
     status: 'warn',
     message: 'No MCP config found',
-    fix: 'claude mcp add ruflo -- npx -y ruflo@latest mcp start',
+    fix: 'claude mcp add swarmlo -- npx -y swarmlo@latest mcp start',
   };
 }
 
@@ -1149,7 +1149,7 @@ async function checkMcpSchemaOverhead(): Promise<HealthCheck> {
     const selection = parseMcpToolSelection(process.env.CLAUDE_FLOW_MCP_TOOLS);
     const tools = filterAdvertisedMcpTools(listMCPTools(), selection);
     // This is diagnostic metadata about the external client's context window,
-    // not Ruflo command configuration, so there is no corresponding CLI flag.
+    // not Swarmlo command configuration, so there is no corresponding CLI flag.
     const rawWindow = process.env.CLAUDE_FLOW_CONTEXT_WINDOW_TOKENS;
     const contextWindow = rawWindow ? Number.parseInt(rawWindow, 10) : undefined;
     const assessment = assessMcpSchemaOverhead(tools, contextWindow);
@@ -1239,7 +1239,7 @@ async function checkVersionFreshness(): Promise<HealthCheck> {
             if (
               pkg.version &&
               typeof pkg.name === 'string' &&
-              (pkg.name === '@claude-flow/cli' || pkg.name === 'claude-flow' || pkg.name === 'ruflo')
+              (pkg.name === '@claude-flow/cli' || pkg.name === 'claude-flow' || pkg.name === 'swarmlo')
             ) {
               currentVersion = pkg.version;
               break;
@@ -1328,17 +1328,17 @@ async function checkVersionFreshness(): Promise<HealthCheck> {
 
 // Check Claude Code CLI (async with proper env inheritance)
 // ADR-150 — surface MetaHarness availability + harnessFit score in
-// the standard ruflo doctor flow. Graceful degradation: when metaharness
+// the standard swarmlo doctor flow. Graceful degradation: when metaharness
 // is not installed (no network, optionalDep skipped), the check returns
-// `warn` with a hint instead of `fail` — ruflo continues to function.
+// `warn` with a hint instead of `fail` — swarmlo continues to function.
 /**
- * iter 45 — verify the ruflo-side MetaHarness integration is intact.
+ * iter 45 — verify the swarmlo-side MetaHarness integration is intact.
  *
  * The existing `checkMetaharness` verifies the UPSTREAM `metaharness`
  * package is reachable (warn if missing — it's optional per ADR-150).
  * This check verifies the INTEGRATION LAYER (plugin scripts, production
  * module, subprocess bridge) is intact. Unlike upstream, the integration
- * layer is shipped with ruflo — missing files mean ruflo's install is
+ * layer is shipped with swarmlo — missing files mean swarmlo's install is
  * corrupted, not that an optional dep is absent.
  *
  * Status mapping:
@@ -1347,13 +1347,13 @@ async function checkVersionFreshness(): Promise<HealthCheck> {
  *   warn — files present but module import errored at runtime
  *
  * Verified files (iter 36-53 surfaces — full ADR-150 deep-integration set):
- *   - plugins/ruflo-metaharness/scripts/_harness.mjs                (subprocess bridge)
- *   - plugins/ruflo-metaharness/scripts/_similarity.mjs             (ADR-152 §3.1 module, iter 36)
- *   - plugins/ruflo-metaharness/scripts/similarity.mjs              (CLI skill, iter 36)
- *   - plugins/ruflo-metaharness/scripts/_spike-similarity.mjs       (regression anchor, iter 35)
- *   - plugins/ruflo-metaharness/scripts/drift-from-history.mjs      (1-command primitive, iter 53)
- *   - plugins/ruflo-metaharness/skills/harness-similarity/SKILL.md
- *   - plugins/ruflo-metaharness/skills/harness-drift-from-history/SKILL.md  (iter 53)
+ *   - plugins/swarmlo-metaharness/scripts/_harness.mjs                (subprocess bridge)
+ *   - plugins/swarmlo-metaharness/scripts/_similarity.mjs             (ADR-152 §3.1 module, iter 36)
+ *   - plugins/swarmlo-metaharness/scripts/similarity.mjs              (CLI skill, iter 36)
+ *   - plugins/swarmlo-metaharness/scripts/_spike-similarity.mjs       (regression anchor, iter 35)
+ *   - plugins/swarmlo-metaharness/scripts/drift-from-history.mjs      (1-command primitive, iter 53)
+ *   - plugins/swarmlo-metaharness/skills/harness-similarity/SKILL.md
+ *   - plugins/swarmlo-metaharness/skills/harness-drift-from-history/SKILL.md  (iter 53)
  */
 /**
  * ADR-305 — funnel state audit. Reports the effective enabled/disabled
@@ -1376,7 +1376,7 @@ async function checkFunnel(): Promise<HealthCheck> {
       name: 'Funnel (ADR-305)',
       status: 'warn',
       message: `state unreadable: ${err instanceof Error ? err.message : String(err)}`,
-      fix: 'ruflo funnel status',
+      fix: 'swarmlo funnel status',
     };
   }
 }
@@ -1411,7 +1411,7 @@ async function checkProxySponsoredConsent(): Promise<HealthCheck> {
         name: 'Meta LLM Proxy (ADR-313)',
         status: 'warn',
         message: `${parts.join('; ')} — flagged rate-limited but sponsored capacity isn't enabled`,
-        fix: 'ruflo proxy sponsor-enable --yes',
+        fix: 'swarmlo proxy sponsor-enable --yes',
       };
     }
 
@@ -1421,7 +1421,7 @@ async function checkProxySponsoredConsent(): Promise<HealthCheck> {
       name: 'Meta LLM Proxy (ADR-313)',
       status: 'warn',
       message: `state unreadable: ${err instanceof Error ? err.message : String(err)}`,
-      fix: 'ruflo proxy sponsor-status',
+      fix: 'swarmlo proxy sponsor-status',
     };
   }
 }
@@ -1441,7 +1441,7 @@ async function checkProxyBinary(): Promise<HealthCheck> {
     const { proxyBinaryPath, proxyInstallManifestPath } = await import('../proxy/paths.js');
     const binPath = proxyBinaryPath();
     if (!existsSync(binPath)) {
-      return { name: NAME, status: 'warn', message: 'not installed', fix: 'ruflo proxy install' };
+      return { name: NAME, status: 'warn', message: 'not installed', fix: 'swarmlo proxy install' };
     }
 
     const manifestPath = proxyInstallManifestPath();
@@ -1449,8 +1449,8 @@ async function checkProxyBinary(): Promise<HealthCheck> {
       return {
         name: NAME,
         status: 'warn',
-        message: 'binary present but no install-manifest.json — provenance unknown (installed outside `ruflo proxy install`?)',
-        fix: 'ruflo proxy update --release <x.y.z>',
+        message: 'binary present but no install-manifest.json — provenance unknown (installed outside `swarmlo proxy install`?)',
+        fix: 'swarmlo proxy update --release <x.y.z>',
       };
     }
 
@@ -1465,7 +1465,7 @@ async function checkProxyBinary(): Promise<HealthCheck> {
         name: NAME,
         status: 'fail',
         message: `binary sha256 does not match the recorded install manifest — possible tampering or a manual overwrite (expected ${manifest.sha256.slice(0, 12)}…, got ${liveSha.slice(0, 12)}…)`,
-        fix: 'ruflo proxy update --release <x.y.z>',
+        fix: 'swarmlo proxy update --release <x.y.z>',
       };
     }
 
@@ -1482,19 +1482,19 @@ async function checkProxyProcess(): Promise<HealthCheck> {
     const { proxyPidFilePath } = await import('../proxy/paths.js');
     const pidPath = proxyPidFilePath();
     if (!existsSync(pidPath)) {
-      return { name: NAME, status: 'warn', message: 'not running (no PID file)', fix: 'ruflo proxy start' };
+      return { name: NAME, status: 'warn', message: 'not running (no PID file)', fix: 'swarmlo proxy start' };
     }
 
     const pidRaw = readFileSync(pidPath, 'utf-8').trim();
     const pid = parseInt(pidRaw, 10);
     if (!Number.isFinite(pid)) {
-      return { name: NAME, status: 'warn', message: `PID file is malformed: ${JSON.stringify(pidRaw)}`, fix: 'ruflo proxy stop && ruflo proxy start' };
+      return { name: NAME, status: 'warn', message: `PID file is malformed: ${JSON.stringify(pidRaw)}`, fix: 'swarmlo proxy stop && swarmlo proxy start' };
     }
 
     try {
       process.kill(pid, 0); // signal-0 liveness probe — throws if the process is dead
     } catch {
-      return { name: NAME, status: 'warn', message: `PID file points at ${pid}, which is not running — stale PID file`, fix: 'ruflo proxy start' };
+      return { name: NAME, status: 'warn', message: `PID file points at ${pid}, which is not running — stale PID file`, fix: 'swarmlo proxy start' };
     }
 
     // Live version-compat + data-plane info, ONLY once PID liveness already
@@ -1536,7 +1536,7 @@ async function checkProxyProcess(): Promise<HealthCheck> {
             name: NAME,
             status: 'warn',
             message: `running (pid ${pid}) reports v${body.version}, but the installed binary is v${manifest.version} — a stale process from a previous version?`,
-            fix: 'ruflo proxy stop && ruflo proxy start',
+            fix: 'swarmlo proxy stop && swarmlo proxy start',
           };
         }
         versionNote = body.version ? ` v${body.version}` : '';
@@ -1590,7 +1590,7 @@ async function checkProxyBindAddress(): Promise<HealthCheck> {
   }
 }
 
-/** `ruflo auth` health (ADR-306). Warn (never fail) on absence — auth is never required for core functionality. */
+/** `swarmlo auth` health (ADR-306). Warn (never fail) on absence — auth is never required for core functionality. */
 async function checkAuth(): Promise<HealthCheck> {
   const NAME = 'Cognitum identity (ADR-306)';
   try {
@@ -1600,7 +1600,7 @@ async function checkAuth(): Promise<HealthCheck> {
     const { profiles } = listProfiles();
 
     if (profiles.length === 0) {
-      return { name: NAME, status: 'warn', message: 'not logged in', fix: 'ruflo auth login' };
+      return { name: NAME, status: 'warn', message: 'not logged in', fix: 'swarmlo auth login' };
     }
 
     let keychainAvailable: boolean | 'unknown' = 'unknown';
@@ -1627,7 +1627,7 @@ async function checkAuth(): Promise<HealthCheck> {
         name: NAME,
         status: 'fail',
         message: `scope granted without a matching consent receipt: ${violations.join(', ')}`,
-        fix: 'ruflo auth logout && ruflo auth login',
+        fix: 'swarmlo auth logout && swarmlo auth login',
       };
     }
 
@@ -1658,7 +1658,7 @@ async function checkMetaharnessIntegration(): Promise<HealthCheck> {
   // `import.meta.url`. The plugins dir is always a sibling of the package
   // root regardless of where the package was installed. Walk up from
   // `dist/src/commands/doctor.js` (built) or `src/commands/doctor.ts`
-  // (dev) until we find a directory containing `plugins/ruflo-metaharness/`.
+  // (dev) until we find a directory containing `plugins/swarmlo-metaharness/`.
   const candidates: string[] = [];
 
   // Strategy 1: walk up from this module's own URL — covers npx + global install.
@@ -1666,7 +1666,7 @@ async function checkMetaharnessIntegration(): Promise<HealthCheck> {
     const selfDir = dirname(fileURLToPath(import.meta.url));
     let q = selfDir;
     for (let i = 0; i < 8; i++) {
-      candidates.push(join(q, 'plugins', 'ruflo-metaharness'));
+      candidates.push(join(q, 'plugins', 'swarmlo-metaharness'));
       q = dirname(q);
     }
   } catch {
@@ -1676,12 +1676,12 @@ async function checkMetaharnessIntegration(): Promise<HealthCheck> {
   // Strategy 2: walk up from cwd — covers monorepo dev (running from a sub-package).
   let p = process.cwd();
   for (let i = 0; i < 8; i++) {
-    candidates.push(join(p, 'plugins', 'ruflo-metaharness'));
+    candidates.push(join(p, 'plugins', 'swarmlo-metaharness'));
     p = dirname(p);
   }
 
   // Strategy 3: explicit node_modules path relative to cwd — covers project-local install.
-  candidates.push(join(process.cwd(), 'node_modules', '@claude-flow', 'cli', 'plugins', 'ruflo-metaharness'));
+  candidates.push(join(process.cwd(), 'node_modules', '@claude-flow', 'cli', 'plugins', 'swarmlo-metaharness'));
 
   let pluginDir: string | null = null;
   for (const c of candidates) {
@@ -1701,8 +1701,8 @@ async function checkMetaharnessIntegration(): Promise<HealthCheck> {
     return {
       name: 'MetaHarness integration (ADR-150)',
       status: 'warn',
-      message: 'plugins/ruflo-metaharness/ not found — MetaHarness skills will degrade gracefully',
-      fix: 'Optional: install via `npm i -D @metaharness/darwin metaharness` or run `ruflo plugins install ruflo-metaharness`',
+      message: 'plugins/swarmlo-metaharness/ not found — MetaHarness skills will degrade gracefully',
+      fix: 'Optional: install via `npm i -D @metaharness/darwin metaharness` or run `swarmlo plugins install swarmlo-metaharness`',
     };
   }
 
@@ -1731,7 +1731,7 @@ async function checkMetaharnessIntegration(): Promise<HealthCheck> {
       name: 'MetaHarness integration (ADR-150)',
       status: 'fail',
       message: `Missing files: ${missing.join(', ')}`,
-      fix: 'Reinstall ruflo or restore from git: `git checkout HEAD -- plugins/ruflo-metaharness/`',
+      fix: 'Reinstall swarmlo or restore from git: `git checkout HEAD -- plugins/swarmlo-metaharness/`',
     };
   }
 
@@ -1744,7 +1744,7 @@ async function checkMetaharnessIntegration(): Promise<HealthCheck> {
         name: 'MetaHarness integration (ADR-150)',
         status: 'fail',
         message: '_similarity.mjs does not export similarity()',
-        fix: 'Reinstall ruflo or restore the file from git',
+        fix: 'Reinstall swarmlo or restore the file from git',
       };
     }
     const result = mod.similarity({}, {});
@@ -1776,7 +1776,7 @@ async function checkMetaharnessIntegration(): Promise<HealthCheck> {
         name: 'MetaHarness integration (ADR-150)',
         status: 'fail',
         message: '_harness.mjs does not export parseMcpScanText (iter 50 — needed by mcp-scan + oia-audit)',
-        fix: 'Reinstall ruflo or restore _harness.mjs from git',
+        fix: 'Reinstall swarmlo or restore _harness.mjs from git',
       };
     }
     if (typeof harnessMod.runHarnessAsync !== 'function' || typeof harnessMod.runMetaharnessAsync !== 'function') {
@@ -1784,7 +1784,7 @@ async function checkMetaharnessIntegration(): Promise<HealthCheck> {
         name: 'MetaHarness integration (ADR-150)',
         status: 'fail',
         message: '_harness.mjs missing iter-56 async exports (runHarnessAsync / runMetaharnessAsync) — oia-audit parallelization will fail',
-        fix: 'Reinstall ruflo or restore _harness.mjs from git',
+        fix: 'Reinstall swarmlo or restore _harness.mjs from git',
       };
     }
     // Smoke: parser handles empty input gracefully
@@ -1814,7 +1814,7 @@ async function checkMetaharnessIntegration(): Promise<HealthCheck> {
 /**
  * Dependency-contract check: every `@metaharness/*` package this CLI DECLARES
  * in its own optionalDependencies must actually resolve at runtime. Declared
- * packages are advertised integration surfaces (`ruflo metaharness evolve`,
+ * packages are advertised integration surfaces (`swarmlo metaharness evolve`,
  * flywheel receipt interop, radio coordination) — a declared-but-absent
  * package means the install dropped an optional dep (or the declaration
  * regressed to peer-only), so the advertised integration silently degrades.
@@ -1891,13 +1891,13 @@ async function checkMetaharness(): Promise<HealthCheck> {
     return {
       name: 'MetaHarness (ADR-150)',
       status: 'pass',
-      message: `v${versionMatch[1]} — run \`npx ruflo metaharness score\` for the full scorecard`,
+      message: `v${versionMatch[1]} — run \`npx swarmlo metaharness score\` for the full scorecard`,
     };
   } catch {
     return {
       name: 'MetaHarness (ADR-150)',
       status: 'warn',
-      message: 'Not installed — `npx ruflo metaharness *` commands will degrade gracefully',
+      message: 'Not installed — `npx swarmlo metaharness *` commands will degrade gracefully',
       fix: 'npm install --include=optional  # to enable the metaharness optional dep',
     };
   }
@@ -2137,7 +2137,7 @@ export const doctorCommand: Command = {
     // part of the health-check flow. Runs, reports, exits.
     if (fixHandles) {
       output.writeln();
-      output.writeln(output.bold('RuFlo Doctor — fix-handles'));
+      output.writeln(output.bold('Swarmlo Doctor — fix-handles'));
       output.writeln(output.dim('─'.repeat(50)));
       output.writeln();
 
@@ -2202,7 +2202,7 @@ export const doctorCommand: Command = {
     }
 
     output.writeln();
-    output.writeln(output.bold('RuFlo Doctor'));
+    output.writeln(output.bold('Swarmlo Doctor'));
     output.writeln(output.dim('System diagnostics and health check'));
     output.writeln(output.dim('─'.repeat(50)));
     output.writeln();
@@ -2231,10 +2231,10 @@ export const doctorCommand: Command = {
       checkFederationBreaker, // ADR-097 Phase 4
       checkMetaharness, // ADR-150 — MetaHarness upstream package
       checkMetaharnessDeclaredPackages, // dependency contract — declared optional deps must resolve
-      checkMetaharnessIntegration, // iter 45 — ruflo-side integration layer
+      checkMetaharnessIntegration, // iter 45 — swarmlo-side integration layer
       checkFunnel, // ADR-305 — effective funnel state + deciding precedence source
       checkProxySponsoredConsent, // ADR-313 — Meta LLM Proxy sponsored-downtime health
-      checkAuth, // ADR-306 — Cognitum identity (warn-only; never fails bare `ruflo doctor`)
+      checkAuth, // ADR-306 — Cognitum identity (warn-only; never fails bare `swarmlo doctor`)
     ];
 
     // #2677: `--component memory` now runs the whole memory-health suite,
@@ -2274,8 +2274,8 @@ export const doctorCommand: Command = {
       'agentic-flow': checkAgenticFlow,
       'encryption': checkEncryptionAtRest, // ADR-096 Phase 5
       'federation': checkFederationBreaker, // ADR-097 Phase 4
-      'metaharness': [checkMetaharness, checkMetaharnessDeclaredPackages, checkMetaharnessIntegration], // ADR-150 — upstream + declared deps + ruflo-side
-      'metaharness-integration': checkMetaharnessIntegration, // iter 45 — ruflo-side
+      'metaharness': [checkMetaharness, checkMetaharnessDeclaredPackages, checkMetaharnessIntegration], // ADR-150 — upstream + declared deps + swarmlo-side
+      'metaharness-integration': checkMetaharnessIntegration, // iter 45 — swarmlo-side
       'funnel': checkFunnel, // ADR-305
       // ADR-307 — deep-dive array, same pattern as 'memory' above: the cheap
       // sponsored-consent check first, then binary/process/bind in the order
@@ -2328,7 +2328,7 @@ export const doctorCommand: Command = {
     }
 
     // #2545: --fix / --install can actually repair the Learning Bridge by
-    // recording the resolver sidecar. When doctor runs via `npx ruflo`, the CLI
+    // recording the resolver sidecar. When doctor runs via `npx swarmlo`, the CLI
     // CAN resolve its optional @claude-flow/memory dep (it is in the same npx
     // cache), so writing the sidecar makes the SessionStart hook find it.
     if ((showFix || autoInstall)) {

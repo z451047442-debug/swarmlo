@@ -162,24 +162,24 @@ export interface AnthropicCallResult {
  *
  * #1725 — falls back to Ollama Cloud (Tier-2, OpenAI-compat) when
  * ANTHROPIC_API_KEY is unset and OLLAMA_API_KEY is present, or when
- * RUFLO_PROVIDER=ollama is explicitly set. Response shape is normalized
+ * SWARMLO_PROVIDER=ollama is explicitly set. Response shape is normalized
  * to the Anthropic-flavored AnthropicCallResult so existing callers
  * don't need to know which provider answered.
  */
 export async function callAnthropicMessages(input: AnthropicCallInput): Promise<AnthropicCallResult> {
   // #2962 — precedence: explicit per-agent flag (input.provider, forwarded
   // from agent.provider by executeAgentTask, itself populated from a
-  // user's `agent spawn --provider` flag) → env vars (RUFLO_PROVIDER + the
+  // user's `agent spawn --provider` flag) → env vars (SWARMLO_PROVIDER + the
   // *_API_KEY family — unchanged back-compat surface) → persisted
   // `agents.providers` config (`providers configure`) → the original
   // key-presence inference, kept below as the last-resort fallback.
-  const explicitProvider = (input.provider || process.env.RUFLO_PROVIDER || '').toLowerCase();
+  const explicitProvider = (input.provider || process.env.SWARMLO_PROVIDER || '').toLowerCase();
   const ollamaKey = process.env.OLLAMA_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
   // #2042 — OpenRouter is an OpenAI-compat endpoint that fronts dozens of
   // providers. Reporter (@ummcke00) had `providers.openrouter.apiKey` in
   // their config.yaml but agent_execute hardcoded Anthropic. Detect via
-  // explicit RUFLO_PROVIDER=openrouter OR presence of OPENROUTER_API_KEY
+  // explicit SWARMLO_PROVIDER=openrouter OR presence of OPENROUTER_API_KEY
   // when no Anthropic key is available (same precedence as the Ollama
   // branch above).
   const openrouterKey = process.env.OPENROUTER_API_KEY;
@@ -439,8 +439,8 @@ async function callOpenAICompat(
         'content-type': 'application/json',
         // OpenRouter convention: identify the integrating app for analytics
         // and rate-limit tiering. Harmless on other OpenAI-compat backends.
-        'HTTP-Referer': 'https://github.com/ruvnet/ruflo',
-        'X-Title': 'Ruflo',
+        'HTTP-Referer': 'https://github.com/z451047442-debug/swarmlo',
+        'X-Title': 'Swarmlo',
       },
       body: JSON.stringify({
         model,
@@ -587,7 +587,7 @@ export async function executeAgentTask(input: AgentExecuteInput): Promise<AgentE
   // (returned when the request fully fails with no successful retry).
   const anthropicModel = firstCallModel;
   const systemPrompt = input.systemPrompt ||
-    `You are a ${agent.agentType} agent operating as part of a Ruflo swarm. ` +
+    `You are a ${agent.agentType} agent operating as part of a Swarmlo swarm. ` +
     `Agent ID: ${input.agentId}. Domain: ${agent.domain ?? 'general'}. ` +
     `Respond directly and stay focused on the task. If you need information you don't have, state that explicitly.`;
 
@@ -720,7 +720,7 @@ export async function executeAgentTask(input: AgentExecuteInput): Promise<AgentE
     // default; PII/retention surface, mirrors the router trajectory recorder).
     // HONESTY: `resolved` here is the WEAKEST proxy — 'api-success' means only
     // that the model returned without an API error, NOT that the output is
-    // correct (ruflo has no SWE-bench gold oracle). model_patch is '' because
+    // correct (swarmlo has no SWE-bench gold oracle). model_patch is '' because
     // this single-shot execute path produces no unified diff. Both facts are
     // stamped so no downstream weight-eft export mistakes this for gold data.
     if (process.env.CLAUDE_FLOW_RUN_TRANSCRIPTS === '1') {
@@ -780,7 +780,7 @@ export async function executeAgentTask(input: AgentExecuteInput): Promise<AgentE
     ...(noProvider && {
       remediation:
         'Set one of ANTHROPIC_API_KEY, OPENROUTER_API_KEY (+ optional OPENROUTER_BASE_URL), or OLLAMA_API_KEY. ' +
-        'Or set RUFLO_PROVIDER=openrouter|ollama to force a specific provider.',
+        'Or set SWARMLO_PROVIDER=openrouter|ollama to force a specific provider.',
     }),
   };
 }

@@ -99,27 +99,27 @@ const INVARIANTS = [
   {
     issue: '#1951',
     file: 'v3/@claude-flow/cli/.claude/helpers/statusline.cjs',
-    substring: 'RUFLO_VERSION',
-    why: 'Startup version-probe variable in the deployed statusline — without it the header reverts to a hard-coded `RuFlo V3.5`.',
+    substring: 'SWARMLO_VERSION',
+    why: 'Startup version-probe variable in the deployed statusline — without it the header reverts to a hard-coded `Swarmlo V3.5`.',
   },
   {
     issue: '#1951',
     file: 'v3/@claude-flow/cli/.claude/helpers/statusline.cjs',
-    // Regex matches the path.join(home, '.claude', 'plugins', 'marketplaces', 'ruflo', …) form.
+    // Regex matches the path.join(home, '.claude', 'plugins', 'marketplaces', 'swarmlo', …) form.
     // The original substring form happened to hit because of a comment in the v3 snapshot,
     // not the actual code path; switch to a regex that catches the real call site.
-    regex: /['"]marketplaces['"]\s*,\s*['"]ruflo['"]/,
+    regex: /['"]marketplaces['"]\s*,\s*['"]swarmlo['"]/,
     why: 'Plugin-install candidate path probed first — without it, plugin users always fall through to the hardcoded default.',
   },
   {
     issue: '#1951',
     file: '.claude/helpers/statusline.cjs',
-    regex: /['"]marketplaces['"]\s*,\s*['"]ruflo['"]/,
+    regex: /['"]marketplaces['"]\s*,\s*['"]swarmlo['"]/,
     why: 'Same plugin-install candidate in the root statusline copy.',
   },
   // #2679 sync: the init template no longer inlines the statusline —
   // it reads .claude/helpers/statusline.cjs and substitutes. The
-  // marketplaces/ruflo candidate path therefore lives in the helper
+  // marketplaces/swarmlo candidate path therefore lives in the helper
   // file (already covered by the two invariants above). Dropping this
   // entry since the invariant is now enforced by the paired
   // .claude/helpers/statusline.cjs + v3/@claude-flow/cli/.claude/helpers/
@@ -157,7 +157,7 @@ const INVARIANTS = [
   // The regression vector is closed by ARCHITECTURE: if a future refactor
   // reintroduces raw-bytes reading from a memory.db path, the #2196 guard
   // (presence of the delegation pattern) catches it before the SQLite
-  // magic-check would ever be relevant. See ruvnet/ruflo#2216 for the
+  // magic-check would ever be relevant. See z451047442-debug/swarmlo#2216 for the
   // user-deployed (pre-#2196) statusline still having the bug.
   // #2679 sync: statusline-generator no longer inlines the delegation
   // template as a big string — it now READS
@@ -290,47 +290,47 @@ const INVARIANTS = [
     why: 'midstream-aware-loader.ts must lazy-load agentic-flow via loadAgenticFlowQuicTransport so it can degrade gracefully when the peer dep is absent (#1949).',
   },
 
-  // ADR-120 Step 3 — ruflo-federation-peer Rust crate composes the
+  // ADR-120 Step 3 — swarmlo-federation-peer Rust crate composes the
   // QUIC transport (midstreamer-quic) with the AIMDS 3-gate pipeline.
   {
     issue: 'ADR-120',
-    file: 'v3/crates/ruflo-federation-peer/Cargo.toml',
-    substring: 'name = "ruflo-federation-peer"',
+    file: 'v3/crates/swarmlo-federation-peer/Cargo.toml',
+    substring: 'name = "swarmlo-federation-peer"',
     why: 'Step 3 crate name pin. The crate composes midstreamer-quic + aimds-* into a single Rust process per federation peer.',
   },
   {
     issue: 'ADR-120',
-    file: 'v3/crates/ruflo-federation-peer/Cargo.toml',
+    file: 'v3/crates/swarmlo-federation-peer/Cargo.toml',
     substring: 'midstreamer-quic = { version = "0.3.0"',
     why: 'Step 3 crate pins midstreamer-quic@0.3.0 (ruvnet/midstream PR #82 added the QuicTransport embedding trait this crate needs for its TransportProvider blanket impl).',
   },
   {
     issue: 'ADR-120',
-    file: 'v3/crates/ruflo-federation-peer/Cargo.toml',
+    file: 'v3/crates/swarmlo-federation-peer/Cargo.toml',
     substring: 'aimds-core = { version = "0.2.0"',
     why: 'Step 3 crate pins aimds-core@0.2.0 (ruvnet/midstream PR #82 added the SafetyGate composing trait this crate adapts in native_gate).',
   },
   {
     issue: 'ADR-120',
-    file: 'v3/crates/ruflo-federation-peer/src/lib.rs',
+    file: 'v3/crates/swarmlo-federation-peer/src/lib.rs',
     substring: 'midstreamer_quic::{QuicConnection, QuicTransport}',
     why: 'Step 3 native_transport must import the upstream QuicTransport trait (not just QuicConnection) so MidstreamerTransport is generic over any embedder-supplied transport.',
   },
   {
     issue: 'ADR-120',
-    file: 'v3/crates/ruflo-federation-peer/src/lib.rs',
+    file: 'v3/crates/swarmlo-federation-peer/src/lib.rs',
     substring: 'aimds_core::{PromptInput, SafetyGate as AimdsSafetyGate, SafetyVerdict as AimdsVerdict}',
     why: 'Step 3 native_gate must adapt aimds_core::SafetyGate to the peer-local SafetyGate trait — without this import the adapter degrades to a typed placeholder.',
   },
   {
     issue: 'ADR-120',
-    file: 'v3/crates/ruflo-federation-peer/src/lib.rs',
+    file: 'v3/crates/swarmlo-federation-peer/src/lib.rs',
     substring: 'pub trait TransportProvider',
     why: 'Step 3 trait surface: TransportProvider abstracts the QUIC backend so the Peer dispatch loop is testable without the upstream Rust deps materialized.',
   },
   {
     issue: 'ADR-120',
-    file: 'v3/crates/ruflo-federation-peer/src/lib.rs',
+    file: 'v3/crates/swarmlo-federation-peer/src/lib.rs',
     substring: 'pub trait SafetyGate',
     why: 'Step 3 trait surface: SafetyGate abstracts the AIMDS 3-gate pipeline so the Peer dispatch loop is testable without the upstream aimds-* deps materialized.',
   },

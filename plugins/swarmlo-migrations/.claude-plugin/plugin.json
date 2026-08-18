@@ -1,0 +1,21 @@
+{
+  "name": "swarmlo-migrations",
+  "description": "Schema migration management — generate, validate, dry-run, and rollback database migrations",
+  "version": "0.2.1",
+  "author": {
+    "name": "ruvnet",
+    "url": "https://github.com/ruvnet"
+  },
+  "homepage": "https://github.com/z451047442-debug/swarmlo",
+  "license": "MIT",
+  "keywords": [
+    "swarmlo",
+    "migrations",
+    "database",
+    "schema",
+    "rollback",
+    "mcp",
+    "dry-run",
+    "up-down-pairs"
+  ]
+}

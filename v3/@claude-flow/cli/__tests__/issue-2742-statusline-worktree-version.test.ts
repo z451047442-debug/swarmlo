@@ -19,7 +19,7 @@ const stripAnsi = (value: string) => value.replace(/\x1b\[[0-9;]*m/g, '');
 
 describe('statusline worktree version resolution — issue #2742', () => {
   it('resolves the main repo package.json version from a linked-worktree CWD with no local node_modules', () => {
-    const parent = mkdtempSync(path.join(tmpdir(), 'ruflo-worktree-'));
+    const parent = mkdtempSync(path.join(tmpdir(), 'swarmlo-worktree-'));
     const mainRoot = path.join(parent, 'main-repo');
     const worktreeRoot = path.join(parent, 'main-repo-worktree');
     const script = path.join(parent, 'statusline.cjs');
@@ -64,7 +64,7 @@ describe('statusline worktree version resolution — issue #2742', () => {
   });
 
   it('does not misidentify a real (non-worktree) .git directory as a worktree', () => {
-    const parent = mkdtempSync(path.join(tmpdir(), 'ruflo-nonworktree-'));
+    const parent = mkdtempSync(path.join(tmpdir(), 'swarmlo-nonworktree-'));
     const cwd = path.join(parent, 'plain-repo');
     const script = path.join(parent, 'statusline.cjs');
     mkdirSync(path.join(cwd, '.git'), { recursive: true }); // a real repo: .git is a DIRECTORY

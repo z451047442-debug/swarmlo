@@ -25,11 +25,11 @@ const priv = privateKey.export({ type: 'pkcs8', format: 'pem' });
 
 // A realistic champion manifest (with a receipt block — the heavier case).
 const manifest = {
-  schema: 'ruflo.proven-config/v1',
+  schema: 'swarmlo.proven-config/v1',
   policy: { ref: 'sha256:' + 'a'.repeat(64) },
   host: { 'claude-code': '>=1.9' },
   platform: ['linux', 'macOS', 'windows'],
-  compatibility: { ruflo: '>=3.24.0', metaharness: '>=0.3.0' },
+  compatibility: { swarmlo: '>=3.24.0', metaharness: '>=0.3.0' },
   benchmark: { corpus: 'LAB-v1', corpusHash: 'b'.repeat(64) },
   layer: 'framework/node-cli',
   receipt: {

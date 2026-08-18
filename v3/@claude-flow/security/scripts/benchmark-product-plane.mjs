@@ -10,7 +10,7 @@ const digest = `sha256:${'a'.repeat(64)}`;
 const envelope = {
   schemaVersion: 'cognitum.action.v1',
   eventId: 'benchmark-event',
-  issuer: 'ruflo.policy',
+  issuer: 'swarmlo.policy',
   audience: 'meta-llm',
   subject: { namespace: 'firebase-subject', id: 'benchmark-user' },
   actor: { namespace: 'workload', id: 'spiffe://cognitum.example/agent/benchmark' },

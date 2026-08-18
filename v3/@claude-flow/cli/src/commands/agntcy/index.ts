@@ -1,11 +1,11 @@
 /**
  * V3 CLI AGNTCY/Outshift Runtime Integration — ADR-380 §2.
  *
- * Scaffolds the three new `ruflo` CLI verbs ADR-380 §2 specifies:
+ * Scaffolds the three new `swarmlo` CLI verbs ADR-380 §2 specifies:
  *
- *   ruflo transport use slim
- *   ruflo agent publish
- *   ruflo swarm join <namespace>
+ *   swarmlo transport use slim
+ *   swarmlo agent publish
+ *   swarmlo swarm join <namespace>
  *
  * ============================================================================
  * INTEGRATION STATUS: NOT WIRED IN. This module is intentionally
@@ -35,7 +35,7 @@
  *   - Every runtime touchpoint goes through `detectAgntcyRuntime()` in
  *     `runtime.ts`, which only ever does a guarded dynamic `import()`
  *     wrapped in try/catch, and only after an explicit
- *     `RUFLO_AGNTCY_SLIM_ENDPOINT` env var opt-in.
+ *     `SWARMLO_AGNTCY_SLIM_ENDPOINT` env var opt-in.
  *   - Every command in this directory exits 0 (not an error) when AGNTCY/
  *     SLIM is not configured — this is optional, removable augmentation,
  *     not a required dependency. The CLI, and these commands' own local

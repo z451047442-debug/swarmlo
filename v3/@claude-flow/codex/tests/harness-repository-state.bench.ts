@@ -10,7 +10,7 @@ let cleanRoot = '';
 let dirtyRoot = '';
 
 function repository(label: string): string {
-  const root = mkdtempSync(join(tmpdir(), `ruflo-source-state-${label}-`));
+  const root = mkdtempSync(join(tmpdir(), `swarmlo-source-state-${label}-`));
   roots.push(root);
   execFileSync('git', ['init', '--quiet', root]);
   execFileSync('git', ['-C', root, 'config', 'user.email', 'bench@example.com']);

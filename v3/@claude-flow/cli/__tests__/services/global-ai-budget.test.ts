@@ -30,7 +30,7 @@ describe('#2661 — GlobalAiBudget', () => {
 
   afterEach(() => {
     rmSync(dir, { recursive: true, force: true });
-    delete process.env.RUFLO_AI_BUDGET_DISABLE;
+    delete process.env.SWARMLO_AI_BUDGET_DISABLE;
   });
 
   const makeBudget = (limits?: Partial<typeof DEFAULT_AI_BUDGET_LIMITS>) =>
@@ -113,8 +113,8 @@ describe('#2661 — GlobalAiBudget', () => {
       expect(b.reason).toMatch(/hourly-budget/);
     });
 
-    it('RUFLO_AI_BUDGET_DISABLE=1 bypasses the fuse (explicit escape hatch)', async () => {
-      process.env.RUFLO_AI_BUDGET_DISABLE = '1';
+    it('SWARMLO_AI_BUDGET_DISABLE=1 bypasses the fuse (explicit escape hatch)', async () => {
+      process.env.SWARMLO_AI_BUDGET_DISABLE = '1';
       const budget = makeBudget({ maxLaunchesPerHour: 0, maxLaunchesPerDay: 0, maxConcurrentGlobal: 0 });
       const p = await budget.reserve(REQ);
       expect(p.allowed).toBe(true);
@@ -207,7 +207,7 @@ describe('#2661 — GlobalAiBudget', () => {
       expect(usage.costUsd).toBe(0.0031);
     });
 
-    it('is a silent no-op for a bypass permit (RUFLO_AI_BUDGET_DISABLE=1)', () => {
+    it('is a silent no-op for a bypass permit (SWARMLO_AI_BUDGET_DISABLE=1)', () => {
       const budget = makeBudget();
       expect(() => budget.recordUsage('bypass_123_456', { workerType: 'audit', model: 'haiku' })).not.toThrow();
       const receiptsFile = join(dir, 'ai-budget-receipts.jsonl');

@@ -1,0 +1,22 @@
+{
+  "name": "swarmlo-swarm",
+  "description": "Agent teams, swarm coordination, Monitor streams, and worktree isolation — wraps 4 swarm_* + 8 agent_* MCP tools (12 total) plus 6 topologies (hierarchical / mesh / hierarchical-mesh / ring / star / adaptive)",
+  "version": "0.2.1",
+  "author": {
+    "name": "ruvnet",
+    "url": "https://github.com/ruvnet"
+  },
+  "homepage": "https://github.com/z451047442-debug/swarmlo",
+  "license": "MIT",
+  "keywords": [
+    "swarmlo",
+    "swarm",
+    "agents",
+    "teams",
+    "monitor",
+    "mcp",
+    "topologies",
+    "worktree-isolation",
+    "monitor-stream"
+  ]
+}

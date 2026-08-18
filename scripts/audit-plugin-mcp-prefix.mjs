@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Prevent Claude plugin bundles from using the standalone MCP namespace.
-// Marketplace-installed tools are exposed through the ruflo-core plugin as
-// mcp__plugin_ruflo-core_ruflo__<tool>, not mcp__claude-flow__<tool>.
+// Marketplace-installed tools are exposed through the swarmlo-core plugin as
+// mcp__plugin_swarmlo-core_swarmlo__<tool>, not mcp__claude-flow__<tool>.
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, extname, join, relative } from 'node:path';
@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const PLUGINS = join(ROOT, 'plugins');
 const LEGACY_PREFIX = 'mcp__claude-flow__';
-const CORRECT_PREFIX = 'mcp__plugin_ruflo-core_ruflo__';
+const CORRECT_PREFIX = 'mcp__plugin_swarmlo-core_swarmlo__';
 const STANDALONE_AUDIT_ALLOW = 'audit-allow: standalone-mcp-prefix';
 const TEXT_EXTENSIONS = new Set(['.md', '.mjs', '.js', '.cjs', '.ts', '.sh', '.json', '.yaml', '.yml']);
 

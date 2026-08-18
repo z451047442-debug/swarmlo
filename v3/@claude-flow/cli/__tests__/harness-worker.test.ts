@@ -27,7 +27,7 @@ function fullInput(): HarnessWorkerInput {
 }
 
 describe('runHarnessLoopWorker', () => {
-  it('is a no-op when not opted in (RUFLO_HARNESS_LOOP off) — safe default', async () => {
+  it('is a no-op when not opted in (SWARMLO_HARNESS_LOOP off) — safe default', async () => {
     const cwd = mkdtempSync(join(tmpdir(), 'hw-'));
     const r = await runHarnessLoopWorker(cwd, { optInOverride: false, loadInput: fullInput });
     expect(r.ran).toBe(false);

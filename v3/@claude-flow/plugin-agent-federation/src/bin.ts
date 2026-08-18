@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Standalone CLI shim for @claude-flow/plugin-agent-federation.
- * Maps `ruflo-federation <subcommand> [args]` -> CLICommandDefinition handlers.
+ * Maps `swarmlo-federation <subcommand> [args]` -> CLICommandDefinition handlers.
  *
  * Auth/config via .env (loaded from CWD or any parent):
  *   FEDERATION_NODE_NAME      - this node's identity (default: hostname)
@@ -145,9 +145,9 @@ function makeContext(): PluginContext {
 }
 
 function printHelp(commandNames: string[]): void {
-  console.log('ruflo-federation — Cross-installation agent federation CLI');
+  console.log('swarmlo-federation — Cross-installation agent federation CLI');
   console.log('');
-  console.log('Usage: ruflo-federation <subcommand> [options]');
+  console.log('Usage: swarmlo-federation <subcommand> [options]');
   console.log('');
   console.log('Config (via .env or env vars):');
   console.log('  FEDERATION_NODE_NAME, FEDERATION_BIND_HOST, FEDERATION_BIND_PORT, FEDERATION_TRUST_LEVEL');
@@ -157,7 +157,7 @@ function printHelp(commandNames: string[]): void {
     console.log('  ' + n.replace(/^federation /, ''));
   }
   console.log('');
-  console.log('Run "ruflo-federation <subcommand> --help" for command-specific options.');
+  console.log('Run "swarmlo-federation <subcommand> --help" for command-specific options.');
 }
 
 async function main(): Promise<void> {
@@ -178,7 +178,7 @@ async function main(): Promise<void> {
   const resolved = resolveCommand(argv, commandNames);
   if (!resolved) {
     console.error('Unknown subcommand: ' + argv.join(' '));
-    console.error('Run "ruflo-federation --help" to list available subcommands.');
+    console.error('Run "swarmlo-federation --help" to list available subcommands.');
     process.exitCode = 1;
     return;
   }

@@ -50,7 +50,7 @@ function lastTrainingSeconds(statusOut: string): number | null {
 
 describe.skipIf(!CLI_BUILT)('#2940 hooks intelligence --train actually trains', () => {
   it('moves "Last Training" to ~0s ago instead of only ever aging', () => {
-    const cwd = mkdtempSync(join(tmpdir(), 'ruflo-2940-'));
+    const cwd = mkdtempSync(join(tmpdir(), 'swarmlo-2940-'));
     try {
       const init = cli(['memory', 'init'], cwd);
       expect(init.code).toBe(0);

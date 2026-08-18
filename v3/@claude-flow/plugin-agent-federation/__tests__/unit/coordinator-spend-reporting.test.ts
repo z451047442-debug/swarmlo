@@ -127,7 +127,7 @@ describe('FederationCoordinator.reportSpend (ADR-097 Phase 3 upstream)', () => {
       });
       const ev = reporter.getEvents()[0];
       // Pin every field the consumer in
-      // plugins/ruflo-cost-tracker/scripts/federation.mjs reads.
+      // plugins/swarmlo-cost-tracker/scripts/federation.mjs reads.
       expect(Object.keys(ev).sort()).toEqual(
         ['peerId', 'success', 'taskId', 'tokensUsed', 'ts', 'usdSpent'].sort(),
       );

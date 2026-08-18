@@ -1,5 +1,5 @@
 /**
- * `ruflo auth` — Cognitum identity (ADR-306).
+ * `swarmlo auth` — Cognitum identity (ADR-306).
  *
  * `login` obtains OAuth tokens via the loopback PKCE flow (default,
  * interactive desktop), the OOB manual-paste flow (`--no-browser`, or
@@ -75,7 +75,7 @@ function refuseNonInteractive(hasTokenStdin: boolean): CommandResult | null {
   // The CLI harness only acts on exitCode — it never auto-prints
   // CommandResult.message, so this path must print for itself.
   const message =
-    'ruflo auth login refuses to run interactively in a non-TTY/CI environment. ' +
+    'swarmlo auth login refuses to run interactively in a non-TTY/CI environment. ' +
     'Use --token-stdin for automation (reads {"access_token",...} JSON from stdin).';
   output.printError(message);
   return { success: false, message, exitCode: 1 };
@@ -203,7 +203,7 @@ const statusCommand: Command = {
     const shown = filterName ? profiles.filter((p) => p.profile === filterName) : profiles;
 
     if (shown.length === 0) {
-      const message = filterName ? `No such profile: ${filterName}` : 'Not logged in. Run: ruflo auth login';
+      const message = filterName ? `No such profile: ${filterName}` : 'Not logged in. Run: swarmlo auth login';
       if (ctx.flags.json) {
         output.printJson({ profiles: [] });
       } else {
@@ -271,11 +271,11 @@ export const authCommand: Command = {
   description: 'Cognitum identity — login, logout, status (ADR-306)',
   subcommands: [loginCommand, logoutCommand, statusCommand],
   examples: [
-    { command: 'ruflo auth login', description: 'Sign in via the browser PKCE flow' },
-    { command: 'ruflo auth login --no-browser', description: 'Sign in via the headless OOB copy-paste flow' },
-    { command: 'ruflo auth status', description: 'Show signed-in profile(s)' },
-    { command: 'ruflo auth status --check', description: 'Validate or silently refresh credentials now' },
-    { command: 'ruflo auth logout', description: 'Sign out of the default profile' },
+    { command: 'swarmlo auth login', description: 'Sign in via the browser PKCE flow' },
+    { command: 'swarmlo auth login --no-browser', description: 'Sign in via the headless OOB copy-paste flow' },
+    { command: 'swarmlo auth status', description: 'Show signed-in profile(s)' },
+    { command: 'swarmlo auth status --check', description: 'Validate or silently refresh credentials now' },
+    { command: 'swarmlo auth logout', description: 'Sign out of the default profile' },
   ],
   action: statusCommand.action,
 };

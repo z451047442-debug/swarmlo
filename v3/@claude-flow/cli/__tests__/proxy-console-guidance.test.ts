@@ -1,4 +1,4 @@
-/** Bare `ruflo proxy` should be an actionable lifecycle dashboard, not the
+/** Bare `swarmlo proxy` should be an actionable lifecycle dashboard, not the
  * unrelated sponsored-capacity status command. */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -26,7 +26,7 @@ let savedEnv: NodeJS.ProcessEnv;
 beforeEach(() => {
   stateDir = fs.mkdtempSync(path.join(os.tmpdir(), 'proxy-console-guidance-test-'));
   savedEnv = { ...process.env };
-  process.env.RUFLO_STATE_DIR = stateDir;
+  process.env.SWARMLO_STATE_DIR = stateDir;
   writeln.mockClear();
 });
 
@@ -51,8 +51,8 @@ describe('bare proxy console guidance', () => {
 
     expect(result).toMatchObject({ success: true, data: { installed: true, running: false } });
     expect(lines).toContain('Meta Proxy');
-    expect(lines).toContain('npx ruflo@latest proxy start --service');
-    expect(lines).toContain('npx ruflo@latest auth login');
+    expect(lines).toContain('npx swarmlo@latest proxy start --service');
+    expect(lines).toContain('npx swarmlo@latest auth login');
     expect(lines).not.toContain('Sponsored downtime consent');
     expect(lines).not.toContain('Rate-limit flag');
   });
@@ -67,7 +67,7 @@ describe('bare proxy console guidance', () => {
       version: null,
     }).join('\n');
 
-    expect(lines).toContain('npx ruflo@latest proxy install --yes');
+    expect(lines).toContain('npx swarmlo@latest proxy install --yes');
     // Assert against the constant, not a literal — a hardcoded version here
     // would have to be edited on every pin bump, which is how the advertised
     // version drifted from the installed one in the first place.
@@ -97,7 +97,7 @@ describe('pin-drift guidance for an existing install', () => {
 
     expect(lines).toContain('installed v0.4.0');
     expect(lines).toContain(`current pin v${DEFAULT_PROXY_RELEASE}`);
-    expect(lines).toContain('npx ruflo@latest proxy update');
+    expect(lines).toContain('npx swarmlo@latest proxy update');
   });
 
   it('stays silent when the installed release already matches the pin', async () => {

@@ -1,5 +1,5 @@
 /**
- * MCP Tool Composition Inspector — ADR-320 (this ADR; ruvnet/ruflo dream-cycle
+ * MCP Tool Composition Inspector — ADR-320 (this ADR; z451047442-debug/swarmlo dream-cycle
  * proposal, arXiv:2606.27027 "ShareLock").
  *
  * The attack: an adversary registers N seemingly-benign MCP tools whose
@@ -14,7 +14,7 @@
  * A CLI-only v1 of this idea already shipped directly to `main`
  * (dream-cycle #2783, commits 381b7ebcc/581cd2bf3) as
  * `v3/@claude-flow/cli/src/security/mcp-composition-inspector.ts` — an
- * on-demand `ruflo security composition-scan` command using exact
+ * on-demand `swarmlo security composition-scan` command using exact
  * common-substring matching plus an injection-phrase catalog and
  * typosquat check. That module's own header explicitly scopes itself as
  * "a bounded engineering fix rather than an ADR-scope subsystem" and lists
@@ -49,7 +49,7 @@
  * 4. A fragment's "population" (how many distinct tools carry it) caps
  *    false positives: shared shingles that appear in more than
  *    `maxFragmentPopulation` (default 3) tools are template language
- *    (e.g. every ruflo `memory_*` tool's boilerplate), not an attack —
+ *    (e.g. every swarmlo `memory_*` tool's boilerplate), not an attack —
  *    Shamir-split attacks concentrate a fragment in a small conspiracy of
  *    2-3 tools. Same population-cap idea as the CLI v1, reimplemented here
  *    against the hash index instead of raw substrings.

@@ -24,7 +24,7 @@
  * (`stdio: ['ignore', fd, fd]`) + `detached: true` + `unref()` via
  * `child_process.spawn()` directly — `SafeExecutor.executeStreaming()`
  * buffers output in-process, which is wrong for a process meant to outlive
- * the `ruflo` invocation that started it.
+ * the `swarmlo` invocation that started it.
  *
  * @module proxy/lifecycle
  */
@@ -42,14 +42,14 @@ import {
 
 export class ProxyNotInstalledError extends Error {
   constructor() {
-    super('meta-proxy is not installed. Run: ruflo proxy install');
+    super('meta-proxy is not installed. Run: swarmlo proxy install');
     this.name = 'ProxyNotInstalledError';
   }
 }
 
 export class ProxyAlreadyRunningError extends Error {
   constructor(public readonly pid: number) {
-    super(`meta-proxy is already running (pid ${pid}). Stop it first with: ruflo proxy stop`);
+    super(`meta-proxy is already running (pid ${pid}). Stop it first with: swarmlo proxy stop`);
     this.name = 'ProxyAlreadyRunningError';
   }
 }
@@ -201,7 +201,7 @@ export async function startForeground(supervised = false): Promise<never> {
 
 /**
  * Background/`--service` start — detaches so the process outlives this
- * `ruflo` invocation, redirecting stdout/stderr to a real log file (not
+ * `swarmlo` invocation, redirecting stdout/stderr to a real log file (not
  * buffered in-process). Returns once the child's PID is confirmed written,
  * without waiting for the process to exit.
  */
@@ -219,7 +219,7 @@ export async function startBackground(): Promise<{ pid: number }> {
 
     const logFd = fs.openSync(proxyLogFilePath(), 'a');
     const cliEntry = process.argv[1];
-    if (!cliEntry) throw new Error('cannot locate the ruflo CLI entrypoint for supervised service mode');
+    if (!cliEntry) throw new Error('cannot locate the swarmlo CLI entrypoint for supervised service mode');
     const child = spawn(process.execPath, [cliEntry, 'proxy', 'supervise'], {
       stdio: ['ignore', logFd, logFd],
       detached: true,
@@ -227,7 +227,7 @@ export async function startBackground(): Promise<{ pid: number }> {
     });
     fs.closeSync(logFd); // the child holds its own duplicated fd; safe to close ours
 
-    if (!child.pid) throw new Error('ruflo proxy supervisor failed to spawn — no PID returned');
+    if (!child.pid) throw new Error('swarmlo proxy supervisor failed to spawn — no PID returned');
     writePidFile(child.pid);
     child.unref();
     return { pid: child.pid };

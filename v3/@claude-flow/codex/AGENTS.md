@@ -62,7 +62,7 @@ This project uses hierarchical swarm coordination for complex tasks:
 
 ### Policy-Governed Concurrent Execution
 
-- Ruflo coordinates and records policy decisions; Codex workers execute.
+- Swarmlo coordinates and records policy decisions; Codex workers execute.
 - Use `guidance_brain` for live capability routing; registration is distinct
   from configuration, reachability, health, and authorization.
 - Follow the complete loop: recall, inspect, route, plan, execute, test,
@@ -139,7 +139,7 @@ Use `$skill-name` syntax to invoke:
 
 [optional body]
 
-Co-Authored-By: ruflo-bot <ruflo-bot@users.noreply.github.com>
+Co-Authored-By: swarmlo-bot <swarmlo-bot@users.noreply.github.com>
 ```
 
 Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
@@ -177,5 +177,5 @@ npx @claude-flow/cli memory search \
 
 ## Links
 
-- Documentation: https://github.com/ruvnet/claude-flow
-- Issues: https://github.com/ruvnet/claude-flow/issues
+- Documentation: https://github.com/z451047442-debug/swarmlo
+- Issues: https://github.com/z451047442-debug/swarmlo/issues

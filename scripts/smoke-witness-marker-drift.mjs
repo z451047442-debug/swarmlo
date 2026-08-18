@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Regression guard for ruvnet/ruflo#2021.
+ * Regression guard for z451047442-debug/swarmlo#2021.
  *
  * #2021 happened because a dep bump (`@claude-flow/memory` alpha.14 → 16)
  * silently invalidated witness marker `#1825`, whose marker string was
@@ -96,7 +96,7 @@ if (drift.length > 0) {
     `\nFix path: either restore the marker string in the cited file,\n` +
     `or update verification/<os>/manifest.md.json (edit the 'marker'\n` +
     `field for the drifted id, then run:\n\n` +
-    `  node plugins/ruflo-core/scripts/witness/regen.mjs \\\n` +
+    `  node plugins/swarmlo-core/scripts/witness/regen.mjs \\\n` +
     `    --manifest verification/<os>/manifest.md.json \\\n` +
     `    --history  verification/<os>/history.jsonl\n\n` +
     `…for each of macos, linux, windows. The regen re-signs the\n` +

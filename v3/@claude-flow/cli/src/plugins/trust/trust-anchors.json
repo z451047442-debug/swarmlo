@@ -4,7 +4,7 @@
   "anchors": [
     {
       "publicKey": "0000000000000000000000000000000000000000000000000000000000000000",
-      "owner": "PLACEHOLDER — Ruflo official-plugin signing key (to be filled in P1.1 with the real key fingerprint when the publish flow is wired)",
+      "owner": "PLACEHOLDER — Swarmlo official-plugin signing key (to be filled in P1.1 with the real key fingerprint when the publish flow is wired)",
       "scope": "@claude-flow/*"
     }
   ]

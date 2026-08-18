@@ -904,7 +904,7 @@ export const embeddingsTools: MCPTool[] = [
       } catch { /* not installed */ }
 
       const ruvectorEnabled = config.neural.ruvector?.enabled ?? false;
-      const backendProbe = await generateRealEmbedding('ruflo embedding backend probe', config.dimension);
+      const backendProbe = await generateRealEmbedding('swarmlo embedding backend probe', config.dimension);
       const semanticGrounded = backendProbe.backend === 'onnx';
 
       return {

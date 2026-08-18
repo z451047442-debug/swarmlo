@@ -1,5 +1,5 @@
 /**
- * Regression guard for ruvnet/ruflo#2661 — scheduled AI workers must be
+ * Regression guard for z451047442-debug/swarmlo#2661 — scheduled AI workers must be
  * OPT-IN. Merely finding the Claude CLI on PATH must never authorize
  * recurring `claude --print` launches: a default install produces ZERO
  * autonomous Claude launches regardless of how many worktree daemons run.
@@ -7,7 +7,7 @@
  * Consent gates (any one):
  *   - `daemon start --headless`            → constructor { aiWorkersEnabled: true }
  *   - `daemon.aiWorkers.enabled: true`     → .claude-flow/config.json
- *   - `RUFLO_DAEMON_AI_WORKERS=1`          → environment
+ *   - `SWARMLO_DAEMON_AI_WORKERS=1`          → environment
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -22,11 +22,11 @@ describe('#2661 — AI workers are opt-in', () => {
   beforeEach(() => {
     tempDir = mkdtempSync(join(tmpdir(), 'daemon-2661-test-'));
     mkdirSync(join(tempDir, '.claude-flow', 'logs'), { recursive: true });
-    delete process.env.RUFLO_DAEMON_AI_WORKERS;
+    delete process.env.SWARMLO_DAEMON_AI_WORKERS;
   });
 
   afterEach(() => {
-    delete process.env.RUFLO_DAEMON_AI_WORKERS;
+    delete process.env.SWARMLO_DAEMON_AI_WORKERS;
     rmSync(tempDir, { recursive: true, force: true });
     process.removeAllListeners('SIGTERM');
     process.removeAllListeners('SIGINT');
@@ -51,8 +51,8 @@ describe('#2661 — AI workers are opt-in', () => {
     expect(daemon.getStatus().config.aiWorkersEnabled).toBe(true);
   });
 
-  it('enables via RUFLO_DAEMON_AI_WORKERS=1', () => {
-    process.env.RUFLO_DAEMON_AI_WORKERS = '1';
+  it('enables via SWARMLO_DAEMON_AI_WORKERS=1', () => {
+    process.env.SWARMLO_DAEMON_AI_WORKERS = '1';
     const daemon = new WorkerDaemon(tempDir);
     expect(daemon.getStatus().config.aiWorkersEnabled).toBe(true);
   });
@@ -67,7 +67,7 @@ describe('#2661 — AI workers are opt-in', () => {
   });
 
   it('config.json false beats env opt-in precedence is flag > file > env', () => {
-    process.env.RUFLO_DAEMON_AI_WORKERS = '1';
+    process.env.SWARMLO_DAEMON_AI_WORKERS = '1';
     writeFileSync(
       join(tempDir, '.claude-flow', 'config.json'),
       JSON.stringify({ 'daemon.aiWorkers.enabled': false })

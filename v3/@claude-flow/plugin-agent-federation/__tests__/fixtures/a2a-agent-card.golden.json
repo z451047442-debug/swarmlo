@@ -1,10 +1,10 @@
 {
-  "name": "ruflo-federation/node-golden",
-  "description": "Ruflo federation node node-golden — zero-trust cross-installation agent federation (2 agent role(s), PII-gated data flow, compliance-grade audit trail).",
+  "name": "swarmlo-federation/node-golden",
+  "description": "Swarmlo federation node node-golden — zero-trust cross-installation agent federation (2 agent role(s), PII-gated data flow, compliance-grade audit trail).",
   "supportedInterfaces": [
     {
       "url": "ws://127.0.0.1:9100",
-      "protocolBinding": "RUFLO-FEDERATION",
+      "protocolBinding": "SWARMLO-FEDERATION",
       "protocolVersion": "1.0"
     }
   ],
@@ -15,8 +15,8 @@
     "extendedAgentCard": false,
     "extensions": [
       {
-        "uri": "urn:ruflo:federation:manifest:v1",
-        "description": "ruflo cross-installation federation identity (Ed25519-signed manifest)",
+        "uri": "urn:swarmlo:federation:manifest:v1",
+        "description": "swarmlo cross-installation federation identity (Ed25519-signed manifest)",
         "required": false,
         "params": {
           "nodeId": "node-golden",
@@ -37,14 +37,14 @@
     {
       "id": "agent-type:coder",
       "name": "coder",
-      "description": "Federated ruflo agent role \"coder\" — dispatchable via cross-installation federation sessions.",
-      "tags": ["ruflo", "federation", "agent-role", "coder"]
+      "description": "Federated swarmlo agent role \"coder\" — dispatchable via cross-installation federation sessions.",
+      "tags": ["swarmlo", "federation", "agent-role", "coder"]
     },
     {
       "id": "agent-type:reviewer",
       "name": "reviewer",
-      "description": "Federated ruflo agent role \"reviewer\" — dispatchable via cross-installation federation sessions.",
-      "tags": ["ruflo", "federation", "agent-role", "reviewer"]
+      "description": "Federated swarmlo agent role \"reviewer\" — dispatchable via cross-installation federation sessions.",
+      "tags": ["swarmlo", "federation", "agent-role", "reviewer"]
     }
   ]
 }

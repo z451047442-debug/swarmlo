@@ -38,7 +38,7 @@ export function isInteractive(): boolean {
 export function reducedMotion(env: NodeJS.ProcessEnv = process.env): boolean {
   return Boolean(
     env.NO_COLOR !== undefined ||
-    env.RUFLO_REDUCED_MOTION === '1' ||
+    env.SWARMLO_REDUCED_MOTION === '1' ||
     env.TERM === 'dumb'
   );
 }

@@ -26,7 +26,7 @@ function findTool(name: string) {
 
 const TEMPLATES_DIR = resolve(
   __dirname,
-  '../../../../plugins/ruflo-business-pods/templates',
+  '../../../../plugins/swarmlo-business-pods/templates',
 );
 const POD_NAMES = ['sales', 'marketing', 'finance', 'ops', 'support', 'hr', 'exec'] as const;
 const loadJson = (name: string): unknown =>

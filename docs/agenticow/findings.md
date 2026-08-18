@@ -31,14 +31,14 @@
 
 First query through a freshly forked branch can spike (observed 36s on N=50k base). Subsequent queries are sub-ms. This is HNSW index load cost on first access — recurring queries amortize it away.
 
-For ruflo's Darwin / per-session-branch pattern where each branch sees many reads, the warmup is paid once per branch and irrelevant. For "branch + single query + close" patterns it dominates and agenticow is a bad fit.
+For swarmlo's Darwin / per-session-branch pattern where each branch sees many reads, the warmup is paid once per branch and irrelevant. For "branch + single query + close" patterns it dominates and agenticow is a bad fit.
 
-## What this means for ruflo integration
+## What this means for swarmlo integration
 
 **Go** — but with calibrated framing:
 
 - **Size win is the killer feature**: 162 bytes/branch is exact. The Darwin worktree bloat we hit in v3.14.4 (3.3 GB across parallel agents) is the strongest motivating use case. With agenticow each agent's memory branch is 162 bytes; the worktree bloat dies.
-- **Time win triggers at scale**: at the ~3,300-pattern level ruflo already runs at (per session-start logs), full-copy of the equivalent `.rvf` would exceed agenticow's ~10ms fork. We're past the crossover for our real workload.
+- **Time win triggers at scale**: at the ~3,300-pattern level swarmlo already runs at (per session-start logs), full-copy of the equivalent `.rvf` would exceed agenticow's ~10ms fork. We're past the crossover for our real workload.
 - **Read-through is fast**: sub-ms top-10 after warmup. Good enough for the existing query budgets.
 
 ## What NOT to claim in marketing/docs
@@ -49,4 +49,4 @@ For ruflo's Darwin / per-session-branch pattern where each branch sees many read
 
 ## Decision
 
-Proceed with integration into `ruflo-rag-memory` as a new branching primitive. Position it as the **structural** answer to Darwin worktree bloat, not as a speed claim.
+Proceed with integration into `swarmlo-rag-memory` as a new branching primitive. Position it as the **structural** answer to Darwin worktree bloat, not as a speed claim.

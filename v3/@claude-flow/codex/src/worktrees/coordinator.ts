@@ -41,7 +41,7 @@ export class CodexWorktreeCoordinator {
     const top = git(this.repoRoot, ['rev-parse', '--show-toplevel']);
     if (resolve(top) !== this.repoRoot) throw new Error(`repoRoot must be the git top-level: ${top}`);
     this.registryDir = join(this.repoRoot, '.claude-flow', 'swarm', 'worktrees');
-    this.worktreeBase = join(dirname(this.repoRoot), '.ruflo-worktrees', basename(this.repoRoot));
+    this.worktreeBase = join(dirname(this.repoRoot), '.swarmlo-worktrees', basename(this.repoRoot));
   }
 
   prepare(
@@ -69,7 +69,7 @@ export class CodexWorktreeCoordinator {
     try {
       for (const agent of agents) {
         const readOnly = agent.readOnly === true;
-        const branch = `ruflo/${runId}/${agent.id}`;
+        const branch = `swarmlo/${runId}/${agent.id}`;
         const worktreePath = join(this.worktreeBase, runId, agent.id);
         if (readOnly) {
           git(this.repoRoot, ['worktree', 'add', '--detach', worktreePath, options.baseRef ?? 'HEAD']);

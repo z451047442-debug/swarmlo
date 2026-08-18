@@ -8,7 +8,7 @@
 //
 // Writes a run JSON (tagged summary.benchmark="codemod-tier1") into the
 // cost-tracker plugin's runs dir, which is exactly what `cost-trend` reads:
-//   plugins/ruflo-cost-tracker/docs/benchmarks/runs/codemod-<timestamp>.json
+//   plugins/swarmlo-cost-tracker/docs/benchmarks/runs/codemod-<timestamp>.json
 // View the series with: BENCH_NAME=codemod-tier1 node scripts/trend.mjs
 //
 // Usage:
@@ -25,7 +25,7 @@ const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const CLI_ROOT = resolve(SCRIPT_DIR, '..');
 const REPO_ROOT = resolve(SCRIPT_DIR, '../../../..');
 // Write to the cost-tracker plugin's runs dir — the exact path `cost-trend` reads.
-const RUNS_DIR = join(REPO_ROOT, 'plugins', 'ruflo-cost-tracker', 'docs', 'benchmarks', 'runs');
+const RUNS_DIR = join(REPO_ROOT, 'plugins', 'swarmlo-cost-tracker', 'docs', 'benchmarks', 'runs');
 
 // Estimated per-edit LLM cost (USD). Documented estimates, NOT a live call —
 // used only to express the savings of a $0 deterministic codemod.

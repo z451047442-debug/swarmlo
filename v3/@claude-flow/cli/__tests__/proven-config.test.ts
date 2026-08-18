@@ -10,7 +10,7 @@ import { describe, it, expect } from 'vitest';
 import { generateKeyPairSync } from 'node:crypto';
 import {
   signProvenConfig, verifyProvenConfig, isSuitable, evaluateForAdoption,
-  satisfiesRange, canonicalManifestBytes, RUFLO_CONFIG_PUBKEY,
+  satisfiesRange, canonicalManifestBytes, SWARMLO_CONFIG_PUBKEY,
   type ProvenConfigManifest, type InstallEnv,
 } from '../src/config/proven-config.js';
 
@@ -21,11 +21,11 @@ const kp = generateKeyPairSync('ed25519', {
 
 function manifest(over: Partial<ProvenConfigManifest> = {}): ProvenConfigManifest {
   return {
-    schema: 'ruflo.proven-config/v1',
+    schema: 'swarmlo.proven-config/v1',
     policy: { ref: 'sha256:' + 'a'.repeat(64) },
     host: { 'claude-code': '>=1.9' },
     platform: ['linux', 'macOS'],
-    compatibility: { ruflo: '>=3.24.0' },
+    compatibility: { swarmlo: '>=3.24.0' },
     benchmark: { corpus: 'LAB-v4', corpusHash: 'sha256:' + 'b'.repeat(64) },
     layer: 'framework/node-cli',
     receipt: { heldOutDelta: 0.03, redblue: 'PASS', drift: 0.01, receiptCoverage: 1 },
@@ -37,7 +37,7 @@ function manifest(over: Partial<ProvenConfigManifest> = {}): ProvenConfigManifes
 const env: InstallEnv = {
   platform: 'darwin',
   hosts: { 'claude-code': '1.9.3' },
-  versions: { ruflo: '3.24.0' },
+  versions: { swarmlo: '3.24.0' },
   layer: 'framework/node-cli/my-repo',
 };
 
@@ -49,7 +49,7 @@ describe('proven-config — authenticity (Ed25519, fail-closed)', () => {
 
   it('REJECTS a manifest tampered after signing', () => {
     const signed = signProvenConfig(manifest(), kp.privateKey);
-    (signed.manifest.compatibility as Record<string, string>).ruflo = '>=1.0.0'; // widen after signing
+    (signed.manifest.compatibility as Record<string, string>).swarmlo = '>=1.0.0'; // widen after signing
     expect(verifyProvenConfig(JSON.stringify(signed), kp.publicKey)).toBeNull();
   });
 
@@ -68,7 +68,7 @@ describe('proven-config — authenticity (Ed25519, fail-closed)', () => {
   });
 
   it('ships a valid baked config public key (PEM)', () => {
-    expect(RUFLO_CONFIG_PUBKEY).toContain('BEGIN PUBLIC KEY');
+    expect(SWARMLO_CONFIG_PUBKEY).toContain('BEGIN PUBLIC KEY');
   });
 });
 
@@ -102,9 +102,9 @@ describe('proven-config — suitability gate (signed != suitable)', () => {
   });
 
   it('skips when a compatibility range is unmet (the version gate for backwards-compat)', () => {
-    const r = isSuitable(manifest(), { ...env, versions: { ruflo: '3.23.0' } });
+    const r = isSuitable(manifest(), { ...env, versions: { swarmlo: '3.23.0' } });
     expect(r.suitable).toBe(false);
-    expect(r.reason).toMatch(/ruflo 3.23.0/);
+    expect(r.reason).toMatch(/swarmlo 3.23.0/);
   });
 
   it('applies the hierarchy layer (ancestor ok, sibling not)', () => {
@@ -113,7 +113,7 @@ describe('proven-config — suitability gate (signed != suitable)', () => {
   });
 
   it('requires only the constraints the manifest declares', () => {
-    const bare: ProvenConfigManifest = { schema: 'ruflo.proven-config/v1', policy: { ref: 'sha256:' + 'd'.repeat(64) } };
+    const bare: ProvenConfigManifest = { schema: 'swarmlo.proven-config/v1', policy: { ref: 'sha256:' + 'd'.repeat(64) } };
     expect(isSuitable(bare, { platform: 'win32' }).suitable).toBe(true);
   });
 });
@@ -133,7 +133,7 @@ describe('proven-config — combined adoption decision', () => {
   });
 
   it('safe-skips a signed-but-unsuitable manifest (not an error)', () => {
-    const signed = signProvenConfig(manifest({ compatibility: { ruflo: '>=9.9.9' } }), kp.privateKey);
+    const signed = signProvenConfig(manifest({ compatibility: { swarmlo: '>=9.9.9' } }), kp.privateKey);
     const r = evaluateForAdoption(JSON.stringify(signed), env, kp.publicKey);
     expect(r.adopt).toBe(false);
     expect(r.manifest).toBeDefined(); // it WAS authentic

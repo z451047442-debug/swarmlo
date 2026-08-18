@@ -1,6 +1,6 @@
 # Swarm SOTA Report — 2026-05-29
 
-**TL;DR:** Five 2026 arXiv papers redefine swarm consensus — decentralized Shapley credit, hierarchical PBFT at O(n) message complexity, and communication-policy decoupling each expose structural gaps in Ruflo's flat Raft consensus that will limit scaling past ~50 agents.
+**TL;DR:** Five 2026 arXiv papers redefine swarm consensus — decentralized Shapley credit, hierarchical PBFT at O(n) message complexity, and communication-policy decoupling each expose structural gaps in Swarmlo's flat Raft consensus that will limit scaling past ~50 agents.
 
 ---
 
@@ -17,7 +17,7 @@
 
 ---
 
-## Ruflo Current Capability
+## Swarmlo Current Capability
 
 | Capability | Status | Detail |
 |-----------|--------|--------|
@@ -37,7 +37,7 @@
 
 | Framework | Consensus | Max Agents (validated) | Credit Attribution | Observability |
 |-----------|-----------|----------------------|-------------------|--------------|
-| **Ruflo (claude-flow v3.6)** | Raft | 8 (configured max) | None | Hooks + memory (no trace graph) |
+| **Swarmlo (claude-flow v3.6)** | Raft | 8 (configured max) | None | Hooks + memory (no trace graph) |
 | **LangGraph v0.4** | Checkpoint-based (no consensus) | No stated limit | None | LangSmith native (full trace) |
 | **AutoGen 1.0 GA** | GroupChat selector | No stated limit | None | Azure Monitor integration |
 | **CrewAI Enterprise** | Sequential/hierarchical fixed | 50+ (enterprise reported) | None | SOC2 observability hooks |
@@ -78,7 +78,7 @@ _This section is completed after file hash computation._
 
 **Source:** dasroot.net (Apr 2026), digitalapplied.com (2026), callsphere.ai (2026)
 
-Qdrant is 10-25% faster than Weaviate/Milvus on common workloads (Grade B). Weaviate hybrid search (vector + keyword) achieves 93.2% recall at 1M vectors (Grade B). Milvus handles 1B-scale collections at 100K+ QPS (Grade B). Ruflo's ruvector/AgentDB has no public benchmark, no hybrid retrieval, and no validated performance at 1M+ vectors. LanceDB costs ~$200-500/month at 10M vectors — 4-25× cheaper than alternatives.
+Qdrant is 10-25% faster than Weaviate/Milvus on common workloads (Grade B). Weaviate hybrid search (vector + keyword) achieves 93.2% recall at 1M vectors (Grade B). Milvus handles 1B-scale collections at 100K+ QPS (Grade B). Swarmlo's ruvector/AgentDB has no public benchmark, no hybrid retrieval, and no validated performance at 1M+ vectors. LanceDB costs ~$200-500/month at 10M vectors — 4-25× cheaper than alternatives.
 
 **Finding:** ruvector benchmarking gap is the single highest-ROI documentation task: publishing HNSW recall@10 at 100K, 1M, 10M vectors would immediately differentiate vs all four competitors who publish vendor-only Grade B claims.
 
@@ -88,9 +88,9 @@ Qdrant is 10-25% faster than Weaviate/Milvus on common workloads (Grade B). Weav
 
 **Source:** codebase grep (no ruview module found), LangSmith docs, OpenAI Agents SDK tracing
 
-Ruflo has no dedicated swarm execution trace module. `post-edit` and `post-task` hooks write to memory namespaces but produce no structured span-based trace graph. LangGraph ships LangSmith natively (full agent graph, token cost per node, replay). OpenAI Agents SDK emits OpenTelemetry-compatible spans out of the box. CrewAI Enterprise has SOC2 observability. Ruflo has none.
+Swarmlo has no dedicated swarm execution trace module. `post-edit` and `post-task` hooks write to memory namespaces but produce no structured span-based trace graph. LangGraph ships LangSmith natively (full agent graph, token cost per node, replay). OpenAI Agents SDK emits OpenTelemetry-compatible spans out of the box. CrewAI Enterprise has SOC2 observability. Swarmlo has none.
 
-**Finding (Grade C — single internal assessment):** Absence of a structured trace graph is the primary barrier to enterprise adoption; every competitor has addressed this; Ruflo has not.
+**Finding (Grade C — single internal assessment):** Absence of a structured trace graph is the primary barrier to enterprise adoption; every competitor has addressed this; Swarmlo has not.
 
 ---
 

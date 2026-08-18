@@ -21,7 +21,7 @@ import type { WorkerConfig } from '../src/dual-mode/index.js';
 
 describe('DualModeOrchestrator #2947 — codex worker stdin EOF', () => {
   it('completes a worker that blocks waiting for stdin EOF, within a short timeout', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'ruflo-2947-'));
+    const dir = mkdtempSync(join(tmpdir(), 'swarmlo-2947-'));
     const fakeCodex = join(dir, 'fake-codex.mjs');
     // Stands in for `codex exec`: waits for stdin EOF, then prints and exits 0.
     // If stdin is never closed, this process hangs until killed.

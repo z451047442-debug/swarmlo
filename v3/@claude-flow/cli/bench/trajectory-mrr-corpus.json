@@ -34,7 +34,7 @@
     },
     {
       "id": "t-007",
-      "raw": "Built the parent-death watchdog for ruflo mcp start. Polls process.ppid every 2 seconds; when it transitions to 1 (orphaned by Claude Code exit), runs cleanup and exits cleanly. Source: src/runtime/parent-death-watchdog.ts. Wired into src/commands/mcp.ts. Tests at __tests__/parent-death-watchdog-2234.test.ts.",
+      "raw": "Built the parent-death watchdog for swarmlo mcp start. Polls process.ppid every 2 seconds; when it transitions to 1 (orphaned by Claude Code exit), runs cleanup and exits cleanly. Source: src/runtime/parent-death-watchdog.ts. Wired into src/commands/mcp.ts. Tests at __tests__/parent-death-watchdog-2234.test.ts.",
       "query": "parent death watchdog MCP server"
     },
     {
@@ -89,7 +89,7 @@
     },
     {
       "id": "t-018",
-      "raw": "Closed the MCP server orphan leak. ruflo mcp start now installs a parent-death watchdog that exits cleanly when ppid becomes 1 (orphaned by Claude Code restart). Was leaking ~1GB across a week of restarts (#2234). Wiring point: src/commands/mcp.ts. Watchdog implementation at src/runtime/parent-death-watchdog.ts.",
+      "raw": "Closed the MCP server orphan leak. swarmlo mcp start now installs a parent-death watchdog that exits cleanly when ppid becomes 1 (orphaned by Claude Code restart). Was leaking ~1GB across a week of restarts (#2234). Wiring point: src/commands/mcp.ts. Watchdog implementation at src/runtime/parent-death-watchdog.ts.",
       "query": "MCP orphan leak fix"
     },
     {

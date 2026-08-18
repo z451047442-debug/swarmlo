@@ -98,36 +98,36 @@ ${workerTypes.map(type => `• ${type}: ${workerGroups[type].length} agents`).jo
 🔧 AVAILABLE MCP TOOLS FOR HIVE MIND COORDINATION:
 
 1️⃣ **COLLECTIVE INTELLIGENCE**
-   mcp__ruflo__hive-mind_consensus    - Democratic decision making
-   mcp__ruflo__hive-mind_memory       - Share knowledge across the hive
-   mcp__ruflo__hive-mind_broadcast    - Broadcast to all workers
-   mcp__ruflo__neural_patterns        - Neural pattern recognition
+   mcp__swarmlo__hive-mind_consensus    - Democratic decision making
+   mcp__swarmlo__hive-mind_memory       - Share knowledge across the hive
+   mcp__swarmlo__hive-mind_broadcast    - Broadcast to all workers
+   mcp__swarmlo__neural_patterns        - Neural pattern recognition
 
 2️⃣ **QUEEN COORDINATION**
-   mcp__ruflo__hive-mind_status       - Monitor swarm health
-   mcp__ruflo__task_create            - Create and delegate tasks
-   mcp__ruflo__coordination_orchestrate - Orchestrate task distribution
-   mcp__ruflo__agent_spawn            - Spawn additional workers
+   mcp__swarmlo__hive-mind_status       - Monitor swarm health
+   mcp__swarmlo__task_create            - Create and delegate tasks
+   mcp__swarmlo__coordination_orchestrate - Orchestrate task distribution
+   mcp__swarmlo__agent_spawn            - Spawn additional workers
 
 3️⃣ **WORKER MANAGEMENT**
-   mcp__ruflo__agent_list             - List all active agents
-   mcp__ruflo__agent_status           - Check agent status
-   mcp__ruflo__agent_health           - Check worker health
-   mcp__ruflo__hive-mind_join         - Add agent to hive
-   mcp__ruflo__hive-mind_leave        - Remove agent from hive
+   mcp__swarmlo__agent_list             - List all active agents
+   mcp__swarmlo__agent_status           - Check agent status
+   mcp__swarmlo__agent_health           - Check worker health
+   mcp__swarmlo__hive-mind_join         - Add agent to hive
+   mcp__swarmlo__hive-mind_leave        - Remove agent from hive
 
 4️⃣ **TASK ORCHESTRATION**
-   mcp__ruflo__task_assign            - Assign tasks to workers
-   mcp__ruflo__task_status            - Track task progress
-   mcp__ruflo__task_complete          - Mark tasks complete
-   mcp__ruflo__workflow_create        - Create workflows
+   mcp__swarmlo__task_assign            - Assign tasks to workers
+   mcp__swarmlo__task_status            - Track task progress
+   mcp__swarmlo__task_complete          - Mark tasks complete
+   mcp__swarmlo__workflow_create        - Create workflows
 
 5️⃣ **MEMORY & LEARNING**
-   mcp__ruflo__memory_store           - Store collective knowledge
-   mcp__ruflo__memory_retrieve        - Access shared memory
-   mcp__ruflo__memory_search          - Search memory patterns
-   mcp__ruflo__neural_train           - Learn from experiences
-   mcp__ruflo__hooks_intelligence_pattern-store - Store patterns
+   mcp__swarmlo__memory_store           - Store collective knowledge
+   mcp__swarmlo__memory_retrieve        - Access shared memory
+   mcp__swarmlo__memory_search          - Search memory patterns
+   mcp__swarmlo__neural_train           - Learn from experiences
+   mcp__swarmlo__hooks_intelligence_pattern-store - Store patterns
 
 📋 HIVE MIND EXECUTION PROTOCOL:
 
@@ -159,18 +159,18 @@ ${workerTypes.map(type => `• ${type}: ${workerGroups[type].length} agents`).jo
 ${objective}
 
 ⚠️ CRITICAL — TOOL PREFERENCE RULES (#1422):
-• You MUST use Ruflo MCP tools (mcp__ruflo__*) for ALL orchestration tasks
-• Do NOT use Claude native Task/Agent tools for swarm coordination — use mcp__ruflo__agent_spawn, mcp__ruflo__task_assign, etc.
+• You MUST use Swarmlo MCP tools (mcp__swarmlo__*) for ALL orchestration tasks
+• Do NOT use Claude native Task/Agent tools for swarm coordination — use mcp__swarmlo__agent_spawn, mcp__swarmlo__task_assign, etc.
 • Native Claude tools (Read, Write, Edit, Bash, Grep, Glob) should ONLY be used for file operations and shell commands
-• All agent spawning, task assignment, memory, and coordination MUST go through mcp__ruflo__* tools
-• If a Ruflo MCP tool exists for an operation, always prefer it over any native equivalent
+• All agent spawning, task assignment, memory, and coordination MUST go through mcp__swarmlo__* tools
+• If a Swarmlo MCP tool exists for an operation, always prefer it over any native equivalent
 
 💡 COORDINATION TIPS:
-• Use mcp__ruflo__hive-mind_broadcast for swarm-wide announcements
-• Check worker status regularly with mcp__ruflo__hive-mind_status
+• Use mcp__swarmlo__hive-mind_broadcast for swarm-wide announcements
+• Check worker status regularly with mcp__swarmlo__hive-mind_status
 • Store important decisions in shared memory for persistence
 • Use consensus for any decisions affecting multiple workers
-• Use mcp__ruflo__task_assign to assign tasks to workers, then mcp__ruflo__task_complete when done
+• Use mcp__swarmlo__task_assign to assign tasks to workers, then mcp__swarmlo__task_complete when done
 
 🚀 BEGIN HIVE MIND COORDINATION NOW!
 Start by checking the current hive status and then proceed with the objective.
@@ -251,11 +251,11 @@ async function spawnClaudeCodeInstance(
       const claudeArgs: string[] = [];
 
       // #1748 Issue 2 — pass --mcp-config so the spawned worker actually has
-      // mcp__ruflo__* tools registered. Before this, the coordination prompt
+      // mcp__swarmlo__* tools registered. Before this, the coordination prompt
       // referenced tools the worker didn't know about and exited silently.
       // Resolution order:
       //   1. explicit --mcp-config <path> flag passed by the caller
-      //   2. ./.mcp.json in cwd (project-local Ruflo MCP config)
+      //   2. ./.mcp.json in cwd (project-local Swarmlo MCP config)
       //   3. ~/.claude.json or ~/.claude/mcp.json (user-global)
       // If none found, we still spawn but warn — that's the pre-fix behavior
       // and the user's debug log will surface the missing tools.
@@ -282,7 +282,7 @@ async function spawnClaudeCodeInstance(
         claudeArgs.push(`--mcp-config=${mcpConfigPath}`);
         output.printInfo(`Spawned worker MCP config: ${mcpConfigPath}`);
       } else {
-        output.printWarning('No .mcp.json or ~/.claude.json found — spawned worker will not have mcp__ruflo__* tools (#1748 Issue 2). Pass --mcp-config <path> or run "ruflo init" to generate one.');
+        output.printWarning('No .mcp.json or ~/.claude.json found — spawned worker will not have mcp__swarmlo__* tools (#1748 Issue 2). Pass --mcp-config <path> or run "swarmlo init" to generate one.');
       }
 
       // Check for non-interactive mode
@@ -1016,7 +1016,7 @@ const taskCommand: Command = {
 
     try {
       // #1791.1 — `hive-mind_task` was never registered in the bundled MCP
-      // server (the `mcp__ruflo__hive-mind_*` surface only exposes init,
+      // server (the `mcp__swarmlo__hive-mind_*` surface only exposes init,
       // spawn, status, broadcast, consensus, memory, shutdown, leave). The
       // CLI was dispatching to a tool that doesn't exist, producing
       // `MCP tool not found: hive-mind_task` and aborting.

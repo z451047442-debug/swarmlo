@@ -1029,7 +1029,7 @@ export const hiveMindTools: MCPTool[] = [
     },
   },
   {
-    // #1916: `ruflo hive-mind optimize-memory` referenced an unregistered
+    // #1916: `swarmlo hive-mind optimize-memory` referenced an unregistered
     // `hive-mind_optimize-memory` tool. Best-effort today: prunes obviously-
     // empty shared-memory keys and reports the before/after counts; pattern
     // quality consolidation is a follow-up (it belongs in the intelligence

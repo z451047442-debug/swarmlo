@@ -1,7 +1,7 @@
 /**
  * Lazy loader for `@claude-flow/security`'s OAuth + keychain surface
  * (ADR-306). `@claude-flow/security` is an `optionalDependency` of this
- * package (see package.json) — `ruflo auth` is the one capability that
+ * package (see package.json) — `swarmlo auth` is the one capability that
  * genuinely cannot function without it, so this module's job is turning "the
  * optional package failed to install" into one clear, actionable error
  * instead of a raw `ERR_MODULE_NOT_FOUND` stack trace. Mirrors the
@@ -49,7 +49,7 @@ export type { OAuthTokenResponse, PkceRequest, CallbackResult, KeychainAdapter }
 export class SecurityPackageMissingError extends Error {
   constructor(cause: unknown) {
     super(
-      "ruflo auth needs the '@claude-flow/security' package, which isn't installed " +
+      "swarmlo auth needs the '@claude-flow/security' package, which isn't installed " +
         "(it's an optional dependency — install/reinstall failed or was skipped for this " +
         `platform). Try: npm install @claude-flow/security. Underlying error: ${
           cause instanceof Error ? cause.message : String(cause)

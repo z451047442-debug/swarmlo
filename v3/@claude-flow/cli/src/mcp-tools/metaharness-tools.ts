@@ -32,7 +32,7 @@
  *                                render + transcript failure analysis
  *
  * Every tool resolves the corresponding plugin script
- * (`plugins/ruflo-metaharness/scripts/<X>.mjs`) via the same locator
+ * (`plugins/swarmlo-metaharness/scripts/<X>.mjs`) via the same locator
  * the commands/metaharness.ts dispatcher uses, then spawns it with
  * `--format json` and parses the response.
  *
@@ -66,12 +66,12 @@ import {
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
- * Walk up from this module to find plugins/ruflo-metaharness/scripts/.
+ * Walk up from this module to find plugins/swarmlo-metaharness/scripts/.
  * Handles three install layouts (mirrors commands/metaharness.ts).
  *
  * `requiredScript`, if provided, narrows the match the same way the
  * commands dispatcher does — guards against the publish-artifact mirror
- * (`v3/@claude-flow/cli/plugins/ruflo-metaharness/scripts/`, regenerated
+ * (`v3/@claude-flow/cli/plugins/swarmlo-metaharness/scripts/`, regenerated
  * by `prepublishOnly`) shadowing the source when it's stale on a new
  * script.
  */
@@ -79,13 +79,13 @@ function locatePluginScripts(requiredScript?: string): string | null {
   const candidates: string[] = [];
   let p = resolve(__dirname);
   for (let i = 0; i < 8; i++) {
-    candidates.push(join(p, 'plugins', 'ruflo-metaharness', 'scripts'));
-    candidates.push(join(p, '..', 'plugins', 'ruflo-metaharness', 'scripts'));
+    candidates.push(join(p, 'plugins', 'swarmlo-metaharness', 'scripts'));
+    candidates.push(join(p, '..', 'plugins', 'swarmlo-metaharness', 'scripts'));
     p = dirname(p);
   }
   const cwd = getProjectCwd();
-  candidates.push(join(cwd, 'plugins', 'ruflo-metaharness', 'scripts'));
-  candidates.push(join(cwd, 'node_modules', '@claude-flow', 'cli', 'plugins', 'ruflo-metaharness', 'scripts'));
+  candidates.push(join(cwd, 'plugins', 'swarmlo-metaharness', 'scripts'));
+  candidates.push(join(cwd, 'node_modules', '@claude-flow', 'cli', 'plugins', 'swarmlo-metaharness', 'scripts'));
   for (const c of candidates) {
     if (!existsSync(join(c, '_harness.mjs'))) continue;
     if (requiredScript && !existsSync(join(c, requiredScript))) continue;
@@ -107,7 +107,7 @@ function locatePluginScripts(requiredScript?: string): string | null {
  *   2. exitCode 0 + degraded payload    → success: true, degraded: true
  *      (ADR-150 constraint #3 — upstream `@metaharness/*` absent, script
  *      emits `{degraded:true, reason:"metaharness-not-available"}` and
- *      exits 0 so ruflo stays operational. `success: true` because the
+ *      exits 0 so swarmlo stays operational. `success: true` because the
  *      script DID run as designed; the agent reads `degraded: true` to
  *      know the dep was missing.)
  *
@@ -188,7 +188,7 @@ const MCP_SUCCESS_SEMANTIC =
 export const metaharnessTools: MCPTool[] = [
   {
     name: 'metaharness_score',
-    description: 'ADR-150 — 5-dimension harness readiness scorecard from `metaharness score <path>` (harnessFit / compileConfidence / taskCoverage / toolSafety / memoryUsefulness + estCostPerRunUsd). Pure-read subprocess; graceful degradation when metaharness optional dep absent. Use when you need an evidence-based readiness signal before recommending the user run `ruflo metaharness mint`; reading the repo manually is wrong because the 5-dim score includes signals (cost-per-run, MCP surface safety) that aren\'t obvious from source. ' + MCP_SUCCESS_SEMANTIC,
+    description: 'ADR-150 — 5-dimension harness readiness scorecard from `metaharness score <path>` (harnessFit / compileConfidence / taskCoverage / toolSafety / memoryUsefulness + estCostPerRunUsd). Pure-read subprocess; graceful degradation when metaharness optional dep absent. Use when you need an evidence-based readiness signal before recommending the user run `swarmlo metaharness mint`; reading the repo manually is wrong because the 5-dim score includes signals (cost-per-run, MCP surface safety) that aren\'t obvious from source. ' + MCP_SUCCESS_SEMANTIC,
     category: 'metaharness',
     inputSchema: {
       type: 'object',
@@ -399,9 +399,9 @@ export const metaharnessTools: MCPTool[] = [
       type: 'object',
       properties: {
         repo: { type: 'string', description: 'Repo path to evolve (default: cwd)', default: '.' },
-        generations: { type: 'number', description: '1..50 (ruflo cap)', default: 3 },
-        children: { type: 'number', description: '1..20 (ruflo cap) — variants per generation', default: 3 },
-        concurrency: { type: 'number', description: '1..8 (ruflo cap)', default: 2 },
+        generations: { type: 'number', description: '1..50 (swarmlo cap)', default: 3 },
+        children: { type: 'number', description: '1..20 (swarmlo cap) — variants per generation', default: 3 },
+        concurrency: { type: 'number', description: '1..8 (swarmlo cap)', default: 2 },
         seed: { type: 'number', description: 'PRNG seed for reproducibility' },
         sandbox: { type: 'string', enum: ['real', 'mock', 'agent'], description: 'real = run npm test; mock = scoring stub; agent = LLM judge', default: 'real' },
         selection: { type: 'string', enum: ['quality-diversity', 'behavioral-diversity', 'niche-steering', 'clade', 'pareto'], description: 'Next-generation sampling strategy from the archive tree' },
@@ -448,13 +448,13 @@ export const metaharnessTools: MCPTool[] = [
   },
   {
     name: 'metaharness_security_bench',
-    description: 'ADR-153 — upstream Darwin Shield (their own ADR-155): evolves a champion security-detection harness against a 10-vuln/9-decoy ground-truth corpus and grades on TPR/FPR/patch-pass/repro/unsafe vs four baselines (B0 static, B1 LLM-single-pass, B2 fixed-agent, B3 Darwin-champion). Closest reference implementation for ruflo ADR-155 nightly self-learning security harness (#2417). Use when you need an empirical floor for Loop A reward-signal soundness; running this periodically gives baseline diversity and week-over-week champion-fitness drift. Bypassing this and just running the static MCP scan is wrong because static-only baseline (B0) reaches TPR=0.3/FPR=1 — proving static-alone has a measured detection ceiling. Parses overall PASS/FAIL + per-gate verdicts + baselines table from markdown. ' + MCP_SUCCESS_SEMANTIC,
+    description: 'ADR-153 — upstream Darwin Shield (their own ADR-155): evolves a champion security-detection harness against a 10-vuln/9-decoy ground-truth corpus and grades on TPR/FPR/patch-pass/repro/unsafe vs four baselines (B0 static, B1 LLM-single-pass, B2 fixed-agent, B3 Darwin-champion). Closest reference implementation for swarmlo ADR-155 nightly self-learning security harness (#2417). Use when you need an empirical floor for Loop A reward-signal soundness; running this periodically gives baseline diversity and week-over-week champion-fitness drift. Bypassing this and just running the static MCP scan is wrong because static-only baseline (B0) reaches TPR=0.3/FPR=1 — proving static-alone has a measured detection ceiling. Parses overall PASS/FAIL + per-gate verdicts + baselines table from markdown. ' + MCP_SUCCESS_SEMANTIC,
     category: 'metaharness',
     inputSchema: {
       type: 'object',
       properties: {
-        population: { type: 'number', description: '1..20 (ruflo cap) — candidate detectors per cycle', default: 2 },
-        cycles: { type: 'number', description: '1..100 (ruflo cap) — evolution cycles', default: 1 },
+        population: { type: 'number', description: '1..20 (swarmlo cap) — candidate detectors per cycle', default: 2 },
+        cycles: { type: 'number', description: '1..100 (swarmlo cap) — evolution cycles', default: 1 },
         seed: { type: 'number', description: 'PRNG seed for reproducibility' },
         alertOnFail: { type: 'boolean', description: 'Exit 1 when overall verdict is FAIL', default: false },
         timeoutMs: { type: 'number', description: 'Override the computed timeout (default = 3s × 19 evals × population × cycles + 30s)' },
@@ -564,7 +564,7 @@ export const metaharnessTools: MCPTool[] = [
   // ───────────────────────────────────────────────────────────────────────
   {
     name: 'metaharness_learn',
-    description: 'ADR-235 (upstream) — GEPA learning run via `metaharness learn`: optimizes a harness genome against a SWE-bench-style slice manifest. $0 DRY-RUN BY DEFAULT — it resolves the slice and prices the run without model calls; pass run=true to actually spend (model calls + Docker sandboxes). Requires a local metaharness repo checkout (repo param or $METAHARNESS_REPO); without one the tool returns {status:"checkout-required"} with clone instructions — that is a precondition report, not an error. Use when you want the harness policy to LEARN from a task corpus rather than hand-editing prompts; manual prompt tweaking is wrong because GEPA scores candidates against held-out slices and only promotes measured winners. Long real runs exceed the 120s MCP subprocess budget — run those via `ruflo metaharness learn` in a terminal instead. ' + MCP_SUCCESS_SEMANTIC,
+    description: 'ADR-235 (upstream) — GEPA learning run via `metaharness learn`: optimizes a harness genome against a SWE-bench-style slice manifest. $0 DRY-RUN BY DEFAULT — it resolves the slice and prices the run without model calls; pass run=true to actually spend (model calls + Docker sandboxes). Requires a local metaharness repo checkout (repo param or $METAHARNESS_REPO); without one the tool returns {status:"checkout-required"} with clone instructions — that is a precondition report, not an error. Use when you want the harness policy to LEARN from a task corpus rather than hand-editing prompts; manual prompt tweaking is wrong because GEPA scores candidates against held-out slices and only promotes measured winners. Long real runs exceed the 120s MCP subprocess budget — run those via `swarmlo metaharness learn` in a terminal instead. ' + MCP_SUCCESS_SEMANTIC,
     category: 'metaharness',
     inputSchema: {
       type: 'object',

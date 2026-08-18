@@ -24,12 +24,12 @@
  * HONESTY: `resolved` IS A PROXY
  * ------------------------------
  * `DarwinTrajectory.resolved` is meant to be GOLD-resolved status from the
- * official SWE-bench harness. Ruflo has NO SWE-bench oracle. Every record
+ * official SWE-bench harness. Swarmlo has NO SWE-bench oracle. Every record
  * therefore stamps `resolved_source` describing where the boolean actually
  * came from, so no downstream consumer can mistake a proxy for gold:
  *   - 'gold-oracle'      — a real conformant gold eval supplied it (never
- *                          ruflo today; reserved for an external caller)
- *   - 'output-verifier'  — ruflo's structural output-verifier confidence,
+ *                          swarmlo today; reserved for an external caller)
+ *   - 'output-verifier'  — swarmlo's structural output-verifier confidence,
  *                          thresholded — an EXPLICIT proxy
  *   - 'api-success'      — the model returned without an API error — the
  *                          weakest proxy (says nothing about correctness)
@@ -79,7 +79,7 @@ export interface ChatMessageLite {
 /** Where a `resolved` boolean actually came from (never silently "gold"). */
 export type ResolvedSource = 'gold-oracle' | 'output-verifier' | 'api-success' | 'external';
 
-/** Ruflo's cascade tier. haiku → 'cheap' (first tier), sonnet/opus → 'frontier'. */
+/** Swarmlo's cascade tier. haiku → 'cheap' (first tier), sonnet/opus → 'frontier'. */
 export type RunTier = 'cheap' | 'frontier';
 
 /** One persisted run transcript. Maps 1:1 to a DarwinTrajectory (+ provenance). */
@@ -183,7 +183,7 @@ export function recordRunTranscript(args: {
   task: string;
   /** Concrete model id that produced the run (e.g. "claude-haiku-4"). */
   model: string;
-  /** Ruflo cascade tier of `model`. */
+  /** Swarmlo cascade tier of `model`. */
   tier: RunTier;
   /** The resolved boolean (see resolvedSource for what it actually means). */
   resolved: boolean;
@@ -255,7 +255,7 @@ export function readRunTranscripts(path?: string): { records: RunTranscriptRecor
   return { records, malformed, path: p };
 }
 
-/** Map a ruflo model tier label to the weight-eft policy tier. */
+/** Map a swarmlo model tier label to the weight-eft policy tier. */
 export function tierForModel(model: string | undefined): RunTier {
   // haiku (and any explicitly-cheap label) → 'cheap' (cascade first tier).
   // sonnet / opus / everything else → 'frontier' (the escalation tier).

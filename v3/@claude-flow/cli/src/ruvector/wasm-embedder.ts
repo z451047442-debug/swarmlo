@@ -4,7 +4,7 @@
  *
  * OPT-IN by design: there is NO default package (an earlier iteration defaulted
  * to `@ruvector/lattice-wasm`, which does not exist — npm 404). Point
- * `RUFLO_EMBED_WASM_PKG` at any real WASM embedder that follows the ruvnet
+ * `SWARMLO_EMBED_WASM_PKG` at any real WASM embedder that follows the ruvnet
  * wasm-bindgen convention (a text→vector embed export). With the env unset, this
  * tier is INERT and everything resolves exactly as before (ruvector ONNX). Fully
  * fail-closed; never throws.
@@ -20,10 +20,10 @@ const require_ = createRequire(import.meta.url);
 
 /**
  * Package specifier for the optional WASM embedder. EMPTY by default (opt-in).
- * `RUFLO_LATTICE_WASM_PKG` is accepted as a back-compat alias.
+ * `SWARMLO_LATTICE_WASM_PKG` is accepted as a back-compat alias.
  */
-export const EMBED_WASM_PKG = process.env.RUFLO_EMBED_WASM_PKG || process.env.RUFLO_LATTICE_WASM_PKG || '';
-export const DEFAULT_EMBED_MODEL = process.env.RUFLO_EMBED_MODEL || 'default';
+export const EMBED_WASM_PKG = process.env.SWARMLO_EMBED_WASM_PKG || process.env.SWARMLO_LATTICE_WASM_PKG || '';
+export const DEFAULT_EMBED_MODEL = process.env.SWARMLO_EMBED_MODEL || 'default';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 let _mod: any = null;

@@ -59,7 +59,7 @@ const AUTOPILOT_STATE_PATH = join(DATA_DIR, 'autopilot-state.json');
 // Approximate tokens per character (Claude averages ~3.5 chars per token)
 const CHARS_PER_TOKEN = 3.5;
 
-const DEBUG = !!(process.env.RUFLO_DEBUG || process.env.DEBUG);
+const DEBUG = !!(process.env.SWARMLO_DEBUG || process.env.DEBUG);
 
 // ── Graceful shutdown (FIX 3) ───────────────────────────────────────────────
 // The active backend is created mid-handler and closed at the end. SQLite holds

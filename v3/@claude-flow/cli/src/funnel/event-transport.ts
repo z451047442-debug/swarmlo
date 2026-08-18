@@ -32,7 +32,7 @@ const EVENTS_FILE = 'funnel-events.jsonl';
 const FLUSH_STATE_FILE = 'funnel-events-flush.json';
 
 /**
- * Default endpoint — the ruflo-funnel-analytics endpoint on the ruv.io
+ * Default endpoint — the swarmlo-funnel-analytics endpoint on the ruv.io
  * domain, mapped via Cloud Run domain mapping to the cognitum-analytics
  * Cloud Function on cognitum-20260110. Overridable by env for staging or
  * self-hosted deploys. The domain choice is deliberate: an rUv-authored
@@ -40,7 +40,7 @@ const FLUSH_STATE_FILE = 'funnel-events-flush.json';
  * cognitum.one — that keeps the CLI attribution honest.
  */
 export const DEFAULT_ENDPOINT =
-  process.env.RUFLO_FUNNEL_EVENTS_ENDPOINT ?? 'https://funnel.ruv.io/v1/events';
+  process.env.SWARMLO_FUNNEL_EVENTS_ENDPOINT ?? 'https://funnel.ruv.io/v1/events';
 
 /** Cap per POST — server enforces its own limits too; this is a safety net. */
 export const MAX_BATCH = 100;
@@ -142,7 +142,7 @@ function postBatch(endpoint: string, batch: EventBatch): Promise<{ ok: boolean; 
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(body),
           'Idempotency-Key': batch.batchId,
-          'User-Agent': `ruflo-funnel/${batch.release}`,
+          'User-Agent': `swarmlo-funnel/${batch.release}`,
         },
       },
       (res) => {

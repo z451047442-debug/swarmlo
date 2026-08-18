@@ -11,7 +11,7 @@
  *   • the OFF-BY-DEFAULT guarantee — no budget cap ⇒ ZERO spawns
  *   • verdict extraction from the JSON envelope
  *
- * One optional live smoke (RUFLO_FABLE_LIVE=1) a human can run is at the end.
+ * One optional live smoke (SWARMLO_FABLE_LIVE=1) a human can run is at the end.
  */
 
 import { describe, it, expect, vi } from 'vitest';
@@ -69,10 +69,10 @@ describe('FableHarness — command construction', () => {
     const h = new FableHarness({ maxBudgetUsd: 5, spawnClaude: fn });
     await h.judgeBatch(items(1));
     expect(calls).toHaveLength(1);
-    expect(calls[0].cwd).toContain('ruflo-fable');
+    expect(calls[0].cwd).toContain('swarmlo-fable');
     expect(calls[0].cwd).not.toBe(process.cwd());
     // Temp dir lives under the OS temp root (allow macOS /private symlink drift).
-    expect(calls[0].cwd.includes(tmpdir()) || calls[0].cwd.includes('ruflo-fable')).toBe(true);
+    expect(calls[0].cwd.includes(tmpdir()) || calls[0].cwd.includes('swarmlo-fable')).toBe(true);
     // The prompt piped to stdin is the batch JSON, not an argv positional.
     expect(calls[0].prompt).toContain('task 0');
     expect(calls[0].argv).not.toContain('task 0');
@@ -237,8 +237,8 @@ describe('cost model', () => {
 });
 
 // ── Optional live smoke — human-run only, never in CI ─────────────────────
-const LIVE = process.env.RUFLO_FABLE_LIVE === '1';
-(LIVE ? describe : describe.skip)('FableHarness — LIVE smoke (RUFLO_FABLE_LIVE=1)', () => {
+const LIVE = process.env.SWARMLO_FABLE_LIVE === '1';
+(LIVE ? describe : describe.skip)('FableHarness — LIVE smoke (SWARMLO_FABLE_LIVE=1)', () => {
   it('judges a trivial item against the real Fable CLI', async () => {
     const h = new FableHarness({ maxBudgetUsd: 0.5 }); // real spawnClaude
     const out = await h.judgeBatch([

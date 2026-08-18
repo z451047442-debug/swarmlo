@@ -6,7 +6,7 @@
  *
  * Checks:
  *   1. Ed25519 signature over the canonical manifest bytes is valid under
- *      RUFLO_HELPERS_PUBKEY (same primitive as helper-signing.ts).
+ *      SWARMLO_HELPERS_PUBKEY (same primitive as helper-signing.ts).
  *   2. manifest.version matches package.json version.
  *   3. Every critical helper on disk hashes to the manifest entry.
  *
@@ -29,9 +29,9 @@ function die(msg) { console.error(`[verify-helpers] ${msg}`); process.exit(1); }
 // #2675 — helper-signing.ts is the sole key source. prepare-publish.mjs and
 // stable-npm-release.yml both build before verification, so importing emitted
 // runtime code preserves the exact key users will trust after installation.
-let RUFLO_HELPERS_PUBKEY;
+let SWARMLO_HELPERS_PUBKEY;
 try {
-  ({ RUFLO_HELPERS_PUBKEY } = await import('../dist/src/init/helper-signing.js'));
+  ({ SWARMLO_HELPERS_PUBKEY } = await import('../dist/src/init/helper-signing.js'));
 } catch {
   die('compiled helper-signing.js is unavailable; run `npm run build` before verification');
 }
@@ -52,8 +52,8 @@ const sortedFiles = {};
 for (const k of Object.keys(signed.manifest.files).sort()) sortedFiles[k] = signed.manifest.files[k];
 const canonical = Buffer.from(JSON.stringify({ version: signed.manifest.version, files: sortedFiles }), 'utf-8');
 
-if (!edVerify(null, canonical, RUFLO_HELPERS_PUBKEY, Buffer.from(signed.signature, 'base64'))) {
-  die('Ed25519 signature does not verify against RUFLO_HELPERS_PUBKEY');
+if (!edVerify(null, canonical, SWARMLO_HELPERS_PUBKEY, Buffer.from(signed.signature, 'base64'))) {
+  die('Ed25519 signature does not verify against SWARMLO_HELPERS_PUBKEY');
 }
 
 const pkgVersion = JSON.parse(readFileSync(join(PKG_ROOT, 'package.json'), 'utf-8')).version;

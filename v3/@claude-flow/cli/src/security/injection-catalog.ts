@@ -1,5 +1,5 @@
 /**
- * Shared injection-phrase catalog for the ruflo security scanners.
+ * Shared injection-phrase catalog for the swarmlo security scanners.
  *
  * Both `mcp-composition-inspector` (#2783 static tool scan) and
  * `channel-guard` (#2783 companion runtime message scan) consume this

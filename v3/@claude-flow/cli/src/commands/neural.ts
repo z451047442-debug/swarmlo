@@ -4390,7 +4390,7 @@ const routerCommand: Command = {
 // ============================================================================
 // ADR-150 weight-eft slice — `neural distill export | plan | eval | train`
 //
-// Turns ruflo's captured run transcripts into AUDITED TRAINING DATA + a
+// Turns swarmlo's captured run transcripts into AUDITED TRAINING DATA + a
 // COST-PARETO measurement + a GPU TRAINING PLAN via the optional
 // `@metaharness/weight-eft` dependency. HARD honesty rule: this ships training
 // DATA + a cost audit + a GPU plan — it does NOT train a model and does NOT
@@ -4495,7 +4495,7 @@ const distillPlanCommand: Command = {
     { name: 'dpo', type: 'string', description: 'Path to dpo.jsonl (default: .claude-flow/neural/weft-export/dpo.jsonl)' },
     { name: 'base', short: 'b', type: 'string', description: 'Base model id to tune (7-14B band). Default Qwen2.5-Coder-7B-Instruct' },
     { name: 'params-b', type: 'number', description: 'Base model param count in billions (gate [1,14]). Default 7' },
-    { name: 'adapter-prefix', type: 'string', description: 'Adapter output prefix', default: 'ruflo-weft' },
+    { name: 'adapter-prefix', type: 'string', description: 'Adapter output prefix', default: 'swarmlo-weft' },
     { name: 'format', short: 'f', type: 'string', description: 'Output format: table, json', default: 'table' },
   ],
   examples: [
@@ -4512,7 +4512,7 @@ const distillPlanCommand: Command = {
       ? { id: String(ctx.flags.base), paramsB: (ctx.flags['params-b'] ?? ctx.flags.paramsB) != null ? parseInt(String((ctx.flags['params-b'] ?? ctx.flags.paramsB)), 10) : 7 }
       : DEFAULT_BASE_MODEL;
 
-    const res = await runPlan({ base, sftPath, dpoPath, adapterPrefix: String((ctx.flags['adapter-prefix'] ?? ctx.flags.adapterPrefix) || 'ruflo-weft') });
+    const res = await runPlan({ base, sftPath, dpoPath, adapterPrefix: String((ctx.flags['adapter-prefix'] ?? ctx.flags.adapterPrefix) || 'swarmlo-weft') });
     if (res.degraded) {
       const payload = { degraded: true, reason: res.reason };
       if (fmt === 'json') output.writeln(JSON.stringify(payload, null, 2));
@@ -4522,7 +4522,7 @@ const distillPlanCommand: Command = {
     const payload = { ok: true, base: res.base, sft: res.sft, dpo: res.dpo, dryRun: true };
     if (fmt === 'json') { output.writeln(JSON.stringify(payload, null, 2)); return { success: true, data: payload }; }
     output.writeln();
-    output.writeln(output.bold(`weight-eft GPU training plan ($0 dry-run — no tune runs from ruflo)`));
+    output.writeln(output.bold(`weight-eft GPU training plan ($0 dry-run — no tune runs from swarmlo)`));
     output.writeln(`  base model: ${res.base.id} (${res.base.paramsB}B)`);
     output.writeln(output.dim('  SFT stage:'));
     output.writeln(`    ${res.sft.summary}`);
@@ -4531,7 +4531,7 @@ const distillPlanCommand: Command = {
     output.writeln(`    ${res.dpo.summary}`);
     output.writeln(`    $ ${res.dpo.command}`);
     output.writeln();
-    output.writeln(output.dim('These commands run on a GPU host; ruflo does not execute them. See `neural distill train --remote` for a spend-gated remote path.'));
+    output.writeln(output.dim('These commands run on a GPU host; swarmlo does not execute them. See `neural distill train --remote` for a spend-gated remote path.'));
     return { success: true, data: payload };
   },
 };
@@ -4592,14 +4592,14 @@ const distillTrainCommand: Command = {
   name: 'train',
   description: 'Remote-GPU LoRA tune over SSH — DRY-RUN by default (prints ssh/rsync/ruvllm commands + read-only preflight). Real compute ONLY with --execute --yes (spends GPU time on YOUR host). Not a $0/local tune.',
   options: [
-    { name: 'remote', short: 'r', type: 'string', description: 'SSH host or tailscale name (default: $RUFLO_DISTILL_REMOTE). Never hard-coded.' },
+    { name: 'remote', short: 'r', type: 'string', description: 'SSH host or tailscale name (default: $SWARMLO_DISTILL_REMOTE). Never hard-coded.' },
     { name: 'base', short: 'b', type: 'string', description: 'Base model id to tune. Default Qwen2.5-Coder-7B-Instruct' },
     { name: 'sft', type: 'string', description: 'Local sft.jsonl (default: .claude-flow/neural/weft-export/sft.jsonl)' },
     { name: 'dpo', type: 'string', description: 'Local dpo.jsonl (default: .claude-flow/neural/weft-export/dpo.jsonl)' },
     { name: 'adapter-dir', type: 'string', description: 'Local dir to fetch the trained adapter into', default: '.claude-flow/neural' },
     { name: 'ssh-user', type: 'string', description: 'SSH user (default: current user)' },
     { name: 'ssh-port', type: 'number', description: 'SSH port', default: '22' },
-    { name: 'remote-workdir', type: 'string', description: 'Remote working dir (default: ~/.ruflo-weft/<runId>)' },
+    { name: 'remote-workdir', type: 'string', description: 'Remote working dir (default: ~/.swarmlo-weft/<runId>)' },
     { name: 'execute', type: 'boolean', description: 'Opt in to REAL GPU compute on the remote host (still needs --yes)', default: 'false' },
     { name: 'yes', type: 'boolean', description: 'Second confirmation gate; required with --execute to actually spend', default: 'false' },
     { name: 'preflight', type: 'boolean', description: 'Opt in to read-only reachability/GPU probes against the host (bare dry-run is fully offline and contacts nothing)', default: 'false' },
@@ -4608,15 +4608,15 @@ const distillTrainCommand: Command = {
   examples: [
     { command: 'claude-flow neural distill train --remote gpu-box', description: 'OFFLINE DRY-RUN: print the ssh/rsync/ruvllm commands only (no host contact)' },
     { command: 'claude-flow neural distill train --remote gpu-box --preflight', description: 'DRY-RUN + read-only reachability/GPU probes against the host' },
-    { command: 'RUFLO_DISTILL_REMOTE=gpu-box claude-flow neural distill train --execute --yes', description: 'Run the real remote tune (spends GPU time on your host)' },
+    { command: 'SWARMLO_DISTILL_REMOTE=gpu-box claude-flow neural distill train --execute --yes', description: 'Run the real remote tune (spends GPU time on your host)' },
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     const path = await import('node:path');
     const { runRemoteTrain } = await import('../services/weight-eft.js');
     const fmt = (ctx.flags.format as string) || 'table';
-    const host = (ctx.flags.remote as string | undefined) || process.env.RUFLO_DISTILL_REMOTE;
+    const host = (ctx.flags.remote as string | undefined) || process.env.SWARMLO_DISTILL_REMOTE;
     if (!host) {
-      output.printError('No remote host. Pass --remote <host> or set RUFLO_DISTILL_REMOTE.');
+      output.printError('No remote host. Pass --remote <host> or set SWARMLO_DISTILL_REMOTE.');
       return { success: false, exitCode: 2 };
     }
     const res = await runRemoteTrain({
@@ -4657,7 +4657,7 @@ const distillTrainCommand: Command = {
       for (const s of res.steps) output.writeln(`    [${s.ok ? 'ok ' : 'FAIL'}] ${s.label}: ${s.detail}`);
     }
     output.writeln();
-    output.writeln(output.dim('Honesty: ruflo does not train locally or at $0. This is an explicit, user-triggered remote-GPU spend. resolved-gold in the SFT data is still a proxy.'));
+    output.writeln(output.dim('Honesty: swarmlo does not train locally or at $0. This is an explicit, user-triggered remote-GPU spend. resolved-gold in the SFT data is still a proxy.'));
     return { success: res.mode !== 'preflight-failed', data: res };
   },
 };
@@ -4691,7 +4691,7 @@ export const neuralCommand: Command = {
   ],
   action: async (): Promise<CommandResult> => {
     output.writeln();
-    output.writeln(output.bold('RuFlo Neural System'));
+    output.writeln(output.bold('Swarmlo Neural System'));
     output.writeln(output.dim('Advanced AI pattern learning and inference'));
     output.writeln();
     output.writeln('Use --help with subcommands for more info');

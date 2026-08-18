@@ -1,4 +1,4 @@
-// #2984: `ruflo mcp start -t http` printed a full "Status: Running" success
+// #2984: `swarmlo mcp start -t http` printed a full "Status: Running" success
 // table — PID, health/RPC URLs — then exited with code 0 within seconds,
 // without ever binding the port. Root cause: bin/cli.js's "normal CLI mode"
 // branch (which `-t http` always takes, since it disqualifies the implicit

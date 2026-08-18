@@ -1,11 +1,11 @@
 /**
- * `ruflo spinner` — manage ruflo verbs in Claude Code's spinnerVerbs
+ * `swarmlo spinner` — manage swarmlo verbs in Claude Code's spinnerVerbs
  * settings (ADR-318).
  *
  * Claude Code exposes `spinnerVerbs.mode` + `spinnerVerbs.verbs[]` in
- * ~/.claude/settings.json. This command appends a curated ruflo pool to
+ * ~/.claude/settings.json. This command appends a curated swarmlo pool to
  * that array, tagged with a zero-width joiner marker so `disable` can
- * strip only ruflo verbs without touching user-authored ones.
+ * strip only swarmlo verbs without touching user-authored ones.
  *
  * NEVER replaces — always appends (see ADR-318 §Guarantees). Always backs
  * up ~/.claude/settings.json before write.
@@ -20,9 +20,9 @@ import { hasConsent, recordConsent, revokeConsent } from '../funnel/consent.js';
 
 // Zero-width joiner triple — invisible in every terminal that renders it,
 // takes zero display cells, and is exceedingly unlikely to appear in a
-// user-authored verb. Used to tag ruflo-managed entries so `disable`
+// user-authored verb. Used to tag swarmlo-managed entries so `disable`
 // removes ONLY ours.
-const RUFLO_MARKER = '‍‍‍';
+const SWARMLO_MARKER = '‍‍‍';
 
 const SETTINGS_PATH = path.join(os.homedir(), '.claude', 'settings.json');
 
@@ -31,9 +31,9 @@ const SETTINGS_PATH = path.join(os.homedir(), '.claude', 'settings.json');
 //
 // Ratio target: ~15% Cognitum-tagged, ~85% neutral — sponsor is visible but
 // doesn't dominate. With append mode + ~50 Claude Code default verbs, this
-// gives roughly a 40% chance any spin is a ruflo verb, and ~6% of ALL spins
+// gives roughly a 40% chance any spin is a swarmlo verb, and ~6% of ALL spins
 // show a Cognitum-tagged verb.
-const RUFLO_VERB_POOL_V0 = [
+const SWARMLO_VERB_POOL_V0 = [
   // Memory & retrieval (7)
   'Consulting the memory graph',
   'Warming the HNSW index',
@@ -83,7 +83,7 @@ const RUFLO_VERB_POOL_V0 = [
 // Reject anything that violates the ADR-318 §Guarantees ingest rules.
 function isValidVerb(v: string): boolean {
   if (typeof v !== 'string') return false;
-  const stripped = v.replace(RUFLO_MARKER, '');
+  const stripped = v.replace(SWARMLO_MARKER, '');
   if (stripped.length === 0 || stripped.length > 30) return false;
   // Claude Code's spinnerVerbs takes present participles. Traditionally
   // one word ("Thinking"), but multi-word phrases work too as long as
@@ -110,11 +110,11 @@ function isValidVerb(v: string): boolean {
 }
 
 function markVerb(v: string): string {
-  return v + RUFLO_MARKER;
+  return v + SWARMLO_MARKER;
 }
 
-function isRufloVerb(v: string): boolean {
-  return typeof v === 'string' && v.includes(RUFLO_MARKER);
+function isSwarmloVerb(v: string): boolean {
+  return typeof v === 'string' && v.includes(SWARMLO_MARKER);
 }
 
 interface SpinnerVerbsBlock {
@@ -165,12 +165,12 @@ function writeSettings(data: SettingsShape): void {
 
 const enableSub: Command = {
   name: 'enable',
-  description: "Add ruflo's curated verb pool to Claude Code's spinner rotation",
+  description: "Add swarmlo's curated verb pool to Claude Code's spinner rotation",
   options: [
     { name: 'yes', description: 'Skip the confirmation prompt', type: 'boolean', default: false },
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
-    const validVerbs = RUFLO_VERB_POOL_V0.filter(isValidVerb);
+    const validVerbs = SWARMLO_VERB_POOL_V0.filter(isValidVerb);
     if (validVerbs.length === 0) {
       output.printError('Verb pool is empty after validation — refusing to write nothing.');
       return { success: false };
@@ -181,8 +181,8 @@ const enableSub: Command = {
     output.writeln('');
     for (const v of validVerbs) output.writeln('  • ' + v);
     output.writeln('');
-    output.writeln('Some verbs mention Cognitum, Ruflo\'s sponsor. This is opt-in and reversible via');
-    output.writeln("`ruflo spinner disable`. Claude Code's default verbs are preserved (append-only).");
+    output.writeln('Some verbs mention Cognitum, Swarmlo\'s sponsor. This is opt-in and reversible via');
+    output.writeln("`swarmlo spinner disable`. Claude Code's default verbs are preserved (append-only).");
     if (!ctx.flags.yes) {
       output.writeln('');
       output.printWarning('Re-run with --yes to confirm.');
@@ -198,14 +198,14 @@ const enableSub: Command = {
     if (currentBlock.mode === 'replace') {
       output.printError(
         'settings.json has spinnerVerbs.mode = "replace" — refusing to append (would silently be inert). ' +
-        'Either change your mode to "append" manually and re-run, or accept ruflo\'s pool as your entire set via manual edit.'
+        'Either change your mode to "append" manually and re-run, or accept swarmlo\'s pool as your entire set via manual edit.'
       );
       return { success: false, data: { currentMode: 'replace' } };
     }
     const currentVerbs = Array.isArray(currentBlock.verbs) ? currentBlock.verbs : [];
-    // Strip any prior ruflo entries so re-running enable is idempotent
+    // Strip any prior swarmlo entries so re-running enable is idempotent
     // instead of duplicating our pool every time.
-    const preservedUserVerbs = currentVerbs.filter(v => !isRufloVerb(v));
+    const preservedUserVerbs = currentVerbs.filter(v => !isSwarmloVerb(v));
     const newVerbs = validVerbs.map(markVerb);
     data.spinnerVerbs = {
       mode: 'append',
@@ -229,7 +229,7 @@ const enableSub: Command = {
 
 const disableSub: Command = {
   name: 'disable',
-  description: 'Remove ruflo verbs from Claude Code\'s spinner rotation (user-authored verbs preserved)',
+  description: 'Remove swarmlo verbs from Claude Code\'s spinner rotation (user-authored verbs preserved)',
   action: async (): Promise<CommandResult> => {
     const { data, raw } = readSettings();
     if (!raw || !data.spinnerVerbs?.verbs?.length) {
@@ -239,14 +239,14 @@ const disableSub: Command = {
     }
     const backupPath = backupSettings(raw);
     const before = data.spinnerVerbs.verbs.length;
-    data.spinnerVerbs.verbs = data.spinnerVerbs.verbs.filter(v => !isRufloVerb(v));
+    data.spinnerVerbs.verbs = data.spinnerVerbs.verbs.filter(v => !isSwarmloVerb(v));
     const after = data.spinnerVerbs.verbs.length;
     // If we removed everything and the block is now empty, drop the block
     // entirely so Claude Code falls straight back to its defaults.
     if (data.spinnerVerbs.verbs.length === 0) delete data.spinnerVerbs;
     writeSettings(data);
     revokeConsent('spinner-verbs', 'cli-spinner-disable');
-    output.printSuccess(`Disabled — removed ${before - after} ruflo verbs (kept ${after} user-authored).`);
+    output.printSuccess(`Disabled — removed ${before - after} swarmlo verbs (kept ${after} user-authored).`);
     output.writeln(`Backup: ${backupPath}`);
     return { success: true, data: { removed: before - after, kept: after, backup: backupPath } };
   },
@@ -254,21 +254,21 @@ const disableSub: Command = {
 
 const listSub: Command = {
   name: 'list',
-  description: 'Show ruflo\'s verb pool and which verbs are currently installed',
+  description: 'Show swarmlo\'s verb pool and which verbs are currently installed',
   options: [
     { name: 'json', description: 'Output as JSON', type: 'boolean', default: false },
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     const { data } = readSettings();
     const installed = data.spinnerVerbs?.verbs ?? [];
-    const installedRuflo = installed.filter(isRufloVerb).map(v => v.replace(RUFLO_MARKER, ''));
-    const installedUser = installed.filter(v => !isRufloVerb(v));
-    const pool = RUFLO_VERB_POOL_V0.filter(isValidVerb);
+    const installedSwarmlo = installed.filter(isSwarmloVerb).map(v => v.replace(SWARMLO_MARKER, ''));
+    const installedUser = installed.filter(v => !isSwarmloVerb(v));
+    const pool = SWARMLO_VERB_POOL_V0.filter(isValidVerb);
     const summary = {
       consent: hasConsent('spinner-verbs') ? 'granted' : 'not-granted',
       mode: data.spinnerVerbs?.mode ?? '(none)',
       pool_available: pool,
-      installed_ruflo: installedRuflo,
+      installed_swarmlo: installedSwarmlo,
       installed_user_authored: installedUser,
     };
     if (ctx.flags.json) {
@@ -277,14 +277,14 @@ const listSub: Command = {
       output.writeln(`Consent: ${summary.consent}`);
       output.writeln(`spinnerVerbs.mode in settings.json: ${summary.mode}`);
       output.writeln('');
-      output.writeln(`Ruflo pool (${pool.length} verbs, available):`);
+      output.writeln(`Swarmlo pool (${pool.length} verbs, available):`);
       for (const v of pool) output.writeln('  • ' + v);
       output.writeln('');
-      output.writeln(`Currently installed ruflo verbs (${installedRuflo.length}):`);
-      if (installedRuflo.length === 0) output.writeln('  (none — run `ruflo spinner enable --yes` to install)');
-      else for (const v of installedRuflo) output.writeln('  • ' + v);
+      output.writeln(`Currently installed swarmlo verbs (${installedSwarmlo.length}):`);
+      if (installedSwarmlo.length === 0) output.writeln('  (none — run `swarmlo spinner enable --yes` to install)');
+      else for (const v of installedSwarmlo) output.writeln('  • ' + v);
       output.writeln('');
-      output.writeln(`User-authored verbs (${installedUser.length}, untouched by ruflo):`);
+      output.writeln(`User-authored verbs (${installedUser.length}, untouched by swarmlo):`);
       for (const v of installedUser) output.writeln('  • ' + v);
     }
     return { success: true, data: summary };
@@ -322,13 +322,13 @@ const resetSub: Command = {
 
 export const spinnerCommand: Command = {
   name: 'spinner',
-  description: 'Manage ruflo verbs in Claude Code\'s spinnerVerbs rotation (ADR-318)',
+  description: 'Manage swarmlo verbs in Claude Code\'s spinnerVerbs rotation (ADR-318)',
   subcommands: [enableSub, disableSub, listSub, resetSub],
   examples: [
-    { command: 'ruflo spinner list', description: 'Show the ruflo pool + what\'s currently installed' },
-    { command: 'ruflo spinner enable --yes', description: 'Append ruflo\'s verb pool to settings.json' },
-    { command: 'ruflo spinner disable', description: 'Remove ruflo verbs, keep user-authored ones' },
-    { command: 'ruflo spinner reset --yes', description: 'Restore the most recent settings.json backup' },
+    { command: 'swarmlo spinner list', description: 'Show the swarmlo pool + what\'s currently installed' },
+    { command: 'swarmlo spinner enable --yes', description: 'Append swarmlo\'s verb pool to settings.json' },
+    { command: 'swarmlo spinner disable', description: 'Remove swarmlo verbs, keep user-authored ones' },
+    { command: 'swarmlo spinner reset --yes', description: 'Restore the most recent settings.json backup' },
   ],
   action: listSub.action,
 };

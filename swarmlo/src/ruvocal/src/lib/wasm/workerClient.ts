@@ -7,7 +7,7 @@
  *
  * Behind a feature flag so the existing main-thread code path remains the
  * default until we've broken everything in `wasmMcp.ts` over to the worker.
- * Toggle with `localStorage.setItem("ruflo:wasm-worker", "true")` from the
+ * Toggle with `localStorage.setItem("swarmlo:wasm-worker", "true")` from the
  * browser console, or pass `?worker=1` on the URL.
  */
 
@@ -41,7 +41,7 @@ let readyPromise: Promise<void> | null = null;
 export function isWorkerEnabled(): boolean {
 	if (!browser) return false;
 	try {
-		const flag = localStorage.getItem("ruflo:wasm-worker");
+		const flag = localStorage.getItem("swarmlo:wasm-worker");
 		if (flag === "true") return true;
 		const params = new URLSearchParams(window.location.search);
 		return params.get("worker") === "1";
@@ -56,7 +56,7 @@ function ensureWorker(): Worker {
 	// Using new URL() so vite-plugin-svelte picks it up at build time.
 	worker = new Worker(new URL("./wasm.worker.ts", import.meta.url), {
 		type: "module",
-		name: "ruflo-wasm-mcp",
+		name: "swarmlo-wasm-mcp",
 	});
 
 	worker.addEventListener("message", (event: MessageEvent) => {

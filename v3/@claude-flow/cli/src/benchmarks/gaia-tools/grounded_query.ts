@@ -8,7 +8,7 @@
  *   - web_search: raw snippets → agent reads + parses → 2-3 extra turns
  *   - grounded_query: Gemini synthesises an answer + cites sources in 1 call
  *
- * This is Ruflo's cross-provider stack in action:
+ * This is Swarmlo's cross-provider stack in action:
  *   Gemini grounds (google_search tool) → Sonnet/Haiku reasons → answer
  *
  * Credential resolution (mirrors performance-capability.ts / web_search.ts):

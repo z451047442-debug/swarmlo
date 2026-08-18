@@ -3,8 +3,8 @@
 //
 // WHY: the MetaHarness packages were once declared only as OPTIONAL PEER
 // dependencies, which npm never auto-installs — so a clean `npm install` of
-// ruflo shipped with zero MetaHarness packages on disk while every advertised
-// surface (`ruflo metaharness …`) assumed they might be there. The pin watcher
+// swarmlo shipped with zero MetaHarness packages on disk while every advertised
+// surface (`swarmlo metaharness …`) assumed they might be there. The pin watcher
 // missed it because it never looked at peerDependencies. This script closes
 // the loop end-to-end: it installs the EXACT ranges v3/@claude-flow/cli
 // declares into a pristine temp project (no repo node_modules in scope), then
@@ -58,7 +58,7 @@ async function main() {
 
   let workDir = null;
   if (specs.length) {
-    workDir = mkdtempSync(join(tmpdir(), 'ruflo-mh-clean-install-'));
+    workDir = mkdtempSync(join(tmpdir(), 'swarmlo-mh-clean-install-'));
     writeFileSync(join(workDir, 'package.json'), JSON.stringify({ name: 'mh-clean-install-probe', private: true, type: 'module' }, null, 2));
     try {
       execFileSync('npm', [

@@ -4,4 +4,4 @@
  * independently-typed string literals that could silently drift apart.
  */
 
-export const KEYCHAIN_SERVICE = 'ruflo-cognitum-auth';
+export const KEYCHAIN_SERVICE = 'swarmlo-cognitum-auth';

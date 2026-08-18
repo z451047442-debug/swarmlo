@@ -58,7 +58,7 @@ function buildTestRvfa(
   const secs = sections ?? [
     { id: 'kernel', data: 'kernel-payload-original' },
     { id: 'runtime', data: 'runtime-payload-original' },
-    { id: 'ruflo', data: 'ruflo-payload-original' },
+    { id: 'swarmlo', data: 'swarmlo-payload-original' },
   ];
   for (const s of secs) {
     writer.addSection(s.id, Buffer.from(s.data), { compression: 'none' });
@@ -280,8 +280,8 @@ describe('RvfaPatcher.applyPatch', () => {
     const runtime = reader.extractSection('runtime');
     assert.equal(runtime.toString('utf-8'), 'runtime-payload-original');
 
-    const ruflo = reader.extractSection('ruflo');
-    assert.equal(ruflo.toString('utf-8'), 'ruflo-payload-original');
+    const swarmlo = reader.extractSection('swarmlo');
+    assert.equal(swarmlo.toString('utf-8'), 'swarmlo-payload-original');
   });
 
   it('creates a backup file', async () => {

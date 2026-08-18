@@ -12,7 +12,7 @@
 //   BENCH_NO_WRITE=1 node scripts/benchmark-self-learning.mjs
 //
 // Repro:
-//   1. Clone ruvnet/ruflo, npm install, build the CLI:
+//   1. Clone z451047442-debug/swarmlo, npm install, build the CLI:
 //        npm install && (cd v3/@claude-flow/cli && npx tsc -b)
 //   2. Run this script. It prints a "before/after" table per surface.
 //   3. Inspect docs/benchmarks/runs/self-learning-<ts>.json for the persisted
