@@ -41,7 +41,7 @@ const emptyWitness = {
     signatureAlgo: 'ed25519',
     publicKey: '',
     signature: '',
-    seedDerivation: "sha256(gitCommit + ':swarmlo-witness/v1')",
+    seedDerivation: "swarmlo fork Ed25519 key: ~/.swarmlo/helpers-signing.key",
   },
 };
 
@@ -63,7 +63,7 @@ console.log(`  ${manifestPath}`);
 console.log(`  ${historyPath}`);
 console.log(`  ${fixesTemplate}     (edit then re-run regen)`);
 console.log(``);
-console.log(`next: install @noble/ed25519, edit witness-fixes.json, then:`);
+console.log(`next: ensure the fork signing key (~/.swarmlo/helpers-signing.key), edit witness-fixes.json, then:`);
 console.log(`  node /path/to/regen.mjs --manifest verification.md.json \\`);
 console.log(`                          --history verification-history.jsonl \\`);
 console.log(`                          --fixes witness-fixes.json`);

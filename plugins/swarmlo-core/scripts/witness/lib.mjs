@@ -12,9 +12,9 @@
 import { readFileSync, writeFileSync, existsSync, appendFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { execSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
+import { createHash, createPrivateKey, createPublicKey, sign } from 'node:crypto';
 import { createRequire } from 'node:module';
-import { platform } from 'node:os';
+import { homedir, platform } from 'node:os';
 
 /**
  * Map Node's `process.platform` value (linux/darwin/win32) to the
@@ -50,42 +50,27 @@ function loadRvfNode(probeRoots) {
   return null;
 }
 
-// ─── ed25519 lazy load ─────────────────────────────────────────────
-// Locate @noble/ed25519 from the caller's project (it lives in their
-// node_modules, not bundled with this script). We probe a few likely
-// install roots so the toolkit works in swarmlo's monorepo layout *and*
-// a user's flat node_modules.
-function loadEd25519(probeRoots) {
-  // Expand caller-supplied roots with workspace-package locations so
-  // pnpm's isolated layout (where transitive deps don't hoist to the
-  // workspace root) still resolves @noble/ed25519. Callers don't need
-  // to know about this — the function just probes more places.
-  const expanded = [
-    ...probeRoots,
-    ...probeRoots.flatMap(r => [
-      join(r, 'v3/@claude-flow/cli'),
-      join(r, 'v3/@claude-flow/plugin-agent-federation'),
-    ]),
-  ];
-  let lastErr;
-  for (const root of expanded) {
-    try {
-      const req = createRequire(join(root, 'noop.js'));
-      const ed = req('@noble/ed25519');
-      ed.etc.sha512Sync = (...m) => {
-        const h = createHash('sha512');
-        for (const x of m) h.update(x);
-        return h.digest();
-      };
-      return ed;
-    } catch (e) { lastErr = e; }
+// ─── ed25519 signing key ───────────────────────────────────────────
+// Witness manifests are signed with the swarmlo fork's Ed25519 keypair
+// (~/.swarmlo/helpers-signing.key — the same keypair that signs the
+// auto-refreshed helpers, see helper-signing.ts). The private key is
+// never committed; verifiers hold the matching public key (verify.mjs).
+// Rotating the key = replace the public key in verify.mjs + re-sign.
+export function resolveWitnessSigningKey(env = process.env) {
+  return env.SWARMLO_WITNESS_SIGNING_KEY ?? join(homedir(), '.swarmlo', 'helpers-signing.key');
+}
+
+function loadSigningKeyPair(keyPath) {
+  if (!existsSync(keyPath)) {
+    throw new Error(
+      `Witness signing key not found: ${keyPath}\n` +
+      `Expected a PKCS#8 PEM Ed25519 private key. Override the path via ` +
+      `the SWARMLO_WITNESS_SIGNING_KEY env var.`
+    );
   }
-  throw new Error(
-    "Could not locate '@noble/ed25519'. Install it in your project " +
-    "(npm i @noble/ed25519) or pass a node_modules root via the " +
-    "WITNESS_ED25519_ROOT env var. Probed: " + expanded.join(', ') +
-    ". Last error: " + (lastErr?.message ?? '?')
-  );
+  const privateKey = createPrivateKey(readFileSync(keyPath, 'utf8'));
+  const publicKey = createPublicKey(privateKey).export({ format: 'der', type: 'spki' }).subarray(-32);
+  return { privateKey, publicKey };
 }
 
 // ─── manifest helpers ─────────────────────────────────────────────
@@ -116,12 +101,19 @@ export function refreshFix(repoRoot, fix) {
  * @param {string} opts.manifestPath   Where to write verification.md.json.
  * @param {Array}  opts.newFixes       New fix entries to register.
  * @param {object} [opts.releases]     Map of pkg → version for the manifest.
- * @param {string[]} [opts.ed25519Roots] Probe roots for @noble/ed25519.
+ * @param {string} [opts.os]           OS bundle name (linux|macos|windows).
+ * @param {string} [opts.signingKey]   Path to the fork Ed25519 signing key.
  * @returns {{witness: object, summary: string}}
  */
 export function regenerate(opts) {
-  const { repoRoot, manifestPath, newFixes = [], releases = {}, ed25519Roots = [] } = opts;
-  const ed = loadEd25519(ed25519Roots.length ? ed25519Roots : [repoRoot, join(repoRoot, 'v3')]);
+  const {
+    repoRoot,
+    manifestPath,
+    newFixes = [],
+    releases = {},
+    os: osOverride,
+    signingKey = resolveWitnessSigningKey(),
+  } = opts;
 
   const existing = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : null;
   const oldFixes = existing?.manifest?.fixes ?? [];
@@ -144,7 +136,7 @@ export function regenerate(opts) {
     issuedAt,
     gitCommit,
     branch,
-    os: osDir(),
+    os: osOverride ?? osDir(),
     releases,
     summary: { totalFixes: merged.length, verified: verifiedCount, missing: missingCount },
     fixes: merged.map(f => { const { _missing, ...c } = f; return c; }),
@@ -152,9 +144,8 @@ export function regenerate(opts) {
 
   const manifestCanonical = JSON.stringify(manifest);
   const manifestHash = createHash('sha256').update(manifestCanonical).digest('hex');
-  const seed = createHash('sha256').update(gitCommit + ':swarmlo-witness/v1').digest();
-  const publicKey = ed.getPublicKey(seed);
-  const signature = ed.sign(Buffer.from(manifestHash, 'hex'), seed);
+  const { privateKey, publicKey } = loadSigningKeyPair(signingKey);
+  const signature = sign(null, Buffer.from(manifestHash, 'hex'), privateKey);
 
   const witness = {
     manifest,
@@ -164,7 +155,7 @@ export function regenerate(opts) {
       signatureAlgo: 'ed25519',
       publicKey: Buffer.from(publicKey).toString('hex'),
       signature: Buffer.from(signature).toString('hex'),
-      seedDerivation: "sha256(gitCommit + ':swarmlo-witness/v1')",
+      seedDerivation: `swarmlo fork Ed25519 key: ${signingKey}`,
     },
   };
 

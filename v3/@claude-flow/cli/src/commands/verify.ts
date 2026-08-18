@@ -3,8 +3,9 @@
  *
  * Fetches the verification.md.json witness manifest from the live repo,
  * recomputes SHA-256 of every cited file in the user's installed
- * artifact, re-derives the Ed25519 public key from the manifest's git
- * commit, and verifies the signature.
+ * artifact, and verifies the Ed25519 signature against the swarmlo fork's
+ * embedded public key (the same keypair that signs the auto-refreshed
+ * helpers — see init/helper-signing.ts).
  *
  * Run via: swarmlo verify [--branch <branch>] [--manifest <local-path>]
  *
@@ -14,12 +15,23 @@
  * drifted.
  */
 
-import { createHash } from 'crypto';
+import { createHash, createPublicKey, verify as edVerify } from 'crypto';
 import { existsSync, readFileSync } from 'fs';
 import { dirname, join, sep } from 'path';
 import { fileURLToPath } from 'url';
 import type { Command, CommandContext, CommandResult } from '../types.js';
 import { output } from '../output.js';
+
+/**
+ * Swarmlo witness-signing PUBLIC key (safe to commit) — the swarmlo fork's
+ * Ed25519 keypair (~/.swarmlo/helpers-signing.key, rotated 2026-08-18 with
+ * the fork rebrand). Pre-rebrand manifests signed with the upstream
+ * ruflo seed-derived key no longer verify against this key. Rotating the
+ * key = replace this constant + re-sign the witness manifests.
+ */
+const SWARMLO_WITNESS_PUBKEY_PEM = `-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEA7bjJiEJpq5sDBLH4yGNqudPWqNOhW+1+2hJ6mmo8iuQ=
+-----END PUBLIC KEY-----`;
 
 interface ManifestFix {
   id: string;
@@ -141,36 +153,32 @@ async function verifySignature(witness: Witness): Promise<{
   publicKeyReproducible: boolean;
   signatureValid: boolean;
 }> {
-  // Lazy-load @noble/ed25519 — keep verify command snappy when no signature check needed
-  let ed: typeof import('@noble/ed25519') | null = null;
   try {
-    ed = await import('@noble/ed25519');
+    const manifestCanonical = JSON.stringify(witness.manifest);
+    const recomputedHash = createHash('sha256').update(manifestCanonical).digest('hex');
+    const manifestHashOk = recomputedHash === witness.integrity.manifestHash;
+
+    // The swarmlo fork's Ed25519 public key is the trust anchor for every
+    // signed witness manifest. `publicKeyReproducible` asserts the manifest
+    // declares exactly this fork key; the signature is then verified
+    // against the same key — fail-closed if either check fails. Native
+    // Node crypto only (no @noble dependency).
+    const forkKey = createPublicKey(SWARMLO_WITNESS_PUBKEY_PEM);
+    const forkKeyRaw = forkKey.export({ format: 'der', type: 'spki' }).subarray(-32);
+    const publicKeyReproducible =
+      forkKeyRaw.toString('hex') === witness.integrity.publicKey;
+
+    const signatureValid = edVerify(
+      null,
+      Buffer.from(witness.integrity.manifestHash, 'hex'),
+      forkKey,
+      Buffer.from(witness.integrity.signature, 'hex'),
+    );
+
+    return { manifestHashOk, publicKeyReproducible, signatureValid };
   } catch {
     return { manifestHashOk: false, publicKeyReproducible: false, signatureValid: false };
   }
-  // Configure sync sha512 for the v2 API
-  const sha512Sync = (...m: Uint8Array[]): Uint8Array => {
-    const h = createHash('sha512');
-    for (const x of m) h.update(x);
-    return h.digest();
-  };
-  (ed as { etc: { sha512Sync: typeof sha512Sync } }).etc.sha512Sync = sha512Sync;
-
-  const manifestCanonical = JSON.stringify(witness.manifest);
-  const recomputedHash = createHash('sha256').update(manifestCanonical).digest('hex');
-  const manifestHashOk = recomputedHash === witness.integrity.manifestHash;
-
-  const seed = createHash('sha256').update(witness.manifest.gitCommit + ':swarmlo-witness/v1').digest();
-  const reKey = ed.getPublicKey(seed);
-  const publicKeyReproducible = Buffer.from(reKey).toString('hex') === witness.integrity.publicKey;
-
-  const signatureValid = ed.verify(
-    Buffer.from(witness.integrity.signature, 'hex'),
-    Buffer.from(witness.integrity.manifestHash, 'hex'),
-    Buffer.from(witness.integrity.publicKey, 'hex'),
-  );
-
-  return { manifestHashOk, publicKeyReproducible, signatureValid };
 }
 
 export const verifyCommand: Command = {
@@ -263,7 +271,7 @@ export const verifyCommand: Command = {
     output.writeln();
     output.writeln(output.bold('Manifest signature'));
     output.writeln(`  manifest hash matches: ${sig.manifestHashOk ? output.success('yes') : output.error('no')}`);
-    output.writeln(`  public key reproducible from gitCommit: ${sig.publicKeyReproducible ? output.success('yes') : output.error('no')}`);
+    output.writeln(`  public key matches swarmlo fork signer: ${sig.publicKeyReproducible ? output.success('yes') : output.error('no')}`);
     output.writeln(`  Ed25519 signature valid: ${sig.signatureValid ? output.success('yes') : output.error('no')}`);
     output.writeln();
 

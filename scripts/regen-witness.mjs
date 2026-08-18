@@ -8,7 +8,8 @@
  * editing `witness-fixes.json` at the repo root.
  *
  * Usage:
- *   node scripts/regen-witness.mjs            # regen + append history
+ *   node scripts/regen-witness.mjs            # regen current OS + append history
+ *   node scripts/regen-witness.mjs --os macos # regen a specific OS bundle
  *   node scripts/regen-witness.mjs --dry-run  # preview without writing
  */
 
@@ -21,7 +22,13 @@ const REPO_ROOT = process.cwd();
 // Per-OS layout (see ADR-103 §6 — verification cognitive container).
 // Each OS subdir holds the manifest signed by that OS's runner; CI
 // regenerates its own per-OS bundle. Shared inputs live at verification/.
-const OS = osDir();
+const args = process.argv.slice(2);
+const osIdx = args.indexOf('--os');
+const OS = osIdx >= 0 ? args[osIdx + 1] : osDir();
+if (!['linux', 'macos', 'windows'].includes(OS)) {
+  console.error(`unknown OS '${OS}' — expected linux | macos | windows`);
+  process.exit(2);
+}
 const VERIFICATION_DIR = join(REPO_ROOT, 'verification');
 const MANIFEST_PATH = join(VERIFICATION_DIR, OS, 'manifest.md.json');
 const HISTORY_PATH = join(VERIFICATION_DIR, OS, 'history.jsonl');
@@ -51,7 +58,7 @@ const result = regenerate({
   manifestPath: MANIFEST_PATH,
   newFixes,
   releases,
-  ed25519Roots: [REPO_ROOT, join(REPO_ROOT, 'v3')],
+  os: OS,
 });
 
 console.log('witness regen summary');

@@ -58,7 +58,6 @@ const result = regenerate({
   manifestPath,
   newFixes,
   releases,
-  ed25519Roots: [repoRoot, resolve(repoRoot, 'v3')],
 });
 
 console.log(`witness regen summary\n─────────────────────`);

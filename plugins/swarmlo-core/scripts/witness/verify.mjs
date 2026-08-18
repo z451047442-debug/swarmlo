@@ -21,11 +21,21 @@ import { readFileSync, existsSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import {
   createHash,
-  createPrivateKey,
   createPublicKey,
   verify as verifyEd25519,
 } from 'node:crypto';
 import { fileSha256, fileContains } from './lib.mjs';
+
+/**
+ * Swarmlo witness-signing PUBLIC key (safe to commit) — the swarmlo fork's
+ * Ed25519 keypair (~/.swarmlo/helpers-signing.key, rotated 2026-08-18 with
+ * the fork rebrand). Pre-rebrand manifests signed with the upstream
+ * ruflo seed-derived key no longer verify against this key. Rotating the
+ * key = replace this constant + re-sign verification/<os>/manifest.md.json.
+ */
+const SWARMLO_WITNESS_PUBKEY_PEM = `-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEA7bjJiEJpq5sDBLH4yGNqudPWqNOhW+1+2hJ6mmo8iuQ=
+-----END PUBLIC KEY-----`;
 
 const args = parseArgs(process.argv.slice(2));
 if (!args.manifest) { console.error('--manifest <path> required'); process.exit(2); }
@@ -151,39 +161,20 @@ function verifySignature(witness) {
   try {
     const recomputed = createHash('sha256').update(JSON.stringify(witness.manifest)).digest('hex');
     const manifestHashOk = recomputed === witness.integrity.manifestHash;
-    const seed = createHash('sha256')
-      .update(witness.manifest.gitCommit + ':swarmlo-witness/v1')
-      .digest();
 
-    // RFC 8410 DER wrappers let Node/OpenSSL derive and verify Ed25519 keys
-    // without a package install. The witness format remains byte-compatible
-    // with manifests produced by @noble/ed25519.
-    const privateKey = createPrivateKey({
-      key: Buffer.concat([
-        Buffer.from('302e020100300506032b657004220420', 'hex'),
-        seed,
-      ]),
-      format: 'der',
-      type: 'pkcs8',
-    });
-    const reproducedKey = createPublicKey(privateKey)
-      .export({ format: 'der', type: 'spki' })
-      .subarray(-32);
+    // The swarmlo fork's Ed25519 public key is the trust anchor for every
+    // signed witness manifest. `publicKeyReproducible` asserts the manifest
+    // declares exactly this fork key; the signature is then verified
+    // against the same key — fail-closed if either check fails.
+    const forkKey = createPublicKey(SWARMLO_WITNESS_PUBKEY_PEM);
+    const forkKeyRaw = forkKey.export({ format: 'der', type: 'spki' }).subarray(-32);
     const publicKeyReproducible =
-      reproducedKey.toString('hex') === witness.integrity.publicKey;
+      forkKeyRaw.toString('hex') === witness.integrity.publicKey;
 
-    const declaredKey = createPublicKey({
-      key: Buffer.concat([
-        Buffer.from('302a300506032b6570032100', 'hex'),
-        Buffer.from(witness.integrity.publicKey, 'hex'),
-      ]),
-      format: 'der',
-      type: 'spki',
-    });
     const signatureValid = verifyEd25519(
       null,
       Buffer.from(witness.integrity.manifestHash, 'hex'),
-      declaredKey,
+      forkKey,
       Buffer.from(witness.integrity.signature, 'hex'),
     );
     return { manifestHashOk, publicKeyReproducible, signatureValid, verifier: 'node:crypto' };

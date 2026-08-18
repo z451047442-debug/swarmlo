@@ -16,8 +16,8 @@
     {
       "id": "#1862",
       "desc": "ruflo-core PostToolUse hooks call documented CLI flags (-c/-s/-e, -f/-s) instead of bogus --format true. (#1921 moved the invocation behind scripts/ruflo-hook.sh — the documented-flag form is preserved.)",
-      "file": "plugins/ruflo-core/hooks/hooks.json",
-      "marker": "post-edit -f \\\"$FILE\\\" -s true"
+      "file": "plugins/swarmlo-core/scripts/swarmlo-hook.cjs",
+      "marker": "invokeCli('post-edit', ['-f', String(file), '-s', 'true']"
     },
     {
       "id": "ADR-101-C",
@@ -202,13 +202,13 @@
     {
       "id": "#1921-shim",
       "desc": "scripts/ruflo-hook.sh \u2014 resilient invoker shipped in each plugin (.claude-plugin/, plugin/, plugins/ruflo-core/): prefers a local `ruflo`/`claude-flow` binary, else `npx --prefer-offline --yes ruflo@latest`, always `exit 0`. stdin (hook event JSON) passes through unchanged. Companion to #1921.",
-      "file": "plugins/ruflo-core/scripts/ruflo-hook.sh",
-      "marker": "npx --prefer-offline --yes ruflo@latest hooks"
+      "file": "plugins/swarmlo-core/scripts/swarmlo-hook.sh",
+      "marker": "run swarmlo hooks \"$@\""
     },
     {
       "id": "#1927",
       "desc": "ruflo-cost-tracker track.mjs encodeProjectPath now replaces Windows path separators (`\\`) and the drive colon (`:`), not just `/`, so `D:\\project\\Foo` encodes to `D--project-Foo` (matching Claude Code's ~/.claude/projects/<encoded-cwd>/ scheme) instead of being passed through unchanged on Windows. Behavioral CI guard: smoke.sh step 29b runs track.mjs with a Windows-style TRACK_CWD and asserts the 'looked under' path is encoded. (Also fixed smoke.sh step 8 \u2014 ADR-0001 is Accepted, not Proposed.)",
-      "file": "plugins/ruflo-cost-tracker/scripts/track.mjs",
+      "file": "plugins/swarmlo-cost-tracker/scripts/track.mjs",
       "marker": "#1927: Claude Code encodes"
     },
     {
