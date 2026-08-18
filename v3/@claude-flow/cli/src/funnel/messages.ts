@@ -22,7 +22,8 @@ export const MAX_MESSAGE_COLUMNS = 80;
 
 /**
  * Exact-host allowlist (ADR-301). Ships in code, never in the payload.
- * github.com is allowed only under /ruvnet/.
+ * github.com is allowed only under the upstream /ruvnet/ org or the
+ * fork /z451047442-debug/ org.
  */
 const ALLOWED_URL_HOSTS = new Set([
   'cognitum.one', 'www.cognitum.one', 'docs.cognitum.one',
@@ -31,7 +32,7 @@ const ALLOWED_URL_HOSTS = new Set([
   'agentics.org', 'www.agentics.org',
 ]);
 const GITHUB_HOST = 'github.com';
-const GITHUB_PATH_PREFIX = '/ruvnet/';
+const GITHUB_PATH_PREFIXES = ['/ruvnet/', '/z451047442-debug/'];
 
 /**
  * C0/C1 controls (incl. ESC, so every ANSI/OSC/DCS sequence trips this),
@@ -72,7 +73,7 @@ export function isAllowedUrl(url: string): boolean {
   }
   if (parsed.protocol !== 'https:') return false;
   if (ALLOWED_URL_HOSTS.has(parsed.hostname)) return true;
-  if (parsed.hostname === GITHUB_HOST && parsed.pathname.startsWith(GITHUB_PATH_PREFIX)) return true;
+  if (parsed.hostname === GITHUB_HOST && GITHUB_PATH_PREFIXES.some(p => parsed.pathname.startsWith(p))) return true;
   return false;
 }
 
