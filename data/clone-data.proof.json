@@ -1,20 +1,20 @@
 {
   "schema": "swarmlo-ecosystem-proof/v2",
-  "generated_at": "2026-08-18T04:05:01.004Z",
+  "generated_at": "2026-08-18T06:55:28.302Z",
   "sources": {
     "github_clones": "https://api.github.com/repos/{owner}/{repo}/traffic/clones (14-day rolling window)",
     "npm_downloads": "https://api.npmjs.org/downloads/range/last-year/{pkg}"
   },
   "latest_snapshot": {
-    "id": "2026-08-18T04:05:01.004Z-87726cc6",
-    "captured_at": "2026-08-18T04:05:01.004Z",
+    "id": "2026-08-18T06:55:28.302Z-42230092",
+    "captured_at": "2026-08-18T06:55:28.302Z",
     "clones_14d": 0,
     "unique_cloners_14d": 0,
     "npm_downloads_12mo_headline": 8779254,
     "headline": "8.8M npm downloads · 0k git clones (14d)"
   },
-  "ledger_snapshot_count": 13,
-  "ledger_sha256": "d5487a89773e7301fdd6f5a7ccf3448227932eba7d67c45d6a7123620aa7a58a",
+  "ledger_snapshot_count": 14,
+  "ledger_sha256": "07ff4a855e8871bea545eeb2d8c5614d656dbe8be51eb27d67efb3ba8ee1132e",
   "ledger_path": "data/clone-data.ledger.json",
   "rvf_path": "data/clone-data.rvf"
 }
