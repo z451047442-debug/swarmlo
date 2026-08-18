@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Regression guard for z451047442-debug/swarmlo#2042 — agent_execute hardcoded the
+ * Regression guard for ruvnet/ruflo#2042 — agent_execute hardcoded the
  * Anthropic SDK and ignored the v3 provider system. Reporter: @ummcke00.
  *
  * The fix routes executeAgentTask() through callAnthropicMessages(),

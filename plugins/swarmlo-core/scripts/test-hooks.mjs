@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Regression guard for github.com/z451047442-debug/swarmlo#1859, #1862, #2721, #2816, #2856.
+ * Regression guard for github.com/ruvnet/ruflo#1859, #1862, #2721, #2816, #2856.
  *
  * Drives every hook command from `hooks/hooks.json` — PreToolUse,
  * PostToolUse, PreCompact, Stop — with synthetic Claude-Code-style stdin,

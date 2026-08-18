@@ -1,5 +1,5 @@
 /**
- * Tests for the regex entity tagger (ADR-147 P2, z451047442-debug/swarmlo#2317).
+ * Tests for the regex entity tagger (ADR-147 P2, ruvnet/ruflo#2317).
  *
  * Goal of the tagger: a conservative third signal for hybridSearch.
  * False negatives are fine (dense + sparse cover the rest); false

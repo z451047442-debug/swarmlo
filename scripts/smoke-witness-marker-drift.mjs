@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Regression guard for z451047442-debug/swarmlo#2021.
+ * Regression guard for ruvnet/ruflo#2021.
  *
  * #2021 happened because a dep bump (`@claude-flow/memory` alpha.14 → 16)
  * silently invalidated witness marker `#1825`, whose marker string was

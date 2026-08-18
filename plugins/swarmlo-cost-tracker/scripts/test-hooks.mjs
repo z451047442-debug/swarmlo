@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Regression guard for github.com/z451047442-debug/swarmlo#2721.
+ * Regression guard for github.com/ruvnet/ruflo#2721.
  *
  * Drives the Stop hook command from `hooks/hooks.json` exactly as Claude
  * Code/Codex would — `spawnSync(command, { shell: true, ... })`, no bash

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Rebranded Ruflo → Swarmlo** (2026-08-18 fork release) — full rename across branding, file/directory names, `npx` commands, plugin IDs, `RUFLO_*`→`SWARMLO_*` environment variables, runtime paths (`~/.swarmlo`), schema strings, and repository URLs (fork: `z451047442-debug/swarmlo`). Historical ADRs, benchmark records, and signed artifacts intentionally keep the old name.
+- **Published `swarmlo@3.38.9` to npm** (root umbrella bundling the rebranded `@claude-flow/cli`).
+
+### Fixed
+
+- Windows `spawnSync npm.cmd EINVAL` in publish preflight scripts (`scripts/prepare-root-publish.mjs`, `scripts/stage-internal-runtime-bundles.mjs`) — added `shell: true` for `.cmd` spawning.
+- Invalid JSON in shipped `.claude/settings.json` (unescaped inner quotes around `$CLAUDE_PROJECT_DIR` hook commands).
+- Restored executable bit on 437 shebang scripts lost when the fork snapshot was created on Windows (CI "executable + syntax-clean" smoke checks).
+
 ## [3.34.0] - 2026-07-31
 
 ### Added

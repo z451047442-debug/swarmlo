@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Regression guard for github.com/z451047442-debug/swarmlo#1874.
+ * Regression guard for github.com/ruvnet/ruflo#1874.
  *
  * Static dist scan: assert the MCP server packages emit a spec-compliant
  * `YYYY-MM-DD` string for `protocolVersion`, never the previous

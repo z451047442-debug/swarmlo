@@ -19,7 +19,7 @@ const os = require('os');
 
 const helpersDir = __dirname;
 
-// Resolve an installed @claude-flow/cli (or ruflo) bin — mirrors
+// Resolve an installed @claude-flow/cli (or swarmlo) bin — mirrors
 // statusline-generator.ts's resolveCliBin() candidate list. Used only to
 // spawn the detached funnel-refresh helper below; failures are silent (no
 // candidate found just means the refresh never fires this session).
@@ -27,7 +27,7 @@ const helpersDir = __dirname;
 // Verifies dist/src/index.js exists alongside bin/cli.js, not just the bin
 // itself — Claude Code's own plugin marketplace mechanism installs by
 // `git clone`/`git pull` with no build step, so `~/.claude/plugins/
-// marketplaces/ruflo` is a SOURCE-ONLY checkout by construction: bin/cli.js
+// marketplaces/swarmlo` is a SOURCE-ONLY checkout by construction: bin/cli.js
 // is present on disk but importing dist/src/index.js throws
 // ERR_MODULE_NOT_FOUND on every real command (confirmed live — only
 // `--version` happens to survive it, since it reads package.json directly).
@@ -40,9 +40,9 @@ function resolveCliBinForHook() {
     const home = os.homedir();
     const cwd = process.cwd();
     const candidates = [
-      path.join(home, '.claude', 'plugins', 'marketplaces', 'ruflo', 'bin', 'cli.js'),
+      path.join(home, '.claude', 'plugins', 'marketplaces', 'swarmlo', 'bin', 'cli.js'),
       path.join(cwd, 'node_modules', '@claude-flow', 'cli', 'bin', 'cli.js'),
-      path.join(cwd, 'node_modules', 'ruflo', 'bin', 'cli.js'),
+      path.join(cwd, 'node_modules', 'swarmlo', 'bin', 'cli.js'),
       path.join(cwd, 'v3', '@claude-flow', 'cli', 'bin', 'cli.js'),
       // helpersDir is .claude/helpers/ inside the package itself when this
       // file is running from a real @claude-flow/cli install (not a project
@@ -101,7 +101,7 @@ function spawnDetachedFunnelRefresh() {
 
 // ADR-318/319: first-run auto-enable of spinner verbs (default ON) +
 // announcements (default OFF, explicit opt-in). Fires ONCE per install
-// (marker at ~/.ruflo/first-run-enabled.json), then never again —
+// (marker at ~/.swarmlo/first-run-enabled.json), then never again —
 // subsequent sessions see the marker and skip.
 //
 // Split posture rationale:
@@ -110,16 +110,16 @@ function spawnDetachedFunnelRefresh() {
 //     Disclosure notification + one-command disable satisfies the ethical bar.
 //   - Announcements = higher-intrusion (prominent line at every Claude Code
 //     startup, more attention per view). Default OFF; opt-in via
-//     RUFLO_AUTO_ENABLE_ANNOUNCEMENTS=1 or explicit `ruflo announcements enable`.
+//     SWARMLO_AUTO_ENABLE_ANNOUNCEMENTS=1 or explicit `swarmlo announcements enable`.
 //
 // Gates (spinner is default-on unless any is TRUE):
-//   - RUFLO_NO_AUTO_ENABLE truthy (master opt-out — kills both)
-//   - RUFLO_NO_AUTO_ENABLE_SPINNER truthy (spinner-only opt-out)
+//   - SWARMLO_NO_AUTO_ENABLE truthy (master opt-out — kills both)
+//   - SWARMLO_NO_AUTO_ENABLE_SPINNER truthy (spinner-only opt-out)
 //   - CI / GITHUB_ACTIONS truthy
 //   - stdout is not a TTY (piped, non-interactive)
 //   - Marker file already exists
 //
-// Announcements needs the same gates PLUS RUFLO_AUTO_ENABLE_ANNOUNCEMENTS=1.
+// Announcements needs the same gates PLUS SWARMLO_AUTO_ENABLE_ANNOUNCEMENTS=1.
 //
 // Marker is written even if the spawns fail — auto-enable is a "we tried once"
 // contract, not "keep trying until success." Users can run enable manually.
@@ -129,14 +129,14 @@ function firstRunAutoEnableIfEligible() {
     const fs = require('fs');
     const os = require('os');
     const truthy = (v) => v && !/^(0|false|off|no)$/i.test(String(v));
-    if (truthy(process.env.RUFLO_NO_AUTO_ENABLE)) return;
+    if (truthy(process.env.SWARMLO_NO_AUTO_ENABLE)) return;
     if (process.env.CI || process.env.GITHUB_ACTIONS) return;
     if (process.stdout && process.stdout.isTTY === false) return;
-    const markerPath = path.join(os.homedir(), '.ruflo', 'first-run-enabled.json');
+    const markerPath = path.join(os.homedir(), '.swarmlo', 'first-run-enabled.json');
     if (fs.existsSync(markerPath)) return;
 
-    const enableSpinner = !truthy(process.env.RUFLO_NO_AUTO_ENABLE_SPINNER);
-    const enableAnnouncements = truthy(process.env.RUFLO_AUTO_ENABLE_ANNOUNCEMENTS);
+    const enableSpinner = !truthy(process.env.SWARMLO_NO_AUTO_ENABLE_SPINNER);
+    const enableAnnouncements = truthy(process.env.SWARMLO_AUTO_ENABLE_ANNOUNCEMENTS);
 
     // Nothing to do — user opted out of both. Skip marker write so if they
     // change their mind and re-enable env vars later, first-run still fires.
@@ -184,13 +184,13 @@ function firstRunAutoEnableIfEligible() {
       if (enableSpinner) parts.push('spinner verbs');
       if (enableAnnouncements) parts.push('startup announcements');
       const disableCmds = [];
-      if (enableSpinner) disableCmds.push('`ruflo spinner disable`');
-      if (enableAnnouncements) disableCmds.push('`ruflo announcements disable`');
+      if (enableSpinner) disableCmds.push('`swarmlo spinner disable`');
+      if (enableAnnouncements) disableCmds.push('`swarmlo announcements disable`');
       process.stderr.write(
-        '[ruflo] First-run: enabled ' + parts.join(' + ') + '. ' +
+        '[swarmlo] First-run: enabled ' + parts.join(' + ') + '. ' +
         'Disable anytime with ' + disableCmds.join(' / ') + '. ' +
         (enableSpinner && !enableAnnouncements
-          ? 'Announcements stay opt-in — set RUFLO_AUTO_ENABLE_ANNOUNCEMENTS=1 to enable those too. '
+          ? 'Announcements stay opt-in — set SWARMLO_AUTO_ENABLE_ANNOUNCEMENTS=1 to enable those too. '
           : '') +
         'Restart Claude Code once to see the changes take effect.\n'
       );
@@ -287,7 +287,7 @@ async function readStdin() {
 }
 
 function claimSideEffectEvent(family, stdinData, event) {
-  if (/^(1|true|yes|on)$/i.test(process.env.RUFLO_DISABLE_HOOK_DEDUP || '')) return true;
+  if (/^(1|true|yes|on)$/i.test(process.env.SWARMLO_DISABLE_HOOK_DEDUP || '')) return true;
   try {
     const crypto = require('crypto');
     const eventId = event?.tool_use_id || event?.toolUseId ||
@@ -297,10 +297,10 @@ function claimSideEffectEvent(family, stdinData, event) {
       : `payload:${(stdinData || '').trim()}|bucket:${Math.floor(Date.now() / 2000)}`;
     const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
     const digest = crypto.createHash('sha256')
-      .update(`ruflo-hook-dedup-v1\0${path.resolve(projectRoot)}\0${family}\0${payloadIdentity}`)
+      .update(`swarmlo-hook-dedup-v1\0${path.resolve(projectRoot)}\0${family}\0${payloadIdentity}`)
       .digest('hex');
-    const dir = process.env.RUFLO_HOOK_DEDUP_DIR ||
-      path.join(os.tmpdir(), 'ruflo-hook-dedup-v1');
+    const dir = process.env.SWARMLO_HOOK_DEDUP_DIR ||
+      path.join(os.tmpdir(), 'swarmlo-hook-dedup-v1');
     fs.mkdirSync(dir, { recursive: true });
     const fd = fs.openSync(path.join(dir, digest), 'wx', 0o600);
     fs.writeFileSync(fd, String(Date.now()));
@@ -395,14 +395,14 @@ const handlers = {
     // limit. Cheap local file reads only; never a network call or a child
     // process, so it cannot add latency to prompt submission.
     try {
-      const rlFunnelEnv = process.env.RUFLO_FUNNEL;
+      const rlFunnelEnv = process.env.SWARMLO_FUNNEL;
       const rlDisabledByEnv = rlFunnelEnv !== undefined && /^(0|false|off|no)$/i.test(String(rlFunnelEnv).trim());
       const rlCiVars = ['CI', 'GITHUB_ACTIONS', 'GITLAB_CI', 'CIRCLECI', 'TRAVIS', 'BUILDKITE', 'JENKINS_URL', 'TEAMCITY_VERSION', 'TF_BUILD'];
       const rlIsCi = rlCiVars.some((v) => {
         const val = process.env[v];
         return val !== undefined && val !== '' && val !== '0' && String(val).toLowerCase() !== 'false';
       });
-      const rlHome = path.join(os.homedir(), '.ruflo');
+      const rlHome = path.join(os.homedir(), '.swarmlo');
       let rlUserDisabled = false;
       try {
         const rlUserCfg = JSON.parse(fs.readFileSync(path.join(rlHome, 'funnel.json'), 'utf8'));
@@ -434,7 +434,7 @@ const handlers = {
             rlConsented = !!(rlReceipt && rlReceipt.granted === true && rlReceipt.at !== null && rlReceipt.policyVersion === 1);
           } catch (e) { /* not consented */ }
           if (!rlConsented) {
-            console.log('[COGNITUM] Hit your Claude usage limit? Free sponsored capacity is available at cognitum.one/meta-llm — run: ruflo proxy sponsor-enable --yes');
+            console.log('[COGNITUM] Hit your Claude usage limit? Free sponsored capacity is available at cognitum.one/meta-llm — run: swarmlo proxy sponsor-enable --yes');
           }
         }
       }
@@ -476,7 +476,7 @@ const handlers = {
 
   'session-restore': async () => {
     // ADR-318/319 first-run auto-enable — fire once per install, never
-    // re-fires after user disables. Respects RUFLO_NO_AUTO_ENABLE + CI.
+    // re-fires after user disables. Respects SWARMLO_NO_AUTO_ENABLE + CI.
     // Fully non-blocking (detached spawn) so session-restore latency
     // is unchanged.
     firstRunAutoEnableIfEligible();

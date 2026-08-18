@@ -1,5 +1,5 @@
 /**
- * Regression guard for z451047442-debug/swarmlo#2612.
+ * Regression guard for ruvnet/ruflo#2612.
  *
  * The canonical MCP registration name is `claude-flow` — this preserves the
  * `mcp__claude-flow__*` prefix that ~166 plugin tool references depend on

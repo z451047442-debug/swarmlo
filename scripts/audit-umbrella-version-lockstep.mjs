@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Static guard for z451047442-debug/swarmlo#2151 — enforce three-way version lockstep
+ * Static guard for ruvnet/ruflo#2151 — enforce three-way version lockstep
  * across the umbrella packages that ship together:
  *
  *   - @claude-flow/cli  (v3/@claude-flow/cli/package.json)
@@ -99,5 +99,5 @@ if (violations.length === 0) {
 console.error('\nviolations:');
 for (const v of violations) console.error(`  ✗ ${v}`);
 console.error(`\n${violations.length} violation(s).`);
-console.error('Reference: z451047442-debug/swarmlo#2151 (version mismatch — swarmlo@3.10.2 + cli@3.10.1).');
+console.error('Reference: ruvnet/ruflo#2151 (version mismatch — swarmlo@3.10.2 + cli@3.10.1).');
 process.exit(1);

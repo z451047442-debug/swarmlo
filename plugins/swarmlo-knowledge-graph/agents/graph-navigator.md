@@ -49,7 +49,7 @@ The pathfinder traversal algorithm finds relevant subgraphs:
 - `mcp__plugin_swarmlo-core_swarmlo__agentdb_causal-edge` -- create/query causal edges between entities
 - `mcp__plugin_swarmlo-core_swarmlo__agentdb_hierarchical-store` -- store entity metadata in hierarchical structure
 - `mcp__plugin_swarmlo-core_swarmlo__agentdb_hierarchical-recall` -- recall entities by path or query
-- `mcp__plugin_swarmlo-core_swarmlo__agentdb_semantic-route` -- semantic similarity routing for graph search (note: `semanticRouter` controller is `enabled: false` in current AgentDB builds — fall back to `agentdb_pattern-search` or `embeddings_generate` + manual cosine; see github.com/z451047442-debug/swarmlo#2049)
+- `mcp__plugin_swarmlo-core_swarmlo__agentdb_semantic-route` -- semantic similarity routing for graph search (note: `semanticRouter` controller is `enabled: false` in current AgentDB builds — fall back to `agentdb_pattern-search` or `embeddings_generate` + manual cosine; see github.com/ruvnet/ruflo#2049)
 - `mcp__plugin_swarmlo-core_swarmlo__agentdb_pattern-store` -- store discovered graph patterns
 - `mcp__plugin_swarmlo-core_swarmlo__agentdb_pattern-search` -- search for similar graph structures
 - `mcp__plugin_swarmlo-core_swarmlo__agentdb_context-synthesize` -- synthesize context from multiple graph nodes

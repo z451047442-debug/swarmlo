@@ -1,5 +1,5 @@
 /**
- * Tests for McpCallerIdentity (ADR-377 Phase 3, z451047442-debug/swarmlo#2516, #2873).
+ * Tests for McpCallerIdentity (ADR-377 Phase 3, ruvnet/ruflo#2516, #2873).
  *
  * Covers:
  *  - issueInvocationToken + verifyInvocationToken round-trip succeeds

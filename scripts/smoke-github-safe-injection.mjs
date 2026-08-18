@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Regression guard for z451047442-debug/swarmlo#2089 — ADR-127 Phase 1.
+ * Regression guard for ruvnet/ruflo#2089 — ADR-127 Phase 1.
  *
  * Generalizes the smoke-pre-bash-hook.mjs pattern (#2017) to the GitHub helper
  * surface.  `github-safe.js` writes untrusted PR/issue body content to a temp

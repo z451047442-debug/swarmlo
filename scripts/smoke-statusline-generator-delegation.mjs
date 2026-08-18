@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Regression guard for z451047442-debug/swarmlo#2195.
+ * Regression guard for ruvnet/ruflo#2195.
  *
  * The statusline generator previously re-implemented all data readers
  * locally with fragile file probes that returned wrong values:

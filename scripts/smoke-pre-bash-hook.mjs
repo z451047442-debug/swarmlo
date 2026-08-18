@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Regression guard for z451047442-debug/swarmlo#2017.
+ * Regression guard for ruvnet/ruflo#2017.
  *
  * The `pre-bash` PreToolUse hook in `.claude/helpers/hook-handler.cjs` reads
  * the command Claude Code is about to execute and refuses to run dangerous

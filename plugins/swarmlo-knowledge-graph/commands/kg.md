@@ -32,7 +32,7 @@ Knowledge graph commands:
 4. Include legend with entity types and relation types
 
 **`kg search <query>`** -- Semantic search across the knowledge graph.
-1. Search entities via `mcp__plugin_swarmlo-core_swarmlo__agentdb_pattern-search` (the `semanticRouter` controller is `enabled: false` in current AgentDB builds — pattern-search is the available substitute; see github.com/z451047442-debug/swarmlo#2049)
+1. Search entities via `mcp__plugin_swarmlo-core_swarmlo__agentdb_pattern-search` (the `semanticRouter` controller is `enabled: false` in current AgentDB builds — pattern-search is the available substitute; see github.com/ruvnet/ruflo#2049)
 2. Expand results with causal edges to show related context
 3. Rank by pattern-match score (fall back to `mcp__plugin_swarmlo-core_swarmlo__embeddings_generate` + manual cosine for higher-fidelity semantic similarity if needed)
 4. Display matches with entity name, type, file location, and relevance score

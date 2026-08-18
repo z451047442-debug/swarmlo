@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Static guard for z451047442-debug/swarmlo#2219 — keep the `better-sqlite3` override
+ * Static guard for ruvnet/ruflo#2219 — keep the `better-sqlite3` override
  * pinned to a version that ships Node 24/25/26 prebuilds.
  *
  * Why: `agentdb` declares `better-sqlite3` as an OPTIONAL dependency at

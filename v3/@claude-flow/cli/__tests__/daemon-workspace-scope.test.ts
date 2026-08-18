@@ -1,5 +1,5 @@
 /**
- * Regression guard for z451047442-debug/swarmlo#1914 — `killStaleDaemons` must only ever
+ * Regression guard for ruvnet/ruflo#1914 — `killStaleDaemons` must only ever
  * reap daemons belonging to the current workspace (ADR-014: per-workspace
  * daemon scope). Before this fix it SIGTERM'd every process whose command line
  * contained `daemon start --foreground`, so `daemon start` in workspace B

@@ -1,5 +1,5 @@
 /**
- * Tests for AgentDbRetrievalGuard (ADR-377 Phase 1, z451047442-debug/swarmlo#2516).
+ * Tests for AgentDbRetrievalGuard (ADR-377 Phase 1, ruvnet/ruflo#2516).
  *
  * Covers:
  *  - Clean content passes through untouched

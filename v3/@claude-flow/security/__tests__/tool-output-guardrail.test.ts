@@ -1,5 +1,5 @@
 /**
- * Tests for ToolOutputGuardrail (ADR-131, z451047442-debug/swarmlo#2149).
+ * Tests for ToolOutputGuardrail (ADR-131, ruvnet/ruflo#2149).
  *
  * Covers:
  *  - Safe content passes unchanged

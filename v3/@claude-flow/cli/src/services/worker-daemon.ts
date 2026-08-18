@@ -2075,7 +2075,7 @@ export class WorkerDaemon extends EventEmitter {
     };
 
     try {
-      // z451047442-debug/swarmlo#2782: use writeFileAtomic — its temp file is uniquified with
+      // ruvnet/ruflo#2782: use writeFileAtomic — its temp file is uniquified with
       // pid + timestamp + random suffix, so two concurrent in-process saveState()
       // calls can no longer collide on a shared `.tmp` basename and race one
       // another's renameSync into ENOENT. Related to but distinct from #1637.

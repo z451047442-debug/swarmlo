@@ -202,7 +202,7 @@ export class SwarmCoordinator {
     }
 
     const startTime = Date.now();
-    // z451047442-debug/swarmlo#1872 — `agent.executeTask` can throw (mock rejection in
+    // ruvnet/ruflo#1872 — `agent.executeTask` can throw (mock rejection in
     // tests, real broker/network errors in production). Previously the
     // throw propagated up to the caller, defeating the
     // "TaskResult{status:'failed', error}" contract callers rely on
@@ -334,7 +334,7 @@ export class SwarmCoordinator {
    * Scale agents
    */
   async scaleAgents(config: { type: string; count: number }): Promise<void> {
-    // z451047442-debug/swarmlo#1872 — `count` is the TARGET TOTAL of this agent type, not
+    // ruvnet/ruflo#1872 — `count` is the TARGET TOTAL of this agent type, not
     // a delta. Previously `count` was added to the existing count, so
     // calling `scaleAgents({count:3})` then `scaleAgents({count:2})`
     // ended up at 1+3+2=6 instead of the intuitive 2.

@@ -1,5 +1,5 @@
 /**
- * Regression guard for z451047442-debug/swarmlo#2962 — explicit provider/model selection
+ * Regression guard for ruvnet/ruflo#2962 — explicit provider/model selection
  * (`providers configure`, `agent spawn --provider/--model`) did not
  * propagate into actual agent execution. Backend/model selection at
  * `agent_execute` time was driven solely by env vars, never by the

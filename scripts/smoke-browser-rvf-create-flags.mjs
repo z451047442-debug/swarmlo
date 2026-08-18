@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Regression guard for z451047442-debug/swarmlo#2015.
+ * Regression guard for ruvnet/ruflo#2015.
  *
  * `ruvector@0.2.25 rvf create` accepts only:
  *   -d, --dimension <n>    (required)
@@ -106,7 +106,7 @@ if (failures.length > 0) {
   console.error(`\n${failures.length} call site(s) missing --dimension:`);
   for (const f of failures) console.error(`  ${f}`);
   console.error(`\nFix: append "--dimension 384" (or your project's vector dim)`);
-  console.error(`to the rvf create invocation. See z451047442-debug/swarmlo#2015.`);
+  console.error(`to the rvf create invocation. See ruvnet/ruflo#2015.`);
   process.exit(1);
 }
 

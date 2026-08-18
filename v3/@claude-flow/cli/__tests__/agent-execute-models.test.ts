@@ -1,5 +1,5 @@
 /**
- * Regression guard for z451047442-debug/swarmlo#1906 — model aliases must map to
+ * Regression guard for ruvnet/ruflo#1906 — model aliases must map to
  * current (Claude 4.x) model ids, not the deprecated Claude-3.x ids that
  * the Anthropic API now 404s.
  */

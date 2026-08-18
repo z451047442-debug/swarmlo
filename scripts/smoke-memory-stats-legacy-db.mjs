@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Regression guard for z451047442-debug/swarmlo#2120 — `swarmlo memory stats` and
+ * Regression guard for ruvnet/ruflo#2120 — `swarmlo memory stats` and
  * `listEntries` returned 0 entries against a populated `.swarm/memory.db`
  * on WSL2 (reporter: @alexandrelealbess, alpha.81).
  *

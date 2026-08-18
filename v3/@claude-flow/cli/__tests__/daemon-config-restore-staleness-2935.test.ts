@@ -1,5 +1,5 @@
 /**
- * Regression guard for z451047442-debug/swarmlo#2935.
+ * Regression guard for ruvnet/ruflo#2935.
  *
  * A resourceThresholds value set explicitly in .claude-flow/config.json is
  * just as much a deliberate override as a constructor arg — but

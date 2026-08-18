@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Smoke test for z451047442-debug/swarmlo#2132 — Windows end-to-end hook execution.
+ * Smoke test for ruvnet/ruflo#2132 — Windows end-to-end hook execution.
  *
  * This is the real validation: simulates a Claude Code PostToolUse hook
  * firing against the generated settings.json on Windows. The original

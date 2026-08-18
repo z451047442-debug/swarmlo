@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Static guard for z451047442-debug/swarmlo#2132 — plugin `hooks.json` commands must be
+ * Static guard for ruvnet/ruflo#2132 — plugin `hooks.json` commands must be
  * cross-platform (work on Windows without WSL / Git Bash).
  *
  * The reporter ran the plugin hooks on native Windows and every `PostToolUse`
@@ -43,7 +43,7 @@
  * entries is scanned. Comments, descriptions, and the top-level `_note`
  * field are ignored.
  *
- * ## Codex strict top-level-key guard (z451047442-debug/swarmlo#2855)
+ * ## Codex strict top-level-key guard (ruvnet/ruflo#2855)
  *
  * Codex's plugin hook-manifest loader accepts only `description` and
  * `hooks` at the top level and hard-fails ("unknown field `_note`,
@@ -275,7 +275,7 @@ for (const v of violations) {
   console.error(`     cmd: ${v.cmd}`);
   console.error(`     fix: ${v.hint}`);
 }
-console.error('\nReference: z451047442-debug/swarmlo#2132 (plugin hooks broken on Windows).');
+console.error('\nReference: ruvnet/ruflo#2132 (plugin hooks broken on Windows).');
 console.error('Cross-platform pattern: .claude/settings.json + .claude/helpers/hook-handler.cjs (node, no bash).');
 console.error('POSIX-exempt pattern: add "_platform": "posix" to hooks.json + create scripts/swarmlo-hook.cjs sibling.');
 process.exit(1);

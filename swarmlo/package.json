@@ -1,11 +1,11 @@
 {
-  "name": "swarmlo",
+  "name": "swarmlo-app",
   "version": "3.38.9",
-  "description": "swarmlo - Enterprise AI agent orchestration platform. Deploy 60+ specialized agents in coordinated swarms with self-learning, fault-tolerant consensus, vector memory, and MCP integration",
+  "description": "swarmlo-app - Enterprise AI agent orchestration platform. Deploy 60+ specialized agents in coordinated swarms with self-learning, fault-tolerant consensus, vector memory, and MCP integration",
   "main": "bin/swarmlo.js",
   "type": "module",
   "bin": {
-    "swarmlo": "bin/swarmlo.js"
+    "swarmlo-app": "bin/swarmlo.js"
   },
   "homepage": "https://github.com/z451047442-debug/swarmlo#readme",
   "bugs": {

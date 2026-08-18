@@ -38,13 +38,13 @@ const dim = (msg) => console.log(`  ${DIM}${msg}${RESET}`);
 // transcript, and stderr, per the issue's requested channel).
 function warnMemoryUnavailable() {
   const line1 = `[AutoMemory] @claude-flow/memory not resolvable from ${PROJECT_ROOT} — self-learning imports are DISABLED.`;
-  const line2 = '             Fix: npm i -D @claude-flow/memory   (or re-run: npx ruflo@latest init, then npx ruflo@latest doctor --fix)';
+  const line2 = '             Fix: npm i -D @claude-flow/memory   (or re-run: npx swarmlo@latest init, then npx swarmlo@latest doctor --fix)';
   console.log(`${YELLOW}${line1}${RESET}`);
   console.log(`${YELLOW}${line2}${RESET}`);
   process.stderr.write(`${line1}\n${line2}\n`);
 }
 
-const DEBUG = !!(process.env.RUFLO_DEBUG || process.env.DEBUG);
+const DEBUG = !!(process.env.SWARMLO_DEBUG || process.env.DEBUG);
 
 // ── Graceful shutdown (FIX 3) ───────────────────────────────────────────────
 // Track the backend in use so a SIGTERM/SIGINT mid-run can still flush it
@@ -166,7 +166,7 @@ class JsonFileBackend {
 
 async function loadMemoryPackage() {
   // Strategy 0 (#2545): sidecar recorded by `init` / `doctor --fix`. On the
-  // documented `npx ruflo` path @claude-flow/memory (an optionalDependency of
+  // documented `npx swarmlo` path @claude-flow/memory (an optionalDependency of
   // the CLI) lands in the npx cache, which is NOT on the walk-up path from the
   // project — so init resolves it from the CLI's own context and records the
   // absolute path here. This is the only strategy that works on that install.
@@ -189,7 +189,7 @@ async function loadMemoryPackage() {
   }
 
   // Strategy 2: Use createRequire for CJS-style resolution (handles nested node_modules
-  // when installed as a transitive dependency via npx ruflo / npx @claude-flow/cli@latest)
+  // when installed as a transitive dependency via npx swarmlo / npx @claude-flow/cli@latest)
   try {
     const { createRequire } = await import('module');
     const require = createRequire(join(PROJECT_ROOT, 'package.json'));
@@ -379,7 +379,7 @@ async function doStatus() {
 
   console.log('\n=== Auto Memory Bridge Status ===\n');
   console.log(`  Package:        ${memPkg ? '✅ Available' : '❌ Not found — self-learning DISABLED (fix: npm i -D @claude-flow/memory)'}`);
-  console.log(`  Resolver:       ${hasSidecar ? '✅ .claude-flow/memory-package.json' : '⏸ no sidecar (run: npx ruflo@latest doctor --fix)'}`);
+  console.log(`  Resolver:       ${hasSidecar ? '✅ .claude-flow/memory-package.json' : '⏸ no sidecar (run: npx swarmlo@latest doctor --fix)'}`);
   console.log(`  Store:          ${existsSync(STORE_PATH) ? '✅ ' + STORE_PATH : '⏸ Not initialized'}`);
   console.log(`  LearningBridge: ${config.learningBridge.enabled ? '✅ Enabled' : '⏸ Disabled'}`);
   console.log(`  MemoryGraph:    ${config.memoryGraph.enabled ? '✅ Enabled' : '⏸ Disabled'}`);
@@ -404,7 +404,7 @@ const command = process.argv[2] || 'status';
 // Dynamic import() failures can surface as unhandled rejections on a later
 // microtask even when the awaiting call site already caught them, which would
 // otherwise force a non-zero exit. Swallow to keep hooks exit-0, but surface the
-// reason under RUFLO_DEBUG/DEBUG so genuine async bugs aren't silently hidden
+// reason under SWARMLO_DEBUG/DEBUG so genuine async bugs aren't silently hidden
 // (FIX 2 — the previous `() => {}` discarded every rejection process-wide).
 process.on('unhandledRejection', (reason) => {
   if (DEBUG) {

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Static guard for z451047442-debug/swarmlo#2127 (and the family of #1147 / #2018).
+ * Static guard for ruvnet/ruflo#2127 (and the family of #1147 / #2018).
  *
  * The reporter hit `TypeError: Invalid Version: (empty)` inside arborist's
  * `canDedupe` while installing `swarmlo@3.8.0`. Two reviewers could not
@@ -131,5 +131,5 @@ if (violations.length === 0) {
 console.error('\nviolations:');
 for (const v of violations) console.error(`  ✗ ${v}`);
 console.error(`\n${violations.length} violation(s) — see remediation hints above.`);
-console.error('Reference: z451047442-debug/swarmlo#2127 (Invalid Version dedupe crash).');
+console.error('Reference: ruvnet/ruflo#2127 (Invalid Version dedupe crash).');
 process.exit(1);

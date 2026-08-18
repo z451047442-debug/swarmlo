@@ -1,5 +1,5 @@
 /**
- * Regression guard for z451047442-debug/swarmlo#2661 — scheduled AI workers must be
+ * Regression guard for ruvnet/ruflo#2661 — scheduled AI workers must be
  * OPT-IN. Merely finding the Claude CLI on PATH must never authorize
  * recurring `claude --print` launches: a default install produces ZERO
  * autonomous Claude launches regardless of how many worktree daemons run.

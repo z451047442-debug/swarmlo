@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Regression guard for github.com/z451047442-debug/swarmlo#1863 (and the crash class it represents).
+ * Regression guard for github.com/ruvnet/ruflo#1863 (and the crash class it represents).
  *
  * #1863: `task status <id>` threw `TypeError: Cannot read properties of
  * undefined (reading 'join')` because the command formatter did

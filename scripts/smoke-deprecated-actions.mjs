@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Deprecated-action regression guard for z451047442-debug/swarmlo#2089 — ADR-127 Phase 3.
+ * Deprecated-action regression guard for ruvnet/ruflo#2089 — ADR-127 Phase 3.
  *
  * Fails if any file in scope references:
  *   - actions/checkout@v3   (replaced by @v4 in Phase 3)

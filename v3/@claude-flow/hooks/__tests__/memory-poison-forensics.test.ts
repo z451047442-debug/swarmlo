@@ -1,5 +1,5 @@
 /**
- * Tests for MemoryPoisonForensics (ADR-377 Phase 2, z451047442-debug/swarmlo#2516, #2873).
+ * Tests for MemoryPoisonForensics (ADR-377 Phase 2, ruvnet/ruflo#2516, #2873).
  *
  * Covers:
  *  - recordAndAnalyze returns `safe: true` until a real baseline exists

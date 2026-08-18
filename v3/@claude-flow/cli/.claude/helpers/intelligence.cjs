@@ -416,7 +416,7 @@ function bootstrapFromMemoryFiles() {
 
 // Truncation transparency (FIX 4): mark the cut with an ellipsis and warn under
 // debug, so later reasoning isn't silently built on severed text.
-const CLIP_DEBUG = !!(process.env.RUFLO_DEBUG || process.env.DEBUG);
+const CLIP_DEBUG = !!(process.env.SWARMLO_DEBUG || process.env.DEBUG);
 function clip(text, max, label) {
   text = text == null ? '' : String(text);
   if (text.length <= max) return text;

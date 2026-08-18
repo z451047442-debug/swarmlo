@@ -1,5 +1,5 @@
 /**
- * Regression guard for z451047442-debug/swarmlo#1916.
+ * Regression guard for ruvnet/ruflo#1916.
  *
  *  (a) `agent_logs` MCP tool must be registered — the `swarmlo agent logs <id>`
  *      CLI subcommand called `callMCPTool('agent_logs', …)` against a tool

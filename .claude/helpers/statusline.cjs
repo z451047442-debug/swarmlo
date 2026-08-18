@@ -2,7 +2,7 @@
 /**
  * Swarmlo V3 Statusline — delegation build (#2195)
  *
- * Fix for z451047442-debug/swarmlo#2195: the previous version re-implemented all data
+ * Fix for ruvnet/ruflo#2195: the previous version re-implemented all data
  * readers locally using fragile file probes that missed AgentDB patterns,
  * the v3/docs/adr/ ADR directory, and the real vector count.
  *
@@ -404,7 +404,7 @@ function getLocalIntegration() {
   return integration;
 }
 
-// ─── Security freshness overlay (z451047442-debug/swarmlo#2776) ──────────────
+// ─── Security freshness overlay (ruvnet/ruflo#2776) ──────────────
 // The shipped CLI producer (dist/src/funnel/local-signals.js getSecurityStatus)
 // only ever emits PENDING / CLEAN / ISSUES — it captures `scannedAt` but never
 // inspects it, so a year-old scan renders 🛡 ✓ forever and the renderer's

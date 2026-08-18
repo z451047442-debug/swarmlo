@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Smoke test for z451047442-debug/swarmlo#2132 — swarmlo-hook.cjs cross-platform shim.
+ * Smoke test for ruvnet/ruflo#2132 — swarmlo-hook.cjs cross-platform shim.
  *
  * Verifies that plugins/swarmlo-core/scripts/swarmlo-hook.cjs:
  *   1. Can be invoked via `node swarmlo-hook.cjs <subcommand>`

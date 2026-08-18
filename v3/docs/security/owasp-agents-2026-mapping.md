@@ -1,7 +1,7 @@
 # OWASP Top 10 for Agentic Applications 2026 — Swarmlo control mapping
 
 **Reference**: OWASP Gen AI Security Project, "OWASP Top 10 for Agentic Applications" (Dec 2025, 100+ contributors).
-**Issue**: [z451047442-debug/swarmlo#2149](https://github.com/z451047442-debug/swarmlo/issues/2149)
+**Issue**: [ruvnet/ruflo#2149](https://github.com/z451047442-debug/swarmlo/issues/2149)
 **Last updated**: 2026-05-26
 
 ## Legend

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Smoke test for z451047442-debug/swarmlo#2132 — Windows-compatible init hook generation.
+ * Smoke test for ruvnet/ruflo#2132 — Windows-compatible init hook generation.
  *
  * Verifies that `swarmlo init` generates a .claude/settings.json containing
  * node-based hook commands (no /bin/bash, no POSIX pipelines), and that the

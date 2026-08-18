@@ -157,7 +157,7 @@ const INVARIANTS = [
   // The regression vector is closed by ARCHITECTURE: if a future refactor
   // reintroduces raw-bytes reading from a memory.db path, the #2196 guard
   // (presence of the delegation pattern) catches it before the SQLite
-  // magic-check would ever be relevant. See z451047442-debug/swarmlo#2216 for the
+  // magic-check would ever be relevant. See ruvnet/ruflo#2216 for the
   // user-deployed (pre-#2196) statusline still having the bug.
   // #2679 sync: statusline-generator no longer inlines the delegation
   // template as a big string — it now READS
