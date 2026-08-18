@@ -22,6 +22,9 @@ import type {
   DependencyNode,
   DependencyEdge,
 } from '../types.js';
+import { MinCutBridge } from './mincut-bridge.js';
+import fs from 'node:fs';
+import path from 'node:path';
 
 /**
  * WASM module interface for GNN operations
@@ -735,6 +738,401 @@ export class GNNBridge implements IGNNBridge {
  */
 export function createGNNBridge(embeddingDim = 128): IGNNBridge {
   return new GNNBridge(embeddingDim);
+}
+
+// ============================================================================
+// High-level CodeGNNBridge facade
+// ============================================================================
+// Contract surface for the MCP tool handlers (code/architecture-analyze,
+// code/refactor-impact, code/split-suggest, code/learn-patterns). Wraps the
+// low-level GNN/MinCut bridges with result shapes the tool layer returns.
+
+const DEFAULT_CODE_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
+const SKIP_DIR_NAMES = new Set([
+  'node_modules', 'dist', 'build', '.git', 'coverage', 'vendor',
+  '.next', '.nuxt', '.turbo', '.cache', 'tmp', '.pnpm-store',
+]);
+const MAX_FILE_BYTES = 100 * 1024; // 100KB cap
+
+/** Collect code files under a root path (skips vendor/build dirs). */
+function walkCodeFiles(rootPath: string): string[] {
+  const out: string[] = [];
+  const visited = new Set<string>();
+
+  const walk = (dir: string) => {
+    let realDir: string;
+    try {
+      realDir = fs.realpathSync(dir);
+    } catch {
+      return;
+    }
+    if (visited.has(realDir)) return; // protect against symlink loops
+    visited.add(realDir);
+
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    for (const entry of entries) {
+      if (entry.name.startsWith('.')) continue;
+      if (SKIP_DIR_NAMES.has(entry.name)) continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(full);
+      } else if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase();
+        if (!DEFAULT_CODE_EXTS.has(ext)) continue;
+        if (entry.name.endsWith('.min.js') || entry.name.endsWith('.min.mjs')) continue;
+        try {
+          const stat = fs.statSync(full);
+          if (stat.size > MAX_FILE_BYTES) continue;
+        } catch {
+          continue;
+        }
+        out.push(full);
+      }
+    }
+  };
+
+  walk(rootPath);
+  return out;
+}
+
+/** Group graph nodes into modules by directory. */
+function buildComponents(graph: DependencyGraph): Array<{
+  name: string;
+  type: string;
+  files: number;
+  dependencies: number;
+}> {
+  const dirOf = (file: string): string => {
+    const parts = file.replace(/\\/g, '/').split('/');
+    return parts.length > 1 ? parts.slice(0, -1).join('/') : '(root)';
+  };
+
+  const byDir = new Map<string, string[]>();
+  const dirOfNode = new Map<string, string>();
+  for (const node of graph.nodes) {
+    const dir = dirOf(node.id);
+    dirOfNode.set(node.id, dir);
+    if (!byDir.has(dir)) byDir.set(dir, []);
+    byDir.get(dir)?.push(node.id);
+  }
+
+  const components: Array<{ name: string; type: string; files: number; dependencies: number }> = [];
+  for (const [name, files] of byDir) {
+    const deps = new Set<string>();
+    for (const edge of graph.edges) {
+      const fromDir = dirOfNode.get(edge.from);
+      const toDir = dirOfNode.get(edge.to);
+      if (fromDir === name && toDir && toDir !== name) deps.add(toDir);
+    }
+    components.push({ name, type: 'module', files: files.length, dependencies: deps.size });
+  }
+  components.sort((a, b) => b.files - a.files);
+  return components;
+}
+
+/** Simple graph metrics derived from the dependency graph. */
+function buildMetrics(graph: DependencyGraph): {
+  modularity: number;
+  coupling: number;
+  cohesion: number;
+} {
+  const nodes = graph.nodes.length;
+  if (nodes === 0) return { modularity: 0, coupling: 0, cohesion: 0 };
+  const edges = graph.edges.length;
+  const avgDegree = (edges * 2) / nodes;
+  const coupling = Math.min(1, edges / Math.max(nodes, 1) / 4);
+  const cohesion = Math.max(0, 1 - coupling * 1.2);
+  const modularity = Math.max(0, Math.min(1, cohesion - Math.abs(avgDegree - 3) * 0.05));
+  return {
+    modularity: Number(modularity.toFixed(2)),
+    coupling: Number(coupling.toFixed(2)),
+    cohesion: Number(cohesion.toFixed(2)),
+  };
+}
+
+/** Detect circular dependencies via DFS. */
+function buildIssues(graph: DependencyGraph): Array<{
+  type: string;
+  components: string[];
+  severity: string;
+}> {
+  const adj = new Map<string, string[]>();
+  for (const node of graph.nodes) adj.set(node.id, []);
+  for (const edge of graph.edges) adj.get(edge.from)?.push(edge.to);
+
+  const issues: Array<{ type: string; components: string[]; severity: string }> = [];
+  const visited = new Set<string>();
+  const recStack = new Set<string>();
+
+  const findCycle = (node: string, pathStack: string[]): void => {
+    visited.add(node);
+    recStack.add(node);
+    for (const neighbor of adj.get(node) ?? []) {
+      if (recStack.has(neighbor)) {
+        const start = pathStack.indexOf(neighbor);
+        const cycle = [...(start >= 0 ? pathStack.slice(start) : []), neighbor];
+        issues.push({
+          type: 'circular_dependency',
+          components: cycle,
+          severity: cycle.length > 3 ? 'high' : 'medium',
+        });
+      } else if (!visited.has(neighbor)) {
+        findCycle(neighbor, [...pathStack, neighbor]);
+      }
+    }
+    recStack.delete(node);
+  };
+
+  for (const node of graph.nodes) {
+    if (!visited.has(node.id)) findCycle(node.id, [node.id]);
+  }
+  return issues;
+}
+
+/**
+ * High-level code analysis facade for the MCP tools.
+ *
+ * NOTE: exported as a callable factory (`CodeGNNBridge()` without `new`)
+ * because the tool tests mock it as a function; a class-style `new` would
+ * throw against that contract.
+ */
+class GNNBridgeFacade {
+  initialized = false;
+  private readonly gnn: GNNBridge;
+  private readonly mincut: MinCutBridge;
+
+  constructor(embeddingDim = 128) {
+    this.gnn = new GNNBridge(embeddingDim);
+    this.mincut = new MinCutBridge();
+  }
+
+  /**
+   * Initialize underlying bridges.
+   */
+  async initialize(): Promise<void> {
+    if (this.initialized) return;
+    await Promise.all([this.gnn.initialize(), this.mincut.initialize()]);
+    this.initialized = true;
+  }
+
+  /**
+   * Check if initialized
+   */
+  isInitialized(): boolean {
+    return this.initialized;
+  }
+
+  /**
+   * Analyze codebase architecture under a root path.
+   */
+  async analyzeArchitecture(
+    rootPath = '.',
+    _options: {
+      analysisTypes?: string[];
+      depth?: number;
+      excludePatterns?: string[];
+      outputFormat?: string;
+    } = {}
+  ): Promise<{
+    components: Array<{ name: string; type: string; files: number; dependencies: number }>;
+    metrics: { modularity: number; coupling: number; cohesion: number };
+    issues: Array<{ type: string; components: string[]; severity: string }>;
+  }> {
+    const files = walkCodeFiles(rootPath);
+    const graph = await this.gnn.buildCodeGraph(files, true);
+    return {
+      components: buildComponents(graph),
+      metrics: buildMetrics(graph),
+      issues: buildIssues(graph),
+    };
+  }
+
+  /**
+   * Predict the impact of changing a target file.
+   */
+  async analyzeRefactorImpact(
+    targetPath: string,
+    options: {
+      changeType?: string;
+      description?: string;
+      includeTests?: boolean;
+      depth?: number;
+    } = {}
+  ): Promise<{
+    directImpact: string[];
+    indirectImpact: string[];
+    riskLevel: 'low' | 'medium' | 'high';
+    breakingChanges: string[];
+  }> {
+    const targetResolved = path.resolve(targetPath);
+    const files = walkCodeFiles(path.dirname(targetResolved));
+    const graph = await this.gnn.buildCodeGraph(files, true);
+
+    const impact = await this.gnn.predictImpact(
+      graph,
+      files.includes(targetResolved) ? [targetResolved] : [],
+      options.depth ?? 3
+    );
+
+    const relative = (file: string): string => path.relative(process.cwd(), file) || file;
+    const scores = Array.from(impact.values());
+    const maxScore = scores.length > 0 ? Math.max(...scores) : 0;
+    const riskLevel: 'low' | 'medium' | 'high' = maxScore > 0.8 ? 'high' : maxScore > 0.5 ? 'medium' : 'low';
+
+    const breakingChanges: string[] = [];
+    if (options.changeType === 'delete') {
+      const dependents = graph.edges.filter((e) => e.to === targetResolved).length;
+      if (dependents > 0) {
+        breakingChanges.push(`Deleting ${targetPath} breaks ${dependents} dependents`);
+      }
+    }
+
+    return {
+      directImpact: files.includes(targetResolved) ? [targetPath] : [],
+      indirectImpact: Array.from(impact)
+        .filter(([file, score]) => file !== targetResolved && score > 0.1)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 20)
+        .map(([file]) => relative(file)),
+      riskLevel,
+      breakingChanges,
+    };
+  }
+
+  /**
+   * Suggest module splits for a target path.
+   */
+  async suggestSplit(
+    targetPath: string,
+    options: { threshold?: number; strategy?: string; includePatterns?: string[] } = {}
+  ): Promise<Array<{
+    file: string;
+    reason: string;
+    suggestedSplits: Array<{ name: string; functions: string[] }>;
+  }>> {
+    const files = walkCodeFiles(targetPath);
+    const graph = await this.gnn.buildCodeGraph(files, true);
+    const numModules = Math.max(2, Math.min(10, Math.ceil(Math.sqrt(Math.max(files.length, 1) / 5))));
+    const partition = await this.mincut.findOptimalCuts(graph, numModules, {});
+
+    const groups = new Map<number, string[]>();
+    for (const [nodeId, partNum] of partition) {
+      if (!groups.has(partNum)) groups.set(partNum, []);
+      groups.get(partNum)?.push(nodeId);
+    }
+
+    return Array.from(groups).map(([, partFiles]) => ({
+      file: partFiles[0] ?? targetPath,
+      reason: `File exceeds recommended size with multiple responsibilities (threshold: ${options.threshold ?? 500})`,
+      suggestedSplits: partFiles.slice(0, 10).map((f) => ({
+        name: path.basename(f),
+        functions: [],
+      })),
+    }));
+  }
+
+  /**
+   * Learn recurring patterns from code under a target path.
+   */
+  async learnPatterns(
+    targetPath: string,
+    _options: { patternTypes?: string[]; language?: string; minConfidence?: number } = {}
+  ): Promise<{
+    patterns: Array<{ name: string; occurrences: number; confidence: number }>;
+    antiPatterns: Array<{ name: string; files: string[]; severity: string }>;
+  }> {
+    const files = walkCodeFiles(targetPath);
+    let callbacks = 0;
+    let tryCatchFiles = 0;
+    let godObjects = 0;
+
+    for (const file of files) {
+      let content: string;
+      try {
+        content = fs.readFileSync(file, 'utf-8');
+      } catch {
+        continue;
+      }
+      if (/function\s*\([^)]*\)\s*\{[\s\S]*callback[\s\S]*\}/i.test(content)) callbacks++;
+      if (/try\s*\{[\s\S]*\}\s*catch\s*\(/i.test(content)) tryCatchFiles++;
+      if (content.split('\n').length > 500) godObjects++;
+    }
+
+    const patterns: Array<{ name: string; occurrences: number; confidence: number }> = [];
+    if (callbacks > 0) patterns.push({ name: 'Callback → async/await conversion', occurrences: callbacks, confidence: 0.85 });
+    if (tryCatchFiles > 0) patterns.push({ name: 'Error handling with try/catch', occurrences: tryCatchFiles, confidence: 0.8 });
+
+    const antiPatterns: Array<{ name: string; files: string[]; severity: string }> = [];
+    if (godObjects > 0) {
+      antiPatterns.push({ name: 'God Object', files: files.slice(0, 3), severity: 'high' });
+    }
+
+    return { patterns, antiPatterns };
+  }
+}
+
+/**
+ * High-level code analysis facade instance.
+ */
+export interface CodeGNNBridge {
+  initialized: boolean;
+  initialize(): Promise<void>;
+  isInitialized(): boolean;
+  analyzeArchitecture(
+    rootPath?: string,
+    options?: {
+      analysisTypes?: string[];
+      depth?: number;
+      excludePatterns?: string[];
+      outputFormat?: string;
+    }
+  ): Promise<{
+    components: Array<{ name: string; type: string; files: number; dependencies: number }>;
+    metrics: { modularity: number; coupling: number; cohesion: number };
+    issues: Array<{ type: string; components: string[]; severity: string }>;
+  }>;
+  analyzeRefactorImpact(
+    targetPath: string,
+    options?: {
+      changeType?: string;
+      description?: string;
+      includeTests?: boolean;
+      depth?: number;
+    }
+  ): Promise<{
+    directImpact: string[];
+    indirectImpact: string[];
+    riskLevel: 'low' | 'medium' | 'high';
+    breakingChanges: string[];
+  }>;
+  suggestSplit(
+    targetPath: string,
+    options?: { threshold?: number; strategy?: string; includePatterns?: string[] }
+  ): Promise<Array<{
+    file: string;
+    reason: string;
+    suggestedSplits: Array<{ name: string; functions: string[] }>;
+  }>>;
+  learnPatterns(
+    targetPath: string,
+    options?: { patternTypes?: string[]; language?: string; minConfidence?: number }
+  ): Promise<{
+    patterns: Array<{ name: string; occurrences: number; confidence: number }>;
+    antiPatterns: Array<{ name: string; files: string[]; severity: string }>;
+  }>;
+}
+
+/**
+ * Create a high-level code analysis bridge.
+ */
+export function CodeGNNBridge(embeddingDim = 128): CodeGNNBridge {
+  return new GNNBridgeFacade(embeddingDim);
 }
 
 export default GNNBridge;

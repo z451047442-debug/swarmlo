@@ -21,7 +21,8 @@
 export * from './types.js';
 
 // Export bridges
-export { GNNBridge, createGNNBridge } from './bridges/gnn-bridge.js';
+export { GNNBridge, CodeGNNBridge, createGNNBridge } from './bridges/gnn-bridge.js';
+export { CodeHNSWBridge } from './bridges/hnsw-bridge.js';
 export { MinCutBridge, createMinCutBridge } from './bridges/mincut-bridge.js';
 
 // Export MCP tools
@@ -41,6 +42,8 @@ export type { MCPTool, ToolContext, MCPToolResult } from './mcp-tools.js';
 import { codeIntelligenceTools } from './mcp-tools.js';
 import { createGNNBridge } from './bridges/gnn-bridge.js';
 import { createMinCutBridge } from './bridges/mincut-bridge.js';
+import { CodeGNNBridge } from './bridges/gnn-bridge.js';
+import { CodeHNSWBridge } from './bridges/hnsw-bridge.js';
 import type {
   CodeIntelligenceConfig,
   IGNNBridge,
@@ -153,8 +156,8 @@ export class CodeIntelligencePlugin {
       get: <T>(key: string) => store.get(key) as T | undefined,
       set: <T>(key: string, value: T) => { store.set(key, value); },
       bridges: {
-        gnn: this.gnnBridge,
-        mincut: this.mincutBridge,
+        gnn: CodeGNNBridge(this.config.search.embeddingDimension),
+        hnsw: CodeHNSWBridge(this.config.search.embeddingDimension),
       },
       config: {
         allowedRoots: this.config.security.allowedRoots,

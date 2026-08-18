@@ -6,8 +6,13 @@
 
 export {
   GNNBridge,
+  CodeGNNBridge,
   createGNNBridge,
 } from './gnn-bridge.js';
+
+export {
+  CodeHNSWBridge,
+} from './hnsw-bridge.js';
 
 export {
   MinCutBridge,
