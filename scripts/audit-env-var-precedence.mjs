@@ -82,6 +82,7 @@ const KNOWN_ESCAPE_HATCHES = new Set([
   'SWARMLO_EMBED_WASM_PKG',          // Opt-in specifier for the optional WASM embedder tier — env-only deployment config, inert by default
   'SWARMLO_LATTICE_WASM_PKG',        // Back-compat alias of SWARMLO_EMBED_WASM_PKG
   'SWARMLO_EMBED_MODEL',             // Model name for the optional WASM embedder — substrate config, env-only
+  'CLAUDE_FLOW_EMBEDDING_DIMENSION', // Embedding dimension override read in memory/memory-initializer.ts getBgeEmbedder — ADR-382 precedence is options.dimension > env > embeddings.json > default (optDim ?? envDim); the audit's same-file heuristic misses the override because the param is destructured (optDim), not read as options.dimension
 
   // ── ADR-320 MCP Composition Inspector + ChannelGuard (this ADR) ─────────────
   // Read inside @claude-flow/security/src/mcp-composition-inspector.ts and

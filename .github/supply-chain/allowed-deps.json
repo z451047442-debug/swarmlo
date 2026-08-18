@@ -16,7 +16,7 @@
     "comment": "rejectInRegistry blocks installation of these known typosquats even if a future maintainer is fooled into adding them"
   },
   "packages": {
-    "ruflo-graph-intelligence": {
+    "swarmlo-graph-intelligence": {
       "comment": "ADR-123 plugin",
       "dependencies": [
         "sublinear-time-solver",
