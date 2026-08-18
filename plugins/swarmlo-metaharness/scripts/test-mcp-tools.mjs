@@ -23,7 +23,7 @@
 
 import { existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const SCRIPTS_DIR = dirname(fileURLToPath(import.meta.url));
 const ARGS = (() => {
@@ -60,7 +60,9 @@ async function main() {
 
   let mod;
   try {
-    mod = await import(distPath);
+    // file:// URL required on Windows (plain drive-path specifier is invalid
+    // ESM); pathToFileURL is a no-op shape-wise on POSIX.
+    mod = await import(pathToFileURL(distPath).href);
   } catch (e) {
     console.error(`test-mcp-tools: failed to import ${distPath}: ${e.message}`);
     process.exit(2);
