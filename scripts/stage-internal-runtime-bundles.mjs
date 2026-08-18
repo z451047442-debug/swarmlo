@@ -45,6 +45,8 @@ function runBuild(packageDirectory) {
   const result = spawnSync(command, ['run', 'build'], {
     cwd: packageDirectory,
     stdio: 'inherit',
+    // Windows requires shell:true to spawn .cmd batch files (EINVAL otherwise)
+    shell: process.platform === 'win32',
   });
   if (result.error) throw result.error;
   if (result.status !== 0) {
