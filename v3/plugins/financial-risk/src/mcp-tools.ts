@@ -50,6 +50,18 @@ const defaultLogger = {
 // Authorization & Rate Limiting
 // ============================================================================
 
+/**
+ * Instantiate a bridge export that may be a class constructor (real module)
+ * or a plain factory function (e.g. when the module is mocked in tests).
+ */
+function instantiateBridge<T>(bridgeType: unknown): T {
+  try {
+    return new (bridgeType as new () => T)();
+  } catch {
+    return (bridgeType as () => T)();
+  }
+}
+
 function checkAuthorization(toolName: string, context?: ToolContext): boolean {
   if (!context?.userRoles) return true;
 
@@ -152,7 +164,7 @@ async function portfolioRiskHandler(
     const { holdings, confidenceLevel, horizon } = validation.data;
 
     // Initialize bridge
-    const economyBridge = context?.bridge?.economy ?? new FinancialEconomyBridge();
+    const economyBridge = context?.bridge?.economy ?? instantiateBridge<FinancialEconomyBridge>(FinancialEconomyBridge);
     if (!economyBridge.initialized) {
       await economyBridge.initialize();
     }
@@ -294,7 +306,7 @@ async function anomalyDetectHandler(
     const { transactions, sensitivity } = validation.data;
 
     // Initialize bridge
-    const sparseBridge = context?.bridge?.sparse ?? new FinancialSparseBridge();
+    const sparseBridge = context?.bridge?.sparse ?? instantiateBridge<FinancialSparseBridge>(FinancialSparseBridge);
     if (!sparseBridge.initialized) {
       await sparseBridge.initialize();
     }
@@ -425,7 +437,7 @@ async function marketRegimeHandler(
     const { marketData } = validation.data;
 
     // Initialize bridge
-    const sparseBridge = context?.bridge?.sparse ?? new FinancialSparseBridge();
+    const sparseBridge = context?.bridge?.sparse ?? instantiateBridge<FinancialSparseBridge>(FinancialSparseBridge);
     if (!sparseBridge.initialized) {
       await sparseBridge.initialize();
     }
@@ -752,7 +764,7 @@ async function stressTestHandler(
     const { portfolio, scenarios } = validation.data;
 
     // Initialize bridge
-    const economyBridge = context?.bridge?.economy ?? new FinancialEconomyBridge();
+    const economyBridge = context?.bridge?.economy ?? instantiateBridge<FinancialEconomyBridge>(FinancialEconomyBridge);
     if (!economyBridge.initialized) {
       await economyBridge.initialize();
     }
