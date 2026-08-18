@@ -11,5 +11,6 @@ export {
 
 export {
   DAGBridge,
+  LegalDAGBridge,
   createDAGBridge,
 } from './dag-bridge.js';
