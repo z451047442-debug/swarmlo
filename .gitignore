@@ -47,6 +47,7 @@
 *.swo
 *.swp
 *.temp
+*.tgz
 *.tmp
 *.tsbuildinfo
 *~
