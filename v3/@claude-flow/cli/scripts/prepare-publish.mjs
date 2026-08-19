@@ -38,6 +38,11 @@ await cp(
   join(pluginsDir, 'swarmlo-metaharness'),
   { recursive: true },
 );
+await cp(
+  join(repoRoot, 'plugins', 'swarmlo-bge-vl'),
+  join(pluginsDir, 'swarmlo-bge-vl'),
+  { recursive: true },
+);
 
 for (const script of [
   'generate-catalog-manifest.mjs',

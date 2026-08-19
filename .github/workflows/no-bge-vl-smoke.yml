@@ -1,0 +1,122 @@
+# ADR-384 removability gate, modeled on no-metaharness-smoke.yml (ADR-150).
+#
+#   "Swarmlo remains operational if the BGE-VL plugin or Python is removed."
+#
+# 1. STATIC: no torch/transformers/Pillow/numpy may appear in non-optional
+#    dependencies of any package.json — python deps live only in the
+#    plugin-side venv (installed by `bge-vl setup`).
+# 2. STRUCTURE: the plugin manifest parses and all required files exist.
+# 3. SIDECAR: stdlib-only self-test runs under CI's python3 (no venv, no
+#    model download) — proves the storage layer + 768-dim guard.
+# 4. DEGRADED: with python forced missing, the relay must exit 0 and emit
+#    {degraded:true} — ADR-150 rule #3.
+name: no-bge-vl-smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/**'
+      - 'scripts/**'
+      - '**/package.json'
+      - '**/package-lock.json'
+      - '.github/workflows/no-bge-vl-smoke.yml'
+  pull_request:
+    paths:
+      - 'plugins/**'
+      - 'scripts/**'
+      - '**/package.json'
+      - '**/package-lock.json'
+      - '.github/workflows/no-bge-vl-smoke.yml'
+  workflow_dispatch:
+
+jobs:
+  smoke-without-python-deps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Static — no python ML deps in non-optional dependencies
+        run: |
+          node -e "
+            const { readFileSync, readdirSync, statSync } = require('fs');
+            const { join } = require('path');
+            const candidates = ['package.json', 'swarmlo/package.json', 'v3/@claude-flow/cli/package.json'];
+            try {
+              for (const p of readdirSync('plugins')) {
+                const pj = join('plugins', p, 'package.json');
+                try { statSync(pj); candidates.push(pj); } catch {}
+              }
+            } catch {}
+            const offenders = [];
+            for (const c of candidates) {
+              let json;
+              try { json = JSON.parse(readFileSync(c, 'utf-8')); } catch { continue; }
+              for (const dep of Object.keys(json.dependencies || {})) {
+                if (/^(torch|transformers|Pillow|numpy)$/.test(dep)) offenders.push({ file: c, dep });
+              }
+            }
+            if (offenders.length) {
+              console.error('ADR-384 removability violated:');
+              for (const o of offenders) console.error('  ' + o.file + ' → ' + o.dep + ' in dependencies');
+              process.exit(1);
+            }
+            console.log('✓ No python ML deps in non-optional dependencies anywhere.');
+          "
+
+      - name: Structure — plugin manifest + required files
+        run: |
+          node -e "
+            const { readFileSync, existsSync } = require('fs');
+            const pj = JSON.parse(readFileSync('plugins/swarmlo-bge-vl/.claude-plugin/plugin.json', 'utf-8'));
+            if (pj.name !== 'swarmlo-bge-vl') throw new Error('manifest name mismatch');
+            for (const f of [
+              'plugins/swarmlo-bge-vl/scripts/bge-vl.mjs',
+              'plugins/swarmlo-bge-vl/scripts/_sidecar.mjs',
+              'plugins/swarmlo-bge-vl/scripts/test-self.mjs',
+              'plugins/swarmlo-bge-vl/python/bge_vl_embed.py',
+              'plugins/swarmlo-bge-vl/python/requirements.txt',
+            ]) {
+              if (!existsSync(f)) throw new Error('missing ' + f);
+            }
+            console.log('✓ Plugin structure intact.');
+          "
+
+      - name: Sidecar — stdlib-only self-test (no venv, no model)
+        run: |
+          python3 -m py_compile plugins/swarmlo-bge-vl/python/bge_vl_embed.py
+          DB=$(mktemp -d)/bge-vl-ci.db
+          python3 plugins/swarmlo-bge-vl/python/bge_vl_embed.py self-test --db "$DB"
+          python3 plugins/swarmlo-bge-vl/python/bge_vl_embed.py health --db "$DB" | grep -q '"dim": 768'
+          echo "✓ Sidecar self-test green (768-dim guard exercised)."
+
+      - name: Relay — self-test drill
+        run: node plugins/swarmlo-bge-vl/scripts/test-self.mjs
+
+      - name: Degraded — python forced missing must exit 0 + degraded:true
+        run: |
+          # SWARMLO_BGE_VL_SKIP_PATH_PROBE=1 is the deterministic seam
+          # (precedent: SWARMLO_METAHARNESS_SKIP_LOCAL): without it,
+          # resolvePython falls through to PATH python3 (ubuntu CI has it),
+          # yielding a model-deps degradation instead of a deterministic
+          # python-unavailable one.
+          OUT=$(SWARMLO_BGE_VL_PYTHON=/nonexistent-python SWARMLO_BGE_VL_SKIP_PATH_PROBE=1 node plugins/swarmlo-bge-vl/scripts/bge-vl.mjs embed --text x 2>&1)
+          STATUS=$?
+          echo "$OUT" | head -10
+          echo "exit: $STATUS"
+          if [ "$STATUS" != "0" ]; then
+            echo "FAIL: relay exited $STATUS but graceful degradation requires 0"
+            exit 1
+          fi
+          if ! echo "$OUT" | grep -q '"degraded": true'; then
+            echo "FAIL: relay did not emit degraded:true"
+            exit 1
+          fi
+          echo "✓ Relay degraded gracefully when python was unreachable."
