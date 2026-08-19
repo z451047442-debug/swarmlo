@@ -14,15 +14,18 @@ name: Clone Tracker (14-day rolling)
 # Running it ourselves keeps the data path inside the repo and signed.
 
 on:
-  schedule:
-    - cron: '17 6 */13 * *'
+  # Fork fix: schedule + push triggers removed — no auto commits to main.
+  # Manual runs only, with an explicit opt-in to push the snapshot back.
   workflow_dispatch:
-    # Allow manual runs (e.g., after a release announcement to capture the spike).
-  push:
-    branches: [main]
-    paths:
-      - 'scripts/track-clones.mjs'
-      - '.github/workflows/clone-tracker.yml'
+    inputs:
+      push_results:
+        description: 'Push snapshot commit to main?'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 permissions:
   contents: write     # to push the snapshot commit
@@ -65,6 +68,7 @@ jobs:
           cat data/clone-data.proof.json
 
       - name: Commit + push snapshot
+        if: ${{ github.event.inputs.push_results == 'true' }}
         run: |
           git config user.name "swarmlo-bot"
           git config user.email "swarmlo-bot@users.noreply.github.com"

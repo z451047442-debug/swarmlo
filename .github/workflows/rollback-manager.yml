@@ -2,10 +2,11 @@ name: 🔄 Automated Rollback Manager
 
 on:
   workflow_run:
-    workflows: ["🔍 Verification Pipeline", "🎯 Truth Scoring Pipeline", "🔗 Cross-Agent Integration Tests"]
+    # Fork fix: 🎯 Truth Scoring Pipeline does not exist here. Detection-only
+    # on the two workflows that do exist; actual rollback is manual-only
+    # (see execute-rollback job condition).
+    workflows: ["🔍 Verification Pipeline", "🔗 Cross-Agent Integration Tests"]
     types: [completed]
-    branches: [main, develop]
-  push:
     branches: [main]
   workflow_dispatch:
     inputs:
@@ -167,7 +168,10 @@ jobs:
     name: 🔍 Pre-Rollback Validation
     runs-on: ubuntu-latest
     needs: failure-detection
-    if: needs.failure-detection.outputs.rollback-required == 'true' || github.event_name == 'workflow_dispatch'
+    # Fork fix: auto-rollback (force-push) is disabled — a fork without the
+    # upstream release pipeline must never auto force-push. Rollbacks run
+    # only on explicit manual workflow_dispatch with confirmation.
+    if: github.event_name == 'workflow_dispatch'
     outputs:
       validation-passed: ${{ steps.validate.outputs.validation-passed }}
       backup-created: ${{ steps.validate.outputs.backup-created }}
