@@ -68,6 +68,14 @@ describe('bgeVlCommand', () => {
     expect(result.exitCode).toBe(2);
   });
 
+  it('reports failure when the relay is killed/timed out (status null)', async () => {
+    existsSyncMock.mockImplementation((p: string) => p.endsWith('bge-vl.mjs'));
+    spawnSyncMock.mockReturnValue({ status: null, signal: 'SIGTERM' });
+    const result = await bgeVlCommand.action({ args: ['search', '--text', 'x'] } as never);
+    expect(result.success).toBe(false);
+    expect(result.exitCode).toBe(1);
+  });
+
   it('round-trips parsed flags into argv, skipping global CLI flags (iter-42 bug class)', async () => {
     existsSyncMock.mockImplementation((p: string) => p.endsWith('bge-vl.mjs'));
     spawnSyncMock.mockReturnValue({ status: 0 });

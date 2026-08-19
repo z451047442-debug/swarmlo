@@ -111,11 +111,17 @@ def cmd_health(args):
 
 
 def cmd_store(args):
-    vec = json.loads(args.vector)
+    try:
+        vec = json.loads(args.vector)
+    except (json.JSONDecodeError, ValueError, struct.error) as e:
+        fail(f'invalid input: {e}', 2)
     if len(vec) != DIM:
         fail(f'vector dim {len(vec)} != {DIM} — 768-dim BGE-VL space only')
     payload = args.payload or '{}'
-    json.loads(payload)  # validate JSON
+    try:
+        json.loads(payload)  # validate JSON
+    except (json.JSONDecodeError, ValueError, struct.error) as e:
+        fail(f'invalid input: {e}', 2)
     con = open_db(args.db)
     con.execute(
         'INSERT OR REPLACE INTO vectors (key, kind, payload, vec) VALUES (?,?,?,?)',
@@ -127,7 +133,10 @@ def cmd_store(args):
 
 
 def cmd_search(args):
-    qvec = json.loads(args.vector)
+    try:
+        qvec = json.loads(args.vector)
+    except (json.JSONDecodeError, ValueError, struct.error) as e:
+        fail(f'invalid input: {e}', 2)
     if len(qvec) != DIM:
         fail(f'query dim {len(qvec)} != {DIM}')
     con = open_db(args.db)
@@ -137,15 +146,19 @@ def cmd_search(args):
     con.close()
     scored = []
     for (i, key, kind, payload, blob) in rows:
-        v = unpack(blob)
+        try:
+            v = unpack(blob)
+        except (json.JSONDecodeError, ValueError, struct.error) as e:
+            fail(f'corrupt vector row {i}: {e}')
         cos = cosine(qvec, v)
         if args.threshold is None or cos >= args.threshold:
             scored.append({'id': i, 'key': key, 'kind': kind,
                            'payload': payload, 'vec': v, 'cos': cos})
     scored.sort(key=lambda s: s['cos'], reverse=True)
-    scored = scored[: args.top_k]
-    order = mmr_rerank([(s['cos'], s['id'], s['vec']) for s in scored],
-                       args.mmr_lambda)
+    top_k = max(1, args.top_k)  # clamp negative/unbounded --top-k
+    scored = scored[: top_k]
+    lam = min(1.0, max(0.0, args.mmr_lambda))  # clamp --mmr-lambda to [0,1]
+    order = mmr_rerank([(s['cos'], s['id'], s['vec']) for s in scored], lam)
     by_id = {s['id']: s for s in scored}
     hits = [
         {'id': i, 'key': by_id[i]['key'], 'kind': by_id[i]['kind'],
@@ -157,9 +170,10 @@ def cmd_search(args):
 
 def cmd_list(args):
     con = open_db(args.db)
+    limit = max(1, args.limit)  # clamp negative/unbounded --limit
     rows = con.execute(
         'SELECT id, key, kind, payload, created_at FROM vectors '
-        'ORDER BY id DESC LIMIT ?', (args.limit,)
+        'ORDER BY id DESC LIMIT ?', (limit,)
     ).fetchall()
     con.close()
     items = [{'id': r[0], 'key': r[1], 'kind': r[2],

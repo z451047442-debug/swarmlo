@@ -52,4 +52,4 @@ Measured 2026-08-19 (local, `main`, after Task 8 doc finalization):
 - **Python sidecar self-test**: `python -X utf8 plugins/swarmlo-bge-vl/python/bge_vl_embed.py self-test --db /tmp/bge-vl-final.db` → `{"ok": true, "self-test": "pass", "dim": 768}`, exit 0.
 - **CLI smoke (out of CI)**: `node v3/@claude-flow/cli/bin/cli.js bge-vl health` → `{"ok": true, "dim": 768, "count": 0, "db": "~/.swarmlo/bge-vl/bge-vl.db"}`, exit 0.
 - **CI `no-bge-vl-smoke.yml`**: workflow committed as the removability gate; first green PR run still pending — not yet exercised on CI (its drill content passes locally via the JS relay self-test above).
-- Manual (out of CI): `npx swarmlo bge-vl setup` → `embed --text` → 768-dim vector; `store` → `search` cosine 1.0 for identical text.
+- Manual (out of CI, PENDING first real run): `npx swarmlo bge-vl setup` → `embed --text` → 768-dim vector; `store` → `search` cosine 1.0 for identical text.

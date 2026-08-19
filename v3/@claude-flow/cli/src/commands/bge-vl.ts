@@ -125,7 +125,7 @@ export const bgeVlCommand: Command = {
       timeout: 5 * 60 * 1000,
     });
     return {
-      success: (r.status ?? 0) === 0,
+      success: (r.status ?? -1) === 0,
       exitCode: r.status ?? 1,
       data: { scriptPath, args: subArgs },
     };

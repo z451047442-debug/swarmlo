@@ -146,6 +146,9 @@ switch (ARGS.op) {
   case 'store': cmdStore(); break;
   case 'search': cmdSearch(); break;
   case 'health': case 'list': case 'delete': case 'purge': {
+    if (ARGS.op === 'delete' && ARGS.key === undefined) {
+      failExit('delete needs --key');
+    }
     const r = emitOrFail(runSidecar(sidecarArgs(
       [ARGS.op, ...(ARGS.key ? ['--key', ARGS.key] : []),
        ...(ARGS.limit ? ['--limit', String(ARGS.limit)] : [])],

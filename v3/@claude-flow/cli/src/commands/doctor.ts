@@ -1864,12 +1864,28 @@ export async function checkBgeVlIntegration(): Promise<HealthCheck> {
       fix: 'Reinstall the CLI package or restore plugins/swarmlo-bge-vl/ from the repo',
     };
   }
-  const probe = spawnSync(
-    process.platform === 'win32' ? 'python' : 'python3',
-    ['-c', 'print(1)'],
-    { timeout: 10_000 },
-  );
-  if (probe.status !== 0) {
+  // Mirror resolvePython()'s candidate resolution (plugins/swarmlo-bge-vl/
+  // scripts/_sidecar.mjs): venv python first, then bare PATH candidates.
+  // A probe narrower than the relay's would warn on setups the relay
+  // actually uses — check exactly what the relay checks.
+  const home = process.env.USERPROFILE || process.env.HOME || '';
+  const venvPython = process.platform === 'win32'
+    ? join(home, '.swarmlo', 'bge-vl', 'venv', 'Scripts', 'python.exe')
+    : join(home, '.swarmlo', 'bge-vl', 'venv', 'bin', 'python3');
+  let pythonFound = existsSync(venvPython);
+  if (!pythonFound) {
+    const bareCandidates = process.platform === 'win32'
+      ? ['python', 'py']
+      : ['python3', 'python'];
+    for (const c of bareCandidates) {
+      const probe = spawnSync(c, ['-c', 'print(1)'], { timeout: 10_000 });
+      if (probe.status === 0) {
+        pythonFound = true;
+        break;
+      }
+    }
+  }
+  if (!pythonFound) {
     return {
       name: 'BGE-VL plugin (ADR-384)',
       status: 'warn',

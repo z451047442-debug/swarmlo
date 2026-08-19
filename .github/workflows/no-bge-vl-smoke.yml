@@ -20,6 +20,8 @@ on:
       - 'scripts/**'
       - '**/package.json'
       - '**/package-lock.json'
+      - 'v3/@claude-flow/cli/src/commands/**'
+      - 'v3/@claude-flow/cli/scripts/**'
       - '.github/workflows/no-bge-vl-smoke.yml'
   pull_request:
     paths:
@@ -27,6 +29,8 @@ on:
       - 'scripts/**'
       - '**/package.json'
       - '**/package-lock.json'
+      - 'v3/@claude-flow/cli/src/commands/**'
+      - 'v3/@claude-flow/cli/scripts/**'
       - '.github/workflows/no-bge-vl-smoke.yml'
   workflow_dispatch:
 

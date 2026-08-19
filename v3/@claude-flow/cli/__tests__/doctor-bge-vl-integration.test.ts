@@ -68,8 +68,10 @@ describe('checkBgeVlIntegration', () => {
     expect(check.fix).toMatch(/Reinstall|restore/);
   });
 
-  it('warns when the plugin is present but no python on PATH', async () => {
-    existsSyncMock.mockReturnValue(true);
+  it('warns when the plugin is present but no python resolves (no venv, bare probes fail)', async () => {
+    // Plugin files exist, but the venv python does not (existsSync false for
+    // the ~/.swarmlo/bge-vl/venv path) and every bare PATH probe fails.
+    existsSyncMock.mockImplementation((p: unknown) => !String(p).includes('venv'));
     spawnSyncMock.mockReturnValue({ status: 1 });
     const check = await checkBgeVlIntegration();
     expect(check.status).toBe('warn');
@@ -86,8 +88,8 @@ describe('checkBgeVlIntegration', () => {
     expect(check.message).toContain('swarmlo-bge-vl');
   });
 
-  it('probes "python" on win32 and "python3" elsewhere', async () => {
-    existsSyncMock.mockReturnValue(true);
+  it('probes "python" on win32 and "python3" elsewhere when no venv python exists', async () => {
+    existsSyncMock.mockImplementation((p: unknown) => !String(p).includes('venv'));
     spawnSyncMock.mockReturnValue({ status: 0 });
     const platformDesc = Object.getOwnPropertyDescriptor(process, 'platform');
     try {
@@ -97,5 +99,12 @@ describe('checkBgeVlIntegration', () => {
     } finally {
       if (platformDesc) Object.defineProperty(process, 'platform', platformDesc);
     }
+  });
+
+  it('passes via the venv python path without probing PATH', async () => {
+    existsSyncMock.mockReturnValue(true);
+    const check = await checkBgeVlIntegration();
+    expect(check.status).toBe('pass');
+    expect(spawnSyncMock).not.toHaveBeenCalled();
   });
 });
