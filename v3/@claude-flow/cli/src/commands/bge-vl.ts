@@ -66,6 +66,46 @@ export const bgeVlCommand: Command = {
   ],
   async action(context: CommandContext): Promise<CommandResult> {
     const args = (context as { args?: string[] }).args || [];
+
+    // iter-42 bug class (metaharness.ts:278-312): the CLI parser consumes
+    // `--text x` into context.flags, so round-trip parsed flags back into
+    // argv — otherwise the relay receives only the positional bucket and
+    // emits a graceful-but-wrong "missing arg" payload. Ported from the
+    // metaharness iter-42 block (same SKIP_KEYS set, same toKebab helper,
+    // same boolean/array/scalar handling). Unlike metaharness there is no
+    // per-subcommand script dispatch here — the single relay script owns
+    // subcommand parsing — so the whole positional bucket passes through.
+    const ctxFlags = (context as { flags?: Record<string, unknown> }).flags || {};
+    const reconstructedFlags: string[] = [];
+    const SKIP_KEYS = new Set([
+      '_',           // parser's positional bucket
+      'config',      // global CLI flag (--config <path>); consumed before dispatch
+      'verbose', 'v',
+      'quiet', 'q',
+      'help', 'h',
+    ]);
+    // Parser normalizes kebab-case → camelCase (--top-k → topK).
+    // Plugin scripts expect kebab-case at argv, so we re-kebab here.
+    const toKebab = (s: string): string =>
+      s.replace(/([A-Z])/g, (m) => `-${m.toLowerCase()}`);
+    for (const [key, value] of Object.entries(ctxFlags)) {
+      if (SKIP_KEYS.has(key)) continue;
+      if (value === undefined || value === null) continue;
+      // Always use --kebab even for single-char keys: the relay matches
+      // literal `--a` / `--b` via argv loop, not via a parser.
+      // Reconstructing as short-form (`-a`) would silently misroute.
+      const flag = `--${toKebab(key)}`;
+      if (typeof value === 'boolean') {
+        if (value === true) reconstructedFlags.push(flag);
+        // false → omit (--no-X handled by users invoking explicit --no- form)
+      } else if (Array.isArray(value)) {
+        for (const v of value) reconstructedFlags.push(flag, String(v));
+      } else {
+        reconstructedFlags.push(flag, String(value));
+      }
+    }
+    const subArgs = [...args, ...reconstructedFlags];
+
     const pluginDir = resolveBgeVlPluginDir();
     if (!pluginDir) {
       return {
@@ -79,7 +119,7 @@ export const bgeVlCommand: Command = {
       };
     }
     const scriptPath = join(pluginDir, 'scripts', 'bge-vl.mjs');
-    const r = spawnSync('node', [scriptPath, ...args], {
+    const r = spawnSync('node', [scriptPath, ...subArgs], {
       stdio: 'inherit',
       env: process.env,
       timeout: 5 * 60 * 1000,
@@ -87,7 +127,7 @@ export const bgeVlCommand: Command = {
     return {
       success: (r.status ?? 0) === 0,
       exitCode: r.status ?? 1,
-      data: { scriptPath, args },
+      data: { scriptPath, args: subArgs },
     };
   },
 };

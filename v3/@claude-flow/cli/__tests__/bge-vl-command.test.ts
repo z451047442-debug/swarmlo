@@ -67,4 +67,18 @@ describe('bgeVlCommand', () => {
     expect(result.success).toBe(false);
     expect(result.exitCode).toBe(2);
   });
+
+  it('round-trips parsed flags into argv, skipping global CLI flags (iter-42 bug class)', async () => {
+    existsSyncMock.mockImplementation((p: string) => p.endsWith('bge-vl.mjs'));
+    spawnSyncMock.mockReturnValue({ status: 0 });
+    const result = await bgeVlCommand.action({
+      args: ['search'],
+      flags: { text: 'bear', topK: 5, config: '/x', help: true },
+    } as never);
+    expect(spawnSyncMock).toHaveBeenCalledOnce();
+    const [, args] = spawnSyncMock.mock.calls[0];
+    expect(args).toEqual(expect.arrayContaining(['search', '--text', 'bear', '--top-k', '5']));
+    expect(args).toEqual(expect.not.arrayContaining(['--config', '--help']));
+    expect(result.success).toBe(true);
+  });
 });
