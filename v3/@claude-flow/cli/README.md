@@ -1,14 +1,12 @@
 <div align="center">
 
 [![Swarmlo Banner](swarmlo/assets/swarmlo-small.jpeg)](https://cognitum.one/agentic-engineering)
-[![Agentics Foundation Banner](docs/assets/sv-summit.png)](https://agentics.org/siliconvalley/?UTM=GH-Swarmlo-SV)
-
 
 <!-- Try Swarmlo — the 4 badges first-time visitors actually act on -->
 [![Try the UI Beta — flo.ruv.io](https://img.shields.io/badge/_Try_the_UI_Beta-flo.ruv.io-6366f1?style=for-the-badge&logoColor=white&logo=svelte)](https://flo.ruv.io/)
 [![npm version (swarmlo)](https://img.shields.io/npm/v/swarmlo?label=npx%20swarmlo&style=for-the-badge&logo=npm&color=cb3837)](https://www.npmjs.com/package/swarmlo)
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Star on GitHub](https://img.shields.io/github/stars/z451047442-debug/swarmlo?style=for-the-badge&logo=github&color=gold)](https://github.com/z451047442-debug/swarmlo)
+[![Star on GitHub](https://img.shields.io/github/stars/ruvnet/claude-flow?style=for-the-badge&logo=github&color=gold)](https://github.com/z451047442-debug/swarmlo)
 
 <!-- Ecosystem strip (collapsed visually with flat-square) -->
 [![Goal Planner](https://img.shields.io/badge/_Goal_Planner-goal.ruv.io-8b5cf6?style=flat-square&logoColor=white&logo=react)](https://goal.ruv.io/)
@@ -19,9 +17,11 @@
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-Plugin-D97757?style=flat-square&logoColor=white&logo=anthropic)](https://github.com/z451047442-debug/swarmlo)
 [![Codex Plugin](https://img.shields.io/badge/Codex-Plugin-412991?style=flat-square&logoColor=white&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0yMi4yODIgOS44MjFhNS45ODUgNS45ODUgMCAwIDAtLjUxNi00LjkxIDYuMDQ2IDYuMDQ2IDAgMCAwLTYuNTEtMi45QTYuMDY1IDYuMDY1IDAgMCAwIDQuOTgxIDQuMThhNS45ODUgNS45ODUgMCAwIDAtMy45OTggMi45IDYuMDQ2IDYuMDQ2IDAgMCAwIC43NDMgNy4wOTcgNS45OCA1Ljk4IDAgMCAwIC41MSA0LjkxMSA2LjA1MSA2LjA1MSAwIDAgMCA2LjUxNSAyLjlBNS45ODUgNS45ODUgMCAwIDAgMTMuMjYgMjRhNi4wNTYgNi4wNTYgMCAwIDAgNS43NzItNC4yMDYgNS45OSA1Ljk5IDAgMCAwIDMuOTk4LTIuOSA2LjA1NiA2LjA1NiAwIDAgMC0uNzQ3LTcuMDczek0xMy4yNiAyMi40M2E0LjQ3NiA0LjQ3NiAwIDAgMS0yLjg3Ni0xLjA0bC4xNDItLjA4IDQuNzc4LTIuNzU4YS43OTUuNzk1IDAgMCAwIC4zOTMtLjY4MXYtNi43MzdsMi4wMiAxLjE2OGEuMDcxLjA3MSAwIDAgMSAuMDM4LjA1MnY1LjU4M2E0LjUwNCA0LjUwNCAwIDAgMS00LjQ5NSA0LjQ5NHpNMy42IDE4LjMwNGE0LjQ3IDQuNDcgMCAwIDEtLjUzNS0zLjAxNGwuMTQyLjA4NSA0Ljc4MyAyLjc1OWEuNzcxLjc3MSAwIDAgMCAuNzgxIDBsNS44NDMtMy4zNjl2Mi4zMzJhLjA4LjA4IDAgMCAxLS4wMzMuMDYyTDkuNzQgMTkuOTVhNC41IDQuNSAwIDAgMS02LjE0LTEuNjQ2ek0yLjM0IDcuODk2YTQuNDg1IDQuNDg1IDAgMCAxIDIuMzY2LTEuOTczVjExLjZhLjc2Ni43NjYgMCAwIDAgLjM4OC42NzdsNS44MTUgMy4zNTQtMi4wMiAxLjE2OGEuMDc2LjA3NiAwIDAgMS0uMDcyIDBsLTQuODMtMi43ODZBNC41MDQgNC41MDQgMCAwIDEgMi4zNCA3Ljg3MnptMTYuNTk3IDMuODU1LTUuODMzLTMuMzg3IDIuMDE2LTEuMTY1YS4wNzYuMDc2IDAgMCAxIC4wNzEgMGw0LjgzIDIuNzkxYTQuNDk0IDQuNDk0IDAgMCAxLS42NzYgOC4xMDR2LTUuNjc3YS43OS43OSAwIDAgMC0uNDA3LS42Njd6bTIuMDEtMy4wMjMtLjE0MS0uMDg1LTQuNzc0LTIuNzgyYS43NzYuNzc2IDAgMCAwLS43ODUgMEw5LjQwOSA5LjIzVjYuODk3YS4wNjYuMDY2IDAgMCAxIC4wMjgtLjA2Mmw0LjgzLTIuNzg3YTQuNDk5IDQuNDk5IDAgMCAxIDYuNjggNC42NnpNOC4zMDcgMTIuODYzbC0yLjAyLTEuMTY0YS4wOC4wOCAwIDAgMS0uMDM4LS4wNTdWNi4wNzRhNC40OTkgNC40OTkgMCAwIDEgNy4zNzYtMy40NTRsLS4xNDIuMDgtNC43NzggMi43NThhLjc5NS43OTUgMCAwIDAtLjM5My42ODJ6bTEuMDk3LTIuMzY2IDIuNjAyLTEuNSAyLjYwNyAxLjV2Mi45OTlsLTIuNTk3IDEuNS0yLjYwNy0xLjVaIi8%2BPC9zdmc%2B)](https://www.npmjs.com/package/@claude-flow/codex)
 
-# Swarmlo
+# swarmlo
 
 **An agent meta-harness for Claude Code and Codex.**
+
+> 🍴 **Fork of [Swarmlo](https://github.com/z451047442-debug/swarmlo) (MIT License)** — maintained by [z451047442-debug](https://github.com/z451047442-debug) with embedding-model enhancements.
 
 </div>
 
@@ -58,7 +58,7 @@ There are **two different install paths** with very different surface areas. Pic
 |---|---|---|
 | What it gives you | Slash commands + a few skills + agent definitions per-plugin | Full Swarmlo loop — 98 agents, 60+ commands, 30 skills, MCP server, hooks, daemon |
 | Files in your workspace | **Zero** | `.claude/`, `.claude-flow/`, `CLAUDE.md`, helpers, settings |
-| MCP server registered | **No** (`memory_store`, `swarm_init`, etc. unavailable to Claude) | Yes |
+| MCP server registered | Only if `swarmlo-core` is installed (it ships its own `.mcp.json`) — most other plugins don't | Yes |
 | Hooks installed | No | Yes |
 | Best for | Try a single plugin's commands without committing to the full install | Production use — everything works as documented |
 
@@ -75,7 +75,7 @@ There are **two different install paths** with very different surface areas. Pic
 /plugin install swarmlo-neural-trader@swarmlo
 ```
 
-This adds slash commands and agent definitions only. The Swarmlo MCP server is NOT registered, so `memory_store`, `swarm_init`, `agent_spawn`, etc. won't be callable from Claude. For the full loop, use Path B below.
+This adds slash commands and agent definitions. `swarmlo-core` (installed above) does register its own MCP server on install — its tools are callable as `mcp__plugin_swarmlo-core_swarmlo__*` (e.g. `mcp__plugin_swarmlo-core_swarmlo__memory_store`), not the bare `memory_store`/`swarm_init`/`agent_spawn` names the CLI-track scaffold uses. Other plugins generally don't ship their own MCP server. For the full loop with the CLI-track tool names, use Path B below.
 
 <details>
 <summary><strong>🔌 All 35 plugins</strong></summary>
@@ -189,23 +189,9 @@ npm install -g swarmlo@latest
 ### MCP Server
 
 ```bash
-# Add Swarmlo as an MCP server in Claude Code (canonical form, matches USERGUIDE.md)
-claude mcp add swarmlo -- npx swarmlo@latest mcp start
+# Add Swarmlo as an MCP server in Claude Code
+claude mcp add claude-flow -- npx swarmlo@latest mcp start
 ```
-
-Small-context backends can advertise only the tool categories they need:
-
-```bash
-CLAUDE_FLOW_MCP_TOOLS=memory,swarm,agent,hooks \
-  npx swarmlo@latest mcp start
-
-# Optional: lets `swarmlo doctor -c mcp-overhead` compare the live schema
-# estimate with the backend's real context limit.
-CLAUDE_FLOW_CONTEXT_WINDOW_TOKENS=32000 swarmlo doctor -c mcp-overhead
-```
-
-The default remains `all` for backwards compatibility. Selectors accept
-categories, namespace prefixes, or exact tool names.
 
 ---
 
