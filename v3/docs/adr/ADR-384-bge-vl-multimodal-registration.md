@@ -44,7 +44,12 @@ Three user decisions (2026-08-19), all binding:
 
 ## Verification
 
-- `tsc` build passes; vitest: `embedding-models.test.ts`, `memory-initializer-hook.test.ts` (refusal + pointer), `bge-vl-command.test.ts`, doctor test — green.
-- Plugin self-tests: `python bge_vl_embed.py self-test` (stdlib-only storage drill + 768-dim guard) and `node plugins/swarmlo-bge-vl/scripts/test-self.mjs` (degraded drill) — green.
-- CI `no-bge-vl-smoke.yml` green on PR.
+Measured 2026-08-19 (local, `main`, after Task 8 doc finalization):
+
+- **Build**: `pnpm -r build` (from `v3/`) — exit 0; every package's `tsc` passes (plus `security` OAuth export surface verification).
+- **Vitest — 4 files / 35 tests, all green, exit 0**: `__tests__/bge-vl-command.test.ts`, `__tests__/memory-initializer-hook.test.ts` (refusal + pointer), `__tests__/embedding-models.test.ts`, `__tests__/doctor-bge-vl-integration.test.ts`.
+- **JS relay self-test**: `node plugins/swarmlo-bge-vl/scripts/test-self.mjs` — degraded drill (`bge-vl-python-unavailable`) + health drill (dim 768), exit 0.
+- **Python sidecar self-test**: `python -X utf8 plugins/swarmlo-bge-vl/python/bge_vl_embed.py self-test --db /tmp/bge-vl-final.db` → `{"ok": true, "self-test": "pass", "dim": 768}`, exit 0.
+- **CLI smoke (out of CI)**: `node v3/@claude-flow/cli/bin/cli.js bge-vl health` → `{"ok": true, "dim": 768, "count": 0, "db": "~/.swarmlo/bge-vl/bge-vl.db"}`, exit 0.
+- **CI `no-bge-vl-smoke.yml`**: workflow committed as the removability gate; first green PR run still pending — not yet exercised on CI (its drill content passes locally via the JS relay self-test above).
 - Manual (out of CI): `npx swarmlo bge-vl setup` → `embed --text` → 768-dim vector; `store` → `search` cosine 1.0 for identical text.
