@@ -18,14 +18,14 @@ function drill(args, env) {
 
 // 1. degraded drill — exit 0 + degraded:true (ADR-150 rule #3).
 {
-  const r = drill(['embed', '--text', 'x'], { SWARMLO_BGE_VL_PYTHON: '/nonexistent-python' });
+  const r = drill(['embed', '--text', 'x'], {
+    SWARMLO_BGE_VL_PYTHON: '/nonexistent-python',
+    SWARMLO_BGE_VL_SKIP_PATH_PROBE: '1',
+  });
   assert.strictEqual(r.status, 0, `degraded drill exit ${r.status}: ${r.stderr}`);
   const j = JSON.parse(r.stdout);
   assert.strictEqual(j.degraded, true, `not degraded: ${r.stdout}`);
-  assert.ok(
-    j.reason === 'bge-vl-python-unavailable' || j.reason === 'bge-vl-model-deps-missing',
-    `unexpected reason ${j.reason}`,
-  );
+  assert.strictEqual(j.reason, 'bge-vl-python-unavailable', `unexpected reason ${j.reason}`);
   assert.ok(j.fix, 'missing fix hint');
   console.log('✓ degraded drill (reason:', j.reason + ')');
 }

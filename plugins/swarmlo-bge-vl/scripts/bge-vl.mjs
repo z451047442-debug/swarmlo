@@ -134,7 +134,10 @@ function cmdSetup() {
   r = run(venvPython, ['-m', 'pip', 'install', '-r', join(PLUGIN_DIR, 'python', 'requirements.txt')]);
   if ((r.status ?? 1) !== 0) failExit('requirements install failed');
   const health = runSidecar(['health']);
-  if (!health.ok) failExit(`sidecar health after setup failed: ${health.stderr}`);
+  if (health.degraded) {
+    emitDegradedJsonAndExit(health.reason);
+  }
+  if (!health.ok) failExit(`sidecar health after setup failed: ${health.json?.error || health.stderr || health.exitCode}`);
   console.log(JSON.stringify({ ok: true, setup: 'complete', venv: venvDir, health: health.json }, null, 2));
 }
 

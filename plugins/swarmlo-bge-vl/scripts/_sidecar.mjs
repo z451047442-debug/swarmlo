@@ -25,6 +25,15 @@ let RESOLVED_PYTHON = null;
 
 export function resolvePython() {
   if (RESOLVED_PYTHON !== null) return RESOLVED_PYTHON;
+  // Test seam (SWARMLO_BGE_VL_SKIP_PATH_PROBE=1): skip venv + PATH probes for a
+  // deterministic degraded drill. An explicit SWARMLO_BGE_VL_PYTHON is still
+  // honored, but only if it actually exists — a nonexistent explicit path
+  // yields null (degraded) instead of falling through to PATH python.
+  if (process.env.SWARMLO_BGE_VL_SKIP_PATH_PROBE === '1') {
+    const explicit = process.env.SWARMLO_BGE_VL_PYTHON;
+    if (explicit && existsSync(explicit)) return (RESOLVED_PYTHON = explicit);
+    return (RESOLVED_PYTHON = null);
+  }
   const home = process.env.USERPROFILE || process.env.HOME || '';
   const candidates = [];
   if (process.env.SWARMLO_BGE_VL_PYTHON) {
