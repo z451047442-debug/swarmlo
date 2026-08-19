@@ -18,7 +18,7 @@ concurrency:
 jobs:
   publish:
     name: Publish stable package train
-    if: github.actor == 'ruvnet'
+    if: github.actor == 'z451047442-debug'
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -70,11 +70,11 @@ jobs:
           node - <<'NODE'
           const expected = process.env.RELEASE_TAG.slice(1);
           const packages = [
-            ['@claude-flow/cli', require('./v3/@claude-flow/cli/package.json')],
-            ['claude-flow', require('./package.json')],
-            ['swarmlo', require('./swarmlo/package.json')],
+            ['swarmlo-cli', require('./v3/@claude-flow/cli/package.json')],
+            ['swarmlo', require('./package.json')],
+            ['swarmlo-app', require('./swarmlo/package.json')],
           ];
-          const expectedNames = ['@claude-flow/cli', 'claude-flow', 'swarmlo'];
+          const expectedNames = ['swarmlo-cli', 'swarmlo', 'swarmlo-app'];
           if (JSON.stringify(packages.map(([name]) => name)) !== JSON.stringify(expectedNames)) {
             throw new Error('stable release package set drifted');
           }
@@ -231,10 +231,10 @@ jobs:
             npm init -y >/dev/null
             npm install "$cli_archive" --omit=optional --no-audit --no-fund
             npm ls --all
-            node node_modules/@claude-flow/cli/bin/cli.js --version
-            node node_modules/@claude-flow/cli/bin/cli.js policy status
+            node node_modules/swarmlo-cli/bin/cli.js --version
+            node node_modules/swarmlo-cli/bin/cli.js policy status
             node --input-type=module - <<'NODE'
-          const base = './node_modules/@claude-flow/cli/node_modules/@claude-flow';
+          const base = './node_modules/swarmlo-cli/node_modules/@claude-flow';
           const security = await import(base + '/security/dist/index.js');
           const codex = await import(base + '/codex/dist/index.js');
           const federation = await import(base + '/plugin-agent-federation/dist/index.js');
@@ -246,24 +246,24 @@ jobs:
           NODE
             mkdir project
             cd project
-            node ../node_modules/@claude-flow/cli/bin/cli.js init --codex --force \
+            node ../node_modules/swarmlo-cli/bin/cli.js init --codex --force \
               2>&1 | tee init.log
             test -f AGENTS.md
             test -f .agents/skills/swarm-orchestration/SKILL.md
             ! grep -q 'Bundled skills directory not found' init.log
-            timeout 30s node ../node_modules/@claude-flow/cli/bin/cli.js daemon start
-            timeout 30s node ../node_modules/@claude-flow/cli/bin/cli.js daemon status
-            timeout 30s node ../node_modules/@claude-flow/cli/bin/cli.js daemon stop
+            timeout 30s node ../node_modules/swarmlo-cli/bin/cli.js daemon start
+            timeout 30s node ../node_modules/swarmlo-cli/bin/cli.js daemon status
+            timeout 30s node ../node_modules/swarmlo-cli/bin/cli.js daemon stop
             cd ..
             mkdir autopilot-scope
             cd autopilot-scope
-            if node ../node_modules/@claude-flow/cli/bin/cli.js \
+            if node ../node_modules/swarmlo-cli/bin/cli.js \
               autopilot config --task-sources issues; then
               echo "::error::invalid explicit Autopilot source was accepted"
               exit 1
             fi
             test ! -f .claude-flow/data/autopilot-state.json
-            node ../node_modules/@claude-flow/cli/bin/cli.js autopilot config \
+            node ../node_modules/swarmlo-cli/bin/cli.js autopilot config \
               --task-sources swarm-tasks,file-checklist \
               --max-iterations 77
             node - <<'NODE'
@@ -283,8 +283,8 @@ jobs:
             npm init -y >/dev/null
             npm install "$root_archive" --omit=optional --no-audit --no-fund
             npm ls --all
-            node node_modules/claude-flow/bin/cli.js --version
-            node node_modules/claude-flow/bin/cli.js policy status
+            node node_modules/swarmlo/bin/cli.js --version
+            node node_modules/swarmlo/bin/cli.js policy status
           )
 
           swarmlo_install="$(mktemp -d)"
@@ -294,7 +294,7 @@ jobs:
             npm install "$cli_archive" "$swarmlo_archive" \
               --omit=optional --no-audit --no-fund
             npm ls --all
-            node node_modules/swarmlo/bin/swarmlo.js --version
+            node node_modules/swarmlo-app/bin/swarmlo.js --version
           )
 
           agentic_v3_install="$(mktemp -d)"
@@ -346,7 +346,7 @@ jobs:
         run: |
           version="${RELEASE_TAG#v}"
           candidate_tag="release-${version//./-}"
-          packages=("@claude-flow/cli" "claude-flow" "swarmlo")
+          packages=("swarmlo-cli" "swarmlo" "swarmlo-app")
           archives=("$CLI_ARCHIVE" "$ROOT_ARCHIVE" "$SWARMLO_ARCHIVE")
           integrities=("$CLI_INTEGRITY" "$ROOT_INTEGRITY" "$SWARMLO_INTEGRITY")
           test "${#packages[@]}" -eq 3
@@ -395,7 +395,7 @@ jobs:
           RELEASE_TAG: ${{ inputs.tag }}
         run: |
           version="${RELEASE_TAG#v}"
-          packages=("@claude-flow/cli" "claude-flow" "swarmlo")
+          packages=("swarmlo-cli" "swarmlo" "swarmlo-app")
           for package in "${packages[@]}"; do
             tags_ready=false
             for attempt in {1..10}; do
@@ -427,10 +427,10 @@ jobs:
             npm init -y >/dev/null
             npm install "@claude-flow/cli@${version}" --omit=optional --no-audit --no-fund
             npm ls --all
-            node node_modules/@claude-flow/cli/bin/cli.js --version
-            node node_modules/@claude-flow/cli/bin/cli.js policy status
+            node node_modules/swarmlo-cli/bin/cli.js --version
+            node node_modules/swarmlo-cli/bin/cli.js policy status
             node --input-type=module - <<'NODE'
-          const base = './node_modules/@claude-flow/cli/node_modules/@claude-flow';
+          const base = './node_modules/swarmlo-cli/node_modules/@claude-flow';
           const security = await import(base + '/security/dist/index.js');
           const codex = await import(base + '/codex/dist/index.js');
           const federation = await import(base + '/plugin-agent-federation/dist/index.js');
@@ -446,8 +446,8 @@ jobs:
             npm init -y >/dev/null
             npm install "claude-flow@${version}" --omit=optional --no-audit --no-fund
             npm ls --all
-            node node_modules/claude-flow/bin/cli.js --version
-            node node_modules/claude-flow/bin/cli.js policy status
+            node node_modules/swarmlo/bin/cli.js --version
+            node node_modules/swarmlo/bin/cli.js policy status
           )
 
           swarmlo_install="$(mktemp -d)"
@@ -456,5 +456,5 @@ jobs:
             npm init -y >/dev/null
             npm install "swarmlo@${version}" --omit=optional --no-audit --no-fund
             npm ls --all
-            node node_modules/swarmlo/bin/swarmlo.js --version
+            node node_modules/swarmlo-app/bin/swarmlo.js --version
           )
