@@ -1239,7 +1239,7 @@ async function checkVersionFreshness(): Promise<HealthCheck> {
             if (
               pkg.version &&
               typeof pkg.name === 'string' &&
-              (pkg.name === '@claude-flow/cli' || pkg.name === 'claude-flow' || pkg.name === 'swarmlo')
+              (pkg.name === 'swarmlo-cli' || pkg.name === '@claude-flow/cli' || pkg.name === 'claude-flow' || pkg.name === 'swarmlo')
             ) {
               currentVersion = pkg.version;
               break;
@@ -1921,12 +1921,12 @@ async function checkMetaharnessDeclaredPackages(): Promise<HealthCheck> {
       const pj = join(q, 'package.json');
       if (existsSync(pj)) {
         try {
-          if ((JSON.parse(readFileSync(pj, 'utf-8')) as { name?: string }).name === '@claude-flow/cli') { root = q; break; }
+          if ((JSON.parse(readFileSync(pj, 'utf-8')) as { name?: string }).name === 'swarmlo-cli' || (JSON.parse(readFileSync(pj, 'utf-8')) as { name?: string }).name === '@claude-flow/cli') { root = q; break; }
         } catch { /* keep walking */ }
       }
       q = dirname(q);
     }
-    if (!root) return { name: NAME, status: 'warn', message: 'could not locate the @claude-flow/cli package root' };
+    if (!root) return { name: NAME, status: 'warn', message: 'could not locate the swarmlo-cli package root' };
 
     const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf-8')) as { optionalDependencies?: Record<string, string> };
     const declared = Object.keys(pkg.optionalDependencies ?? {}).filter((n) => n === 'metaharness' || n.startsWith('@metaharness/'));

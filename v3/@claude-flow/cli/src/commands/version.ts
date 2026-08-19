@@ -35,7 +35,7 @@ function findCatalogManifest(): CatalogManifest | null {
   const candidates: string[] = [];
   try {
     const esmRequire = createRequire(import.meta.url);
-    const pkgRoot = dirname(esmRequire.resolve('@claude-flow/cli/package.json'));
+    const pkgRoot = dirname(esmRequire.resolve('swarmlo-cli/package.json'));
     candidates.push(join(pkgRoot, 'catalog-manifest.json'));
   } catch { /* not resolvable via package resolution */ }
   // Dev checkout fallback: this compiled file lives at dist/src/commands/version.js

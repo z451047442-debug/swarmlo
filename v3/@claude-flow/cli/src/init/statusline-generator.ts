@@ -37,14 +37,14 @@ const __dirname_sg = path.dirname(fileURLToPath(import.meta.url));
 function getInstalledCliVersionLocal(): string {
   try {
     const esmRequire = createRequire(import.meta.url);
-    const pkg = JSON.parse(fs.readFileSync(esmRequire.resolve('@claude-flow/cli/package.json'), 'utf-8'));
+    const pkg = JSON.parse(fs.readFileSync(esmRequire.resolve('swarmlo-cli/package.json'), 'utf-8'));
     return String(pkg.version || '0.0.0');
   } catch {
     let dir = __dirname_sg;
     for (let i = 0; i < 6; i++) {
       try {
         const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf-8'));
-        if (pkg && pkg.name === '@claude-flow/cli') return String(pkg.version || '0.0.0');
+        if (pkg && (pkg.name === 'swarmlo-cli' || pkg.name === '@claude-flow/cli')) return String(pkg.version || '0.0.0');
       } catch { /* no package.json here, or unreadable — keep climbing */ }
       const parent = path.dirname(dir);
       if (parent === dir) break;
@@ -106,7 +106,7 @@ export function generateStatuslineScript(options: InitOptions): string {
   let helperPackageRoot = '';
   try {
     const esmRequire = createRequire(import.meta.url);
-    const pkgJsonPath = esmRequire.resolve('@claude-flow/cli/package.json');
+    const pkgJsonPath = esmRequire.resolve('swarmlo-cli/package.json');
     helperPackageRoot = path.dirname(pkgJsonPath);
     const helperPath = path.join(helperPackageRoot, '.claude', 'helpers', 'statusline.cjs');
     helperContent = fs.readFileSync(helperPath, 'utf-8');
@@ -115,7 +115,7 @@ export function generateStatuslineScript(options: InitOptions): string {
     for (let i = 0; i < 6; i++) {
       try {
         const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf-8'));
-        if (pkg && pkg.name === '@claude-flow/cli') {
+        if (pkg && (pkg.name === 'swarmlo-cli' || pkg.name === '@claude-flow/cli')) {
           const candidate = path.join(dir, '.claude', 'helpers', 'statusline.cjs');
           if (fs.existsSync(candidate)) {
             helperPackageRoot = dir;

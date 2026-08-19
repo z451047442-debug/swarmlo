@@ -42,7 +42,7 @@ function fail(msg) {
 }
 
 if (!existsSync(join(CLI_DIR, 'package.json'))) fail(`cli package not found at ${CLI_DIR}`);
-if (!existsSync(join(CLI_DIR, 'bin', 'cli.js'))) fail(`cli not built — run \`pnpm --filter @claude-flow/cli build\` first`);
+if (!existsSync(join(CLI_DIR, 'bin', 'cli.js'))) fail(`cli not built — run \`pnpm --filter swarmlo-cli build\` first`);
 
 // 1. Pack the CLI. Prefer pnpm pack (rewrites workspace:*); fall back to npm pack.
 const packDest = mkdtempSync(join(tmpdir(), 'cli-pack-'));

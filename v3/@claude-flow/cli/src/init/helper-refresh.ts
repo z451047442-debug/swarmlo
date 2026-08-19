@@ -70,11 +70,11 @@ export const CRITICAL_HELPERS = [
   'statusline.cjs',
 ];
 
-/** Installed @claude-flow/cli version — the value the helpers are stamped with. */
+/** Installed swarmlo-cli version — the value the helpers are stamped with. */
 export function getInstalledCliVersion(): string {
   try {
     const esmRequire = createRequire(import.meta.url);
-    const pkg = JSON.parse(fs.readFileSync(esmRequire.resolve('@claude-flow/cli/package.json'), 'utf-8'));
+    const pkg = JSON.parse(fs.readFileSync(esmRequire.resolve('swarmlo-cli/package.json'), 'utf-8'));
     return String(pkg.version || '0.0.0');
   } catch {
     const root = findPackageRoot(__dirname);
@@ -91,7 +91,7 @@ function findPackageHelpersDir(): string | null {
   const candidates: string[] = [];
   try {
     const esmRequire = createRequire(import.meta.url);
-    const pkgRoot = path.dirname(esmRequire.resolve('@claude-flow/cli/package.json'));
+    const pkgRoot = path.dirname(esmRequire.resolve('swarmlo-cli/package.json'));
     candidates.push(path.join(pkgRoot, '.claude', 'helpers'));
   } catch { /* not resolvable */ }
   const root = findPackageRoot(__dirname);

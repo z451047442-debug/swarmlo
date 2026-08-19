@@ -130,7 +130,7 @@ export class GraphEdgesSource implements KnowledgeGraphSource {
       };
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore — dynamic cross-package import resolved at runtime
-      const mod: GraphEdgeWriterModule = await import('@claude-flow/cli/src/memory/graph-edge-writer.js')
+      const mod: GraphEdgeWriterModule = await import('swarmlo-cli/dist/src/memory/graph-edge-writer.js')
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore — fallback to local dist path in mono-repo context
         .catch(() => import('../../../../../v3/@claude-flow/cli/dist/src/memory/graph-edge-writer.js'));

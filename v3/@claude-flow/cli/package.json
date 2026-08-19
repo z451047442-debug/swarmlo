@@ -1,5 +1,5 @@
 {
-  "name": "@claude-flow/cli",
+  "name": "swarmlo-cli",
   "version": "3.39.0",
   "type": "module",
   "description": "Swarmlo CLI - Enterprise AI agent orchestration with 60+ specialized agents, swarm coordination, MCP server, self-learning hooks, and vector memory for Claude Code",
@@ -7,6 +7,7 @@
   "types": "dist/src/index.d.ts",
   "sideEffects": false,
   "bin": {
+    "swarmlo-cli": "bin/cli.js",
     "cli": "bin/cli.js",
     "claude-flow": "bin/cli.js",
     "claude-flow-mcp": "bin/mcp-server.js"

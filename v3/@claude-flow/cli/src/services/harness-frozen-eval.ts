@@ -44,7 +44,7 @@ function locate(): string | null {
   const candidates: string[] = [];
   try {
     const req = createRequire(import.meta.url);
-    candidates.push(path.join(path.dirname(req.resolve('@claude-flow/cli/package.json')), FROZEN_HUMAN_EVAL_FILE));
+    candidates.push(path.join(path.dirname(req.resolve('swarmlo-cli/package.json')), FROZEN_HUMAN_EVAL_FILE));
   } catch { /* not resolvable in this context */ }
   candidates.push(path.resolve(__dirname, '..', '..', '..', FROZEN_HUMAN_EVAL_FILE)); // dist/src/services → pkg root
   candidates.push(path.resolve(__dirname, '..', '..', FROZEN_HUMAN_EVAL_FILE));        // src/services → pkg root

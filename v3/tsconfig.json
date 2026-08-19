@@ -9,6 +9,7 @@
       "@claude-flow/swarm": ["./@claude-flow/swarm/src"],
       "@claude-flow/performance": ["./@claude-flow/performance/src"],
       "@claude-flow/cli": ["./@claude-flow/cli/src"],
+      "swarmlo-cli": ["./@claude-flow/cli/src"],
       "@claude-flow/neural": ["./@claude-flow/neural/src"],
       "@claude-flow/testing": ["./@claude-flow/testing/src"],
       "@claude-flow/deployment": ["./@claude-flow/deployment/src"],

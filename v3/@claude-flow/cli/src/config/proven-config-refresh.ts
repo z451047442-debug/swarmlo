@@ -39,7 +39,7 @@ function findPackageProvenConfig(): string | null {
   const dirs: string[] = [];
   try {
     const esmRequire = createRequire(import.meta.url);
-    const pkgRoot = path.dirname(esmRequire.resolve('@claude-flow/cli/package.json'));
+    const pkgRoot = path.dirname(esmRequire.resolve('swarmlo-cli/package.json'));
     dirs.push(path.join(pkgRoot, '.claude'));
   } catch { /* not resolvable */ }
   dirs.push(path.resolve(__dirname, '..', '..', '..', '.claude'));

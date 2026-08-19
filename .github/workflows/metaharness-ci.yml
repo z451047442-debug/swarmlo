@@ -186,7 +186,7 @@ jobs:
           # EUNSUPPORTEDPROTOCOL "workspace:*" because the workspace uses pnpm
           # (v3/pnpm-workspace.yaml). Install at workspace root with pnpm.
           # iter 119 — cli imports from workspace siblings; build them first.
-          # iter 127 — switched from `-F "@claude-flow/cli..."` to `-r` because
+          # iter 127 — switched from `-F "swarmlo-cli..."` to `-r` because
           # cli imports from `../../../swarm/src/...` (CROSS-PACKAGE relative
           # path, NOT via the package dep graph). pnpm filter follows
           # package.json deps and missed swarm, producing TS6305 "Output file
@@ -277,7 +277,7 @@ jobs:
           # EUNSUPPORTEDPROTOCOL "workspace:*" because the workspace uses pnpm
           # (v3/pnpm-workspace.yaml). Install at workspace root with pnpm.
           # iter 119 — cli imports from workspace siblings; build them first.
-          # iter 127 — switched from `-F "@claude-flow/cli..."` to `-r` because
+          # iter 127 — switched from `-F "swarmlo-cli..."` to `-r` because
           # cli imports from `../../../swarm/src/...` (CROSS-PACKAGE relative
           # path, NOT via the package dep graph). pnpm filter follows
           # package.json deps and missed swarm, producing TS6305 "Output file
@@ -471,7 +471,7 @@ jobs:
           # EUNSUPPORTEDPROTOCOL "workspace:*" because the workspace uses pnpm
           # (v3/pnpm-workspace.yaml). Install at workspace root with pnpm.
           # iter 119 — cli imports from workspace siblings; build them first.
-          # iter 127 — switched from `-F "@claude-flow/cli..."` to `-r` because
+          # iter 127 — switched from `-F "swarmlo-cli..."` to `-r` because
           # cli imports from `../../../swarm/src/...` (CROSS-PACKAGE relative
           # path, NOT via the package dep graph). pnpm filter follows
           # package.json deps and missed swarm, producing TS6305 "Output file
@@ -599,7 +599,7 @@ jobs:
           # EUNSUPPORTEDPROTOCOL "workspace:*" because the workspace uses pnpm
           # (v3/pnpm-workspace.yaml). Install at workspace root with pnpm.
           # iter 119 — cli imports from workspace siblings; build them first.
-          # iter 127 — switched from `-F "@claude-flow/cli..."` to `-r` because
+          # iter 127 — switched from `-F "swarmlo-cli..."` to `-r` because
           # cli imports from `../../../swarm/src/...` (CROSS-PACKAGE relative
           # path, NOT via the package dep graph). pnpm filter follows
           # package.json deps and missed swarm, producing TS6305 "Output file

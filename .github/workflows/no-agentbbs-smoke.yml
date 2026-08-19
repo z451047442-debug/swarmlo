@@ -163,7 +163,7 @@ jobs:
           (cd v3 && pnpm install --frozen-lockfile)
           # Build whole workspace dep-first (cli has cross-package deps the
           # `...` filter can't discover from package.json alone)
-          (cd v3 && pnpm -r --no-bail build || pnpm --filter @claude-flow/cli build)
+          (cd v3 && pnpm -r --no-bail build || pnpm --filter swarmlo-cli build)
           # Surgically remove agentbbs from every install location it landed.
           find v3 -type d -name agentbbs -path '*node_modules*' -exec rm -rf {} + 2>/dev/null || true
           # Sanity check — the package really is gone

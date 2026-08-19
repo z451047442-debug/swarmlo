@@ -51,7 +51,7 @@ jobs:
           # that pnpm's dependency-aware filter can't discover from
           # package.json alone. `pnpm -r build` runs the build script across
           # the whole workspace, dep-first.
-          pnpm -r --no-bail build || pnpm --filter @claude-flow/cli build
+          pnpm -r --no-bail build || pnpm --filter swarmlo-cli build
       - name: vitest — business-pod-tools
         working-directory: v3/@claude-flow/cli
         run: pnpm vitest run __tests__/business-pod-tools.test.ts

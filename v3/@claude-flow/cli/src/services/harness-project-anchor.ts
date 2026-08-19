@@ -129,7 +129,7 @@ function isSwarmloRepository(projectRoot: string): boolean {
       repository?: string | { url?: string };
     };
     const repository = typeof pkg.repository === 'string' ? pkg.repository : pkg.repository?.url;
-    return ['claude-flow', 'swarmlo', '@claude-flow/cli'].includes(pkg.name ?? '')
+    return ['claude-flow', 'swarmlo', 'swarmlo-cli', '@claude-flow/cli'].includes(pkg.name ?? '')
       && /github\.com[/:]ruvnet\/(?:swarmlo|claude-flow)(?:\.git)?$/i.test(repository ?? '');
   } catch {
     return false;

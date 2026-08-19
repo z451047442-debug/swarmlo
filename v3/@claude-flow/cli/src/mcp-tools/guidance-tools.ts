@@ -31,7 +31,7 @@ function findProjectRoot(): string {
   if (existsSync(cwdManifest)) {
     try {
       const manifest = JSON.parse(readFileSync(cwdManifest, 'utf-8')) as { name?: string };
-      cwdIsCliPackage = manifest.name === '@claude-flow/cli';
+      cwdIsCliPackage = manifest.name === 'swarmlo-cli' || manifest.name === '@claude-flow/cli';
     } catch {
       // An invalid project manifest is not a reason to hide discoverable files.
     }

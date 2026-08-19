@@ -581,7 +581,7 @@ jobs:
     #   - CLI parser ambiguity recording the wrong value (#1859's "true" filename)
     #
     # Independent of the workspace `build` job — only the cli package needs
-    # to be built. We use `pnpm --filter @claude-flow/cli...` to scope.
+    # to be built. We use `pnpm --filter swarmlo-cli...` to scope.
     name: Plugin hooks smoke / ${{ matrix.os }} / Node ${{ matrix.node }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -1273,7 +1273,7 @@ jobs:
         # npm doesn't understand workspace:*. The pnpm workspace root is
         # `v3/pnpm-workspace.yaml`. The CLI's tsc references project-refs to
         # @claude-flow/swarm (and others), so those must be built first —
-        # `pnpm --filter @claude-flow/cli build` alone fails with TS6305.
+        # `pnpm --filter swarmlo-cli build` alone fails with TS6305.
         # `--recursive --no-bail` builds the whole graph in topological order
         # past unrelated package failures; we then assert the specific dist
         # file the smoke imports.

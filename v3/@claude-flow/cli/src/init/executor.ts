@@ -1275,7 +1275,7 @@ function findSourceHelpersDir(sourceBaseDir?: string): string | null {
   // Strategy 1: require.resolve to find package root (most reliable for npx)
   try {
     const esmRequire = createRequire(import.meta.url);
-    const pkgJsonPath = esmRequire.resolve('@claude-flow/cli/package.json');
+    const pkgJsonPath = esmRequire.resolve('swarmlo-cli/package.json');
     const pkgRoot = path.dirname(pkgJsonPath);
     possiblePaths.push(path.join(pkgRoot, '.claude', 'helpers'));
   } catch {
