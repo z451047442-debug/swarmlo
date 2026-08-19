@@ -1774,7 +1774,7 @@ jobs:
 
   cli-npx-install-smoke:
     # Regression guard for ruvnet/ruflo#1147 and #2018 — both report:
-    #   $ npx @claude-flow/cli@latest …
+    #   $ npx swarmlo-cli@latest …
     #   npm error Invalid Version:
     # Caused by an optionalDependencies/peerDependencies overlap deep in the
     # dep tree (see scripts/audit-package-dep-overlap.mjs for the static
@@ -2554,7 +2554,7 @@ jobs:
     # previously re-implemented all data readers locally with fragile file
     # probes that returned wrong values (DDD 0/5, intelligence 1%, ADR 87/87).
     #
-    # The fix delegates to 'npx @claude-flow/cli@latest hooks statusline --json'
+    # The fix delegates to 'npx swarmlo-cli@latest hooks statusline --json'
     # as the single source of truth and counts ADRs in BOTH directories
     # (v3/implementation/adrs/ + v3/docs/adr/).
     #

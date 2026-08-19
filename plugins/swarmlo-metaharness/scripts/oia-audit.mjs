@@ -35,7 +35,7 @@ import { runHarness, runMetaharness, runHarnessAsync, runMetaharnessAsync, emitD
 const NS = process.env.OIA_AUDIT_NAMESPACE || 'metaharness-audit';
 const CLI_PKG = process.env.CLI_CORE === '1'
   ? '@claude-flow/cli-core@alpha'
-  : '@claude-flow/cli@latest';
+  : 'swarmlo-cli@latest';
 
 const ARGS = (() => {
   const a = { path: '.', format: 'json', dryRun: false, alertWorst: null };

@@ -1,5 +1,5 @@
 # Regression guard for #2561 — CLI optionalDependencies bloat causes cold
-# `npx -y @claude-flow/cli@alpha --version` (and `swarmlo@alpha` wrapper) to
+# `npx -y swarmlo-cli@alpha --version` (and `swarmlo@alpha` wrapper) to
 # time out because npm must resolve/download every optional dep before Node
 # ever executes bin/cli.js and can hit its in-process --version fast-path.
 #
@@ -131,7 +131,7 @@ jobs:
             if (failed) {
               console.error("");
               console.error("See #2561 for context. If you truly need one of these deps at the CLI");
-              console.error("layer, prove cold `npx -y @claude-flow/cli@alpha --version` still");
+              console.error("layer, prove cold `npx -y swarmlo-cli@alpha --version` still");
               console.error("returns under 60s and update this guard in the same PR.");
               process.exit(1);
             }

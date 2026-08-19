@@ -151,12 +151,12 @@ function deriveLiveToolNames() {
 // future rename doesn't silently desync the guard from reality.
 function deriveCanonicalCliInvocation() {
   const pkgSrc = readText(join(CLI_ROOT, 'package.json'));
-  if (!pkgSrc) return 'npx @claude-flow/cli@latest';
+  if (!pkgSrc) return 'npx swarmlo-cli@latest';
   try {
     const pkg = JSON.parse(pkgSrc);
     return `npx ${pkg.name}@latest`;
   } catch {
-    return 'npx @claude-flow/cli@latest';
+    return 'npx swarmlo-cli@latest';
   }
 }
 

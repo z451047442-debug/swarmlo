@@ -59,17 +59,17 @@ The pathfinder traversal algorithm finds relevant subgraphs:
 
 After completing graph construction or traversal tasks, train patterns:
 ```bash
-npx @claude-flow/cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
-npx @claude-flow/cli@latest neural train --pattern-type knowledge-graph --epochs 10
+npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@latest neural train --pattern-type knowledge-graph --epochs 10
 ```
 
 ### Memory Learning
 
 Store successful graph patterns and entity extraction results:
 ```bash
-npx @claude-flow/cli@latest memory store --namespace knowledge-graph --key "entity-ENTITY_NAME" --value "ENTITY_METADATA_JSON"
-npx @claude-flow/cli@latest memory store --namespace knowledge-graph --key "pattern-PATTERN_NAME" --value "GRAPH_PATTERN_JSON"
-npx @claude-flow/cli@latest memory search --query "entities related to authentication" --namespace knowledge-graph
+npx swarmlo-cli@latest memory store --namespace knowledge-graph --key "entity-ENTITY_NAME" --value "ENTITY_METADATA_JSON"
+npx swarmlo-cli@latest memory store --namespace knowledge-graph --key "pattern-PATTERN_NAME" --value "GRAPH_PATTERN_JSON"
+npx swarmlo-cli@latest memory search --query "entities related to authentication" --namespace knowledge-graph
 ```
 
 ### Related Plugins

@@ -13,9 +13,9 @@ Verbs:
 1. **ls [--query "<text>"] [--host <host>] [--verdict pass|fail|partial]**
    List browser sessions. Backs onto AgentDB `browser-sessions` namespace.
    ```bash
-   npx -y @claude-flow/cli@latest memory list --namespace browser-sessions
+   npx -y swarmlo-cli@latest memory list --namespace browser-sessions
    # or with semantic filter:
-   npx -y @claude-flow/cli@latest memory search --namespace browser-sessions --query "QUERY"
+   npx -y swarmlo-cli@latest memory search --namespace browser-sessions --query "QUERY"
    ```
    For active (live) sessions, also call `mcp__plugin_swarmlo-core_swarmlo__browser_session-list`.
 

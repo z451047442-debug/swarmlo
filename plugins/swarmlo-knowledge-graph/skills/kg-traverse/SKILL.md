@@ -26,5 +26,5 @@ When you need to explore the knowledge graph starting from a specific entity -- 
 ## CLI alternative
 
 ```bash
-npx @claude-flow/cli@latest memory search --query "relations for ENTITY_NAME" --namespace knowledge-graph
+npx swarmlo-cli@latest memory search --query "relations for ENTITY_NAME" --namespace knowledge-graph
 ```

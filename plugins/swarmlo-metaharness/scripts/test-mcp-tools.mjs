@@ -178,7 +178,7 @@ async function main() {
     //   chain-tools      : 180s  (drift_from_history + oia_audit + audit_list)
     // iter 131 — bumped chain-tool budget 90s → 180s. audit_list still
     // timed out at 90s in CI; locally it runs in ~4s, but CI's
-    // `npx @claude-flow/cli@latest memory list` invocation pays both
+    // `npx swarmlo-cli@latest memory list` invocation pays both
     // the npx fetch AND a full CLI startup (which loads agentic-flow +
     // ONNX). 180s gives 30x headroom over the local cost.
     const isChainTool = tool.name === 'metaharness_drift_from_history'

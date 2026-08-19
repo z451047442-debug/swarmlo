@@ -62,19 +62,28 @@ if (!swarmloPkg) {
   violations.push('v3/@claude-flow/cli/package.json not found');
 } else {
   const cliVersion = cliPkg.version;
-  const swarmloDepRange = swarmloPkg.dependencies?.['@claude-flow/cli'];
+  const swarmloDepRange = swarmloPkg.dependencies?.['swarmlo-cli'];
+
+  // 0. The wrapper must not regress to the upstream @claude-flow/cli package
+  // (ruvnet continues to publish it — an accidental revert would silently
+  // route fork users to the upstream channel).
+  if (swarmloPkg.dependencies?.['@claude-flow/cli']) {
+    violations.push(
+      `swarmlo/package.json still declares "@claude-flow/cli" — wrapper must depend on swarmlo-cli, not the upstream package`
+    );
+  }
 
   if (!swarmloDepRange) {
     violations.push(
-      `swarmlo/package.json does not declare @claude-flow/cli — wrapper must depend on the CLI it wraps`
+      `swarmlo/package.json does not declare swarmlo-cli — wrapper must depend on the CLI it wraps`
     );
   } else {
-    checks.push(`swarmlo wraps @claude-flow/cli with range "${swarmloDepRange}" — cli published as ${cliVersion}`);
+    checks.push(`swarmlo-app wraps swarmlo-cli with range "${swarmloDepRange}" — cli published as ${cliVersion}`);
 
     // 1a. Range must include the current cli version
     if (!semver.satisfies(cliVersion, swarmloDepRange, { includePrerelease: true })) {
       violations.push(
-        `swarmlo's "@claude-flow/cli": "${swarmloDepRange}" does NOT include the cli's actual ` +
+        `swarmlo-app's "swarmlo-cli": "${swarmloDepRange}" does NOT include the cli's actual ` +
         `version ${cliVersion}. Bump the range to "^${cliVersion}" or wider that covers it.`
       );
     }
@@ -84,7 +93,7 @@ if (!swarmloPkg) {
     const rangeUsesPrerelease = /-alpha\.|-beta\.|-rc\.|alpha\.\d+|beta\.\d+|rc\.\d+/.test(swarmloDepRange);
     if (!cliPrerelease && rangeUsesPrerelease) {
       violations.push(
-        `swarmlo's "@claude-flow/cli": "${swarmloDepRange}" carries a pre-release tag but cli ${cliVersion} ` +
+        `swarmlo-app's "swarmlo-cli": "${swarmloDepRange}" carries a pre-release tag but cli ${cliVersion} ` +
         `is on stable semver. Pre-release ranges widen the dedupe walk and have caused real-world ` +
         `crashes (see #1147 / #2018 / #2127). Replace with a plain caret range like "^${cliVersion}".`
       );

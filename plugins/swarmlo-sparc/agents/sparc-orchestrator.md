@@ -141,5 +141,5 @@ Use learned patterns to predict phase durations and common blockers:
 
 After each phase or full SPARC cycle, feed the phase-quality learning loop so quality gates self-tune:
 ```bash
-npx @claude-flow/cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
 ```

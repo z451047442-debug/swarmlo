@@ -9,7 +9,7 @@
  *
  *   const cliPkg = process.env.CLI_CORE === '1'
  *     ? '@claude-flow/cli-core@alpha'
- *     : '@claude-flow/cli@latest';
+ *     : 'swarmlo-cli@latest';
  *
  * Hooks calls and other extras are left untouched (they aren't in
  * cli-core yet — see MIGRATION.md "What's NOT migrable yet").
@@ -58,25 +58,25 @@ let skipped = 0;
 
 for (const f of files) {
   const text = readFileSync(f, 'utf-8');
-  if (!text.includes('@claude-flow/cli')) {
+  if ((!text.includes('@claude-flow/cli') && !text.includes('swarmlo-cli@'))) {
     continue;
   }
 
   let updated = text;
   let changed = false;
 
-  // Pattern 1: spawnSync('npx', ['@claude-flow/cli@latest', 'memory', 'store', ...])
+  // Pattern 1: spawnSync('npx', ['swarmlo-cli@latest', 'memory', 'store', ...])
   // Rewrite into the env-flag pattern. Surgical: only when the SECOND argv
   // element is one of the safe ops.
   for (const op of SAFE_MEM_OPS) {
     const pattern = new RegExp(
-      `(['"\`])@claude-flow/cli@latest\\1(\\s*,\\s*['"\`]${op}\\b)`,
+      `(['"\`])(?:@claude-flow/cli|swarmlo-cli)@latest\\1(\\s*,\\s*['"\`]${op}\\b)`,
       'g',
     );
     if (pattern.test(updated)) {
       updated = updated.replace(
         pattern,
-        `$1\${process.env.CLI_CORE === '1' ? '@claude-flow/cli-core@alpha' : '@claude-flow/cli@latest'}\$1$2`,
+        `$1\${process.env.CLI_CORE === '1' ? '@claude-flow/cli-core@alpha' : 'swarmlo-cli@latest'}\$1$2`,
       );
       // The single-quote → template-literal conversion is too involved for
       // a regex replace; instead, just flag the file and let the human
@@ -85,21 +85,21 @@ for (const f of files) {
       updated = text;
       changed = false;
       needsReview++;
-      console.error(`[review] ${f}: contains @claude-flow/cli@latest with ${op} — apply MIGRATION.md env-flag pattern manually`);
+      console.error(`[review] ${f}: contains @claude-flow/cli@latest / swarmlo-cli@latest with ${op} — apply MIGRATION.md env-flag pattern manually`);
       break;
     }
   }
 
-  // Pattern 2: bare 'npx @claude-flow/cli@latest <safe-op>' in shell-style.
+  // Pattern 2: bare 'npx (?:@claude-flow/cli|swarmlo-cli)@latest <safe-op>' in shell-style.
   // These are easier — string substitution is sound.
   // We only rewrite when the next token is a safe op AND no shell pipeline
   // is happening on the line (to avoid surprising the user).
   for (const op of SAFE_MEM_OPS) {
-    const re = new RegExp(`npx @claude-flow/cli@latest ${op}\\b`, 'g');
+    const re = new RegExp(`npx (?:@claude-flow/cli|swarmlo-cli)@latest ${op}\\b`, 'g');
     if (re.test(updated)) {
       // Check next-token-is-hooks etc. excluded by SAFE list — ok to rewrite.
       const before = updated;
-      updated = updated.replace(re, `npx \${CLI_CORE:-@claude-flow/cli@latest=@claude-flow/cli-core@alpha} ${op}`);
+      updated = updated.replace(re, `npx \${CLI_CORE:-swarmlo-cli@latest=@claude-flow/cli-core@alpha} ${op}`);
       // The shell parameter expansion above is wrong syntax; fall back to
       // no-op + report. (Honest: shell-side migration needs human review.)
       updated = before;
@@ -109,7 +109,7 @@ for (const f of files) {
 
   // Pattern 3: hooks / extras — flag for manual review
   for (const op of NEEDS_REVIEW) {
-    const re = new RegExp(`@claude-flow/cli@latest['"\`]?\\s*,?\\s*['"\`]?${op}\\b`, 'g');
+    const re = new RegExp(`(?:@claude-flow/cli|swarmlo-cli)@latest['"\`]?\\s*,?\\s*['"\`]?${op}\\b`, 'g');
     if (re.test(text)) {
       console.error(`[skip]   ${f}: ${op} call site is not yet migrable to cli-core (alpha.${op === 'hooks' ? '3' : '?'} or later)`);
       skipped++;

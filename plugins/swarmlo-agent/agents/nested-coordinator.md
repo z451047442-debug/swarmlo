@@ -51,13 +51,13 @@ When you spawn a child via `Task`, you have spent **one level** of depth. The ch
 Before spawning a deep tree, search past patterns:
 
 ```bash
-npx @claude-flow/cli@latest memory search --query "<problem shape>" --namespace nested-patterns --limit 5
+npx swarmlo-cli@latest memory search --query "<problem shape>" --namespace nested-patterns --limit 5
 ```
 
 After completion, store the tree shape and what worked:
 
 ```bash
-npx @claude-flow/cli@latest memory store --namespace nested-patterns \
+npx swarmlo-cli@latest memory store --namespace nested-patterns \
   --key "tree-<task>-<timestamp>" \
   --value "depth=N, fan-out=M, total-spawns=X, success=true, leaf-types=[coder,tester]"
 ```

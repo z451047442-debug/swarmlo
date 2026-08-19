@@ -41,5 +41,5 @@ git checkout -b release/v1.2.0
 ## CLI alternative
 
 ```bash
-npx @claude-flow/cli@latest hooks pre-task --description "git workflow"
+npx swarmlo-cli@latest hooks pre-task --description "git workflow"
 ```

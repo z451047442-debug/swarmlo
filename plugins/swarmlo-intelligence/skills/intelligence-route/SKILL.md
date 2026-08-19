@@ -50,7 +50,7 @@ The router learns from these calls. Skipping them = no learning.
 ## CLI alternative
 
 ```bash
-npx @claude-flow/cli@latest hooks route --task "description"
-npx @claude-flow/cli@latest hooks pre-task --description "description"
-npx @claude-flow/cli@latest hooks explain --topic "routing decision"
+npx swarmlo-cli@latest hooks route --task "description"
+npx swarmlo-cli@latest hooks pre-task --description "description"
+npx swarmlo-cli@latest hooks explain --topic "routing decision"
 ```

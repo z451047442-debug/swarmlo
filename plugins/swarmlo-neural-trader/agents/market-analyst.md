@@ -43,11 +43,11 @@ npx neural-trader --sector-analysis --sectors "tech,healthcare,energy"
 3. Check correlations: `npx neural-trader --correlation --symbols "TICKERS" --window 30d`
 4. Store analysis in memory:
    ```bash
-   npx @claude-flow/cli@latest memory store --namespace trading-analysis --key "regime-TICKER-DATE" --value "ANALYSIS"
+   npx swarmlo-cli@latest memory store --namespace trading-analysis --key "regime-TICKER-DATE" --value "ANALYSIS"
    ```
 5. Compare with historical regimes:
    ```bash
-   npx @claude-flow/cli@latest memory search --query "similar regime to CURRENT_REGIME" --namespace trading-analysis
+   npx swarmlo-cli@latest memory search --query "similar regime to CURRENT_REGIME" --namespace trading-analysis
    ```
 
 ### Tools
@@ -60,7 +60,7 @@ npx neural-trader --sector-analysis --sectors "tech,healthcare,energy"
 ### Neural Learning
 
 ```bash
-npx @claude-flow/cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
 ```
 
 ### Comms protocol (ADR-126 Phase 5 — SendMessage pipeline)

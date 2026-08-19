@@ -6,11 +6,11 @@
  * resolution logic inline. This launcher exists to do that work before
  * exec'ing the real server: it resolves a local @claude-flow/cli install
  * and runs its MCP server directly (`<bin>/cli.js mcp start`), falling
- * back to `npx -y @claude-flow/cli@latest mcp start` only when no local
+ * back to `npx -y swarmlo-cli@latest mcp start` only when no local
  * install resolves.
  *
  * Without this, plugins/swarmlo-core/.mcp.json's `npx -y
- * @claude-flow/cli@latest` always re-resolved to whatever was newest on
+ * swarmlo-cli@latest` always re-resolved to whatever was newest on
  * the registry, independent of — and frequently diverging from — any
  * version a user separately pinned via `npm install @claude-flow/cli`
  * (ADR-382 Gap 3 / issue #2971).
@@ -63,7 +63,7 @@ function buildLaunchSpec(localBin) {
   // shell:true carries no injection risk on this branch.
   return {
     command: npxCmd,
-    args: ['-y', '@claude-flow/cli@latest', ...MCP_ARGS],
+    args: ['-y', 'swarmlo-cli@latest', ...MCP_ARGS],
     shell: process.platform === 'win32',
   };
 }

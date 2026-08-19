@@ -40,11 +40,11 @@ npx @claude-flow/cli-core@alpha memory store --key x --value 1 --namespace patte
 - `init`, `migrate`, `doctor`, `daemon`, `deployment` — lifecycle management
 - `performance`, `security`, `providers`, `plugins`, `config` — admin surface
 
-For any of these, install `@claude-flow/cli@alpha` (the metapackage that re-exports cli-core and lazy-loads everything else).
+For any of these, install `swarmlo-cli@alpha` (the metapackage that re-exports cli-core and lazy-loads everything else).
 
 ## Compatibility
 
-`@claude-flow/cli-core@3.7.0-alpha.x` ships in lockstep with `@claude-flow/cli@3.7.0-alpha.x`. Once promoted from alpha → latest, the two packages will continue to share the major.minor line.
+`@claude-flow/cli-core@3.7.0-alpha.x` ships in lockstep with `swarmlo-cli@3.7.0-alpha.x`. Once promoted from alpha → latest, the two packages will continue to share the major.minor line.
 
 ## Verification
 

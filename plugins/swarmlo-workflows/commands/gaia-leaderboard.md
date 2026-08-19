@@ -56,7 +56,7 @@ Rank  System                  L1%    L2%    L3%    Overall
 1. Use the WebFetch tool to retrieve leaderboard data from
    `https://huggingface.co/spaces/gaia-benchmark/leaderboard`.
 2. If the API returns JSON parse it directly; if HTML, extract the table rows.
-3. Load local runs: `npx @claude-flow/cli@latest memory list --namespace gaia-runs`
+3. Load local runs: `npx swarmlo-cli@latest memory list --namespace gaia-runs`
 4. Render a Markdown table comparing leaderboard entries with local runs.
 5. Highlight the gap between our best run and the top-10 median.
 6. Suggest which configuration changes would close the gap most efficiently.

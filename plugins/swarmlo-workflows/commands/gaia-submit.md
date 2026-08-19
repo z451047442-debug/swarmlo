@@ -83,7 +83,7 @@ signed *into* `manifest.md.json`.
    ```json
    {
      "submitted_at": "<ISO-8601>",
-     "harness": "swarmlo@3.6.x / @claude-flow/cli@3.6.x",
+     "harness": "swarmlo@3.6.x / swarmlo-cli@3.6.x",
      "model": "<model-id>",
      "gaia_level": 1,
      "tool_catalogue": ["web_search","file_read","web_browse","image_describe","python_exec"],

@@ -5,7 +5,7 @@ description: Show Swarmlo system health, MCP server status, and active agents
 $ARGUMENTS
 Run diagnostics and show system status.
 ```bash
-npx @claude-flow/cli@latest doctor
-npx @claude-flow/cli@latest status
+npx swarmlo-cli@latest doctor
+npx swarmlo-cli@latest status
 ```
-To auto-fix issues, run `npx @claude-flow/cli@latest doctor --fix` separately.
+To auto-fix issues, run `npx swarmlo-cli@latest doctor --fix` separately.

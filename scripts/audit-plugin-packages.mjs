@@ -46,7 +46,7 @@ const KNOWN_PUBLISHED = new Set([
   '@claude-flow/aidefence',
   '@claude-flow/browser',
   '@claude-flow/claims',
-  '@claude-flow/cli',
+  'swarmlo-cli',
   '@claude-flow/cli-core',
   '@claude-flow/codex',
   '@claude-flow/deployment',

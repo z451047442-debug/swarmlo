@@ -50,7 +50,7 @@ function assert(cond, label) {
 
 function memStore(cwd, key, valueObj) {
   const r = spawnNpxSync([
-    '-y', '@claude-flow/cli@latest', 'memory', 'store',
+    '-y', 'swarmlo-cli@latest', 'memory', 'store',
     '--namespace', NS, '--key', key,
     '--value', JSON.stringify(valueObj),
   ], {
@@ -68,7 +68,7 @@ function memStore(cwd, key, valueObj) {
 
 function memInit(cwd) {
   const r = spawnNpxSync([
-    '-y', '@claude-flow/cli@latest', 'memory', 'init',
+    '-y', 'swarmlo-cli@latest', 'memory', 'init',
   ], {
     cwd,
     stdio: ['ignore', 'pipe', 'pipe'],

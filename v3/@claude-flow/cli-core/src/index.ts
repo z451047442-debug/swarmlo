@@ -116,7 +116,7 @@ Working subcommands:
 Storage:
   JsonMemoryBackend writes to .swarm/memory.json by default. Override with
   CLAUDE_FLOW_MEMORY_PATH or --path. Search is substring-only — for semantic
-  vector search, install the heavy @claude-flow/cli@alpha.
+  vector search, install the heavy swarmlo-cli@alpha.
 
 Programmatic use:
   import { JsonMemoryBackend, runMemoryCommand } from '@claude-flow/cli-core';
@@ -126,6 +126,6 @@ Track progress: https://github.com/z451047442-debug/swarmlo/issues/1760`);
   }
 
   console.error(`@claude-flow/cli-core: command "${args[0]}" not yet wired into cli-core.
-For now, use the full CLI:  npx @claude-flow/cli@alpha ${args.join(' ')}`);
+For now, use the full CLI:  npx swarmlo-cli@alpha ${args.join(' ')}`);
   process.exit(1);
 }

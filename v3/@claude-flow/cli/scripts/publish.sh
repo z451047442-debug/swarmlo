@@ -1,6 +1,6 @@
 #!/bin/bash
 # Publish script for @claude-flow/cli
-# Publishes to both @claude-flow/cli@alpha AND claude-flow@v3alpha
+# Publishes to both swarmlo-cli@alpha AND claude-flow@v3alpha
 
 set -e
 
@@ -54,4 +54,4 @@ echo "  claude-flow@$VERSION (alpha, latest, v3alpha)"
 echo ""
 echo "Install with:"
 echo "  npx claude-flow@alpha"
-echo "  npx @claude-flow/cli@latest"
+echo "  npx swarmlo-cli@latest"

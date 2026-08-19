@@ -12,7 +12,7 @@ Parse `$ARGUMENTS` as `<context-name> <aggregate-name>` (both kebab-case). The c
 
 1. **Validate**: Confirm `src/<context>/domain/` exists. If not, suggest running `/ddd-context <context>` first.
 
-2. **Pre-task hook**: `npx @claude-flow/cli@latest hooks pre-task --description "DDD aggregate: <aggregate-name> in <context>"`
+2. **Pre-task hook**: `npx swarmlo-cli@latest hooks pre-task --description "DDD aggregate: <aggregate-name> in <context>"`
 
 3. **Create aggregate root entity**:
    - File: `src/<context>/domain/entities/<aggregate-name>.entity.ts`
@@ -48,4 +48,4 @@ Parse `$ARGUMENTS` as `<context-name> <aggregate-name>` (both kebab-case). The c
    mcp__plugin_swarmlo-core_swarmlo__memory_store --key "ddd-aggregate-<context>-<aggregate-name>" --value "AGGREGATE_SUMMARY" --namespace tasks
    ```
 
-10. **Post-task hook**: `npx @claude-flow/cli@latest hooks post-task --task-id "ddd-aggregate-<aggregate-name>" --success true --train-neural true`
+10. **Post-task hook**: `npx swarmlo-cli@latest hooks post-task --task-id "ddd-aggregate-<aggregate-name>" --success true --train-neural true`

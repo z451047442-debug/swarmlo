@@ -31,6 +31,6 @@ When you need to identify candlestick patterns (doji, hammer, engulfing, head-sh
 ## CLI alternative
 
 ```bash
-npx @claude-flow/cli@latest memory search --query "bullish reversal patterns" --namespace market-patterns
-npx @claude-flow/cli@latest memory store --key "pattern-AAPL-2026-05-04-doji" --value '{...}' --namespace market-patterns
+npx swarmlo-cli@latest memory search --query "bullish reversal patterns" --namespace market-patterns
+npx swarmlo-cli@latest memory store --key "pattern-AAPL-2026-05-04-doji" --value '{...}' --namespace market-patterns
 ```

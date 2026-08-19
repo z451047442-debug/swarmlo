@@ -23,7 +23,7 @@ Choose based on query type:
 
    **Dense search (default)**:
    ```bash
-   npx @claude-flow/cli@latest memory search --query "QUERY" --namespace NAMESPACE --limit 10
+   npx swarmlo-cli@latest memory search --query "QUERY" --namespace NAMESPACE --limit 10
    ```
    Or via MCP: `mcp__plugin_swarmlo-core_swarmlo__memory_search({ query: "QUERY", namespace: "NAMESPACE", limit: 10 })`
 
@@ -39,7 +39,7 @@ Choose based on query type:
 
    **Smart retrieval** (when --smart or complex recall needed):
    ```bash
-   npx @claude-flow/cli@latest memory search --query "QUERY" --smart --limit 10
+   npx swarmlo-cli@latest memory search --query "QUERY" --smart --limit 10
    ```
    Or via MCP: `mcp__plugin_swarmlo-core_swarmlo__memory_search({ query: "QUERY", smart: true, limit: 10 })`
 

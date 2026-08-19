@@ -45,6 +45,6 @@ Validate domain boundary integrity across all bounded contexts.
 
 7. **Store results**:
    ```bash
-   npx @claude-flow/cli@latest memory store --key "ddd-validation-TIMESTAMP" --value "RESULTS_SUMMARY" --namespace tasks
-   npx @claude-flow/cli@latest hooks post-task --task-id "ddd-validate" --success true --store-results true
+   npx swarmlo-cli@latest memory store --key "ddd-validation-TIMESTAMP" --value "RESULTS_SUMMARY" --namespace tasks
+   npx swarmlo-cli@latest hooks post-task --task-id "ddd-validate" --success true --store-results true
    ```

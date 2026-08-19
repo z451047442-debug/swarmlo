@@ -24,8 +24,8 @@ Always verify sandbox isolation before running untrusted code.
 
 Store successful WASM agent configurations:
 ```bash
-npx @claude-flow/cli@latest memory store --namespace wasm-patterns --key "agent-TYPE" --value "CONFIG_AND_PERFORMANCE"
-npx @claude-flow/cli@latest memory search --query "wasm agent for TASK" --namespace wasm-patterns
+npx swarmlo-cli@latest memory store --namespace wasm-patterns --key "agent-TYPE" --value "CONFIG_AND_PERFORMANCE"
+npx swarmlo-cli@latest memory search --query "wasm agent for TASK" --namespace wasm-patterns
 ```
 
 
@@ -33,6 +33,6 @@ npx @claude-flow/cli@latest memory search --query "wasm agent for TASK" --namesp
 
 After completing tasks, store successful patterns:
 ```bash
-npx @claude-flow/cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
-npx @claude-flow/cli@latest memory search --query "TASK_TYPE patterns" --namespace patterns
+npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@latest memory search --query "TASK_TYPE patterns" --namespace patterns
 ```

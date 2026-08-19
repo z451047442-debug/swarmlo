@@ -11,7 +11,7 @@
  * deps — sona-optimizer, ewc-consolidation, ruvector/*).
  *
  * If a session needs a hooks_* not in this list, it falls through to
- * @claude-flow/cli@alpha at the cost of one extra cold-cache hit.
+ * swarmlo-cli@alpha at the cost of one extra cold-cache hit.
  *
  * Description framing matches the 3.6.30 sharpening: lead with "Use when
  * native X is wrong because Y" or "Native tools have no equivalent".

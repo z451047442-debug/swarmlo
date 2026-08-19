@@ -3,7 +3,7 @@
  * Smoke: `npx`-style install of the CLI tarball (regression guard for #1147 and #2018).
  *
  * Both issues report the same user-visible failure:
- *   $ npx @claude-flow/cli@latest …
+ *   $ npx swarmlo-cli@latest …
  *   npm error Invalid Version:
  *
  * Caused by an `optionalDependencies` ↔ `peerDependencies` overlap deep in
@@ -91,16 +91,16 @@ if (install.code !== 0) {
 }
 
 // 4. Resolve installed bin (handle pkg.bin shape — string or object)
-const installedPkgPath = join(scratch, 'node_modules', '@claude-flow', 'cli', 'package.json');
+const installedPkgPath = join(scratch, 'node_modules', 'swarmlo-cli', 'package.json');
 if (!existsSync(installedPkgPath)) fail(`installed cli package.json missing: ${installedPkgPath}`);
 const installedPkg = JSON.parse(execFileSync('node', ['-e', `console.log(JSON.stringify(require(${JSON.stringify(installedPkgPath)})))`], { encoding: 'utf-8' }));
 let binRel;
 if (typeof installedPkg.bin === 'string') binRel = installedPkg.bin;
 else if (installedPkg.bin && typeof installedPkg.bin === 'object') {
-  binRel = installedPkg.bin['claude-flow'] || installedPkg.bin.cli || Object.values(installedPkg.bin)[0];
+  binRel = installedPkg.bin['swarmlo-cli'] || installedPkg.bin['claude-flow'] || installedPkg.bin.cli || Object.values(installedPkg.bin)[0];
 }
 if (!binRel) fail('installed cli package.json has no usable "bin"');
-const binAbs = resolve(join(scratch, 'node_modules', '@claude-flow', 'cli'), binRel);
+const binAbs = resolve(join(scratch, 'node_modules', 'swarmlo-cli'), binRel);
 if (!existsSync(binAbs)) fail(`installed cli bin missing on disk: ${binAbs}`);
 
 console.log(`[4/5] running ${binAbs} --version`);

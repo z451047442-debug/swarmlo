@@ -52,13 +52,13 @@ const HOOK_RECORDER = join(__dirname, 'fixtures', 'hook-cli-recorder.cjs');
 // `cliInvoke` is the literal token-string that should run the CLI — caller
 // passes the full thing so this script doesn't need to guess shebangs:
 //   - local node script:   "node /abs/path/to/bin/cli.js"
-//   - npx fallthrough:     "npx --yes @claude-flow/cli@latest"
+//   - npx fallthrough:     "npx --yes swarmlo-cli@latest"
 const cliInvoke = process.argv[2];
 if (!cliInvoke) {
   console.error('Usage: node test-hooks.mjs "<cli-invocation-string>"');
   console.error('Examples:');
   console.error('  node test-hooks.mjs "node $PWD/v3/@claude-flow/cli/bin/cli.js"');
-  console.error('  node test-hooks.mjs "npx --yes @claude-flow/cli@latest"');
+  console.error('  node test-hooks.mjs "npx --yes swarmlo-cli@latest"');
   process.exit(2);
 }
 

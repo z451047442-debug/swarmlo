@@ -79,4 +79,4 @@ npx skills add z451047442-debug/swarmlo --all
 
 ## Version
 
-Current: 3.31.0 (stable, published to npm as `swarmlo@latest` / `claude-flow@latest` / `@claude-flow/cli@latest`).
+Current: 3.31.0 (stable, published to npm as `swarmlo@latest` / `claude-flow@latest` / `swarmlo-cli@latest`).

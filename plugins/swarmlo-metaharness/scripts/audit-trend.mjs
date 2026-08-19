@@ -38,7 +38,7 @@ import { SEVERITY_RANK, rankSeverity } from './_harness.mjs';
 const NS = process.env.AUDIT_TREND_NAMESPACE || 'metaharness-audit';
 const CLI_PKG = process.env.CLI_CORE === '1'
   ? '@claude-flow/cli-core@alpha'
-  : '@claude-flow/cli@latest';
+  : 'swarmlo-cli@latest';
 
 const ARGS = (() => {
   const a = {

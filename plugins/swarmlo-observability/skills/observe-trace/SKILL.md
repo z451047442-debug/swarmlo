@@ -25,5 +25,5 @@ When you need to understand how a task was executed across agents -- which spans
 ## CLI alternative
 
 ```bash
-npx @claude-flow/cli@latest memory search --query "trace spans for task TASK_ID" --namespace observability
+npx swarmlo-cli@latest memory search --query "trace spans for task TASK_ID" --namespace observability
 ```

@@ -46,7 +46,7 @@ const releases = {};
 for (const [key, pkgPath] of [
   ['swarmlo', 'swarmlo/package.json'],
   ['claude-flow', 'package.json'],
-  ['@claude-flow/cli', 'v3/@claude-flow/cli/package.json'],
+  ['swarmlo-cli', 'v3/@claude-flow/cli/package.json'],
   ['@claude-flow/memory', 'v3/@claude-flow/memory/package.json'],
 ]) {
   const fullPath = join(REPO_ROOT, pkgPath);

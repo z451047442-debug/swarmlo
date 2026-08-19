@@ -30,5 +30,5 @@ When you need a snapshot of system health -- task completion rates, error rates,
 ## CLI alternative
 
 ```bash
-npx @claude-flow/cli@latest memory search --query "system metrics for last hour" --namespace observability
+npx swarmlo-cli@latest memory search --query "system metrics for last hour" --namespace observability
 ```

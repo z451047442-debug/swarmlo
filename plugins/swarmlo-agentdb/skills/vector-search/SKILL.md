@@ -78,9 +78,9 @@ For hierarchical data (code trees, org charts), use `mcp__plugin_swarmlo-core_sw
 ## CLI alternative
 
 ```bash
-npx @claude-flow/cli@latest embeddings search --query "authentication patterns"
-npx @claude-flow/cli@latest embeddings init
-npx @claude-flow/cli@latest memory search --query "your query"
+npx swarmlo-cli@latest embeddings search --query "authentication patterns"
+npx swarmlo-cli@latest embeddings init
+npx swarmlo-cli@latest memory search --query "your query"
 ```
 
 ## Performance

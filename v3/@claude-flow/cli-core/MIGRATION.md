@@ -6,7 +6,7 @@
 
 ## TL;DR
 
-Each `npx @claude-flow/cli@latest memory <subcommand> ...` in a plugin script can be swapped for `npx @claude-flow/cli-core@alpha memory <subcommand> ...`. Cold-cache wall-time drops from ~25s to ~2s.
+Each `npx swarmlo-cli@latest memory <subcommand> ...` in a plugin script can be swapped for `npx @claude-flow/cli-core@alpha memory <subcommand> ...`. Cold-cache wall-time drops from ~25s to ~2s.
 
 What you trade for it:
 - **Storage file changes** from `.swarm/memory.db` (SQLite + HNSW) to `.swarm/memory.json` (plain JSON). Existing data stays in the SQLite file; the cli-core backend doesn't read from it. Treat the migration as a soft-break for any namespace you care about.
@@ -39,7 +39,7 @@ Before:
 
 ```js
 const r = spawnSync('npx', [
-  '@claude-flow/cli@latest', 'memory', 'store',
+  'swarmlo-cli@latest', 'memory', 'store',
   '--namespace', 'cost-tracking',
   '--key', `session-${id}`,
   '--value', JSON.stringify(summary),
@@ -51,7 +51,7 @@ After:
 ```js
 const cliPkg = process.env.CLI_CORE === '1'
   ? '@claude-flow/cli-core@alpha'  // lite path — JSON backend, fast cold cache
-  : '@claude-flow/cli@latest';     // heavy path — SQLite/HNSW, slow cold cache
+  : 'swarmlo-cli@latest';     // heavy path — SQLite/HNSW, slow cold cache
 const r = spawnSync('npx', [
   cliPkg, 'memory', 'store',
   '--namespace', 'cost-tracking',
@@ -88,7 +88,7 @@ If a switch breaks you:
 unset CLI_CORE
 ```
 
-Or replace the conditional with the bare `'@claude-flow/cli@latest'` and re-run. cli-core left no permanent footprint other than the JSON file (which you can delete: `rm .swarm/memory.json`).
+Or replace the conditional with the bare `'swarmlo-cli@latest'` and re-run. cli-core left no permanent footprint other than the JSON file (which you can delete: `rm .swarm/memory.json`).
 
 ## Reporting issues
 

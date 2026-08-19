@@ -60,10 +60,10 @@ pnpm add @claude-flow/teammate-plugin
 
 ```bash
 # Install via claude-flow plugin manager
-npx @claude-flow/cli@latest plugins install --name @claude-flow/teammate-plugin
+npx swarmlo-cli@latest plugins install --name @claude-flow/teammate-plugin
 
 # Or add to your claude-flow.config.json
-npx @claude-flow/cli@latest config set plugins.teammate-plugin.enabled true
+npx swarmlo-cli@latest config set plugins.teammate-plugin.enabled true
 ```
 
 ### Verify Installation
@@ -73,7 +73,7 @@ npx @claude-flow/cli@latest config set plugins.teammate-plugin.enabled true
 claude plugins list
 
 # Or via claude-flow
-npx @claude-flow/cli@latest plugins list
+npx swarmlo-cli@latest plugins list
 ```
 
 ## Quick Start
@@ -640,13 +640,13 @@ verifyPlugin().catch(console.error);
 
 ```bash
 # Check plugin is registered
-npx @claude-flow/cli@latest plugins list | grep teammate
+npx swarmlo-cli@latest plugins list | grep teammate
 
 # Check plugin info
-npx @claude-flow/cli@latest plugins info teammate-plugin
+npx swarmlo-cli@latest plugins info teammate-plugin
 
 # Test MCP tools
-npx @claude-flow/cli@latest mcp tools | grep teammate
+npx swarmlo-cli@latest mcp tools | grep teammate
 ```
 
 ## Plugin Registry (IPFS)
@@ -686,20 +686,20 @@ This plugin is published to the Claude Flow Plugin Registry on IPFS for decentra
 
 ```bash
 # Install from IPFS-backed registry
-npx @claude-flow/cli@latest plugins install teammate-plugin --registry ipfs
+npx swarmlo-cli@latest plugins install teammate-plugin --registry ipfs
 
 # Or specify registry CID directly
-npx @claude-flow/cli@latest plugins install teammate-plugin --cid <registry-cid>
+npx swarmlo-cli@latest plugins install teammate-plugin --cid <registry-cid>
 ```
 
 ### Verify Registry Integrity
 
 ```bash
 # Check plugin hash matches registry
-npx @claude-flow/cli@latest plugins verify teammate-plugin
+npx swarmlo-cli@latest plugins verify teammate-plugin
 
 # View registry metadata
-npx @claude-flow/cli@latest plugins registry info
+npx swarmlo-cli@latest plugins registry info
 ```
 
 ## License

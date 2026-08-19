@@ -30,7 +30,7 @@ import { similarity } from './_similarity.mjs';
 const NS = process.env.HARNESS_SIMILARITY_NAMESPACE || 'metaharness-audit';
 const CLI_PKG = process.env.CLI_CORE === '1'
   ? '@claude-flow/cli-core@alpha'
-  : '@claude-flow/cli@latest';
+  : 'swarmlo-cli@latest';
 
 const ARGS = (() => {
   const a = {

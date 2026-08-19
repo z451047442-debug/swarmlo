@@ -1,5 +1,5 @@
 #!/bin/bash
-# Cold-cache benchmark — @claude-flow/cli@latest vs @claude-flow/cli-core@alpha
+# Cold-cache benchmark — swarmlo-cli@latest vs @claude-flow/cli-core@alpha
 #
 # Measures the wall-time gap from spawnSync('npx', [pkg, 'memory', 'list'])
 # in a fresh npm cache (the user-visible cost when plugin skills spawn the
@@ -33,8 +33,8 @@ echo ""
 declare -a CC CW KC KW
 for i in $(seq 1 $RUNS); do
   rm -rf "$BENCH_CACHE"
-  v=$(time_pkg "@claude-flow/cli@latest");      echo "cli  cold #$i: ${v}s";  CC+=("$v")
-  v=$(time_pkg "@claude-flow/cli@latest");      echo "cli  warm #$i: ${v}s";  CW+=("$v")
+  v=$(time_pkg "swarmlo-cli@latest");      echo "cli  cold #$i: ${v}s";  CC+=("$v")
+  v=$(time_pkg "swarmlo-cli@latest");      echo "cli  warm #$i: ${v}s";  CW+=("$v")
 done
 for i in $(seq 1 $RUNS); do
   rm -rf "$BENCH_CACHE"

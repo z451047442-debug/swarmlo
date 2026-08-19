@@ -24,7 +24,7 @@ import { loadSessions } from './_sessions.mjs';
 // only does list/store/retrieve, no search). See cli-core/MIGRATION.md.
 const CLI_PKG = process.env.CLI_CORE === '1'
   ? '@claude-flow/cli-core@alpha'
-  : '@claude-flow/cli@latest';
+  : 'swarmlo-cli@latest';
 
 const NS = process.env.BUDGET_NAMESPACE || 'cost-tracking';
 const KEY = 'budget-config';

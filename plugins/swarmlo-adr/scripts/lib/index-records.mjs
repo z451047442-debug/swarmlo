@@ -5,7 +5,7 @@
 
 import { basename } from 'node:path';
 
-export const CLI_PKG = '@claude-flow/cli@latest';
+export const CLI_PKG = 'swarmlo-cli@latest';
 
 export function adrRecordKey(adr) {
   return `${adr.id}::${basename(adr.file, '.md')}`;

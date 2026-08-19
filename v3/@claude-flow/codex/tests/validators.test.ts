@@ -532,7 +532,7 @@ child_agents_md = true
 
 [mcp_servers.claude_flow]
 command = "npx"
-args = ["-y", "@claude-flow/cli@latest"]
+args = ["-y", "swarmlo-cli@latest"]
 enabled = true
 
 [profiles.dev]
@@ -860,7 +860,7 @@ child_agents_md = true
 
 [mcp_servers.claude_flow]
 command = "npx"
-args = ["-y", "@claude-flow/cli@latest"]
+args = ["-y", "swarmlo-cli@latest"]
 enabled = true
 
 [profiles.dev]

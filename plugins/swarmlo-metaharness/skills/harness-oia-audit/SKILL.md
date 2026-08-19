@@ -58,7 +58,7 @@ Each audit run stores under `metaharness-audit:audit-<iso-ts>`. To list
 recent audits:
 
 ```bash
-npx @claude-flow/cli@latest memory list --namespace metaharness-audit --limit 10
+npx swarmlo-cli@latest memory list --namespace metaharness-audit --limit 10
 ```
 
 To diff two audits (drift detection):

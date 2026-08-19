@@ -34,9 +34,9 @@ This plugin's two MCP/CLI surfaces:
 | Surface | Invocation |
 |---------|-----------|
 | **MCP**: dispatch the `testgaps` worker | `mcp tool call hooks_worker-dispatch --json -- '{"trigger":"testgaps"}'` |
-| **CLI**: `coverage-gaps` (table of gaps) | `npx @claude-flow/cli@latest hooks coverage-gaps --format table --limit 20` |
-| **CLI**: `coverage-route` (route a task by gap) | `npx @claude-flow/cli@latest hooks coverage-route --task "add auth tests"` |
-| **CLI**: `coverage-suggest` (suggest tests for a path) | `npx @claude-flow/cli@latest hooks coverage-suggest --path src/` |
+| **CLI**: `coverage-gaps` (table of gaps) | `npx swarmlo-cli@latest hooks coverage-gaps --format table --limit 20` |
+| **CLI**: `coverage-route` (route a task by gap) | `npx swarmlo-cli@latest hooks coverage-route --task "add auth tests"` |
+| **CLI**: `coverage-suggest` (suggest tests for a path) | `npx swarmlo-cli@latest hooks coverage-suggest --path src/` |
 
 `testgaps` is one of 12 background workers documented in [swarmlo-loop-workers ADR-0001](../swarmlo-loop-workers/docs/adrs/0001-loop-workers-contract.md).
 

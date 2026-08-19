@@ -18,7 +18,7 @@ import { spawnNpxSync } from './_npx.mjs';
 
 const CLI_PKG = process.env.CLI_CORE === '1'
   ? '@claude-flow/cli-core@alpha'
-  : '@claude-flow/cli@latest';
+  : 'swarmlo-cli@latest';
 
 export function memoryListAllKeys(namespace) {
   const r = spawnNpxSync([

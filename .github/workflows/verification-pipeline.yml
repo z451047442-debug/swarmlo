@@ -283,7 +283,7 @@ jobs:
       # cold-install cost for the CLI + wrapper (#2561).
       - name: Pre-warm npx cache for CLI smoke checks
         run: |
-          npm install -g @claude-flow/cli@alpha swarmlo@alpha --prefer-offline --no-audit --no-fund || \
+          npm install -g swarmlo-cli@alpha swarmlo@alpha --prefer-offline --no-audit --no-fund || \
             echo "⚠️ Pre-warm install skipped (non-blocking)"
         continue-on-error: true
 

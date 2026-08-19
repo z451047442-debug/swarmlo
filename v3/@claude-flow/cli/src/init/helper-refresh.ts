@@ -45,7 +45,7 @@ function findPackageRoot(startDir: string, maxUp = 6): string | null {
   for (let i = 0; i < maxUp; i++) {
     try {
       const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf-8'));
-      if (pkg && pkg.name === '@claude-flow/cli') return dir;
+      if (pkg && (pkg.name === 'swarmlo-cli' || pkg.name === '@claude-flow/cli')) return dir;
     } catch { /* no package.json here, or unreadable — keep climbing */ }
     const parent = path.dirname(dir);
     if (parent === dir) break; // reached filesystem root
@@ -269,7 +269,7 @@ async function refreshOneHelpersDir(
  *    but nothing ever REFRESHED that global copy — so any install predating
  *    a helpers change (e.g. the 2026-07-13 funnel/promo Line-3 addition)
  *    stayed frozen at the pre-feature statusline forever, even after `npm
- *    i -g @claude-flow/cli@latest`. The global pass fixes that on the next
+ *    i -g swarmlo-cli@latest`. The global pass fixes that on the next
  *    `swarmlo <anything>` invocation. Same forward-only `semver.gte` guard
  *    protects against downgrade by a stale cached CLI.
  *

@@ -95,4 +95,4 @@ node $(npm root -g)/@claude-flow/cli/bin/cli.js gaia-bench run \
 3. If estimated cost > $5, show the estimate and ask for confirmation
 4. Execute: `node … gaia-bench run --level $LEVEL --limit $LIMIT --models $MODELS --concurrency $CONCURRENCY --output json`
 5. Parse JSON output and display a summary table (model | pass-rate | cost | mean-turns)
-6. Store the run record in memory: `npx @claude-flow/cli@latest memory store --namespace gaia-runs --key "run-$(date +%Y%m%d-%H%M)" --value "$SUMMARY"`
+6. Store the run record in memory: `npx swarmlo-cli@latest memory store --namespace gaia-runs --key "run-$(date +%Y%m%d-%H%M)" --value "$SUMMARY"`

@@ -32,6 +32,6 @@ RVF (Swarmlo Vector Format) stores:
 ## Transfer between projects
 
 ```bash
-npx @claude-flow/cli@latest hooks transfer store --pattern "project-knowledge"
-npx @claude-flow/cli@latest hooks transfer from-project --source /path/to/other/project
+npx swarmlo-cli@latest hooks transfer store --pattern "project-knowledge"
+npx swarmlo-cli@latest hooks transfer from-project --source /path/to/other/project
 ```

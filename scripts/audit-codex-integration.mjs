@@ -81,10 +81,10 @@ const walk = (dir) => readdirSync(dir).flatMap((e) => {
 });
 const stale = walk(resolve(ROOT, 'v3/@claude-flow/codex/src'))
   .filter((f) => f.endsWith('.ts'))
-  .filter((f) => /claude-flow@alpha|@claude-flow\/cli@latest/.test(readFileSync(f, 'utf8')))
+  .filter((f) => /claude-flow@alpha|@claude-flow\/cli@latest|swarmlo-cli@latest/.test(readFileSync(f, 'utf8')))
   .map(rel);
 check(stale.length === 0,
-  `no \`claude-flow@alpha\` / \`@claude-flow/cli@latest\` in codex src`,
+  `no \`claude-flow@alpha\` / \`@claude-flow/cli@latest\` / \`swarmlo-cli@latest\` in codex src`,
   `stale CLI refs remain in: ${stale.join(', ')}`);
 
 // ── 6. `dual run` CLI surface (W2) ─────────────────────────────────────────

@@ -9,7 +9,7 @@
  *   - ADR count:    87/87 (missed v3/docs/adr/ → should be 128)
  *   - Vectors:      22    (read session-imports, not AgentDB total)
  *
- * The fix delegates to 'npx @claude-flow/cli@latest hooks statusline --json'
+ * The fix delegates to 'npx swarmlo-cli@latest hooks statusline --json'
  * as the single source of truth and counts ADRs in both directories.
  *
  * This smoke verifies:

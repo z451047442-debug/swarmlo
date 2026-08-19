@@ -54,7 +54,7 @@ If none of those apply, you're paying ~10× the overhead for nothing. Default to
     → If prior similar trees exist, read their depth, fan-out, success rate. Adopt or adapt.
 
 1.2 cost-budget check (bash):
-    npx @claude-flow/cli@latest cost budget --check --request-id $REQUEST_ID
+    npx swarmlo-cli@latest cost budget --check --request-id $REQUEST_ID
     → If under 25% headroom, refuse to start. Return CostBudgetExceeded to caller.
 
 1.3 swarm_init { topology: "hierarchical-mesh", maxAgents: <estimated-leaves>, strategy: "specialized" }

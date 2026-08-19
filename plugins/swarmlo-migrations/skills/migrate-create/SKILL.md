@@ -31,5 +31,5 @@ When you need to create a new database migration for schema changes such as crea
 ## CLI alternative
 
 ```bash
-npx @claude-flow/cli@latest memory store --namespace migrations --key "migration-NNN_NAME" --value '{"number": NNN, "name": "NAME", "status": "pending"}'
+npx swarmlo-cli@latest memory store --namespace migrations --key "migration-NNN_NAME" --value '{"number": NNN, "name": "NAME", "status": "pending"}'
 ```

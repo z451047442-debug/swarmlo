@@ -33,7 +33,7 @@ import {
 
 // #2781 (Jordi-Izquierdo-DDS): CLI_CORE=1 previously routed writes through
 // `@claude-flow/cli-core@alpha`, whose JsonMemoryBackend lives in a different
-// store than `@claude-flow/cli@latest`'s SQLite backend. The default
+// store than `swarmlo-cli@latest`'s SQLite backend. The default
 // `swarmlo memory search` reader hits the SQLite store, so setting CLI_CORE=1
 // for the ~2s cold-cache speedup silently made `import` succeed against a
 // store the default reader never looks at ("147/147 stored" but zero hits
@@ -43,7 +43,7 @@ import {
 if (process.env.CLI_CORE === '1') {
   console.warn(
     '[swarmlo-adr] warning: CLI_CORE=1 is ignored — writing to the default ' +
-    "`@claude-flow/cli@latest` store so `swarmlo memory search` can find the records (#2781).",
+    "`swarmlo-cli@latest` store so `swarmlo memory search` can find the records (#2781).",
   );
 }
 

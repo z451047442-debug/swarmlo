@@ -7,9 +7,9 @@ allowed-tools: Bash(npx * npm *) mcp__plugin_swarmlo-core_swarmlo__memory_store 
 Check dependencies for CVEs and outdated packages:
 
 ```bash
-npx @claude-flow/cli@latest security cve --list
-npx @claude-flow/cli@latest security cve --severity critical
-npx @claude-flow/cli@latest security scan --type deps --depth deep
+npx swarmlo-cli@latest security cve --list
+npx swarmlo-cli@latest security cve --severity critical
+npx swarmlo-cli@latest security scan --type deps --depth deep
 npm audit --json
 ```
 
@@ -20,7 +20,7 @@ npm audit --json
 | moderate | Schedule fix within sprint |
 | low | Track in backlog |
 
-Auto-fix via the scan command: `npx @claude-flow/cli@latest security scan --type deps --fix`
+Auto-fix via the scan command: `npx swarmlo-cli@latest security scan --type deps --fix`
 
 For continuous monitoring, dispatch via MCP:
 `mcp__plugin_swarmlo-core_swarmlo__hooks_worker-dispatch({ trigger: "audit" })`
