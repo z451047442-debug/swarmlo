@@ -26,12 +26,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
   }
 }
 
-// Walk up from swarmlo/bin/ to find @claude-flow/cli in node_modules
+// Walk up from swarmlo/bin/ to find the CLI package in node_modules —
+// swarmlo-cli first, legacy @claude-flow/cli installs as fallback.
+// Returns the CLI package base dir (the dir containing bin/ and dist/).
 function findCliPath() {
   let dir = resolve(__dirname, '..');
   for (let i = 0; i < 10; i++) {
-    const candidate = join(dir, 'node_modules', '@claude-flow', 'cli', 'bin', 'cli.js');
-    if (existsSync(candidate)) return dir;
+    const swarmloCli = join(dir, 'node_modules', 'swarmlo-cli', 'bin', 'cli.js');
+    if (existsSync(swarmloCli)) return join(dir, 'node_modules', 'swarmlo-cli');
+    const legacyCli = join(dir, 'node_modules', '@claude-flow', 'cli', 'bin', 'cli.js');
+    if (existsSync(legacyCli)) return join(dir, 'node_modules', '@claude-flow', 'cli');
     const parent = dirname(dir);
     if (parent === dir) break;
     dir = parent;
@@ -44,10 +48,7 @@ function toImportURL(filePath) {
   return pathToFileURL(filePath).href;
 }
 
-const pkgDir = findCliPath();
-const cliBase = pkgDir
-  ? join(pkgDir, 'node_modules', '@claude-flow', 'cli')
-  : resolve(__dirname, '../../v3/@claude-flow/cli');
+const cliBase = findCliPath() ?? resolve(__dirname, '../../v3/@claude-flow/cli');
 
 // MCP mode: delegate to cli.js directly (branding irrelevant for JSON-RPC)
 const cliArgs = process.argv.slice(2);
