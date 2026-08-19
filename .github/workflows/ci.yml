@@ -146,9 +146,8 @@ jobs:
       - name: Daemon survives parent exit (Windows, regression #1766)
         if: runner.os == 'Windows'
         timeout-minutes: 15
-        # Non-blocking until the first swarmlo-cli publish lands (the alpha
-        # tag doesn't exist before that). Remove after the 3.39.0 P8 release.
-        continue-on-error: true
+        # swarmlo-cli@alpha exists since the 3.39.0 publish (2026-08-20) —
+        # strict mode restored; failures here are real regressions now.
         shell: pwsh
         run: |
           # We install the published `swarmlo-cli@alpha` inside an isolated
