@@ -280,7 +280,7 @@ export const browserSessionTools: MCPTool[] = [
         tags: input.tags ?? [],
         ended_at: new Date().toISOString(),
       });
-      const idx = await shell('npx', ['-y', '@claude-flow/cli@latest', 'memory', 'store',
+      const idx = await shell('npx', ['-y', 'swarmlo-cli@latest', 'memory', 'store',
         '--namespace', 'browser-sessions',
         '--key', input.session as string,
         '--value', indexValue], { timeout: 60000 });
@@ -370,7 +370,7 @@ export const browserSessionTools: MCPTool[] = [
     handler: async (input) => {
       const vN = validateText(input.name as string, 'name');
       if (!vN.valid) return fail(vN.error || 'invalid name');
-      const r = await shell('npx', ['-y', '@claude-flow/cli@latest', 'memory', 'retrieve',
+      const r = await shell('npx', ['-y', 'swarmlo-cli@latest', 'memory', 'retrieve',
         '--namespace', 'browser-templates',
         '--key', input.name as string], { timeout: 60000 });
       if (!r.success) return fail('template fetch failed', { detail: r.error, stderr: r.stderr });
@@ -400,7 +400,7 @@ export const browserSessionTools: MCPTool[] = [
     handler: async (input) => {
       const vH = validateText(input.host as string, 'host');
       if (!vH.valid) return fail(vH.error || 'invalid host');
-      const r = await shell('npx', ['-y', '@claude-flow/cli@latest', 'memory', 'retrieve',
+      const r = await shell('npx', ['-y', 'swarmlo-cli@latest', 'memory', 'retrieve',
         '--namespace', 'browser-cookies',
         '--key', input.host as string], { timeout: 60000 });
       if (!r.success) return fail('cookie lookup failed', { detail: r.error, stderr: r.stderr });

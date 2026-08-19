@@ -20,23 +20,23 @@ interface PackageCompatibility {
 
 // Known compatibility matrix between @claude-flow packages
 const COMPATIBILITY_MATRIX: Record<string, Record<string, PackageCompatibility>> = {
-  '@claude-flow/cli': {
+  'swarmlo-cli': {
     '@claude-flow/embeddings': { minVersion: '3.0.0-alpha.1' },
     '@claude-flow/security': { minVersion: '3.0.0-alpha.1' },
     '@claude-flow/integration': { minVersion: '3.0.0-alpha.1' },
   },
   '@claude-flow/embeddings': {
-    '@claude-flow/cli': { minVersion: '3.0.0-alpha.50' },
+    'swarmlo-cli': { minVersion: '3.0.0-alpha.50' },
   },
   '@claude-flow/integration': {
-    '@claude-flow/cli': { minVersion: '3.0.0-alpha.70' },
+    'swarmlo-cli': { minVersion: '3.0.0-alpha.70' },
     'agentic-flow': { minVersion: '3.0.0-alpha.1' },
   },
 };
 
 // Known breaking changes by version
 const BREAKING_CHANGES: Record<string, Record<string, string[]>> = {
-  '@claude-flow/cli': {
+  'swarmlo-cli': {
     '3.0.0': [
       'Memory API changed from key-value to vector-based',
       'Hooks system completely redesigned',

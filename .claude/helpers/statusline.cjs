@@ -82,7 +82,7 @@ const PROMO_MEMO_TTL_MS = 6 * 60 * 60 * 1000; // 6h — long enough to bridge an
 
 // #2337: resolve an already-installed @claude-flow/cli (or swarmlo) bin so we
 // can invoke it directly via `node`. The previous version called
-// `npx --yes @claude-flow/cli@latest` on every uncached render, which forces
+// `npx --yes swarmlo-cli@latest` on every uncached render, which forces
 // a registry resolution + cold-start of the entire CLI per render. With
 // multiple concurrent Claude Code sessions this storms the host (reporter
 // saw load average 40-65 on a 12-core box).
@@ -107,7 +107,7 @@ function resolveCliBinCandidates() {
     const home = os.homedir();
     candidates.push(
       path.join(home, '.claude', 'plugins', 'marketplaces', 'swarmlo', 'bin', 'cli.js'),
-      path.join(CWD, 'node_modules', '@claude-flow', 'cli', 'bin', 'cli.js'),
+      path.join(CWD, 'node_modules', '@claude-flow', 'cli', 'bin', 'cli.js'), path.join(CWD, 'node_modules', 'swarmlo-cli', 'bin', 'cli.js'),
       path.join(CWD, 'node_modules', 'swarmlo', 'bin', 'cli.js'),
       path.join(CWD, 'v3', '@claude-flow', 'cli', 'bin', 'cli.js'),
     );
@@ -235,7 +235,7 @@ function getStatuslineData() {
   // delegation, so it could never get seeded on Windows either).
   const cmds = resolveCliBinCandidates()
     .map((bin) => '"' + process.execPath + '" "' + bin + '" hooks statusline --json')
-    .concat(['npx --prefer-offline @claude-flow/cli hooks statusline --json']);
+    .concat(['npx --prefer-offline swarmlo-cli hooks statusline --json']);
   for (const cmd of cmds) {
     try {
       const raw = execSync(

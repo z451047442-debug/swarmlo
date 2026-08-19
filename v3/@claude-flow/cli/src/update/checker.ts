@@ -39,7 +39,7 @@ const DEFAULT_CONFIG: UpdateConfig = {
   },
   priority: {
     '@claude-flow/security': 'critical',
-    '@claude-flow/cli': 'high',
+    'swarmlo-cli': 'high',
     '@claude-flow/embeddings': 'normal',
     '@claude-flow/integration': 'normal',
     '@claude-flow/testing': 'low',
@@ -49,7 +49,7 @@ const DEFAULT_CONFIG: UpdateConfig = {
 
 // Packages to check for updates
 const CLAUDE_FLOW_PACKAGES = [
-  '@claude-flow/cli',
+  'swarmlo-cli',
   '@claude-flow/embeddings',
   '@claude-flow/security',
   '@claude-flow/integration',

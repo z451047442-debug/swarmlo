@@ -41,7 +41,7 @@ function resolveCliBinForHook() {
     const cwd = process.cwd();
     const candidates = [
       path.join(home, '.claude', 'plugins', 'marketplaces', 'swarmlo', 'bin', 'cli.js'),
-      path.join(cwd, 'node_modules', '@claude-flow', 'cli', 'bin', 'cli.js'),
+      path.join(cwd, 'node_modules', '@claude-flow', 'cli', 'bin', 'cli.js'), path.join(cwd, 'node_modules', 'swarmlo-cli', 'bin', 'cli.js'),
       path.join(cwd, 'node_modules', 'swarmlo', 'bin', 'cli.js'),
       path.join(cwd, 'v3', '@claude-flow', 'cli', 'bin', 'cli.js'),
       // helpersDir is .claude/helpers/ inside the package itself when this
@@ -84,7 +84,7 @@ function spawnDetachedHookRefresh(subcommand) {
     const cmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
     const spawnArgs = cliBin
       ? [process.execPath, [cliBin, 'hooks', subcommand, '--quiet']]
-      : [cmd, ['--prefer-offline', '@claude-flow/cli', 'hooks', subcommand, '--quiet']];
+      : [cmd, ['--prefer-offline', 'swarmlo-cli', 'hooks', subcommand, '--quiet']];
     const child = spawn(spawnArgs[0], spawnArgs[1], {
       detached: true,
       stdio: 'ignore',
@@ -154,7 +154,7 @@ function firstRunAutoEnableIfEligible() {
         const spawnArgs = cliBin
           ? [process.execPath, [cliBin, ...args]]
           : [process.platform === 'win32' ? 'npx.cmd' : 'npx',
-             ['--prefer-offline', '@claude-flow/cli', ...args]];
+             ['--prefer-offline', 'swarmlo-cli', ...args]];
         const child = spawn(spawnArgs[0], spawnArgs[1], {
           detached: true, stdio: 'ignore', env: process.env, windowsHide: true,
         });

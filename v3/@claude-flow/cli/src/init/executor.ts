@@ -429,8 +429,8 @@ function mergeSettingsForUpgrade(existing: Record<string, unknown>): Record<stri
   // an unbounded `*` here is exponential-backtracking-prone (CodeQL
   // js/redos): a crafted settings.json command string with dozens of
   // dash-token repetitions can hang this check for minutes.
-  const BROKEN_STATUSLINE_RE = /(?:npx\s+(?:--?\S+\s+){0,10})?@?claude-flow(?:\/cli)?(?:@\S+)?\s+hooks\s+statusline/;
-  const BROKEN_NPX_LATEST_RE = /npx\s+(?:--?\S+\s+){0,10}@?claude-flow\/cli@latest\s+\S+/;
+  const BROKEN_STATUSLINE_RE = /(?:npx\s+(?:--?\S+\s+){0,10})?(?:@?claude-flow(?:\/cli)?|swarmlo-cli)(?:@\S+)?\s+hooks\s+statusline/;
+  const BROKEN_NPX_LATEST_RE = /npx\s+(?:--?\S+\s+){0,10}(?:@?claude-flow\/cli|swarmlo-cli)@latest\s+\S+/;
   const existingStatusLine = existing.statusLine as Record<string, unknown> | undefined;
   if (existingStatusLine) {
     const existingCmd = typeof existingStatusLine.command === 'string' ? existingStatusLine.command : '';
@@ -452,7 +452,7 @@ function mergeSettingsForUpgrade(existing: Record<string, unknown>): Record<stri
   // broken pattern for the local-helper form. Idempotent: re-running this
   // migration on already-correct settings is a no-op.
   // Bounded for the same reason as BROKEN_STATUSLINE_RE above (CodeQL js/redos).
-  const BROKEN_HOOK_RE = /npx\s+(?:--?\S+\s+){0,10}@?claude-flow\/cli@latest\s+hooks\s+(\S+)/;
+  const BROKEN_HOOK_RE = /npx\s+(?:--?\S+\s+){0,10}(?:@?claude-flow\/cli|swarmlo-cli)@latest\s+hooks\s+(\S+)/;
   const localHookCmd = (sub: string): string => {
     // POSIX form mirrors settings-generator.ts::hookCmd() exactly.
     // Windows users hit a separate code path (cmd /c …) — Claude Code on

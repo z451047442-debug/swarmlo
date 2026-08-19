@@ -741,7 +741,7 @@ const initClaudeAction = async (ctx: CommandContext): Promise<CommandResult> => 
       if (startAll) {
         try {
           output.writeln(output.dim('  Initializing memory database...'));
-          execSync('npx @claude-flow/cli@latest memory init 2>/dev/null', {
+          execSync('npx swarmlo-cli@latest memory init 2>/dev/null', {
             stdio: 'pipe',
             cwd: ctx.cwd,
             timeout: 30000
@@ -774,7 +774,7 @@ const initClaudeAction = async (ctx: CommandContext): Promise<CommandResult> => 
       if (startDaemon) {
         try {
           output.writeln(output.dim('  Starting daemon...'));
-          execSync('npx @claude-flow/cli@latest daemon start 2>/dev/null', {
+          execSync('npx swarmlo-cli@latest daemon start 2>/dev/null', {
             stdio: 'pipe',
             cwd: ctx.cwd,
             timeout: 30000
@@ -792,7 +792,7 @@ const initClaudeAction = async (ctx: CommandContext): Promise<CommandResult> => 
       if (startAll) {
         try {
           output.writeln(output.dim('  Initializing swarm...'));
-          execSync('npx @claude-flow/cli@latest swarm init --topology hierarchical 2>/dev/null', {
+          execSync('npx swarmlo-cli@latest swarm init --topology hierarchical 2>/dev/null', {
             stdio: 'pipe',
             cwd: ctx.cwd,
             timeout: 30000
@@ -833,7 +833,7 @@ const initClaudeAction = async (ctx: CommandContext): Promise<CommandResult> => 
         // /^[a-zA-Z0-9_-]+\/[a-zA-Z0-9._-]+$/, so no injection risk. If
         // user-controlled args are ever added, escape them before spawn.
         execFileInit('npx', [
-          '@claude-flow/cli@latest', 'embeddings', 'init',
+          'swarmlo-cli@latest', 'embeddings', 'init',
           '--model', embeddingModel,
           '--no-download', '--force',
         ], {
@@ -1158,7 +1158,7 @@ const wizardCommand: Command = {
           // /^[a-zA-Z0-9_-]+\/[a-zA-Z0-9._-]+$/, so no injection risk. If
           // user-controlled args are ever added, escape them before spawn.
           execFileSync('npx', [
-            '@claude-flow/cli@latest', 'embeddings', 'init',
+            'swarmlo-cli@latest', 'embeddings', 'init',
             '--model', embeddingModel,
             '--no-download', '--force',
           ], {

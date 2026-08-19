@@ -2,7 +2,7 @@
 /**
  * Swarmlo Statusline Generator
  * Displays real-time V3 implementation progress and system status.
- * Version is read from the installed @claude-flow/cli package.json at
+ * Version is read from the installed swarmlo-cli package.json at
  * runtime — #1892 fix: previously hardcoded to V3.5 which drifted from
  * the actual installed alpha series.
  *

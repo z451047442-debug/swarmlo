@@ -139,7 +139,7 @@ async function checkConfigFile(): Promise<HealthCheck> {
 
 // Check daemon status
 /**
- * #2448 / #2677 — Detect runaway `npx @claude-flow/cli@latest` commands
+ * #2448 / #2677 — Detect runaway `npx swarmlo-cli@latest` commands
  * left over in `.claude/settings.json` from pre-#2337 installs.
  *
  * These fire on every Claude Code event (statusLine refires every few hundred
@@ -216,7 +216,7 @@ async function checkStaleSettingsNpx(): Promise<HealthCheck> {
   return {
     name: 'Stale npx@latest in settings (#2448)',
     status: 'fail',
-    message: `CRITICAL — runaway \`npx @claude-flow/cli@latest\` commands detected: ${summary}`,
+    message: `CRITICAL — runaway \`npx swarmlo-cli@latest\` commands detected: ${summary}`,
     fix: 'Re-run `npx swarmlo init` to migrate (the v3.13.3+ init migrator regenerates these to local-helper form). On macOS this prevents the process-storm / kernel-panic class reported in #2448.',
   };
 }
@@ -1265,7 +1265,7 @@ async function checkVersionFreshness(): Promise<HealthCheck> {
     // Query npm for latest version (using alpha tag since that's what we publish to)
     let latestVersion = currentVersion;
     try {
-      const npmInfo = await runCommand('npm view @claude-flow/cli@alpha version', 5000);
+      const npmInfo = await runCommand('npm view swarmlo-cli@alpha version', 5000);
       latestVersion = npmInfo.trim();
     } catch {
       // Can't reach npm registry - skip check
@@ -1301,8 +1301,8 @@ async function checkVersionFreshness(): Promise<HealthCheck> {
 
     if (isOutdated) {
       const fix = isNpx
-        ? 'rm -rf ~/.npm/_npx/* && npx -y @claude-flow/cli@latest'
-        : 'npm update @claude-flow/cli';
+        ? 'rm -rf ~/.npm/_npx/* && npx -y swarmlo-cli@latest'
+        : 'npm update swarmlo-cli';
 
       return {
         name: 'Version Freshness',
