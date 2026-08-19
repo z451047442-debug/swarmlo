@@ -87,10 +87,10 @@
     "node": ">=18"
   },
   "peerDependencies": {
-    "@claude-flow/cli": "^3.0.0"
+    "swarmlo-cli": "^3.0.0"
   },
   "peerDependenciesMeta": {
-    "@claude-flow/cli": {
+    "swarmlo-cli": {
       "optional": true
     }
   },

@@ -1,6 +1,10 @@
 #!/bin/bash
-# Publish script for @claude-flow/cli
-# Publishes to both swarmlo-cli@alpha AND claude-flow@v3alpha
+# Publish script for swarmlo-cli (fork-owned CLI package).
+#
+# The legacy npm names (@claude-flow/cli and claude-flow) are owned by
+# upstream ruvnet and are NOT publishable by this fork — single-name
+# publish only. Default tag is `latest`; alpha/v3alpha point at the same
+# version for legacy-compat installs.
 
 set -e
 
@@ -13,45 +17,21 @@ cd "$CLI_DIR"
 VERSION=$(node -p "require('./package.json').version")
 echo "Publishing version: $VERSION"
 
-# 1. Publish @claude-flow/cli with alpha tag
+# 1. Publish swarmlo-cli (prepublishOnly runs prepare-publish.mjs: build,
+#    stage internal bundles, regenerate catalog, re-sign + verify helpers)
 echo ""
-echo "=== Publishing @claude-flow/cli@$VERSION (alpha tag) ==="
-npm publish --tag alpha
-
-# 2. Publish to claude-flow with v3alpha tag
-echo ""
-echo "=== Publishing claude-flow@$VERSION (v3alpha tag) ==="
-
-# Create temp directory
-TEMP_DIR=$(mktemp -d)
-trap "rm -rf $TEMP_DIR" EXIT
-
-# Copy necessary files
-cp -r dist bin src package.json README.md "$TEMP_DIR/"
-
-# Change package name to unscoped
-cd "$TEMP_DIR"
-sed -i 's/"name": "@claude-flow\/cli"/"name": "claude-flow"/' package.json
-
-# Publish with v3alpha tag
-npm publish --tag v3alpha
+echo "=== Publishing swarmlo-cli@$VERSION ==="
+npm publish
 
 echo ""
 echo "=== Updating dist-tags ==="
-
-# Update all tags to point to the new version
-npm dist-tag add @claude-flow/cli@$VERSION alpha
-npm dist-tag add @claude-flow/cli@$VERSION latest
-npm dist-tag add @claude-flow/cli@$VERSION v3alpha
-npm dist-tag add claude-flow@$VERSION alpha
-npm dist-tag add claude-flow@$VERSION latest
-npm dist-tag add claude-flow@$VERSION v3alpha
+npm dist-tag add swarmlo-cli@$VERSION alpha
+npm dist-tag add swarmlo-cli@$VERSION v3alpha
 
 echo ""
 echo "=== Published successfully ==="
-echo "  @claude-flow/cli@$VERSION (alpha, latest, v3alpha)"
-echo "  claude-flow@$VERSION (alpha, latest, v3alpha)"
+echo "  swarmlo-cli@$VERSION (latest, alpha, v3alpha)"
 echo ""
 echo "Install with:"
-echo "  npx claude-flow@alpha"
 echo "  npx swarmlo-cli@latest"
+echo "  npx swarmlo@latest        # self-contained root umbrella"

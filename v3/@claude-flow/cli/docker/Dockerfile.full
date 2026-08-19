@@ -27,7 +27,8 @@ RUN GLOBAL_PREFIX=$(npm config get prefix) \
     && cp -a "${GLOBAL_PREFIX}/lib/node_modules" /staged/lib/ \
     && cp -a "${GLOBAL_PREFIX}/bin/swarmlo" /staged/bin/ 2>/dev/null || true \
     && cp -a "${GLOBAL_PREFIX}/bin/claude-flow" /staged/bin/ 2>/dev/null || true \
-    && cp -a "${GLOBAL_PREFIX}/bin/cli" /staged/bin/ 2>/dev/null || true
+    && cp -a "${GLOBAL_PREFIX}/bin/cli" /staged/bin/ 2>/dev/null || true \
+    && cp -a "${GLOBAL_PREFIX}/bin/swarmlo-cli" /staged/bin/ 2>/dev/null || true
 
 # ── Stage 2: Production ──────────────────────────────────────────
 FROM node:22-alpine AS production
@@ -46,7 +47,8 @@ COPY --from=build /staged/bin/ /usr/local/bin/
 
 # Ensure bin symlinks
 RUN ln -sf /usr/local/lib/node_modules/swarmlo/bin/swarmlo.js /usr/local/bin/swarmlo 2>/dev/null || true \
-    && ln -sf /usr/local/lib/node_modules/@claude-flow/cli/bin/cli.js /usr/local/bin/claude-flow 2>/dev/null || true \
+    && ln -sf /usr/local/lib/node_modules/swarmlo-cli/bin/cli.js /usr/local/bin/swarmlo-cli 2>/dev/null || true \
+    && ln -sf /usr/local/lib/node_modules/swarmlo-cli/bin/cli.js /usr/local/bin/claude-flow 2>/dev/null || true \
     && chmod +x /usr/local/bin/swarmlo 2>/dev/null || true \
     && chmod +x /usr/local/bin/claude-flow 2>/dev/null || true
 

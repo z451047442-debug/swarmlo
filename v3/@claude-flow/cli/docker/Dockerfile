@@ -30,7 +30,7 @@ RUN npm install -g swarmlo@latest \
     && npm cache clean --force
 
 # Prune heavy optional transitive deps that npm still resolves.
-# These are all optionalDependencies of @claude-flow/cli — the CLI
+# These are all optionalDependencies of swarmlo-cli — the CLI
 # works fine without them (graceful fallbacks built in).
 #   agentic-flow: 238MB (ONNX runtimes, OpenTelemetry, Anthropic SDK)
 #   @opentelemetry: 135MB (transitive via agentic-flow)
@@ -69,7 +69,7 @@ RUN GLOBAL_PREFIX=$(npm config get prefix) \
       "${CLI_NM}/@claude-flow/guidance" \
       "${CLI_NM}/@claude-flow/aidefence" \
       "${CLI_NM}/@claude-flow/plugin-gastown-bridge" \
-    && NESTED="${CLI_NM}/@claude-flow/cli/node_modules" \
+    && NESTED="${CLI_NM}/swarmlo-cli/node_modules" \
     && rm -rf \
       "${NESTED}/agentic-flow" \
       "${NESTED}/@ruvector" \
@@ -87,7 +87,8 @@ RUN GLOBAL_PREFIX=$(npm config get prefix) \
     && cp -a "${GLOBAL_PREFIX}/lib/node_modules" /staged/lib/ \
     && cp -a "${GLOBAL_PREFIX}/bin/swarmlo" /staged/bin/ 2>/dev/null || true \
     && cp -a "${GLOBAL_PREFIX}/bin/claude-flow" /staged/bin/ 2>/dev/null || true \
-    && cp -a "${GLOBAL_PREFIX}/bin/cli" /staged/bin/ 2>/dev/null || true
+    && cp -a "${GLOBAL_PREFIX}/bin/cli" /staged/bin/ 2>/dev/null || true \
+    && cp -a "${GLOBAL_PREFIX}/bin/swarmlo-cli" /staged/bin/ 2>/dev/null || true
 
 # ── Stage 2: Production ──────────────────────────────────────────
 FROM node:22-alpine AS production
@@ -107,7 +108,8 @@ COPY --from=build /staged/bin/ /usr/local/bin/
 
 # Ensure bin symlinks point to the right place
 RUN ln -sf /usr/local/lib/node_modules/swarmlo/bin/swarmlo.js /usr/local/bin/swarmlo 2>/dev/null || true \
-    && ln -sf /usr/local/lib/node_modules/@claude-flow/cli/bin/cli.js /usr/local/bin/claude-flow 2>/dev/null || true \
+    && ln -sf /usr/local/lib/node_modules/swarmlo-cli/bin/cli.js /usr/local/bin/swarmlo-cli 2>/dev/null || true \
+    && ln -sf /usr/local/lib/node_modules/swarmlo-cli/bin/cli.js /usr/local/bin/claude-flow 2>/dev/null || true \
     && chmod +x /usr/local/bin/swarmlo 2>/dev/null || true \
     && chmod +x /usr/local/bin/claude-flow 2>/dev/null || true
 
