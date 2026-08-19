@@ -51,61 +51,13 @@ jobs:
         run: npx license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;CC0-1.0' || true
         continue-on-error: true
 
-  # All tests
-  test:
-    name: Test Suite
-    runs-on: ${{ matrix.os }}
-    # Job-level non-blocking: upstream designed tests as advisory
-    # (step-level `|| echo` + continue-on-error). GitHub-hosted runners
-    # occasionally SIGTERM long test steps (exit 143, no user-side cause);
-    # job-level continue-on-error absorbs failures AND cancellations so the
-    # pipeline stays green. Full-suite coverage remains enforced in
-    # v3-ci.yml (V3 CI/CD Pipeline), which gates on tests.
-    continue-on-error: true
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        uses: ./.github/actions/npm-ci-retry
-
-      - name: Run tests (cli)
-        timeout-minutes: 12
-        run: npx vitest run v3/@claude-flow/cli 2>&1 | tail -40 || echo "⚠️ cli tests non-blocking"
-        continue-on-error: true
-
-      - name: Run tests (hooks/memory/security/mcp/shared/guidance)
-        timeout-minutes: 12
-        run: npx vitest run v3/@claude-flow/hooks v3/@claude-flow/memory v3/@claude-flow/security v3/@claude-flow/mcp v3/@claude-flow/shared v3/@claude-flow/guidance 2>&1 | tail -40 || echo "⚠️ core tests non-blocking"
-        continue-on-error: true
-
-      - name: Run tests (plugins + integration + root)
-        timeout-minutes: 12
-        run: npx vitest run v3/plugins plugins v3/__tests__ v3/src tests 2>&1 | tail -40 || echo "⚠️ plugin/integration tests non-blocking"
-        continue-on-error: true
-
-      - name: Generate coverage report
-        if: matrix.os == 'ubuntu-latest'
-        timeout-minutes: 10
-        run: npm run test:coverage || echo "⚠️ Coverage generation failed (non-blocking)"
-        continue-on-error: true
-
-      - name: Upload test results
-        if: ${{ hashFiles('coverage/') != '' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results-${{ matrix.os }}
-          path: coverage/
+  # Tests are gated in v3-ci.yml (V3 CI/CD Pipeline). The duplicate
+  # root-level `npx vitest` Test Suite job here was removed (2026-08-20):
+  # it ran the v3 package tests without the pnpm workspace deps or dist/
+  # builds the suites import at runtime, and deterministically died with
+  # exit 143 (SIGTERM at ~60s, 6/6 runs) — previously misdiagnosed as
+  # random GitHub-hosted runner kills. See v3-ci.yml "Test V3 Packages"
+  # for the canonical pnpm-based gate (install + build + pnpm test).
 
   # Documentation generation
   docs:
@@ -131,7 +83,7 @@ jobs:
   build:
     name: Build & Package (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    needs: [security, test]
+    needs: [security]
     strategy:
       fail-fast: false
       matrix:
@@ -324,13 +276,13 @@ jobs:
   status:
     name: CI Status
     runs-on: ubuntu-latest
-    needs: [security, test, build]
+    needs: [security, build]
     if: always()
-    
+
     steps:
       - name: Check overall status
         run: |
           echo "✅ CI Pipeline completed"
           echo "Security: ${{ needs.security.result }}"
-          echo "Test: ${{ needs.test.result }}"
+          echo "Tests: gated by v3-ci.yml (V3 CI/CD Pipeline)"
           echo "Build: ${{ needs.build.result }}"
