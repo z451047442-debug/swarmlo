@@ -183,6 +183,55 @@ def cmd_purge(args):
     print(json.dumps({'ok': True, 'purged': True}))
 
 
+def cmd_embed(args):
+    text = args.text or ''
+    if not text and not args.image:
+        fail('embed needs --text and/or --image')
+    if args.image:
+        if not os.path.isfile(args.image):
+            fail(f'image not found: {args.image}')
+        ext = os.path.splitext(args.image)[1].lower()
+        if ext not in ('.jpg', '.jpeg', '.png', '.webp'):
+            fail(f'unsupported image type {ext or "(none)"} — jpg/png/webp only')
+    try:
+        import numpy as np  # noqa: F401
+        import torch  # noqa: F401
+        from transformers import AutoModel  # noqa: F401
+        from PIL import Image  # noqa: F401
+    except ImportError as e:
+        fail(
+            f'model deps missing ({getattr(e, "name", e)}) — '
+            f'run `npx swarmlo bge-vl setup`',
+            3,
+        )
+    model_name = args.model or os.environ.get(
+        'SWARMLO_BGE_VL_MODEL', 'BAAI/bge-vl-large'
+    )
+    try:
+        model = AutoModel.from_pretrained(model_name, trust_remote_code=True)
+        model.set_processor(model_name)
+        model.eval()
+        with torch.no_grad():
+            if text and args.image:
+                out = model.encode(
+                    text=text, image=Image.open(args.image).convert('RGB')
+                )
+            elif args.image:
+                out = model.encode(image=Image.open(args.image).convert('RGB'))
+            else:
+                out = model.encode(text=text)
+        vec = out.detach().cpu().numpy().reshape(-1)
+    except Exception as e:
+        fail(f'embed failed: {e}')
+    if vec.shape[0] != DIM:
+        fail(f'{model_name} returned dim {vec.shape[0]}, expected {DIM}')
+    norm = float(np.linalg.norm(vec)) or 1.0
+    vec = (vec / norm).tolist()  # BGE-VL normalizes already; belt-and-braces
+    print(json.dumps(
+        {'ok': True, 'dim': DIM, 'model': model_name, 'vector': vec}
+    ))
+
+
 def _expect_refusal(fn, label):
     # Suppress the refusal's error JSON — the one-JSON-object-per-stdout
     # contract must hold, or the relay's JSON.parse would break.
@@ -255,7 +304,7 @@ def main():
     elif args.mode == 'purge':
         cmd_purge(args)
     elif args.mode == 'embed':
-        fail('embed mode not implemented yet (Task 2)', 2)
+        cmd_embed(args)
 
 
 if __name__ == '__main__':
