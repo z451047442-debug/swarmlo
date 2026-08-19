@@ -185,7 +185,8 @@ export async function getBgeEmbedder(modelName = 'Xenova/bge-base-en-v1.5'): Pro
     if (spec.multimodal) {
       state.error =
         `${modelName} is a multimodal (vision-language) model — the text-only ` +
-        'ONNX pipeline cannot load it (no ONNX export; requires image input + remote code).';
+        'ONNX pipeline cannot load it (no ONNX export; requires image input + remote code). ' +
+        'Use the BGE-VL sidecar instead: `npx swarmlo bge-vl embed --text "..."` (ADR-384).';
       return null;
     }
     const tokenizer = await classes.AutoTokenizer.from_pretrained(modelName, { quantized: true });

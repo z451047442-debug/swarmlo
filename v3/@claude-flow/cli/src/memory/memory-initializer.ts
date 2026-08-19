@@ -2311,7 +2311,9 @@ export async function loadEmbeddingModel(options?: {
       success: false,
       dimensions: 0,
       modelName: resolvedModelName,
-      error: `${resolvedModelName} is a multimodal (vision-language) model — the text-only ONNX pipeline cannot load it (no ONNX export; requires image input + remote code). Registered for config/resolution only. Set CLAUDE_FLOW_EMBEDDING_MODEL to a text embedding model (e.g. Xenova/bge-m3) to proceed.`,
+      error:
+        `${resolvedModelName} is a multimodal (vision-language) model — the text-only ONNX pipeline cannot load it (no ONNX export; requires image input + remote code). Registered for config/resolution only. Set CLAUDE_FLOW_EMBEDDING_MODEL to a text embedding model (e.g. Xenova/bge-m3) to proceed.` +
+        ' Use the BGE-VL sidecar instead: `npx swarmlo bge-vl embed --text "..."` (ADR-384).',
     };
   }
   if (isBgeFamily(resolvedSpec)) {

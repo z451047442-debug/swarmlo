@@ -49,6 +49,9 @@ export interface EmbeddingModelSpec {
    * export, custom remote code, image processor required), so
    * loadEmbeddingModel refuses them loudly instead of attempting a text-only
    * load that would yield wrong-pooling vectors or a confusing failure.
+   * The working pipeline lives in the swarmlo-bge-vl plugin (Python
+   * sidecar, isolated bge-vl.db) — see ADR-384. Loaders refuse with a
+   * pointer to `npx swarmlo bge-vl embed`.
    */
   multimodal?: boolean;
   /**

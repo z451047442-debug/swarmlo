@@ -152,6 +152,7 @@ describe('loadEmbeddingModel — BGE hook (ADR-382)', () => {
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/multimodal \(vision-language\)/);
     expect(result.error).toContain('CLAUDE_FLOW_EMBEDDING_MODEL');
+    expect(result.error).toMatch(/npx swarmlo bge-vl/);
   });
 });
 
