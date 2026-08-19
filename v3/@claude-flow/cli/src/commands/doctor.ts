@@ -11,7 +11,7 @@ import { existsSync, readFileSync, statSync, openSync, readSync, closeSync } fro
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createHash } from 'crypto';
-import { execSync, exec } from 'child_process';
+import { execSync, exec, spawnSync } from 'child_process';
 import { promisify } from 'util';
 import { decodeKey, isEncryptionEnabled } from '../encryption/vault.js';
 import { isEncryptedBlob } from '../encryption/vault.js';
@@ -1811,6 +1811,79 @@ async function checkMetaharnessIntegration(): Promise<HealthCheck> {
   }
 }
 
+export async function checkBgeVlIntegration(): Promise<HealthCheck> {
+  // ADR-384 — surface BGE-VL sidecar availability in `doctor`. Same
+  // 3-strategy plugin-dir walk-up as checkMetaharnessIntegration; the
+  // plugin is an optional augmentation, so absence is WARN not FAIL.
+  const candidates: string[] = [];
+  try {
+    const selfDir = dirname(fileURLToPath(import.meta.url));
+    let q = selfDir;
+    for (let i = 0; i < 8; i++) {
+      candidates.push(join(q, 'plugins', 'swarmlo-bge-vl'));
+      q = dirname(q);
+    }
+  } catch {
+    // fall through to cwd walk
+  }
+  let p = process.cwd();
+  for (let i = 0; i < 8; i++) {
+    candidates.push(join(p, 'plugins', 'swarmlo-bge-vl'));
+    p = dirname(p);
+  }
+  candidates.push(join(process.cwd(), 'node_modules', '@claude-flow', 'cli', 'plugins', 'swarmlo-bge-vl'));
+
+  let pluginDir: string | null = null;
+  for (const c of candidates) {
+    if (existsSync(join(c, 'scripts', 'bge-vl.mjs'))) {
+      pluginDir = c;
+      break;
+    }
+  }
+  if (!pluginDir) {
+    return {
+      name: 'BGE-VL plugin (ADR-384)',
+      status: 'warn',
+      message: 'plugins/swarmlo-bge-vl/ not found — BGE-VL multimodal embeddings will degrade gracefully',
+      fix: 'Optional: `npx swarmlo bge-vl setup` after reinstalling the CLI package',
+    };
+  }
+  const required = [
+    'scripts/bge-vl.mjs',
+    'scripts/_sidecar.mjs',
+    'python/bge_vl_embed.py',
+    'python/requirements.txt',
+    '.claude-plugin/plugin.json',
+  ];
+  const missing = required.filter((f) => !existsSync(join(pluginDir, f)));
+  if (missing.length > 0) {
+    return {
+      name: 'BGE-VL plugin (ADR-384)',
+      status: 'warn',
+      message: `plugin incomplete — missing: ${missing.join(', ')}`,
+      fix: 'Reinstall the CLI package or restore plugins/swarmlo-bge-vl/ from the repo',
+    };
+  }
+  const probe = spawnSync(
+    process.platform === 'win32' ? 'python' : 'python3',
+    ['-c', 'print(1)'],
+    { timeout: 10_000 },
+  );
+  if (probe.status !== 0) {
+    return {
+      name: 'BGE-VL plugin (ADR-384)',
+      status: 'warn',
+      message: 'plugin present but no python on PATH — embed/search will degrade',
+      fix: 'Install Python 3.10+ and run `npx swarmlo bge-vl setup`',
+    };
+  }
+  return {
+    name: 'BGE-VL plugin (ADR-384)',
+    status: 'pass',
+    message: `plugin + python found at ${pluginDir}`,
+  };
+}
+
 /**
  * Dependency-contract check: every `@metaharness/*` package this CLI DECLARES
  * in its own optionalDependencies must actually resolve at runtime. Declared
@@ -2232,6 +2305,7 @@ export const doctorCommand: Command = {
       checkMetaharness, // ADR-150 — MetaHarness upstream package
       checkMetaharnessDeclaredPackages, // dependency contract — declared optional deps must resolve
       checkMetaharnessIntegration, // iter 45 — swarmlo-side integration layer
+      checkBgeVlIntegration, // ADR-384 — BGE-VL sidecar availability
       checkFunnel, // ADR-305 — effective funnel state + deciding precedence source
       checkProxySponsoredConsent, // ADR-313 — Meta LLM Proxy sponsored-downtime health
       checkAuth, // ADR-306 — Cognitum identity (warn-only; never fails bare `swarmlo doctor`)
@@ -2276,6 +2350,7 @@ export const doctorCommand: Command = {
       'federation': checkFederationBreaker, // ADR-097 Phase 4
       'metaharness': [checkMetaharness, checkMetaharnessDeclaredPackages, checkMetaharnessIntegration], // ADR-150 — upstream + declared deps + swarmlo-side
       'metaharness-integration': checkMetaharnessIntegration, // iter 45 — swarmlo-side
+      'bge-vl': checkBgeVlIntegration, // ADR-384 — BGE-VL sidecar availability
       'funnel': checkFunnel, // ADR-305
       // ADR-307 — deep-dive array, same pattern as 'memory' above: the cheap
       // sponsored-consent check first, then binary/process/bind in the order
