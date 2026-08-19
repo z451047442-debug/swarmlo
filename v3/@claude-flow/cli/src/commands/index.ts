@@ -82,6 +82,8 @@ const commandLoaders: Record<string, CommandLoader> = {
   'gaia-bench': () => import('./gaia-bench.js'),
   // MetaHarness integration (ADR-150) — dispatcher over plugins/swarmlo-metaharness/
   metaharness: () => import('./metaharness.js'),
+  // BGE-VL multimodal embeddings (ADR-384) — dispatcher over plugins/swarmlo-bge-vl/
+  'bge-vl': () => import('./bge-vl.js'),
   // Eject (ADR-150 Phase 2) — lift swarmlo project into a renamed standalone harness
   eject: () => import('./eject.js'),
   // Cognitum lifecycle funnel controls (ADR-301/305/309)
@@ -213,6 +215,7 @@ export async function getApplianceCommand() { return loadCommand('appliance'); }
 export async function getCleanupCommand() { return loadCommand('cleanup'); }
 export async function getAutopilotCommand() { return loadCommand('autopilot'); }
 export async function getTransportCommand() { return loadCommand('transport'); }
+export async function getBgeVlCommand() { return loadCommand('bge-vl'); }
 
 /**
  * Core commands loaded synchronously (available immediately)
@@ -267,7 +270,7 @@ export async function getCommandsByCategory(): Promise<Record<string, Command[]>
     analyzeCmd, routeCmd, progressCmd, providersCmd,
     pluginsCmd, deploymentCmd, claimsCmd, issuesCmd,
     updateCmd, processCmd, guidanceCmd, applianceCmd,
-    cleanupCmd, autopilotCmd, policyCmd,
+    cleanupCmd, autopilotCmd, policyCmd, bgeVlCmd,
   ] = await Promise.all([
     loadCommand('daemon'), loadCommand('doctor'), loadCommand('embeddings'), loadCommand('neural'),
     loadCommand('performance'), loadCommand('security'), loadCommand('ruvector'), loadCommand('hive-mind'),
@@ -276,6 +279,7 @@ export async function getCommandsByCategory(): Promise<Record<string, Command[]>
     loadCommand('plugins'), loadCommand('deployment'), loadCommand('claims'), loadCommand('issues'),
     loadCommand('update'), loadCommand('process'), loadCommand('guidance'), loadCommand('appliance'),
     loadCommand('cleanup'), loadCommand('autopilot'), loadCommand('policy'),
+    loadCommand('bge-vl'),
   ]);
 
   return {
@@ -286,7 +290,7 @@ export async function getCommandsByCategory(): Promise<Record<string, Command[]>
     ],
     advanced: [
       neuralCmd, securityCmd, policyCmd, performanceCmd, embeddingsCmd,
-      hiveMindCmd, ruvectorCmd, guidanceCmd, autopilotCmd,
+      hiveMindCmd, ruvectorCmd, guidanceCmd, autopilotCmd, bgeVlCmd,
     ].filter(Boolean) as Command[],
     utility: [
       configCmd, doctorCmd, daemonCmd, completionsCmd,
