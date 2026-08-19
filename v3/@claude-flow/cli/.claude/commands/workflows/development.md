@@ -68,11 +68,11 @@ Remember: All code is written by Claude Code using its native tools!
 ## CLI Usage
 ```bash
 # Start development workflow via CLI
-npx @claude-flow/cli@latest workflow dev "REST API with auth"
+npx swarmlo-cli@latest workflow dev "REST API with auth"
 
 # Create custom workflow
-npx @claude-flow/cli@latest workflow create --name "api-dev" --steps "design,implement,test,deploy"
+npx swarmlo-cli@latest workflow create --name "api-dev" --steps "design,implement,test,deploy"
 
 # Execute saved workflow
-npx @claude-flow/cli@latest workflow execute api-dev
+npx swarmlo-cli@latest workflow execute api-dev
 ```

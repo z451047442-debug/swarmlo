@@ -4,7 +4,7 @@ Update neural models with new data.
 
 ## Usage
 ```bash
-npx @claude-flow/cli@latest training model-update [options]
+npx swarmlo-cli@latest training model-update [options]
 ```
 
 ## Options
@@ -15,11 +15,11 @@ npx @claude-flow/cli@latest training model-update [options]
 ## Examples
 ```bash
 # Update all models
-npx @claude-flow/cli@latest training model-update
+npx swarmlo-cli@latest training model-update
 
 # Specific model
-npx @claude-flow/cli@latest training model-update --model agent-selector
+npx swarmlo-cli@latest training model-update --model agent-selector
 
 # Incremental with validation
-npx @claude-flow/cli@latest training model-update --incremental --validate
+npx swarmlo-cli@latest training model-update --incremental --validate
 ```

@@ -66,17 +66,17 @@ mcp__claude-flow__sparc_mode {
 ### Option 2: Using NPX CLI (Fallback when MCP not available)
 ```bash
 # Run SPARC orchestrator (default)
-npx @claude-flow/cli@latest sparc "build complete authentication system"
+npx swarmlo-cli@latest sparc "build complete authentication system"
 
 # Run a specific mode
-npx @claude-flow/cli@latest sparc run architect "design API structure"
-npx @claude-flow/cli@latest sparc run tdd "implement user service"
+npx swarmlo-cli@latest sparc run architect "design API structure"
+npx swarmlo-cli@latest sparc run tdd "implement user service"
 
 # Execute full TDD workflow
-npx @claude-flow/cli@latest sparc tdd "implement user authentication"
+npx swarmlo-cli@latest sparc tdd "implement user authentication"
 
 # List all modes with details
-npx @claude-flow/cli@latest sparc modes --verbose
+npx swarmlo-cli@latest sparc modes --verbose
 
 # For alpha features
 npx claude-flow@alpha sparc run <mode> "your task"
@@ -121,7 +121,7 @@ mcp__claude-flow__memory_usage {
 ### Using NPX CLI (Fallback)
 ```bash
 # Store specifications
-npx @claude-flow/cli@latest memory store "spec_auth" "OAuth2 + JWT requirements" --namespace spec
+npx swarmlo-cli@latest memory store "spec_auth" "OAuth2 + JWT requirements" --namespace spec
 
 # Store architectural decisions
 ./claude-flow memory store "arch_api" "RESTful microservices design" --namespace arch

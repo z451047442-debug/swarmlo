@@ -23,7 +23,7 @@ mcp__claude-flow__task_orchestrate({
 ```
 
 ### Using CLI (Fallback)
-`npx @claude-flow/cli@latest swarm "analyze system performance" --strategy analysis`
+`npx swarmlo-cli@latest swarm "analyze system performance" --strategy analysis`
 
 ## Agent Roles
 

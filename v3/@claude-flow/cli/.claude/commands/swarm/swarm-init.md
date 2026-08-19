@@ -4,7 +4,7 @@ Initialize a new swarm with specified topology.
 
 ## Usage
 ```bash
-npx @claude-flow/cli@latest swarm init [options]
+npx swarmlo-cli@latest swarm init [options]
 ```
 
 ## Options
@@ -14,6 +14,6 @@ npx @claude-flow/cli@latest swarm init [options]
 
 ## Examples
 ```bash
-npx @claude-flow/cli@latest swarm init --topology mesh
-npx @claude-flow/cli@latest swarm init --topology hierarchical --max-agents 8
+npx swarmlo-cli@latest swarm init --topology mesh
+npx swarmlo-cli@latest swarm init --topology hierarchical --max-agents 8
 ```

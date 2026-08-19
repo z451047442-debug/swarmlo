@@ -56,8 +56,8 @@ Agents share learnings across sessions for cumulative expertise!
 ## CLI Usage
 ```bash
 # Train agent specialization via CLI
-npx @claude-flow/cli@latest train agent --type coder --capabilities "react,typescript"
+npx swarmlo-cli@latest train agent --type coder --capabilities "react,typescript"
 
 # Check specializations
-npx @claude-flow/cli@latest agent list --specializations
+npx swarmlo-cli@latest agent list --specializations
 ```

@@ -11,7 +11,7 @@ Monitor agent health status, resource usage, and detect issues.
 ## Usage
 
 ```bash
-npx @claude-flow/cli@latest agent health [agent-id] [options]
+npx swarmlo-cli@latest agent health [agent-id] [options]
 ```
 
 ## Options
@@ -26,19 +26,19 @@ npx @claude-flow/cli@latest agent health [agent-id] [options]
 
 ```bash
 # Overall health check
-npx @claude-flow/cli@latest agent health
+npx swarmlo-cli@latest agent health
 
 # Specific agent health
-npx @claude-flow/cli@latest agent health coder-lx7m9k2
+npx swarmlo-cli@latest agent health coder-lx7m9k2
 
 # Continuous monitoring
-npx @claude-flow/cli@latest agent health --watch
+npx swarmlo-cli@latest agent health --watch
 
 # Custom interval
-npx @claude-flow/cli@latest agent health -w -i 10
+npx swarmlo-cli@latest agent health -w -i 10
 
 # JSON output
-npx @claude-flow/cli@latest agent health --format json
+npx swarmlo-cli@latest agent health --format json
 ```
 
 ## Output
@@ -99,7 +99,7 @@ Recommendations
 Continuous monitoring with real-time updates:
 
 ```bash
-npx @claude-flow/cli@latest agent health --watch
+npx swarmlo-cli@latest agent health --watch
 
 # Output updates every 5 seconds:
 # [10:30:15] Agent Health: 3 healthy, 0 warning, 0 critical
@@ -134,6 +134,6 @@ Press `Ctrl+C` to stop watching.
 
 ## Related Commands
 
-- `npx @claude-flow/cli@latest agent status` - Detailed agent info
-- `npx @claude-flow/cli@latest agent metrics` - Performance metrics
-- `npx @claude-flow/cli@latest doctor` - System-wide health
+- `npx swarmlo-cli@latest agent status` - Detailed agent info
+- `npx swarmlo-cli@latest agent metrics` - Performance metrics
+- `npx swarmlo-cli@latest doctor` - System-wide health

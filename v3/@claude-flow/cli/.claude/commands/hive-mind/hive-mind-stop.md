@@ -4,5 +4,5 @@ Command documentation for hive-mind-stop in category hive-mind.
 
 Usage:
 ```bash
-npx @claude-flow/cli@latest hive-mind hive-mind-stop [options]
+npx swarmlo-cli@latest hive-mind hive-mind-stop [options]
 ```

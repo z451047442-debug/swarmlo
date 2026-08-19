@@ -4,7 +4,7 @@ Generate comprehensive performance reports for swarm operations.
 
 ## Usage
 ```bash
-npx @claude-flow/cli@latest analysis performance-report [options]
+npx swarmlo-cli@latest analysis performance-report [options]
 ```
 
 ## Options
@@ -15,11 +15,11 @@ npx @claude-flow/cli@latest analysis performance-report [options]
 ## Examples
 ```bash
 # Generate HTML report
-npx @claude-flow/cli@latest analysis performance-report --format html
+npx swarmlo-cli@latest analysis performance-report --format html
 
 # Compare swarms
-npx @claude-flow/cli@latest analysis performance-report --compare swarm-123
+npx swarmlo-cli@latest analysis performance-report --compare swarm-123
 
 # Full metrics report
-npx @claude-flow/cli@latest analysis performance-report --include-metrics --format markdown
+npx swarmlo-cli@latest analysis performance-report --include-metrics --format markdown
 ```

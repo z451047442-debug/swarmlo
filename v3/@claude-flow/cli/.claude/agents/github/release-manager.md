@@ -72,7 +72,7 @@ hooks:
     # 3. Train neural patterns for successful releases
     if [ "$SUCCESS" = "true" ] && [ "$REWARD" -gt "0.9" ]; then
       echo "🧠 Training neural pattern from successful release"
-      npx @claude-flow/cli@latest neural train \
+      npx swarmlo-cli@latest neural train \
         --pattern-type "coordination" \
         --training-data "$RELEASE_OUTPUT" \
         --epochs 50
@@ -587,7 +587,7 @@ jobs:
           cd claude-code-flow/claude-code-flow && npm install && npm test
           cd ../../ruv-swarm/npm && npm install && npm test:all
       - name: Validate Release
-        run: npx @claude-flow/cli@latest release validate
+        run: npx swarmlo-cli@latest release validate
 ```
 
 ## Monitoring and Metrics

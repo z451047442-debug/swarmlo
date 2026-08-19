@@ -4,7 +4,7 @@ Create reusable workflow templates.
 
 ## Usage
 ```bash
-npx @claude-flow/cli@latest workflow create [options]
+npx swarmlo-cli@latest workflow create [options]
 ```
 
 ## Options
@@ -15,11 +15,11 @@ npx @claude-flow/cli@latest workflow create [options]
 ## Examples
 ```bash
 # Create workflow
-npx @claude-flow/cli@latest workflow create --name "deploy-api"
+npx swarmlo-cli@latest workflow create --name "deploy-api"
 
 # From history
-npx @claude-flow/cli@latest workflow create --name "test-suite" --from-history
+npx swarmlo-cli@latest workflow create --name "test-suite" --from-history
 
 # Interactive mode
-npx @claude-flow/cli@latest workflow create --interactive
+npx swarmlo-cli@latest workflow create --interactive
 ```

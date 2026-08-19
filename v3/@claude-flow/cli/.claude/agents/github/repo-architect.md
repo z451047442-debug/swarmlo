@@ -144,9 +144,9 @@ mcp__github__push_files {
 
 ## Quick Start
 \`\`\`bash
-npx @claude-flow/cli@latest init --sparc
+npx swarmlo-cli@latest init --sparc
 npm install
-npx @claude-flow/cli@latest start --ui
+npx swarmlo-cli@latest start --ui
 \`\`\`
 
 ## Features

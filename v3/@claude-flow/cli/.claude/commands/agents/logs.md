@@ -11,7 +11,7 @@ View activity logs and history for agents.
 ## Usage
 
 ```bash
-npx @claude-flow/cli@latest agent logs <agent-id> [options]
+npx swarmlo-cli@latest agent logs <agent-id> [options]
 ```
 
 ## Options
@@ -28,23 +28,23 @@ npx @claude-flow/cli@latest agent logs <agent-id> [options]
 
 ```bash
 # View last 50 lines
-npx @claude-flow/cli@latest agent logs coder-lx7m9k2
+npx swarmlo-cli@latest agent logs coder-lx7m9k2
 
 # View last 100 lines
-npx @claude-flow/cli@latest agent logs coder-lx7m9k2 -n 100
+npx swarmlo-cli@latest agent logs coder-lx7m9k2 -n 100
 
 # Follow logs (live)
-npx @claude-flow/cli@latest agent logs coder-lx7m9k2 --follow
+npx swarmlo-cli@latest agent logs coder-lx7m9k2 --follow
 
 # Filter by level
-npx @claude-flow/cli@latest agent logs coder-lx7m9k2 -l error
+npx swarmlo-cli@latest agent logs coder-lx7m9k2 -l error
 
 # Logs since time
-npx @claude-flow/cli@latest agent logs coder-lx7m9k2 --since "1h"
-npx @claude-flow/cli@latest agent logs coder-lx7m9k2 --since "2026-01-08T10:00:00"
+npx swarmlo-cli@latest agent logs coder-lx7m9k2 --since "1h"
+npx swarmlo-cli@latest agent logs coder-lx7m9k2 --since "2026-01-08T10:00:00"
 
 # JSON output
-npx @claude-flow/cli@latest agent logs coder-lx7m9k2 --format json
+npx swarmlo-cli@latest agent logs coder-lx7m9k2 --format json
 ```
 
 ## Output
@@ -77,7 +77,7 @@ Logs for coder-lx7m9k2
 Real-time log streaming:
 
 ```bash
-npx @claude-flow/cli@latest agent logs coder-lx7m9k2 --follow
+npx swarmlo-cli@latest agent logs coder-lx7m9k2 --follow
 
 # New logs appear as they occur:
 # 2026-01-08 10:40:15 [INFO]  Task received: refactor-auth
@@ -91,16 +91,16 @@ Press `Ctrl+C` to stop following.
 
 ```bash
 # Last hour
-npx @claude-flow/cli@latest agent logs coder-lx7m9k2 --since "1h"
+npx swarmlo-cli@latest agent logs coder-lx7m9k2 --since "1h"
 
 # Last 30 minutes
-npx @claude-flow/cli@latest agent logs coder-lx7m9k2 --since "30m"
+npx swarmlo-cli@latest agent logs coder-lx7m9k2 --since "30m"
 
 # Specific timestamp
-npx @claude-flow/cli@latest agent logs coder-lx7m9k2 --since "2026-01-08T09:00:00"
+npx swarmlo-cli@latest agent logs coder-lx7m9k2 --since "2026-01-08T09:00:00"
 
 # Today's logs
-npx @claude-flow/cli@latest agent logs coder-lx7m9k2 --since "today"
+npx swarmlo-cli@latest agent logs coder-lx7m9k2 --since "today"
 ```
 
 ## JSON Output
@@ -125,6 +125,6 @@ npx @claude-flow/cli@latest agent logs coder-lx7m9k2 --since "today"
 
 ## Related Commands
 
-- `npx @claude-flow/cli@latest agent status` - Current agent status
-- `npx @claude-flow/cli@latest agent health` - Health monitoring
-- `npx @claude-flow/cli@latest agent metrics` - Performance metrics
+- `npx swarmlo-cli@latest agent status` - Current agent status
+- `npx swarmlo-cli@latest agent health` - Health monitoring
+- `npx swarmlo-cli@latest agent metrics` - Performance metrics

@@ -127,7 +127,7 @@ function swarmConfig(options: InitOptions): string {
 - **Neural**: ${options.runtime.enableNeural ? 'Enabled' : 'Disabled'}
 
 \`\`\`bash
-npx @claude-flow/cli@latest swarm init --topology hierarchical --max-agents 8 --strategy specialized
+npx swarmlo-cli@latest swarm init --topology hierarchical --max-agents 8 --strategy specialized
 \`\`\`
 
 ### Agent Routing
@@ -158,14 +158,14 @@ function memoryAndLearning(): string {
 
 ### Before Any Task
 \`\`\`bash
-npx @claude-flow/cli@latest memory search --query "[task keywords]" --namespace patterns
-npx @claude-flow/cli@latest hooks route --task "[task description]"
+npx swarmlo-cli@latest memory search --query "[task keywords]" --namespace patterns
+npx swarmlo-cli@latest hooks route --task "[task description]"
 \`\`\`
 
 ### After Success
 \`\`\`bash
-npx @claude-flow/cli@latest memory store --namespace patterns --key "[name]" --value "[what worked]"
-npx @claude-flow/cli@latest hooks post-task --task-id "[id]" --success true --store-results true
+npx swarmlo-cli@latest memory store --namespace patterns --key "[name]" --value "[what worked]"
+npx swarmlo-cli@latest hooks post-task --task-id "[id]" --success true --store-results true
 \`\`\`
 
 ### MCP Tools (use \`ToolSearch("keyword")\` to discover)
@@ -191,7 +191,7 @@ npx @claude-flow/cli@latest hooks post-task --task-id "[id]" --success true --st
 | \`document\` | After API changes |
 
 \`\`\`bash
-npx @claude-flow/cli@latest hooks worker dispatch --trigger audit
+npx swarmlo-cli@latest hooks worker dispatch --trigger audit
 \`\`\``;
 }
 
@@ -212,13 +212,13 @@ function cliQuickRef(): string {
   return `## CLI Quick Reference
 
 \`\`\`bash
-npx @claude-flow/cli@latest init --wizard           # Setup
-npx @claude-flow/cli@latest swarm init --v3-mode     # Start swarm
-npx @claude-flow/cli@latest memory search --query "" # Vector search
-npx @claude-flow/cli@latest hooks route --task ""    # Route to agent
-npx @claude-flow/cli@latest doctor --fix             # Diagnostics
-npx @claude-flow/cli@latest security scan            # Security scan
-npx @claude-flow/cli@latest performance benchmark    # Benchmarks
+npx swarmlo-cli@latest init --wizard           # Setup
+npx swarmlo-cli@latest swarm init --v3-mode     # Start swarm
+npx swarmlo-cli@latest memory search --query "" # Vector search
+npx swarmlo-cli@latest hooks route --task ""    # Route to agent
+npx swarmlo-cli@latest doctor --fix             # Diagnostics
+npx swarmlo-cli@latest security scan            # Security scan
+npx swarmlo-cli@latest performance benchmark    # Benchmarks
 \`\`\`
 
 26 commands, 140+ subcommands. Use \`--help\` on any command for details.`;
@@ -260,8 +260,8 @@ function securitySection(): string {
 - Always use parameterized queries (prevent injection)
 
 \`\`\`bash
-npx @claude-flow/cli@latest security scan --depth deep
-npx @claude-flow/cli@latest security audit --report
+npx swarmlo-cli@latest security scan --depth deep
+npx swarmlo-cli@latest security audit --report
 \`\`\`
 
 Agents: \`security-architect\` (threat modeling), \`security-auditor\` (vulnerability detection)`;
@@ -275,8 +275,8 @@ function performanceSection(): string {
 - Use HNSW/DiskANN for vector search, Int8 quantization for memory reduction
 
 \`\`\`bash
-npx @claude-flow/cli@latest performance benchmark --suite all
-npx @claude-flow/cli@latest performance profile --target "[component]"
+npx swarmlo-cli@latest performance benchmark --suite all
+npx swarmlo-cli@latest performance profile --target "[component]"
 \`\`\`
 
 Agents: \`performance-engineer\` (profiling), \`perf-analyzer\` (bottleneck detection)`;
@@ -295,11 +295,11 @@ function hooksRef(): string {
 | \`worker\` | Background worker dispatch |
 
 \`\`\`bash
-npx @claude-flow/cli@latest hooks pre-task --description "[task]"
-npx @claude-flow/cli@latest hooks post-task --task-id "[id]" --success true
-npx @claude-flow/cli@latest hooks session-start --session-id "[id]"
-npx @claude-flow/cli@latest hooks route --task "[task]"
-npx @claude-flow/cli@latest hooks worker dispatch --trigger audit
+npx swarmlo-cli@latest hooks pre-task --description "[task]"
+npx swarmlo-cli@latest hooks post-task --task-id "[id]" --success true
+npx swarmlo-cli@latest hooks session-start --session-id "[id]"
+npx swarmlo-cli@latest hooks route --task "[task]"
+npx swarmlo-cli@latest hooks worker dispatch --trigger audit
 \`\`\``;
 }
 
@@ -320,10 +320,10 @@ function federationRef(): string {
 Cross-installation agent collaboration with zero-trust security.
 
 \`\`\`bash
-npx @claude-flow/cli@latest federation init
-npx @claude-flow/cli@latest federation join wss://peer:8443
-npx @claude-flow/cli@latest federation send --to peer --type task-request --message "..."
-npx @claude-flow/cli@latest federation status
+npx swarmlo-cli@latest federation init
+npx swarmlo-cli@latest federation join wss://peer:8443
+npx swarmlo-cli@latest federation send --to peer --type task-request --message "..."
+npx swarmlo-cli@latest federation status
 \`\`\`
 
 - 5-tier trust: UNTRUSTED → VERIFIED → ATTESTED → TRUSTED → PRIVILEGED

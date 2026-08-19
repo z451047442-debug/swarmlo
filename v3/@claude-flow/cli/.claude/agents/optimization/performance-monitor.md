@@ -582,31 +582,31 @@ class DashboardProvider {
 ### Monitoring Commands
 ```bash
 # Start comprehensive monitoring
-npx @claude-flow/cli@latest performance-report --format detailed --timeframe 24h
+npx swarmlo-cli@latest performance-report --format detailed --timeframe 24h
 
 # Real-time bottleneck analysis
-npx @claude-flow/cli@latest bottleneck-analyze --component swarm-coordination
+npx swarmlo-cli@latest bottleneck-analyze --component swarm-coordination
 
 # Health check all components
-npx @claude-flow/cli@latest health-check --components ["swarm", "agents", "coordination"]
+npx swarmlo-cli@latest health-check --components ["swarm", "agents", "coordination"]
 
 # Collect specific metrics
-npx @claude-flow/cli@latest metrics-collect --components ["cpu", "memory", "network"]
+npx swarmlo-cli@latest metrics-collect --components ["cpu", "memory", "network"]
 
 # Monitor SLA compliance
-npx @claude-flow/cli@latest sla-monitor --service swarm-coordination --threshold 99.9
+npx swarmlo-cli@latest sla-monitor --service swarm-coordination --threshold 99.9
 ```
 
 ### Alert Configuration
 ```bash
 # Configure performance alerts
-npx @claude-flow/cli@latest alert-config --metric cpu_usage --threshold 80 --severity warning
+npx swarmlo-cli@latest alert-config --metric cpu_usage --threshold 80 --severity warning
 
 # Set up anomaly detection
-npx @claude-flow/cli@latest anomaly-setup --models ["statistical", "ml", "time_series"]
+npx swarmlo-cli@latest anomaly-setup --models ["statistical", "ml", "time_series"]
 
 # Configure notification channels
-npx @claude-flow/cli@latest notification-config --channels ["slack", "email", "webhook"]
+npx swarmlo-cli@latest notification-config --channels ["slack", "email", "webhook"]
 ```
 
 ## Integration Points

@@ -353,28 +353,28 @@ class CircuitBreaker {
 ### Load Balancing Commands
 ```bash
 # Initialize load balancer
-npx @claude-flow/cli@latest agent spawn load-balancer --type coordinator
+npx swarmlo-cli@latest agent spawn load-balancer --type coordinator
 
 # Start load balancing
-npx @claude-flow/cli@latest load-balance --swarm-id <id> --strategy adaptive
+npx swarmlo-cli@latest load-balance --swarm-id <id> --strategy adaptive
 
 # Monitor load distribution
-npx @claude-flow/cli@latest agent-metrics --type load-balancer
+npx swarmlo-cli@latest agent-metrics --type load-balancer
 
 # Adjust balancing parameters
-npx @claude-flow/cli@latest config-manage --action update --config '{"stealThreshold": 5, "agingBoost": 10}'
+npx swarmlo-cli@latest config-manage --action update --config '{"stealThreshold": 5, "agingBoost": 10}'
 ```
 
 ### Performance Monitoring
 ```bash
 # Real-time load monitoring
-npx @claude-flow/cli@latest performance-report --format detailed
+npx swarmlo-cli@latest performance-report --format detailed
 
 # Bottleneck analysis
-npx @claude-flow/cli@latest bottleneck-analyze --component swarm-coordination
+npx swarmlo-cli@latest bottleneck-analyze --component swarm-coordination
 
 # Resource utilization tracking
-npx @claude-flow/cli@latest metrics-collect --components ["load-balancer", "task-queue"]
+npx swarmlo-cli@latest metrics-collect --components ["load-balancer", "task-queue"]
 ```
 
 ## Integration Points

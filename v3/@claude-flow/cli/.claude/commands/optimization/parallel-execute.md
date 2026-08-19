@@ -4,7 +4,7 @@ Execute tasks in parallel for maximum efficiency.
 
 ## Usage
 ```bash
-npx @claude-flow/cli@latest optimization parallel-execute [options]
+npx swarmlo-cli@latest optimization parallel-execute [options]
 ```
 
 ## Options
@@ -15,11 +15,11 @@ npx @claude-flow/cli@latest optimization parallel-execute [options]
 ## Examples
 ```bash
 # Execute task list
-npx @claude-flow/cli@latest optimization parallel-execute --tasks tasks.json
+npx swarmlo-cli@latest optimization parallel-execute --tasks tasks.json
 
 # Limit parallelism
-npx @claude-flow/cli@latest optimization parallel-execute --tasks tasks.json --max-parallel 5
+npx swarmlo-cli@latest optimization parallel-execute --tasks tasks.json --max-parallel 5
 
 # Custom strategy
-npx @claude-flow/cli@latest optimization parallel-execute --strategy adaptive
+npx swarmlo-cli@latest optimization parallel-execute --strategy adaptive
 ```

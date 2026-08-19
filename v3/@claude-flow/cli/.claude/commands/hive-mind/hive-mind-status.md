@@ -4,5 +4,5 @@ Command documentation for hive-mind-status in category hive-mind.
 
 Usage:
 ```bash
-npx @claude-flow/cli@latest hive-mind hive-mind-status [options]
+npx swarmlo-cli@latest hive-mind hive-mind-status [options]
 ```

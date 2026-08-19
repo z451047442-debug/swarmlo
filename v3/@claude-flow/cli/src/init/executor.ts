@@ -410,7 +410,7 @@ function mergeSettingsForUpgrade(existing: Record<string, unknown>): Record<stri
   // 3. Fix statusLine config (remove invalid fields, ensure correct format)
   // Claude Code only supports: type, command, padding
   //
-  // #2448 — Detect and REGENERATE the runaway `npx @claude-flow/cli@latest`
+  // #2448 — Detect and REGENERATE the runaway `npx swarmlo-cli@latest`
   // statusline form. Pre-#2337 init wrote this to settings.json; it spawns
   // a cold Node process + npm registry round-trip on every fire (statusline
   // refires every few hundred ms), which on macOS produced load average 49
@@ -443,7 +443,7 @@ function mergeSettingsForUpgrade(existing: Record<string, unknown>): Record<stri
   }
 
   // #2448 / #2677 — Detect and REGENERATE per-action hook commands that still
-  // use the runaway `npx @claude-flow/cli@latest hooks <sub>` form. These fire
+  // use the runaway `npx swarmlo-cli@latest hooks <sub>` form. These fire
   // on every PreToolUse/PostToolUse/UserPromptSubmit, each spawning ~130 MB
   // of cold Node + npm registry resolution; the storm is what kernel-paniced
   // the reporter's machine in #2448.
@@ -689,7 +689,7 @@ export async function executeUpgrade(targetDir: string, upgradeSettings = false)
         cvesFixed: 0,
         totalCves: 0,
         lastScan: null,
-        _note: 'Run: npx @claude-flow/cli@latest security scan'
+        _note: 'Run: npx swarmlo-cli@latest security scan'
       };
       fs.writeFileSync(auditPath, JSON.stringify(audit, null, 2), 'utf-8');
       result.created.push('.claude-flow/security/audit-status.json');
@@ -1727,7 +1727,7 @@ async function writeInitialMetrics(
       cvesFixed: 0,
       totalCves: 0,
       lastScan: null,
-      _note: 'Run: npx @claude-flow/cli@latest security scan'
+      _note: 'Run: npx swarmlo-cli@latest security scan'
     };
     fs.writeFileSync(auditPath, JSON.stringify(audit, null, 2), 'utf-8');
     result.created.files.push('.claude-flow/security/audit-status.json');
@@ -1811,13 +1811,13 @@ Swarmlo V3 is a domain-driven design architecture for multi-agent AI coordinatio
 ### Quick Commands
 \`\`\`bash
 # Initialize swarm
-npx @claude-flow/cli@latest swarm init --topology hierarchical --max-agents 8 --strategy specialized
+npx swarmlo-cli@latest swarm init --topology hierarchical --max-agents 8 --strategy specialized
 
 # Check status
-npx @claude-flow/cli@latest swarm status
+npx swarmlo-cli@latest swarm status
 
 # Monitor activity
-npx @claude-flow/cli@latest swarm monitor
+npx swarmlo-cli@latest swarm monitor
 \`\`\`
 
 ---
@@ -1901,17 +1901,17 @@ npx @claude-flow/cli@latest swarm monitor
 ### Example Commands
 \`\`\`bash
 # Initialize
-npx @claude-flow/cli@latest init --wizard
+npx swarmlo-cli@latest init --wizard
 
 # Spawn agent
-npx @claude-flow/cli@latest agent spawn -t coder --name my-coder
+npx swarmlo-cli@latest agent spawn -t coder --name my-coder
 
 # Memory operations
-npx @claude-flow/cli@latest memory store --key "pattern" --value "data" --namespace patterns
-npx @claude-flow/cli@latest memory search --query "authentication"
+npx swarmlo-cli@latest memory store --key "pattern" --value "data" --namespace patterns
+npx swarmlo-cli@latest memory search --query "authentication"
 
 # Diagnostics
-npx @claude-flow/cli@latest doctor --fix
+npx swarmlo-cli@latest doctor --fix
 \`\`\`
 
 ---
@@ -2010,16 +2010,16 @@ High-confidence insights (>0.8) can transfer between agents.
 ### Memory Commands
 \`\`\`bash
 # Store pattern
-npx @claude-flow/cli@latest memory store --key "name" --value "data" --namespace patterns
+npx swarmlo-cli@latest memory store --key "name" --value "data" --namespace patterns
 
 # Semantic search
-npx @claude-flow/cli@latest memory search --query "authentication"
+npx swarmlo-cli@latest memory search --query "authentication"
 
 # List entries
-npx @claude-flow/cli@latest memory list --namespace patterns
+npx swarmlo-cli@latest memory list --namespace patterns
 
 # Initialize database
-npx @claude-flow/cli@latest memory init --force
+npx swarmlo-cli@latest memory init --force
 \`\`\`
 
 ---
@@ -2048,16 +2048,16 @@ npx @claude-flow/cli@latest memory init --force
 ### Hive-Mind Commands
 \`\`\`bash
 # Initialize
-npx @claude-flow/cli@latest hive-mind init --queen-type strategic
+npx swarmlo-cli@latest hive-mind init --queen-type strategic
 
 # Status
-npx @claude-flow/cli@latest hive-mind status
+npx swarmlo-cli@latest hive-mind status
 
 # Spawn workers
-npx @claude-flow/cli@latest hive-mind spawn --count 5 --type worker
+npx swarmlo-cli@latest hive-mind spawn --count 5 --type worker
 
 # Consensus
-npx @claude-flow/cli@latest hive-mind consensus --propose "task"
+npx swarmlo-cli@latest hive-mind consensus --propose "task"
 \`\`\`
 
 ---

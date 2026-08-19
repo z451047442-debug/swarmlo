@@ -41,16 +41,16 @@ mcp__claude-flow__sparc_mode {
 ### Option 2: Using NPX CLI (Fallback when MCP not available)
 ```bash
 # Use when running from terminal or MCP tools unavailable
-npx @claude-flow/cli@latest sparc run code "implement REST API endpoints"
+npx swarmlo-cli@latest sparc run code "implement REST API endpoints"
 
 # For alpha features
 npx claude-flow@alpha sparc run code "implement REST API endpoints"
 
 # With namespace
-npx @claude-flow/cli@latest sparc run code "your task" --namespace code
+npx swarmlo-cli@latest sparc run code "your task" --namespace code
 
 # Non-interactive mode
-npx @claude-flow/cli@latest sparc run code "your task" --non-interactive
+npx swarmlo-cli@latest sparc run code "your task" --non-interactive
 ```
 
 ### Option 3: Local Installation
@@ -82,8 +82,8 @@ mcp__claude-flow__memory_search {
 ### Using NPX CLI (Fallback)
 ```bash
 # Store mode-specific context
-npx @claude-flow/cli@latest memory store "code_context" "important decisions" --namespace code
+npx swarmlo-cli@latest memory store "code_context" "important decisions" --namespace code
 
 # Query previous work
-npx @claude-flow/cli@latest memory query "code" --limit 5
+npx swarmlo-cli@latest memory query "code" --limit 5
 ```

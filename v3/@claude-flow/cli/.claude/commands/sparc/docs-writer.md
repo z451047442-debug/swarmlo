@@ -32,16 +32,16 @@ mcp__claude-flow__sparc_mode {
 ### Option 2: Using NPX CLI (Fallback when MCP not available)
 ```bash
 # Use when running from terminal or MCP tools unavailable
-npx @claude-flow/cli@latest sparc run docs-writer "create API documentation"
+npx swarmlo-cli@latest sparc run docs-writer "create API documentation"
 
 # For alpha features
 npx claude-flow@alpha sparc run docs-writer "create API documentation"
 
 # With namespace
-npx @claude-flow/cli@latest sparc run docs-writer "your task" --namespace docs-writer
+npx swarmlo-cli@latest sparc run docs-writer "your task" --namespace docs-writer
 
 # Non-interactive mode
-npx @claude-flow/cli@latest sparc run docs-writer "your task" --non-interactive
+npx swarmlo-cli@latest sparc run docs-writer "your task" --non-interactive
 ```
 
 ### Option 3: Local Installation
@@ -73,8 +73,8 @@ mcp__claude-flow__memory_search {
 ### Using NPX CLI (Fallback)
 ```bash
 # Store mode-specific context
-npx @claude-flow/cli@latest memory store "docs-writer_context" "important decisions" --namespace docs-writer
+npx swarmlo-cli@latest memory store "docs-writer_context" "important decisions" --namespace docs-writer
 
 # Query previous work
-npx @claude-flow/cli@latest memory query "docs-writer" --limit 5
+npx swarmlo-cli@latest memory query "docs-writer" --limit 5
 ```

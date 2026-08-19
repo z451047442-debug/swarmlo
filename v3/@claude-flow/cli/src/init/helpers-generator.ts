@@ -482,7 +482,7 @@ export function generateHookHandler(): string {
     'function spawnFunnelRefresh() {',
     '  try {',
     "    var cmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';",
-    "    var args = ['--prefer-offline', '@claude-flow/cli', 'hooks', 'refresh-funnel', '--quiet'];",
+    "    var args = ['--prefer-offline', 'swarmlo-cli', 'hooks', 'refresh-funnel', '--quiet'];",
     '    var child = spawn(cmd, args, {',
     "      detached: true, stdio: 'ignore', env: Object.assign({}, process.env),",
     '    });',

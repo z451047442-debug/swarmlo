@@ -24,7 +24,7 @@ mcp__claude-flow__task_orchestrate({
 ```
 
 ### Using CLI (Fallback)
-`npx @claude-flow/cli@latest swarm "update dependencies" --strategy maintenance`
+`npx swarmlo-cli@latest swarm "update dependencies" --strategy maintenance`
 
 ## Agent Roles
 

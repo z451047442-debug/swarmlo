@@ -105,7 +105,8 @@
   "permissions": {
     "allow": [
       "Bash(npx @claude-flow*)",
-      "Bash(npx @claude-flow/cli@latest*)",
+      "Bash(npx swarmlo-cli*)",
+      "Bash(npx swarmlo-cli@latest*)",
       "Bash(node .claude/*)",
       "mcp__claude-flow__:*"
     ],

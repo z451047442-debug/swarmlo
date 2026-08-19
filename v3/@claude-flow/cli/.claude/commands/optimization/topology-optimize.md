@@ -4,7 +4,7 @@ Optimize swarm topology for current workload.
 
 ## Usage
 ```bash
-npx @claude-flow/cli@latest optimization topology-optimize [options]
+npx swarmlo-cli@latest optimization topology-optimize [options]
 ```
 
 ## Options
@@ -15,11 +15,11 @@ npx @claude-flow/cli@latest optimization topology-optimize [options]
 ## Examples
 ```bash
 # Analyze and suggest
-npx @claude-flow/cli@latest optimization topology-optimize --analyze-first
+npx swarmlo-cli@latest optimization topology-optimize --analyze-first
 
 # Optimize for speed
-npx @claude-flow/cli@latest optimization topology-optimize --target speed
+npx swarmlo-cli@latest optimization topology-optimize --target speed
 
 # Apply changes
-npx @claude-flow/cli@latest optimization topology-optimize --target efficiency --apply
+npx swarmlo-cli@latest optimization topology-optimize --target efficiency --apply
 ```

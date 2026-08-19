@@ -600,34 +600,34 @@ const resourceIntegration = {
 ### Resource Management Commands
 ```bash
 # Analyze resource usage
-npx @claude-flow/cli@latest metrics-collect --components ["cpu", "memory", "network"]
+npx swarmlo-cli@latest metrics-collect --components ["cpu", "memory", "network"]
 
 # Optimize resource allocation
-npx @claude-flow/cli@latest daa-resource-alloc --resources <resource-config>
+npx swarmlo-cli@latest daa-resource-alloc --resources <resource-config>
 
 # Predictive scaling
-npx @claude-flow/cli@latest swarm-scale --swarm-id <id> --target-size <size>
+npx swarmlo-cli@latest swarm-scale --swarm-id <id> --target-size <size>
 
 # Performance profiling
-npx @claude-flow/cli@latest performance-report --format detailed --timeframe 24h
+npx swarmlo-cli@latest performance-report --format detailed --timeframe 24h
 
 # Circuit breaker configuration
-npx @claude-flow/cli@latest fault-tolerance --strategy circuit-breaker --config <config>
+npx swarmlo-cli@latest fault-tolerance --strategy circuit-breaker --config <config>
 ```
 
 ### Optimization Commands
 ```bash
 # Run performance optimization
-npx @claude-flow/cli@latest optimize-performance --swarm-id <id> --strategy adaptive
+npx swarmlo-cli@latest optimize-performance --swarm-id <id> --strategy adaptive
 
 # Generate resource forecasts
-npx @claude-flow/cli@latest forecast-resources --time-horizon 3600 --confidence 0.95
+npx swarmlo-cli@latest forecast-resources --time-horizon 3600 --confidence 0.95
 
 # Profile system performance
-npx @claude-flow/cli@latest profile-performance --duration 60000 --components all
+npx swarmlo-cli@latest profile-performance --duration 60000 --components all
 
 # Analyze bottlenecks
-npx @claude-flow/cli@latest bottleneck-analyze --component swarm-coordination
+npx swarmlo-cli@latest bottleneck-analyze --component swarm-coordination
 ```
 
 ## Integration Points

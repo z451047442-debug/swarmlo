@@ -4,7 +4,7 @@ Persist memory across sessions.
 
 ## Usage
 ```bash
-npx @claude-flow/cli@latest memory persist [options]
+npx swarmlo-cli@latest memory persist [options]
 ```
 
 ## Options
@@ -15,11 +15,11 @@ npx @claude-flow/cli@latest memory persist [options]
 ## Examples
 ```bash
 # Export memory
-npx @claude-flow/cli@latest memory persist --export memory-backup.json
+npx swarmlo-cli@latest memory persist --export memory-backup.json
 
 # Import memory
-npx @claude-flow/cli@latest memory persist --import memory-backup.json
+npx swarmlo-cli@latest memory persist --import memory-backup.json
 
 # Compressed export
-npx @claude-flow/cli@latest memory persist --export memory.gz --compress
+npx swarmlo-cli@latest memory persist --export memory.gz --compress
 ```

@@ -4,7 +4,7 @@ View agent performance metrics.
 
 ## Usage
 ```bash
-npx @claude-flow/cli@latest agent metrics [options]
+npx swarmlo-cli@latest agent metrics [options]
 ```
 
 ## Options
@@ -15,11 +15,11 @@ npx @claude-flow/cli@latest agent metrics [options]
 ## Examples
 ```bash
 # All agents metrics
-npx @claude-flow/cli@latest agent metrics
+npx swarmlo-cli@latest agent metrics
 
 # Specific agent
-npx @claude-flow/cli@latest agent metrics --agent-id agent-001
+npx swarmlo-cli@latest agent metrics --agent-id agent-001
 
 # Last hour
-npx @claude-flow/cli@latest agent metrics --period 1h
+npx swarmlo-cli@latest agent metrics --period 1h
 ```
