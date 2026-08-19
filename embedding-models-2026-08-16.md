@@ -22,6 +22,7 @@
 | `Xenova/bge-large-en-v1.5` | 1024 | BGE 系列最大档（335M 参数，约 440MB） | 同上注释 |
 | **`Xenova/bge-m3`** | 1024 | **2026-08-16 新增**：多语言 + 8192 上下文 + 原生 sparse（详见第七节，ADR-382） | [`v3/@claude-flow/cli/src/memory/embedding-models.ts`](v3/@claude-flow/cli/src/memory/embedding-models.ts) 注册表 |
 | **`Xenova/bge-large-zh-v1.5`** | 1024 | **2026-08-16 顺带收录**：中文检索专用，中文查询指令 | 同上注册表 |
+| `BAAI/bge-vl-base` / `BAAI/bge-vl-large` | 768 | **2026-08-19 配置**：CLIP 风格多模态（视觉-语言）。**仅注册表可解析、加载被拒**（无 ONNX 导出 + trust_remote_code + 图像预处理器，纯文本管线无法加载；large 768 维已验证，base 未在库内验证） | 同上注册表 |
 
 ### 交叉编码器（cross-encoder，重排序）
 
@@ -80,6 +81,7 @@ AgentDB v3 bridge（ADR-053，仅默认路径；显式配置模型时跳过—�
 - **bridge（AgentDB）仅在"未显式配置且解析模型为 MiniLM"时介入本地管线——bge-m3 默认下本地记忆管线完全不经过 bridge（全部 11 个入口统一条件化：load/generate/store/search/HNSW 增查/list/get/delete/purge/控制器激活；仅 walRefusalError 诊断性查询 bridge）；bridge 仍是 4 个 384 维插件的直连后端。**
 - **HF 镜像（2026-08-17）**：`CLAUDE_FLOW_HF_ENDPOINT`（回退 `HF_ENDPOINT`）在三处加载器设置 transformers 的 `env.remoteHost`——受限网络可用 hf-mirror.com 等镜像拉取模型，绕过 huggingface.co 拦截。**本机冒烟验证可先试：`CLAUDE_FLOW_HF_ENDPOINT=https://hf-mirror.com claude-flow memory init --force`。**
 - 精排：ms-marco 交叉编码器（仅混合检索路径启用）。
+- **BGE-VL（2026-08-19 配置）**：`BAAI/bge-vl-base` / `BAAI/bge-vl-large` 已注册（family `bge-vl`、别名 `bge-vl-base`/`bge-vl-large`），供名称解析与配置识别；`loadEmbeddingModel` 与 `getBgeEmbedder` 对多模态模型快速失败并给出清晰报错 + 逃生门（`CLAUDE_FLOW_EMBEDDING_MODEL`）。要真正跑图文检索需视觉管线（ONNX 导出或 Python 服务），属后续功能。
 - 云端：OpenAI 两个 text-embedding-3 模型（需 API key）。
 
 ## 七、bge-m3 接入方案（2026-08-16，ADR-382）

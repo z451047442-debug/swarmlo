@@ -7,6 +7,8 @@
 // Xenova/bge-large-zh-v1.5, and Xenova/bge-m3 (1024-dim, 8192 seq,
 // instruction-free). Unregistered models fall back to the legacy name-based
 // dim heuristic (small→384, large→1024, else 768).
+// BGE-VL (multimodal) is registered in the registry but REFUSED here — the
+// text-only pipeline cannot run a vision-language model.
 //
 // BGE outputs use CLS-token pooling + L2 normalisation (per BAAI's docs).
 //
@@ -178,6 +180,14 @@ export async function getBgeEmbedder(modelName = 'Xenova/bge-base-en-v1.5'): Pro
       return null;
     }
     const spec = resolveEmbeddingModel(modelName);
+    // BGE-VL (multimodal) is registered but refused here — defense-in-depth
+    // for direct callers (BEIR scripts can pass BGE_MODEL=BAAI/bge-vl-*).
+    if (spec.multimodal) {
+      state.error =
+        `${modelName} is a multimodal (vision-language) model — the text-only ` +
+        'ONNX pipeline cannot load it (no ONNX export; requires image input + remote code).';
+      return null;
+    }
     const tokenizer = await classes.AutoTokenizer.from_pretrained(modelName, { quantized: true });
     const model = await classes.AutoModel.from_pretrained(modelName, { quantized: true });
     state.embedder = buildEmbedder(modelName, spec, tokenizer, model);

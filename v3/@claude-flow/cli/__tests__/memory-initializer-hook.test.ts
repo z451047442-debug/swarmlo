@@ -142,6 +142,17 @@ describe('loadEmbeddingModel — BGE hook (ADR-382)', () => {
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/BGE embedder failed to load/);
   });
+
+  it('refuses multimodal bge-vl with a clear error instead of a text load', async () => {
+    process.env.CLAUDE_FLOW_DISABLE_BRIDGE = '1';
+    mockProviders(() => makeFakeHf());
+
+    const { loadEmbeddingModel } = await import('../src/memory/memory-initializer.js');
+    const result = await loadEmbeddingModel({ modelName: 'BAAI/bge-vl-large' });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/multimodal \(vision-language\)/);
+    expect(result.error).toContain('CLAUDE_FLOW_EMBEDDING_MODEL');
+  });
 });
 
 describe('loadEmbeddingModel — dimension guard (layer 1)', () => {

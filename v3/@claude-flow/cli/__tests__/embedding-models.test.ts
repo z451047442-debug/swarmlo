@@ -55,6 +55,20 @@ describe('EMBEDDING_MODELS registry', () => {
     expect(zh.sparse).toBe(false);
   });
 
+  it('bge-vl family: multimodal CLIP-style models registered with aliases', () => {
+    for (const id of ['BAAI/bge-vl-base', 'BAAI/bge-vl-large']) {
+      const spec = EMBEDDING_MODELS[id];
+      expect(spec).toBeDefined();
+      expect(spec.family).toBe('bge-vl');
+      expect(spec.multimodal).toBe(true);
+      expect(spec.sparse).toBe(false);
+      expect(spec.queryPrefix).toBeNull();
+    }
+    expect(EMBEDDING_MODELS['BAAI/bge-vl-large'].dim).toBe(768);
+    expect(resolveEmbeddingModel('bge-vl-large').modelId).toBe('BAAI/bge-vl-large');
+    expect(resolveEmbeddingModel('bge-vl-base').modelId).toBe('BAAI/bge-vl-base');
+  });
+
   it('DEFAULT_EMBEDDING_MODEL is bge-m3 (1024-dim, sparse, instruction-free)', () => {
     expect(DEFAULT_EMBEDDING_MODEL).toBe('Xenova/bge-m3');
     const m3 = EMBEDDING_MODELS[DEFAULT_EMBEDDING_MODEL];

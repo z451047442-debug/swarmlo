@@ -2301,6 +2301,19 @@ export async function loadEmbeddingModel(options?: {
   // ADR-382: BGE-family models go through the dedicated bi-encoder
   // (CLS pooling, per-model query prefix, 8192-seq support for bge-m3).
   const resolvedSpec = resolveEmbeddingModel(resolvedModelName);
+  // Multimodal (vision-language) models — BGE-VL family — are registered for
+  // name resolution / config only. The text-only pipeline cannot load them
+  // (no ONNX export, custom remote code, image processor required), so refuse
+  // loudly with an escape hatch instead of attempting a wrong-pooling text
+  // load or surfacing a raw ONNX error.
+  if (resolvedSpec.multimodal) {
+    return {
+      success: false,
+      dimensions: 0,
+      modelName: resolvedModelName,
+      error: `${resolvedModelName} is a multimodal (vision-language) model — the text-only ONNX pipeline cannot load it (no ONNX export; requires image input + remote code). Registered for config/resolution only. Set CLAUDE_FLOW_EMBEDDING_MODEL to a text embedding model (e.g. Xenova/bge-m3) to proceed.`,
+    };
+  }
   if (isBgeFamily(resolvedSpec)) {
     const bge = await getBgeEmbedder(resolvedModelName);
     if (bge) {

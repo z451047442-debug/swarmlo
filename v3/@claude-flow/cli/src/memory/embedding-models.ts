@@ -21,6 +21,7 @@ export type EmbeddingFamily =
   | 'bge-en-v1.5'
   | 'bge-zh-v1.5'
   | 'bge-m3'
+  | 'bge-vl'
   | 'minilm'
   | 'mpnet'
   | 'other';
@@ -42,6 +43,14 @@ export interface EmbeddingModelSpec {
   /** BAAI fusion recipe: dense:sparse = 1:0.3. */
   sparseWeight?: number;
   denseWeight?: number;
+  /**
+   * Multimodal (vision-language) model — e.g. the BGE-VL family. The
+   * text-only ONNX pipeline (bge-embedder.ts) cannot load these (no ONNX
+   * export, custom remote code, image processor required), so
+   * loadEmbeddingModel refuses them loudly instead of attempting a text-only
+   * load that would yield wrong-pooling vectors or a confusing failure.
+   */
+  multimodal?: boolean;
   /**
    * Default semantic-search threshold for this model's dense space.
    * bge-m3's dense cosine distribution is looser than MiniLM's — related
@@ -78,6 +87,31 @@ export const EMBEDDING_MODELS: Readonly<Record<string, EmbeddingModelSpec>> = {
     denseWeight: 1.0,
     defaultThreshold: 0.15, // measured related-pair cosine 0.17–0.22 (2026-08-17)
   },
+  // BGE-VL — CLIP-style multimodal (vision-language) family. Registered for
+  // name resolution / config only: loads are refused (multimodal), so dim is
+  // informational, not verified against a loaded model.
+  'BAAI/bge-vl-base': {
+    modelId: 'BAAI/bge-vl-base',
+    dim: 768, // per BAAI model card — unverified in-tree
+    maxSeqLength: 512,
+    pooling: 'mean', // CLIP projection, not CLS/mean — unused (loads refused)
+    normalize: true,
+    queryPrefix: null, // instruction-free CLIP-style dual encoder
+    family: 'bge-vl',
+    sparse: false,
+    multimodal: true,
+  },
+  'BAAI/bge-vl-large': {
+    modelId: 'BAAI/bge-vl-large',
+    dim: 768, // verified via HF discussion: get_text_features → (2, 768)
+    maxSeqLength: 512,
+    pooling: 'mean', // CLIP projection, not CLS/mean — unused (loads refused)
+    normalize: true,
+    queryPrefix: null, // instruction-free CLIP-style dual encoder
+    family: 'bge-vl',
+    sparse: false,
+    multimodal: true,
+  },
   'Xenova/bge-small-en-v1.5': bgeEn('Xenova/bge-small-en-v1.5', 384),
   'Xenova/bge-base-en-v1.5': bgeEn('Xenova/bge-base-en-v1.5', 768),
   'Xenova/bge-large-en-v1.5': bgeEn('Xenova/bge-large-en-v1.5', 1024),
@@ -106,6 +140,8 @@ export const EMBEDDING_MODELS: Readonly<Record<string, EmbeddingModelSpec>> = {
 /** Short-ID aliases used by `embeddings init` (embeddings.json) and CLI flags. */
 const SHORT_IDS: Readonly<Record<string, string>> = {
   'bge-m3': 'Xenova/bge-m3',
+  'bge-vl-base': 'BAAI/bge-vl-base',
+  'bge-vl-large': 'BAAI/bge-vl-large',
   'bge-small-en-v1.5': 'Xenova/bge-small-en-v1.5',
   'bge-base-en-v1.5': 'Xenova/bge-base-en-v1.5',
   'bge-large-en-v1.5': 'Xenova/bge-large-en-v1.5',
