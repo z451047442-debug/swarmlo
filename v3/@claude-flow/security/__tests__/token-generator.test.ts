@@ -310,8 +310,13 @@ describe('TokenGenerator', () => {
       // This test verifies the comparison takes consistent time
       // regardless of where the mismatch occurs
       const token = generator.generate();
-      const mismatchEarly = 'X' + token.slice(1);
-      const mismatchLate = token.slice(0, -1) + 'X';
+      // Guard against the random token already having 'X' at the mutated
+      // position (base64url charset includes X): a no-op mutation makes
+      // compare() legitimately return true and flakes the assertion.
+      const firstChar = token[0] === 'X' ? 'Y' : 'X';
+      const lastChar = token[token.length - 1] === 'X' ? 'Y' : 'X';
+      const mismatchEarly = firstChar + token.slice(1);
+      const mismatchLate = token.slice(0, -1) + lastChar;
 
       // Both comparisons should work (timing consistency is internal)
       expect(generator.compare(token, mismatchEarly)).toBe(false);
