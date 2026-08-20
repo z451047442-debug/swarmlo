@@ -159,7 +159,7 @@
     ]
   },
   "claudeFlow": {
-    "version": "3.6.11",
+    "version": "3.39.0",
     "enabled": true,
     "modelPreferences": {
       "default": "claude-sonnet-5",
