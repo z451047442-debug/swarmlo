@@ -2613,6 +2613,30 @@ Or export them in your shell profile before launching Claude Code:
 export SWARMLO_STATUSLINE_COST_SYMBOL=⚡   # or: export SWARMLO_STATUSLINE_HIDE_COST=1
 ```
 
+**Disabling the promo row (Line 3):**
+
+Line 3 is the rotating disclosure/promo/insight row served by the funnel subsystem (ADR-301). If you don't want it, `SWARMLO_FUNNEL` removes the whole row — the renderer drops it entirely, and Lines 1–2 are unaffected:
+
+| Variable | Effect | Example |
+|----------|--------|---------|
+| `SWARMLO_FUNNEL` | `0`/`false`/`off`/`no` disables Line 3 entirely. | `SWARMLO_FUNNEL=0` |
+
+Set it in the `env` block of `.claude/settings.json`, same as the cost knobs above:
+
+```json
+{
+  "env": { "SWARMLO_FUNNEL": "0" }
+}
+```
+
+Or export it in your shell profile before launching Claude Code:
+
+```bash
+export SWARMLO_FUNNEL=0
+```
+
+> **Note:** the `env` block is applied when Claude Code starts, so restart the session after changing it.
+
 **Setup (Automatic):**
 
 Run `npx swarmlo@latest init` — this generates `.claude/settings.json` with the correct statusline config and creates the helper script at `.claude/helpers/statusline.cjs`.
