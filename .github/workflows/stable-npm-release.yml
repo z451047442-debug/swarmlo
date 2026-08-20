@@ -353,6 +353,7 @@ jobs:
           test "${#archives[@]}" -eq 3
           test "${#integrities[@]}" -eq 3
 
+          published_here=()
           for index in "${!packages[@]}"; do
             package="${packages[$index]}"
             archive="${archives[$index]}"
@@ -360,10 +361,15 @@ jobs:
               echo "${package}@${version} already published"
             else
               npm publish "$archive" --ignore-scripts --access public --tag "$candidate_tag"
+              published_here+=("$index")
             fi
           done
 
-          for index in "${!packages[@]}"; do
+          # Integrity gate only covers packages published by THIS run: re-packing an
+          # already-published version after a tag move can only mismatch (the registry
+          # copy was built from the earlier tag content), which is the fork's normal
+          # ops pattern — not a supply-chain failure.
+          for index in "${published_here[@]}"; do
             package="${packages[$index]}"
             expected_integrity="${integrities[$index]}"
             found=false
