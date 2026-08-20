@@ -304,7 +304,7 @@ jobs:
             npm install "$cli_archive" agentic-flow@3.0.0-alpha.2 \
               --omit=optional --no-audit --no-fund
             node --input-type=module - <<'NODE'
-          const modulePath = './node_modules/@claude-flow/cli/node_modules/@claude-flow/plugin-agent-federation/dist/transport/midstream-aware-loader.js';
+          const modulePath = './node_modules/swarmlo-cli/node_modules/@claude-flow/plugin-agent-federation/dist/transport/midstream-aware-loader.js';
           const { loadFederationTransport } = await import(modulePath);
           const loaded = await loadFederationTransport({ host: '127.0.0.1', port: 0 });
           if (loaded.source !== 'websocket-fallback') {
@@ -425,7 +425,7 @@ jobs:
           (
             cd "$cli_install"
             npm init -y >/dev/null
-            npm install "@claude-flow/cli@${version}" --omit=optional --no-audit --no-fund
+            npm install "swarmlo-cli@${version}" --omit=optional --no-audit --no-fund
             npm ls --all
             node node_modules/swarmlo-cli/bin/cli.js --version
             node node_modules/swarmlo-cli/bin/cli.js policy status
@@ -444,7 +444,7 @@ jobs:
           (
             cd "$root_install"
             npm init -y >/dev/null
-            npm install "claude-flow@${version}" --omit=optional --no-audit --no-fund
+            npm install "swarmlo@${version}" --omit=optional --no-audit --no-fund
             npm ls --all
             node node_modules/swarmlo/bin/cli.js --version
             node node_modules/swarmlo/bin/cli.js policy status
@@ -454,7 +454,7 @@ jobs:
           (
             cd "$swarmlo_install"
             npm init -y >/dev/null
-            npm install "swarmlo@${version}" --omit=optional --no-audit --no-fund
+            npm install "swarmlo-app@${version}" --omit=optional --no-audit --no-fund
             npm ls --all
             node node_modules/swarmlo-app/bin/swarmlo.js --version
           )
