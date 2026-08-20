@@ -5,7 +5,7 @@
 [![Try the UI Beta — flo.ruv.io](https://img.shields.io/badge/_Try_the_UI_Beta-flo.ruv.io-6366f1?style=for-the-badge&logoColor=white&logo=svelte)](https://flo.ruv.io/)
 [![npm version (swarmlo)](https://img.shields.io/npm/v/swarmlo?label=npx%20swarmlo&style=for-the-badge&logo=npm&color=cb3837)](https://www.npmjs.com/package/swarmlo)
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Star on GitHub](https://img.shields.io/github/stars/ruvnet/claude-flow?style=for-the-badge&logo=github&color=gold)](https://github.com/z451047442-debug/swarmlo)
+[![Star on GitHub](https://img.shields.io/github/stars/z451047442-debug/swarmlo?style=for-the-badge&logo=github&color=gold)](https://github.com/z451047442-debug/swarmlo)
 
 <!-- Ecosystem strip (collapsed visually with flat-square) -->
 [![Goal Planner](https://img.shields.io/badge/_Goal_Planner-goal.ruv.io-8b5cf6?style=flat-square&logoColor=white&logo=react)](https://goal.ruv.io/)
