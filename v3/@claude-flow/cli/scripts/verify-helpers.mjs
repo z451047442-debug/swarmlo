@@ -64,7 +64,7 @@ if (signed.manifest.version !== pkgVersion) {
 for (const name of CRITICAL) {
   const p = join(HELPERS_DIR, name);
   if (!existsSync(p)) die(`critical helper missing on disk: ${p}`);
-  const actual = createHash('sha256').update(readFileSync(p)).digest('hex');
+  const actual = createHash('sha256').update(readFileSync(p).toString('utf8').replace(/\r\n/g, '\n')).digest('hex');
   const expected = signed.manifest.files[name];
   if (!expected) die(`manifest has no entry for ${name}`);
   if (actual !== expected) {

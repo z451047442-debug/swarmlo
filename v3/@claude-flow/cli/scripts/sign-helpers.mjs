@@ -94,7 +94,7 @@ const files = {};
 for (const name of CRITICAL) {
   const p = join(HELPERS_DIR, name);
   if (!existsSync(p)) { console.error(`[sign-helpers] missing helper: ${p}`); process.exit(1); }
-  files[name] = createHash('sha256').update(readFileSync(p)).digest('hex');
+  files[name] = createHash('sha256').update(readFileSync(p).toString('utf8').replace(/\r\n/g, '\n')).digest('hex');
 }
 
 const manifest = { version, files };

@@ -3,11 +3,11 @@
     "version": "3.39.0",
     "files": {
       "auto-memory-hook.mjs": "942a49f67fd07667fb7826f2fa761907079d34907c0837570b8678a5e6a93207",
-      "hook-handler.cjs": "1564b5d55471043f0073cf3496c59645ab92ed1660f4735b5c45f755ede09273",
-      "intelligence.cjs": "78b6f85e9b77089ec7caed4076dbc98e64841c655abc999201a334bf16fc5943",
-      "statusline.cjs": "ebf39627201aaab1e074104f3df1f9abf7409e8521aa0a97ca4f8ba55f7c7bb7"
+      "hook-handler.cjs": "96e60d8385e07f6a1bd119b5f4468261f9e8052d9504d6837976933ec6ed5dcc",
+      "intelligence.cjs": "7839bc24c603e4798e44c70ea5c5c54228b2562da5fc41c49cefefc145e3bdf7",
+      "statusline.cjs": "4350af2fd3dd3a4f84e37e32ee2a31d28cdce9fab4b35d96e2aee940664d65d5"
     }
   },
-  "signature": "6pIGJrYdGDFBVC9cw6Aufsq+lhbVNFUi5H8t3QyRlMNd9102MVRpYn1o0Vy43q6C1NbsOgq2nalRrstjfOivBg==",
+  "signature": "h2sTvZnfHk3xFHAihFy3TBpt2G6R0079lwiRVBPXAnrpxZlhsP8+/XQgx9F2N9PWpaJ9WBXY2pq/4Ou5pFneAw==",
   "algorithm": "ed25519"
 }

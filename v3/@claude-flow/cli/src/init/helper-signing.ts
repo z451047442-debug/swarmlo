@@ -42,7 +42,11 @@ export interface SignedHelpersManifest {
 }
 
 export function sha256Hex(content: string | Buffer): string {
-  return createHash('sha256').update(content).digest('hex');
+  // Canonicalize line endings (CRLF → LF) before hashing so signatures signed on
+  // Windows match checkouts on Linux/CI, where git's autocrlf stores LF on disk.
+  const normalized =
+    typeof content === 'string' ? content.replace(/\r\n/g, '\n') : content.toString('utf8').replace(/\r\n/g, '\n');
+  return createHash('sha256').update(normalized, 'utf8').digest('hex');
 }
 
 /**
