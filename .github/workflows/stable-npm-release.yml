@@ -59,6 +59,13 @@ jobs:
           registry-url: https://registry.npmjs.org
           cache: pnpm
           cache-dependency-path: v3/pnpm-lock.yaml
+        env:
+          # setup-node writes //registry.npmjs.org/:_authToken into the
+          # user-level .npmrc ONLY when NODE_AUTH_TOKEN is present in this
+          # step's env while the action runs. Without it, the later publish
+          # step fails with ENEEDAUTH (npm never reads the NODE_AUTH_TOKEN
+          # variable itself — it is an actions/setup-node convention).
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Install root release-audit dependencies
         run: npm ci --ignore-scripts --omit=dev --omit=optional --no-audit --no-fund
