@@ -1,72 +1,74 @@
-# BGE-VL Multimodal Pipeline Implementation Plan
+# BGE-VL 多模态管线实施计划
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> 本文由原英文计划（`2026-08-19-bge-vl-multimodal-pipeline.md`，已删除，见 git 提交 1248b71）中文化而来。代码块、命令与文件路径保持原样（与仓库实现一一对应），正文与说明均已中文化。
 
-**Goal:** Turn BGE-VL from "registered but refused" (ADR-384 draft) into a working multimodal embedding pipeline: a Python 3.12 sidecar running BAAI/bge-vl-* natively, its 768-dim vectors isolated in a dedicated `bge-vl.db` (never touching the 1024-dim bge-m3 HNSW space in memory.db), shipped as a metaharness-style plugin `plugins/swarmlo-bge-vl/` with core dispatcher + doctor check + CI removability gate.
+> **面向 agentic worker：** 必需子技能：请使用 superpowers:subagent-driven-development（推荐）或 superpowers:executing-plans 按任务逐项执行本计划。步骤使用复选框（`- [ ]`）语法进行跟踪。
 
-**Architecture:** Three user-decided direction choices, 2026-08-19:
-1. **Runtime** — Python sidecar subprocess (transformers + `trust_remote_code`, one-shot JSON protocol, on-demand spawn). Heavy deps imported lazily so storage/health/self-test run on the stdlib alone.
-2. **Storage** — independent SQLite file `bge-vl.db` (stdlib `sqlite3`), owned by the sidecar; dim guard refuses non-768-dim DBs. Retrieval = brute-force cosine + MMR rerank (dimension-agnostic math, mirroring core's cosineSim/mmrRerank semantics).
-3. **Structure** — exact metaharness template replication (ADR-150): plugin dir + core `bge-vl.ts` dispatcher + `prepare-publish.mjs` mirror + doctor component + CI removability gate. The text-only ONNX pipeline keeps refusing BGE-VL, but its error now routes users to the sidecar.
+**目标：** 把 BGE-VL 从「已注册但拒绝加载」（ADR-384 草案）变成一条可工作的多模态嵌入管线：一个原生运行 BAAI/bge-vl-* 的 Python 3.12 Sidecar，其 768 维向量隔离在专属的 `bge-vl.db` 中（绝不进入 memory.db 里 1024 维 bge-m3 的 HNSW 空间），以 metaharness 风格插件 `plugins/swarmlo-bge-vl/` 的形式发布，并配齐核心 dispatcher + doctor 检查 + CI 可移除性门禁。
 
-**Tech Stack:** Python 3.12 (sqlite3/argparse/json stdlib; lazy torch+transformers+Pillow+numpy), Node 20+ (ESM .mjs, spawnSync), TypeScript (vitest) for the core dispatcher/doctor, GitHub Actions for the CI gate.
+**架构：** 三项由用户拍板的方向决策（2026-08-19）：
+1. **运行时** —— Python Sidecar 子进程（transformers + `trust_remote_code`，一次性 JSON 协议，按需拉起）。重依赖采用惰性导入，因此 storage/health/self-test 仅靠标准库即可运行。
+2. **存储** —— 独立的 SQLite 文件 `bge-vl.db`（标准库 `sqlite3`），由 Sidecar 独占；维度守卫拒绝任何非 768 维的数据库。检索 = 暴力余弦 + MMR 重排（与维度无关的数学运算，与核心的 cosineSim/mmrRerank 语义一致）。
+3. **结构** —— 完全复刻 metaharness 模板（ADR-150）：插件目录 + 核心 `bge-vl.ts` dispatcher + `prepare-publish.mjs` 镜像 + doctor 组件 + CI 可移除性门禁。纯文本 ONNX 管线继续拒绝 BGE-VL，但其报错现在会引导用户使用 Sidecar。
 
-**Spec:** `v3/docs/adr/ADR-384-bge-vl-multimodal-registration.md` — Task 0 revises it to the new direction; executors read the revised version first.
+**技术栈：** Python 3.12（sqlite3/argparse/json 标准库；惰性导入 torch+transformers+Pillow+numpy），Node 20+（ESM .mjs，spawnSync），TypeScript（vitest）用于核心 dispatcher/doctor，GitHub Actions 用于 CI 门禁。
 
-## Global Constraints
+**规格：** `v3/docs/adr/ADR-384-bge-vl-multimodal-registration.md` —— Task 0 将其修订为新方向；执行者先阅读修订版。
 
-- BGE-VL vectors are 768-dim and live ONLY in `bge-vl.db` (default `~/.swarmlo/bge-vl/bge-vl.db`, override `CLAUDE_FLOW_BGE_VL_DB`). Never written into memory.db / its `vector_indexes` (that HNSW space belongs to 1024-dim bge-m3).
-- Removability (ADR-150 rule #1): deleting `plugins/swarmlo-bge-vl/` or removing Python must leave swarmlo operational. Every bge-vl path degrades to `{degraded:true}` JSON with exit 0 — never throws.
-- `torch`/`transformers`/`Pillow`/`numpy` must NOT appear in `dependencies` of any package.json (they live only in the plugin-side venv, installed by `bge-vl setup`).
-- Sidecar heavy imports are lazy — `health`/`self-test`/`store`/`search`/`list`/`delete`/`purge` run with stdlib only (CI-tested without a venv).
-- TDD London School for TypeScript; all tests offline (no model download in CI; real embed is manual-verification only).
-- Node 20+, Python 3.10+ (user env: 3.12.0), Windows + POSIX. Spawn always with `-X utf8` (Windows UTF-8 output).
-- Files < 500 lines; no secrets; typed public APIs; input validation at boundaries (image path exists + extension whitelist `jpg/jpeg/png/webp`; payload must parse as JSON).
-- Refusal messages in the text pipeline keep the `CLAUDE_FLOW_EMBEDDING_MODEL` escape hatch (ADR-384 §2).
+## 全局约束
 
-## File Structure
+- BGE-VL 向量为 768 维，且只存在于 `bge-vl.db`（默认 `~/.swarmlo/bge-vl/bge-vl.db`，可用 `CLAUDE_FLOW_BGE_VL_DB` 覆盖）。绝不写入 memory.db 及其 `vector_indexes`（该 HNSW 空间属于 1024 维 bge-m3）。
+- 可移除性（ADR-150 规则 #1）：删除 `plugins/swarmlo-bge-vl/` 或卸载 Python 后 swarmlo 必须仍然可用。每条 bge-vl 路径都以 exit 0 降级为 `{degraded:true}` JSON —— 绝不抛异常。
+- `torch`/`transformers`/`Pillow`/`numpy` 不得出现在任何 package.json 的 `dependencies` 里（它们只存在于插件侧 venv，由 `bge-vl setup` 安装）。
+- Sidecar 的重依赖采用惰性导入 —— `health`/`self-test`/`store`/`search`/`list`/`delete`/`purge` 仅用标准库即可运行（CI 在无 venv 环境下测试）。
+- TypeScript 采用 TDD London School；所有测试离线（CI 不下载模型；真实 embed 仅手工验证）。
+- Node 20+，Python 3.10+（用户环境：3.12.0），Windows + POSIX。spawn 始终带 `-X utf8`（Windows UTF-8 输出）。
+- 文件 <500 行；无 secrets；公共 API 类型化；边界输入校验（图片路径存在 + 扩展名白名单 `jpg/jpeg/png/webp`；payload 必须能解析为 JSON）。
+- 文本管线的拒绝消息保留 `CLAUDE_FLOW_EMBEDDING_MODEL` 逃生舱（ADR-384 §2）。
 
-| File | Action | Responsibility |
+## 文件结构
+
+| 文件 | 动作 | 职责 |
 |---|---|---|
-| `plugins/swarmlo-bge-vl/.claude-plugin/plugin.json` | create | plugin manifest (metaharness-shaped) |
-| `plugins/swarmlo-bge-vl/python/bge_vl_embed.py` | create | sidecar: health/self-test/embed/store/search/list/delete/purge; bge-vl.db + 768-dim guard; lazy torch |
-| `plugins/swarmlo-bge-vl/python/requirements.txt` | create | venv deps (transformers/Pillow/numpy; torch installed separately with CPU index) |
-| `plugins/swarmlo-bge-vl/scripts/_sidecar.mjs` | create | python resolution + spawn + degraded emitter (analog `_harness.mjs`) |
-| `plugins/swarmlo-bge-vl/scripts/bge-vl.mjs` | create | CLI relay: embed/store/search/health/list/delete/purge/setup |
-| `plugins/swarmlo-bge-vl/scripts/test-self.mjs` | create | plugin self-test drill (degraded path + stdlib health) |
-| `v3/@claude-flow/cli/src/commands/bge-vl.ts` | create | core dispatcher (analog `commands/metaharness.ts`) |
-| `v3/@claude-flow/cli/src/commands/index.ts` | modify | register `bge-vl` command |
-| `v3/@claude-flow/cli/__tests__/bge-vl-command.test.ts` | create | vitest for dispatcher (mocked spawnSync/existsSync) |
-| `v3/@claude-flow/cli/src/memory/embedding-models.ts` | modify | multimodal docstring → point at sidecar |
-| `v3/@claude-flow/cli/src/memory/bge-embedder.ts` | modify | refusal message → add `bge-vl` pointer |
-| `v3/@claude-flow/cli/src/memory/memory-initializer.ts` | modify | same pointer in `loadEmbeddingModel` refusal |
-| `v3/@claude-flow/cli/__tests__/embedding-models.test.ts`, `__tests__/memory-initializer-hook.test.ts` | modify | assert new pointer text |
-| `v3/@claude-flow/cli/src/commands/doctor.ts` | modify | add `checkBgeVlIntegration()` + register |
-| `v3/@claude-flow/cli/__tests__/doctor.test.ts` (or existing doctor test file) | modify | warn-when-plugin-missing case |
-| `v3/@claude-flow/cli/scripts/prepare-publish.mjs` | modify | mirror plugin into published package |
-| `.github/workflows/no-bge-vl-smoke.yml` | create | CI removability gate |
-| `v3/docs/adr/ADR-384-bge-vl-multimodal-registration.md` | modify | revise to Accepted: sidecar pipeline |
-| `embedding-models-2026-08-16.md` | modify | BGE-VL row + 结论 bullet |
+| `plugins/swarmlo-bge-vl/.claude-plugin/plugin.json` | 新建 | 插件清单（metaharness 形态） |
+| `plugins/swarmlo-bge-vl/python/bge_vl_embed.py` | 新建 | sidecar：health/self-test/embed/store/search/list/delete/purge；bge-vl.db + 768 维守卫；惰性 torch |
+| `plugins/swarmlo-bge-vl/python/requirements.txt` | 新建 | venv 依赖（transformers/Pillow/numpy；torch 单独用 CPU 索引安装） |
+| `plugins/swarmlo-bge-vl/scripts/_sidecar.mjs` | 新建 | python 解析 + spawn + 降级发射器（对应 `_harness.mjs`） |
+| `plugins/swarmlo-bge-vl/scripts/bge-vl.mjs` | 新建 | CLI 中继：embed/store/search/health/list/delete/purge/setup |
+| `plugins/swarmlo-bge-vl/scripts/test-self.mjs` | 新建 | 插件自测演练（降级路径 + 纯标准库 health） |
+| `v3/@claude-flow/cli/src/commands/bge-vl.ts` | 新建 | 核心 dispatcher（对应 `commands/metaharness.ts`） |
+| `v3/@claude-flow/cli/src/commands/index.ts` | 修改 | 注册 `bge-vl` 命令 |
+| `v3/@claude-flow/cli/__tests__/bge-vl-command.test.ts` | 新建 | dispatcher 的 vitest（mock spawnSync/existsSync） |
+| `v3/@claude-flow/cli/src/memory/embedding-models.ts` | 修改 | 多模态 docstring → 指向 sidecar |
+| `v3/@claude-flow/cli/src/memory/bge-embedder.ts` | 修改 | 拒绝消息 → 增加 `bge-vl` 指引 |
+| `v3/@claude-flow/cli/src/memory/memory-initializer.ts` | 修改 | `loadEmbeddingModel` 拒绝消息同样加指引 |
+| `v3/@claude-flow/cli/__tests__/embedding-models.test.ts`、`__tests__/memory-initializer-hook.test.ts` | 修改 | 断言新指引文案 |
+| `v3/@claude-flow/cli/src/commands/doctor.ts` | 修改 | 新增 `checkBgeVlIntegration()` + 注册 |
+| `v3/@claude-flow/cli/__tests__/doctor.test.ts`（或现有 doctor 测试文件） | 修改 | 插件缺失时 warn 的用例 |
+| `v3/@claude-flow/cli/scripts/prepare-publish.mjs` | 修改 | 将插件镜像进发布包 |
+| `.github/workflows/no-bge-vl-smoke.yml` | 新建 | CI 可移除性门禁 |
+| `v3/docs/adr/ADR-384-bge-vl-multimodal-registration.md` | 修改 | 修订为 Accepted：sidecar 管线 |
+| `embedding-models-2026-08-16.md` | 修改 | BGE-VL 行 + 结论 bullet |
 
 ---
 
-### Task 0: Commit baseline registration + revise ADR-384 to the new direction
+### Task 0：提交基线注册 + 将 ADR-384 修订为新方向
 
-**Files:**
-- Commit (no edit): `embedding-models-2026-08-16.md`, `v3/@claude-flow/cli/__tests__/embedding-models.test.ts`, `v3/@claude-flow/cli/__tests__/memory-initializer-hook.test.ts`, `v3/@claude-flow/cli/src/memory/bge-embedder.ts`, `v3/@claude-flow/cli/src/memory/embedding-models.ts`, `v3/@claude-flow/cli/src/memory/memory-initializer.ts`
-- Modify: `v3/docs/adr/ADR-384-bge-vl-multimodal-registration.md`
+**文件：**
+- 提交（不改动）：`embedding-models-2026-08-16.md`、`v3/@claude-flow/cli/__tests__/embedding-models.test.ts`、`v3/@claude-flow/cli/__tests__/memory-initializer-hook.test.ts`、`v3/@claude-flow/cli/src/memory/bge-embedder.ts`、`v3/@claude-flow/cli/src/memory/embedding-models.ts`、`v3/@claude-flow/cli/src/memory/memory-initializer.ts`
+- 修改：`v3/docs/adr/ADR-384-bge-vl-multimodal-registration.md`
 
-**Interfaces:**
-- Produces: a clean baseline commit `feat: register BGE-VL family with multimodal refusal (ADR-384)`; the revised ADR is the spec all later tasks argue from.
+**接口：**
+- 产出：干净的基线提交 `feat: register BGE-VL family with multimodal refusal (ADR-384)`；修订后的 ADR 是后续所有任务立论的规格。
 
-- [ ] **Step 1: Commit the prior session's registration work as-is**
+- [ ] **步骤 1：将上一会话的注册工作原样提交**
 
 ```bash
 git add embedding-models-2026-08-16.md v3/@claude-flow/cli/__tests__/embedding-models.test.ts v3/@claude-flow/cli/__tests__/memory-initializer-hook.test.ts v3/@claude-flow/cli/src/memory/bge-embedder.ts v3/@claude-flow/cli/src/memory/embedding-models.ts v3/@claude-flow/cli/src/memory/memory-initializer.ts
 git commit -m "feat: register BGE-VL family with multimodal refusal (ADR-384)"
 ```
 
-- [ ] **Step 2: Revise ADR-384** — replace Status, Decision §2/§3, and Verification with:
+- [ ] **步骤 2：修订 ADR-384** —— 将 Status、Decision §2/§3 与 Verification 替换为：
 
 ```markdown
 - **Status**: Accepted
@@ -106,7 +108,7 @@ Three user decisions (2026-08-19), all binding:
 - Manual (out of CI): `npx swarmlo bge-vl setup` → `embed --text` → 768-dim vector; `store` → `search` cosine 1.0 for identical text.
 ```
 
-- [ ] **Step 3: Commit**
+- [ ] **步骤 3：提交**
 
 ```bash
 git add v3/docs/adr/ADR-384-bge-vl-multimodal-registration.md
@@ -115,19 +117,19 @@ git commit -m "docs: revise ADR-384 to sidecar pipeline direction"
 
 ---
 
-### Task 1: Plugin manifest + sidecar storage core (stdlib-only, self-test green)
+### Task 1：插件清单 + sidecar 存储核心（仅标准库，self-test 通过）
 
-**Files:**
-- Create: `plugins/swarmlo-bge-vl/.claude-plugin/plugin.json`
-- Create: `plugins/swarmlo-bge-vl/python/bge_vl_embed.py` (storage modes only; `embed` lands in Task 2)
+**文件：**
+- 新建：`plugins/swarmlo-bge-vl/.claude-plugin/plugin.json`
+- 新建：`plugins/swarmlo-bge-vl/python/bge_vl_embed.py`（仅存储模式；`embed` 在 Task 2 落地）
 
-**Interfaces:**
-- Consumes: nothing.
-- Produces: `open_db(path)`, `pack/unpack`, `cosine(a,b)`, `mmr_rerank(ranked, lam)`, modes `health|self-test|store|search|list|delete|purge`; JSON protocol `{ok:true,...}` on stdout, exit 0; errors `{ok:false,error}` exit 2. These exact names are consumed by Tasks 2–3.
+**接口：**
+- 消费：无。
+- 产出：`open_db(path)`、`pack/unpack`、`cosine(a,b)`、`mmr_rerank(ranked, lam)`、模式 `health|self-test|store|search|list|delete|purge`；stdout 输出 JSON 协议 `{ok:true,...}`，exit 0；错误 `{ok:false,error}` exit 2。这些确切名称被 Task 2–3 消费。
 
-- [ ] **Step 1: Write the plugin manifest**
+- [ ] **步骤 1：编写插件清单**
 
-`plugins/swarmlo-bge-vl/.claude-plugin/plugin.json`:
+`plugins/swarmlo-bge-vl/.claude-plugin/plugin.json`：
 
 ```json
 {
@@ -141,9 +143,9 @@ git commit -m "docs: revise ADR-384 to sidecar pipeline direction"
 }
 ```
 
-- [ ] **Step 2: Write the sidecar (storage modes) so `self-test` passes**
+- [ ] **步骤 2：编写 sidecar（存储模式）使 `self-test` 通过**
 
-`plugins/swarmlo-bge-vl/python/bge_vl_embed.py`:
+`plugins/swarmlo-bge-vl/python/bge_vl_embed.py`：
 
 ```python
 #!/usr/bin/env python3
@@ -410,13 +412,13 @@ if __name__ == '__main__':
     main()
 ```
 
-- [ ] **Step 3: Run self-test, verify green**
+- [ ] **步骤 3：运行 self-test，确认通过**
 
-Run: `python -X utf8 plugins/swarmlo-bge-vl/python/bge_vl_embed.py self-test --db /tmp/bge-vl-self-test.db`
-Expected: `{"ok": true, "self-test": "pass", "dim": 768}`, exit 0.
-Also run: `python -X utf8 plugins/swarmlo-bge-vl/python/bge_vl_embed.py health --db /tmp/bge-vl-self-test.db` → `"count": 2`.
+运行：`python -X utf8 plugins/swarmlo-bge-vl/python/bge_vl_embed.py self-test --db /tmp/bge-vl-self-test.db`
+预期：`{"ok": true, "self-test": "pass", "dim": 768}`，exit 0。
+再运行：`python -X utf8 plugins/swarmlo-bge-vl/python/bge_vl_embed.py health --db /tmp/bge-vl-self-test.db` → `"count": 2`。
 
-- [ ] **Step 4: Commit**
+- [ ] **步骤 4：提交**
 
 ```bash
 git add plugins/swarmlo-bge-vl/.claude-plugin/plugin.json plugins/swarmlo-bge-vl/python/bge_vl_embed.py
@@ -425,24 +427,24 @@ git commit -m "feat: bge-vl plugin — stdlib-only storage sidecar with 768-dim 
 
 ---
 
-### Task 2: Sidecar embed mode (lazy heavy deps) + requirements.txt
+### Task 2：Sidecar embed 模式（惰性重依赖）+ requirements.txt
 
-**Files:**
-- Modify: `plugins/swarmlo-bge-vl/python/bge_vl_embed.py` (replace the `embed` stub in `main()` and add `cmd_embed`)
-- Create: `plugins/swarmlo-bge-vl/python/requirements.txt`
+**文件：**
+- 修改：`plugins/swarmlo-bge-vl/python/bge_vl_embed.py`（替换 `main()` 中的 `embed` 桩并新增 `cmd_embed`）
+- 新建：`plugins/swarmlo-bge-vl/python/requirements.txt`
 
-**Interfaces:**
-- Consumes: `DIM`, `fail` from Task 1.
-- Produces: `cmd_embed(args)` → stdout `{"ok":true,"dim":768,"model":"<name>","vector":[...768 floats]}`; exit 3 + `{ok:false,error:"model deps missing (...)"}` when torch/transformers/PIL/numpy are not importable. Consumed by Task 3's relay.
+**接口：**
+- 消费：Task 1 的 `DIM`、`fail`。
+- 产出：`cmd_embed(args)` → stdout `{"ok":true,"dim":768,"model":"<name>","vector":[...768 floats]}`；当 torch/transformers/PIL/numpy 不可导入时 exit 3 + `{ok:false,error:"model deps missing (...)"}`。被 Task 3 的中继消费。
 
-- [ ] **Step 1: Write the failing degradation probe**
+- [ ] **步骤 1：写出会失败的降级探针**
 
-Run: `python -X utf8 plugins/swarmlo-bge-vl/python/bge_vl_embed.py embed --text "probe" --db /tmp/x.db`
-Expected (with the Task-1 stub): exit 2 with `{"ok": false, "error": "embed mode not implemented yet (Task 2)"}` — this confirms the mode routes; the real contract arrives in Step 2.
+运行：`python -X utf8 plugins/swarmlo-bge-vl/python/bge_vl_embed.py embed --text "probe" --db /tmp/x.db`
+预期（使用 Task 1 的桩）：exit 2 且输出 `{"ok": false, "error": "embed mode not implemented yet (Task 2)"}` —— 这确认了模式路由正常；真正的契约在步骤 2 落地。
 
-- [ ] **Step 2: Add `cmd_embed` + `requirements.txt`**
+- [ ] **步骤 2：新增 `cmd_embed` + `requirements.txt`**
 
-In `bge_vl_embed.py`, add below `cmd_purge`:
+在 `bge_vl_embed.py` 中，于 `cmd_purge` 之后添加：
 
 ```python
 def cmd_embed(args):
@@ -494,14 +496,14 @@ def cmd_embed(args):
     ))
 ```
 
-Replace the `elif args.mode == 'embed':` stub in `main()` with:
+将 `main()` 中的 `elif args.mode == 'embed':` 桩替换为：
 
 ```python
     elif args.mode == 'embed':
         cmd_embed(args)
 ```
 
-`plugins/swarmlo-bge-vl/python/requirements.txt` (torch is NOT here — `setup` installs it separately with the CPU index):
+`plugins/swarmlo-bge-vl/python/requirements.txt`（torch 不在此处 —— `setup` 会用 CPU 索引单独安装）：
 
 ```
 transformers>=4.46
@@ -509,14 +511,14 @@ Pillow>=10.0
 numpy>=1.24
 ```
 
-- [ ] **Step 3: Verify the degradation contract (no venv needed)**
+- [ ] **步骤 3：验证降级契约（无需 venv）**
 
-Run: `python -X utf8 plugins/swarmlo-bge-vl/python/bge_vl_embed.py embed --text "probe"`
-Expected on a machine without torch/transformers: exit 3, stdout `{"ok": false, "error": "model deps missing (...)"}`. If torch IS installed locally, this step instead loads the model (slow) — either outcome proves routing works; CI asserts the exit-3 shape via the relay in Task 3.
+运行：`python -X utf8 plugins/swarmlo-bge-vl/python/bge_vl_embed.py embed --text "probe"`
+预期：在没有 torch/transformers 的机器上，exit 3，stdout `{"ok": false, "error": "model deps missing (...)"}`。若本机已安装 torch，此步骤会转而加载模型（较慢）——两种结果都证明路由正常；CI 在 Task 3 通过中继断言 exit-3 的形态。
 
-- [ ] **Step 4: Re-run self-test (regression) and commit**
+- [ ] **步骤 4：重跑 self-test（回归）并提交**
 
-Run: `python -X utf8 plugins/swarmlo-bge-vl/python/bge_vl_embed.py self-test --db /tmp/bge-vl-self-test.db` → still pass.
+运行：`python -X utf8 plugins/swarmlo-bge-vl/python/bge_vl_embed.py self-test --db /tmp/bge-vl-self-test.db` → 仍应通过。
 
 ```bash
 git add plugins/swarmlo-bge-vl/python/bge_vl_embed.py plugins/swarmlo-bge-vl/python/requirements.txt
@@ -525,18 +527,18 @@ git commit -m "feat: bge-vl sidecar embed mode with lazy torch imports"
 
 ---
 
-### Task 3: JS bridge + relay + plugin self-test
+### Task 3：JS 桥接 + 中继 + 插件自测
 
-**Files:**
-- Create: `plugins/swarmlo-bge-vl/scripts/_sidecar.mjs`
-- Create: `plugins/swarmlo-bge-vl/scripts/bge-vl.mjs`
-- Create: `plugins/swarmlo-bge-vl/scripts/test-self.mjs`
+**文件：**
+- 新建：`plugins/swarmlo-bge-vl/scripts/_sidecar.mjs`
+- 新建：`plugins/swarmlo-bge-vl/scripts/bge-vl.mjs`
+- 新建：`plugins/swarmlo-bge-vl/scripts/test-self.mjs`
 
-**Interfaces:**
-- Consumes: sidecar modes from Tasks 1–2 (exit codes 0/2/3).
-- Produces: `resolvePython()` → `string|null`; `runSidecar(args, {timeoutMs})` → `{ok, degraded, reason, json, stderr, exitCode}`; `emitDegradedJsonAndExit(reason, fix)`; `PLUGIN_DIR`, `SIDECAR_PATH`. Consumed by Tasks 4–7.
+**接口：**
+- 消费：Task 1–2 的 sidecar 模式（退出码 0/2/3）。
+- 产出：`resolvePython()` → `string|null`；`runSidecar(args, {timeoutMs})` → `{ok, degraded, reason, json, stderr, exitCode}`；`emitDegradedJsonAndExit(reason, fix)`；`PLUGIN_DIR`、`SIDECAR_PATH`。被 Task 4–7 消费。
 
-- [ ] **Step 1: Write the bridge `_sidecar.mjs`**
+- [ ] **步骤 1：编写桥接 `_sidecar.mjs`**
 
 ```js
 // _sidecar.mjs — shared invocation helper for the BGE-VL Python sidecar.
@@ -627,7 +629,7 @@ export function emitDegradedJsonAndExit(reason, fix = 'run: npx swarmlo bge-vl s
 }
 ```
 
-- [ ] **Step 2: Write the relay `bge-vl.mjs`**
+- [ ] **步骤 2：编写中继 `bge-vl.mjs`**
 
 ```js
 #!/usr/bin/env node
@@ -787,7 +789,7 @@ switch (ARGS.op) {
 }
 ```
 
-- [ ] **Step 3: Write the plugin self-test `test-self.mjs`**
+- [ ] **步骤 3：编写插件自测 `test-self.mjs`**
 
 ```js
 // test-self.mjs — plugin self-test drill (CI + local).
@@ -839,13 +841,13 @@ function drill(args, env) {
 console.log('✓ test-self.mjs complete');
 ```
 
-- [ ] **Step 4: Run the self-tests, verify, commit**
+- [ ] **步骤 4：运行自测，验证并提交**
 
-Run:
+运行：
 ```bash
 node plugins/swarmlo-bge-vl/scripts/test-self.mjs
 ```
-Expected: degraded drill passes; health drill passes (this machine has Python 3.12.0) or skips.
+预期：降级演练通过；health 演练通过（本机有 Python 3.12.0）或跳过。
 
 ```bash
 git add plugins/swarmlo-bge-vl/scripts/_sidecar.mjs plugins/swarmlo-bge-vl/scripts/bge-vl.mjs plugins/swarmlo-bge-vl/scripts/test-self.mjs
@@ -854,20 +856,20 @@ git commit -m "feat: bge-vl JS relay with graceful degradation (ADR-150 pattern)
 
 ---
 
-### Task 4: Core `bge-vl` command dispatcher + registration + vitest
+### Task 4：核心 `bge-vl` 命令 dispatcher + 注册 + vitest
 
-**Files:**
-- Create: `v3/@claude-flow/cli/src/commands/bge-vl.ts`
-- Modify: `v3/@claude-flow/cli/src/commands/index.ts` (mirror metaharness registration at the sites around lines 84, 204, 264–288)
-- Create: `v3/@claude-flow/cli/__tests__/bge-vl-command.test.ts`
+**文件：**
+- 新建：`v3/@claude-flow/cli/src/commands/bge-vl.ts`
+- 修改：`v3/@claude-flow/cli/src/commands/index.ts`（在第 84、204、264–288 行附近镜像 metaharness 的注册位置）
+- 新建：`v3/@claude-flow/cli/__tests__/bge-vl-command.test.ts`
 
-**Interfaces:**
-- Consumes: `plugins/swarmlo-bge-vl/scripts/bge-vl.mjs` (Task 3); `Command`/`CommandContext`/`CommandResult` from `../types.js`.
-- Produces: `resolveBgeVlPluginDir(): string | null`; `bgeVlCommand: Command`. Consumed by Task 6 (doctor reuses the same walk-up strategy, not the function — doctor must stay mock-free).
+**接口：**
+- 消费：`plugins/swarmlo-bge-vl/scripts/bge-vl.mjs`（Task 3）；来自 `../types.js` 的 `Command`/`CommandContext`/`CommandResult`。
+- 产出：`resolveBgeVlPluginDir(): string | null`；`bgeVlCommand: Command`。被 Task 6 消费（doctor 复用同一套向上查找策略，但不复用该函数 —— doctor 必须保持无 mock）。
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **步骤 1：先写会失败的测试**
 
-`v3/@claude-flow/cli/__tests__/bge-vl-command.test.ts`:
+`v3/@claude-flow/cli/__tests__/bge-vl-command.test.ts`：
 
 ```ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -936,14 +938,14 @@ describe('bgeVlCommand', () => {
 });
 ```
 
-- [ ] **Step 2: Run it, watch it fail**
+- [ ] **步骤 2：运行它，看着它失败**
 
-Run: `cd v3/@claude-flow/cli && npx vitest run __tests__/bge-vl-command.test.ts`
-Expected: FAIL — `Cannot find module '../src/commands/bge-vl.js'`.
+运行：`cd v3/@claude-flow/cli && npx vitest run __tests__/bge-vl-command.test.ts`
+预期：FAIL —— `Cannot find module '../src/commands/bge-vl.js'`。
 
-- [ ] **Step 3: Implement the dispatcher**
+- [ ] **步骤 3：实现 dispatcher**
 
-`v3/@claude-flow/cli/src/commands/bge-vl.ts`:
+`v3/@claude-flow/cli/src/commands/bge-vl.ts`：
 
 ```ts
 /**
@@ -1041,22 +1043,22 @@ export const bgeVlCommand: Command = {
 };
 ```
 
-- [ ] **Step 4: Register in `commands/index.ts`**
+- [ ] **步骤 4：在 `commands/index.ts` 中注册**
 
-Mirror the metaharness registration exactly:
-- Add to the command map near line 84: `  'bge-vl': () => import('./bge-vl.js'),`
-- Add the getter near line 204: `export async function getBgeVlCommand() { return loadCommand('bge-vl'); }`
-- Add `bgeVlCmd` to the `loadCommand('...')` list and the aggregated lists near lines 264–288 (copy the metaharness entries `metaharnessCmd` and add `bgeVlCmd` beside each).
+完全镜像 metaharness 的注册方式：
+- 在第 84 行附近的命令映射中加入：`  'bge-vl': () => import('./bge-vl.js'),`
+- 在第 204 行附近加入 getter：`export async function getBgeVlCommand() { return loadCommand('bge-vl'); }`
+- 在第 264–288 行附近把 `bgeVlCmd` 加入 `loadCommand('...')` 列表与聚合列表（复制 metaharness 条目 `metaharnessCmd`，并在每一处旁边加上 `bgeVlCmd`）。
 
-- [ ] **Step 5: Run the test + tsc build**
+- [ ] **步骤 5：运行测试 + tsc 构建**
 
-Run:
+运行：
 ```bash
 cd v3/@claude-flow/cli && npx vitest run __tests__/bge-vl-command.test.ts && pnpm -r build
 ```
-Expected: 4 tests PASS; tsc exit 0.
+预期：4 个测试 PASS；tsc exit 0。
 
-- [ ] **Step 6: Commit**
+- [ ] **步骤 6：提交**
 
 ```bash
 git add v3/@claude-flow/cli/src/commands/bge-vl.ts v3/@claude-flow/cli/src/commands/index.ts v3/@claude-flow/cli/__tests__/bge-vl-command.test.ts
@@ -1065,34 +1067,34 @@ git commit -m "feat: bge-vl core command dispatcher over the plugin relay (ADR-3
 
 ---
 
-### Task 5: Refusal messages route to the sidecar
+### Task 5：拒绝消息指向 sidecar
 
-**Files:**
-- Modify: `v3/@claude-flow/cli/src/memory/embedding-models.ts` (multimodal docstring)
-- Modify: `v3/@claude-flow/cli/src/memory/bge-embedder.ts` (refusal string)
-- Modify: `v3/@claude-flow/cli/src/memory/memory-initializer.ts` (refusal string in `loadEmbeddingModel`)
-- Modify: `v3/@claude-flow/cli/__tests__/memory-initializer-hook.test.ts` (assert the pointer)
+**文件：**
+- 修改：`v3/@claude-flow/cli/src/memory/embedding-models.ts`（多模态 docstring）
+- 修改：`v3/@claude-flow/cli/src/memory/bge-embedder.ts`（拒绝文案）
+- 修改：`v3/@claude-flow/cli/src/memory/memory-initializer.ts`（`loadEmbeddingModel` 中的拒绝文案）
+- 修改：`v3/@claude-flow/cli/__tests__/memory-initializer-hook.test.ts`（断言该指引）
 
-**Interfaces:**
-- Consumes: ADR-384 §2 wording (Task 0).
-- Produces: text-pipeline refusal errors now contain `bge-vl`; consumed by no code, asserted by tests.
+**接口：**
+- 消费：ADR-384 §2 的措辞（Task 0）。
+- 产出：文本管线拒绝错误现在包含 `bge-vl`；不被任何代码消费，由测试断言。
 
-- [ ] **Step 1: Update the test first (failing)**
+- [ ] **步骤 1：先更新测试（使其失败）**
 
-In `v3/@claude-flow/cli/__tests__/memory-initializer-hook.test.ts`, in the existing BGE-VL refusal test, keep the current assertions (`/multimodal \(vision-language\)/` and `CLAUDE_FLOW_EMBEDDING_MODEL`) and add:
+在 `v3/@claude-flow/cli/__tests__/memory-initializer-hook.test.ts` 中，在现有 BGE-VL 拒绝测试里，保留当前断言（`/multimodal \(vision-language\)/` 与 `CLAUDE_FLOW_EMBEDDING_MODEL`），并添加：
 
 ```ts
       expect(String(error)).toMatch(/npx swarmlo bge-vl/);
 ```
 
-- [ ] **Step 2: Run it, watch it fail**
+- [ ] **步骤 2：运行它，看着它失败**
 
-Run: `cd v3/@claude-flow/cli && npx vitest run __tests__/memory-initializer-hook.test.ts`
-Expected: FAIL — error does not contain `npx swarmlo bge-vl`.
+运行：`cd v3/@claude-flow/cli && npx vitest run __tests__/memory-initializer-hook.test.ts`
+预期：FAIL —— 错误中不包含 `npx swarmlo bge-vl`。
 
-- [ ] **Step 3: Update the three source files**
+- [ ] **步骤 3：更新三个源文件**
 
-`embedding-models.ts` — append to the `multimodal?` docstring (keep the existing sentences):
+`embedding-models.ts` —— 追加到 `multimodal?` docstring（保留现有句子）：
 
 ```ts
    * The working pipeline lives in the swarmlo-bge-vl plugin (Python
@@ -1100,7 +1102,7 @@ Expected: FAIL — error does not contain `npx swarmlo bge-vl`.
    * pointer to `npx swarmlo bge-vl embed`.
 ```
 
-`bge-embedder.ts` — replace the refusal string with:
+`bge-embedder.ts` —— 将拒绝文案替换为：
 
 ```ts
     if (spec.multimodal) {
@@ -1112,18 +1114,18 @@ Expected: FAIL — error does not contain `npx swarmlo bge-vl`.
     }
 ```
 
-`memory-initializer.ts` — locate the `multimodal` refusal inside `loadEmbeddingModel` (the block returning `success:false` that mentions `CLAUDE_FLOW_EMBEDDING_MODEL`). Read it first, keep every existing sentence, and append:
+`memory-initializer.ts` —— 定位 `loadEmbeddingModel` 内 `multimodal` 拒绝块（返回 `success:false` 且提及 `CLAUDE_FLOW_EMBEDDING_MODEL` 的那段）。先读它，保留每一句现有句子，并追加：
 
 ```ts
     ' Use the BGE-VL sidecar instead: `npx swarmlo bge-vl embed --text "..."` (ADR-384).';
 ```
 
-- [ ] **Step 4: Run the tests, verify green**
+- [ ] **步骤 4：运行测试，确认通过**
 
-Run: `cd v3/@claude-flow/cli && npx vitest run __tests__/memory-initializer-hook.test.ts __tests__/embedding-models.test.ts`
-Expected: all PASS (registry tests unaffected).
+运行：`cd v3/@claude-flow/cli && npx vitest run __tests__/memory-initializer-hook.test.ts __tests__/embedding-models.test.ts`
+预期：全部 PASS（注册表测试不受影响）。
 
-- [ ] **Step 5: Commit**
+- [ ] **步骤 5：提交**
 
 ```bash
 git add v3/@claude-flow/cli/src/memory/embedding-models.ts v3/@claude-flow/cli/src/memory/bge-embedder.ts v3/@claude-flow/cli/src/memory/memory-initializer.ts v3/@claude-flow/cli/__tests__/memory-initializer-hook.test.ts
@@ -1132,26 +1134,26 @@ git commit -m "feat: route BGE-VL refusal messages to the sidecar pipeline"
 
 ---
 
-### Task 6: Doctor component `checkBgeVlIntegration`
+### Task 6：doctor 组件 `checkBgeVlIntegration`
 
-**Files:**
-- Modify: `v3/@claude-flow/cli/src/commands/doctor.ts` (add the check function + register it beside `checkMetaharnessIntegration`'s call site)
-- Modify: the doctor test file that already covers `checkMetaharnessIntegration` (grep `__tests__/doctor*.test.ts` for it; create the case in whichever file has it)
+**文件：**
+- 修改：`v3/@claude-flow/cli/src/commands/doctor.ts`（新增检查函数，并在 `checkMetaharnessIntegration` 的调用点旁注册）
+- 修改：已覆盖 `checkMetaharnessIntegration` 的 doctor 测试文件（grep `__tests__/doctor*.test.ts` 找它；在包含它的那个文件里新增用例）
 
-**Interfaces:**
-- Consumes: `HealthCheck` type (existing); plugin layout from Task 1/3.
-- Produces: `checkBgeVlIntegration(): Promise<HealthCheck>` — `warn` when plugin absent (optional posture, same as metaharness), `pass` when files + python present, `warn` when python missing with fix hint `npx swarmlo bge-vl setup`.
+**接口：**
+- 消费：`HealthCheck` 类型（已有）；Task 1/3 的插件布局。
+- 产出：`checkBgeVlIntegration(): Promise<HealthCheck>` —— 插件缺失时 `warn`（可选姿态，同 metaharness），文件 + python 齐全时 `pass`，python 缺失时 `warn` 并给出修复提示 `npx swarmlo bge-vl setup`。
 
-- [ ] **Step 1: Find the registration site and the existing doctor test pattern**
+- [ ] **步骤 1：找到注册位置与现有 doctor 测试模式**
 
 ```bash
 grep -n "checkMetaharnessIntegration" v3/@claude-flow/cli/src/commands/doctor.ts
 grep -rn "checkMetaharnessIntegration" v3/@claude-flow/cli/__tests__/ | head -5
 ```
 
-- [ ] **Step 2: Write the failing test in the identified doctor test file**
+- [ ] **步骤 2：在找到的 doctor 测试文件中写会失败的测试**
 
-Mirror the existing metaharness case's mock style (mock `fs.existsSync` + `child_process.spawnSync` if that's what it uses; otherwise import the real function and mock only `existsSync`):
+镜像现有 metaharness 用例的 mock 风格（mock `fs.existsSync` + `child_process.spawnSync`（如果它用的是这个）；否则导入真实函数，只 mock `existsSync`）：
 
 ```ts
   it('checkBgeVlIntegration warns when the plugin is absent', async () => {
@@ -1163,12 +1165,12 @@ Mirror the existing metaharness case's mock style (mock `fs.existsSync` + `child
   });
 ```
 
-Run: `cd v3/@claude-flow/cli && npx vitest run <that test file>`
-Expected: FAIL — `checkBgeVlIntegration is not defined`.
+运行：`cd v3/@claude-flow/cli && npx vitest run <那个测试文件>`
+预期：FAIL —— `checkBgeVlIntegration is not defined`。
 
-- [ ] **Step 3: Implement in `doctor.ts`**
+- [ ] **步骤 3：在 `doctor.ts` 中实现**
 
-Add after `checkMetaharnessIntegration`'s closing brace:
+在 `checkMetaharnessIntegration` 的右花括号之后添加：
 
 ```ts
 async function checkBgeVlIntegration(): Promise<HealthCheck> {
@@ -1245,35 +1247,35 @@ async function checkBgeVlIntegration(): Promise<HealthCheck> {
 }
 ```
 
-Then register: in the doctor health-check list where `checkMetaharnessIntegration()` is awaited, add `checkBgeVlIntegration()` beside it (same Promise.all or sequential await pattern the file uses — read the call site and match it).
+然后注册：在 doctor 健康检查列表里 `checkMetaharnessIntegration()` 被 await 的位置，在其旁边加上 `checkBgeVlIntegration()`（沿用该文件相同的 Promise.all 或顺序 await 模式 —— 先读调用点并与其保持一致）。
 
-- [ ] **Step 4: Run the doctor test + build**
+- [ ] **步骤 4：运行 doctor 测试 + 构建**
 
-Run: `cd v3/@claude-flow/cli && npx vitest run <doctor test file> && pnpm -r build`
-Expected: new case PASS; tsc exit 0.
+运行：`cd v3/@claude-flow/cli && npx vitest run <doctor 测试文件> && pnpm -r build`
+预期：新用例 PASS；tsc exit 0。
 
-- [ ] **Step 5: Commit**
+- [ ] **步骤 5：提交**
 
 ```bash
-git add v3/@claude-flow/cli/src/commands/doctor.ts v3/@claude-flow/cli/__tests__/<doctor test file>
+git add v3/@claude-flow/cli/src/commands/doctor.ts v3/@claude-flow/cli/__tests__/<doctor 测试文件>
 git commit -m "feat: doctor component for BGE-VL sidecar availability"
 ```
 
 ---
 
-### Task 7: Publish mirror + CI removability gate
+### Task 7：发布镜像 + CI 可移除性门禁
 
-**Files:**
-- Modify: `v3/@claude-flow/cli/scripts/prepare-publish.mjs` (mirror the plugin)
-- Create: `.github/workflows/no-bge-vl-smoke.yml`
+**文件：**
+- 修改：`v3/@claude-flow/cli/scripts/prepare-publish.mjs`（镜像插件）
+- 新建：`.github/workflows/no-bge-vl-smoke.yml`
 
-**Interfaces:**
-- Consumes: plugin layout (Tasks 1–3), relay/test-self (Task 3).
-- Produces: published `@claude-flow/cli` package contains `plugins/swarmlo-bge-vl/`; CI enforces removability.
+**接口：**
+- 消费：插件布局（Task 1–3）、中继/test-self（Task 3）。
+- 产出：发布的 `@claude-flow/cli` 包包含 `plugins/swarmlo-bge-vl/`；CI 强制可移除性。
 
-- [ ] **Step 1: Add the mirror in `prepare-publish.mjs`**
+- [ ] **步骤 1：在 `prepare-publish.mjs` 中加入镜像**
 
-Read the metaharness mirror block (around lines 35–40, `await cp(join(repoRoot, 'plugins', 'swarmlo-metaharness'), join(pluginsDir, 'swarmlo-metaharness'), { recursive: true })`). Add immediately after it:
+读取 metaharness 镜像块（约第 35–40 行，`await cp(join(repoRoot, 'plugins', 'swarmlo-metaharness'), join(pluginsDir, 'swarmlo-metaharness'), { recursive: true })`）。紧跟其后添加：
 
 ```js
 await cp(
@@ -1283,9 +1285,9 @@ await cp(
 );
 ```
 
-- [ ] **Step 2: Write the CI workflow**
+- [ ] **步骤 2：编写 CI workflow**
 
-`.github/workflows/no-bge-vl-smoke.yml`:
+`.github/workflows/no-bge-vl-smoke.yml`：
 
 ```yaml
 # ADR-384 removability gate, modeled on no-metaharness-smoke.yml (ADR-150).
@@ -1407,7 +1409,7 @@ jobs:
           echo "✓ Relay degraded gracefully when python was unreachable."
 ```
 
-- [ ] **Step 3: Verify the steps locally (what CI will run)**
+- [ ] **步骤 3：在本地验证 CI 将要运行的步骤**
 
 ```bash
 python -X utf8 -m py_compile plugins/swarmlo-bge-vl/python/bge_vl_embed.py
@@ -1415,9 +1417,9 @@ python -X utf8 plugins/swarmlo-bge-vl/python/bge_vl_embed.py self-test --db /tmp
 node plugins/swarmlo-bge-vl/scripts/test-self.mjs
 SWARMLO_BGE_VL_PYTHON=/nonexistent-python node plugins/swarmlo-bge-vl/scripts/bge-vl.mjs embed --text x; echo "exit=$?"
 ```
-Expected: all green; degraded drill exit 0 with `"degraded": true`.
+预期：全部通过；降级演练 exit 0 且输出 `"degraded": true`。
 
-- [ ] **Step 4: Commit**
+- [ ] **步骤 4：提交**
 
 ```bash
 git add v3/@claude-flow/cli/scripts/prepare-publish.mjs .github/workflows/no-bge-vl-smoke.yml
@@ -1426,33 +1428,33 @@ git commit -m "ci: BGE-VL removability gate + publish mirror (ADR-384)"
 
 ---
 
-### Task 8: Docs finalize + full verification
+### Task 8：文档收尾 + 全量验证
 
-**Files:**
-- Modify: `v3/docs/adr/ADR-384-bge-vl-multimodal-registration.md` (Verification section → measured results)
-- Modify: `embedding-models-2026-08-16.md` (BGE-VL table row + 快速结论 bullet)
+**文件：**
+- 修改：`v3/docs/adr/ADR-384-bge-vl-multimodal-registration.md`（Verification 一节 → 实测结果）
+- 修改：`embedding-models-2026-08-16.md`（BGE-VL 表格行 + 快速结论 bullet）
 
-**Interfaces:**
-- Consumes: everything above.
-- Produces: spec/doc truth matches the shipped code.
+**接口：**
+- 消费：以上全部。
+- 产出：规格/文档与已交付代码保持一致。
 
-- [ ] **Step 1: Update `embedding-models-2026-08-16.md`**
+- [ ] **步骤 1：更新 `embedding-models-2026-08-16.md`**
 
-Replace the BGE-VL table row (section 一) with:
+将 BGE-VL 表格行（第一节）替换为：
 
 ```markdown
 | `BAAI/bge-vl-base` / `BAAI/bge-vl-large` | 768 | **2026-08-19 接入**：CLIP 风格多模态（视觉-语言）。文本 ONNX 管线仍拒绝加载并指向 sidecar；**工作管线在 `plugins/swarmlo-bge-vl/`**——Python sidecar（transformers + trust_remote_code）+ 独立 `bge-vl.db`（768 维守卫，绝不进 memory.db 的 1024 维 HNSW）。命令：`npx swarmlo bge-vl embed|store|search|setup`；缺 Python 优雅降级 | `v3/@claude-flow/cli/src/commands/bge-vl.ts`、`plugins/swarmlo-bge-vl/` |
 ```
 
-Replace the 快速结论 BGE-VL bullet with:
+将快速结论的 BGE-VL bullet 替换为：
 
 ```markdown
 - **BGE-VL（2026-08-19 工作管线）**：注册表保持 `bge-vl-base`/`bge-vl-large`（`multimodal: true`）；文本管线加载失败时给出 sidecar 指引。真正的图文嵌入走 `npx swarmlo bge-vl setup`（venv：torch CPU + transformers）→ `bge-vl embed --text/--image` → `bge-vl store/search`（独立 `~/.swarmlo/bge-vl/bge-vl.db`，768 维专属，维度守卫拒绝混库）。`CLAUDE_FLOW_HF_ENDPOINT` 镜像透传；模型默认 `BAAI/bge-vl-large`（`SWARMLO_BGE_VL_MODEL` 可换）。
 ```
 
-- [ ] **Step 2: Update ADR-384 Verification section** to the actual results (fill in exact pass counts after running Step 3).
+- [ ] **步骤 2：将 ADR-384 的 Verification 一节更新为实际结果**（在运行步骤 3 之后填写确切的通过数量）。
 
-- [ ] **Step 3: Full verification**
+- [ ] **步骤 3：全量验证**
 
 ```bash
 cd v3/@claude-flow/cli && pnpm -r build
@@ -1461,9 +1463,9 @@ node plugins/swarmlo-bge-vl/scripts/test-self.mjs
 python -X utf8 plugins/swarmlo-bge-vl/python/bge_vl_embed.py self-test --db /tmp/bge-vl-final.db
 ```
 
-Expected: tsc exit 0; all vitest files green; both self-tests green.
+预期：tsc exit 0；所有 vitest 文件通过；两个 self-test 通过。
 
-- [ ] **Step 4: Commit**
+- [ ] **步骤 4：提交**
 
 ```bash
 git add v3/docs/adr/ADR-384-bge-vl-multimodal-registration.md embedding-models-2026-08-16.md
@@ -1472,8 +1474,8 @@ git commit -m "docs: finalize ADR-384 verification + embedding-model inventory"
 
 ---
 
-## Execution Notes
+## 执行说明
 
-- Windows dev box: `python` resolves to 3.12.0; venv bootstrap via `npx swarmlo bge-vl setup` uses the CPU torch index (~200MB vs 2.5GB CUDA). Model download (~1.6GB for bge-vl-large) is one-time via HF cache, mirror-able with `CLAUDE_FLOW_HF_ENDPOINT=https://hf-mirror.com`.
-- Manual end-to-end (after Task 3, optional): `setup` → `embed --text "a bear"` (expect 768 floats) → `store --key bear --text "a bear"` → `search --text "a bear"` (top hit cosine ≈ 1.0).
-- The plan intentionally reuses core's cosineSim/mmrRerank *semantics* inside the sidecar (same math where the vectors live); importing the TS utilities from the plugin relay would break the published-package layout, so the relay stays dependency-free like the metaharness skills.
+- Windows 开发机：`python` 解析为 3.12.0；通过 `npx swarmlo bge-vl setup` 引导 venv 时使用 CPU torch 索引（约 200MB，对比 CUDA 2.5GB）。模型下载（bge-vl-large 约 1.6GB）为一次性 HF 缓存，可用 `CLAUDE_FLOW_HF_ENDPOINT=https://hf-mirror.com` 走镜像。
+- 手工端到端（Task 3 之后，可选）：`setup` → `embed --text "a bear"`（预期 768 个浮点数）→ `store --key bear --text "a bear"` → `search --text "a bear"`（最高命中 cosine ≈ 1.0）。
+- 本计划有意在 sidecar 内部复用核心 cosineSim/mmrRerank 的*语义*（在向量所在的位置做同样的数学运算）；从插件中继导入 TS 工具函数会破坏发布包布局，因此中继像 metaharness skills 一样保持零依赖。
