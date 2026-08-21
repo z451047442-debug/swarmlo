@@ -72,7 +72,7 @@ docker run -p 3000:3000 \
 
 ### Google Cloud Run (production-style)
 
-`cloudbuild.yaml` does a multi-stage build with `INCLUDE_DB=true`, pushes to Artifact Registry, and deploys to Cloud Run. Hosted demo at `flo.ruv.io` runs from this exact pipeline. See [`cloudbuild.yaml`](./cloudbuild.yaml) and the deploy notes in [ADR-033](../../docs/adr/ADR-033-RUVOCAL-WASM-MCP-INTEGRATION.md).
+`cloudbuild.yaml` does a multi-stage build with `INCLUDE_DB=true`, pushes to Artifact Registry, and deploys to Cloud Run. Hosted demo at `flo.ruv.io` runs from this exact pipeline. For a step-by-step Windows/Linux walkthrough (prerequisites, Docker self-host, Cloud Run + custom domain), see [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md). See [`cloudbuild.yaml`](./cloudbuild.yaml) and the deploy notes in [ADR-033](../../docs/adr/ADR-033-RUVOCAL-WASM-MCP-INTEGRATION.md).
 
 ## Database
 
