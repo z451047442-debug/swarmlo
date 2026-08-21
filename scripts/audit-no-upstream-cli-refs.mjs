@@ -40,7 +40,6 @@ const SKIP_PATHS = [
   // Historical plugin ADRs and intentional test fixtures keep the old name
   // per the repo rename convention (5f9d2ae).
   'plugins/swarmlo-workflows/scripts/fixtures',
-  'embedding-models-2026-08-16.md',
   '.github/supply-chain/accepted-findings.json',
 ];
 const SKIP_FILES = new Set([
