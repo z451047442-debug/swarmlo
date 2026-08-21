@@ -47,8 +47,6 @@ User --> Swarmlo (CLI/MCP) --> Router --> Swarm --> Agents --> Memory --> LLM Pr
 
 ---
 
-![Swarmlo Plugins](./swarmlo-plugins.gif)
-
 ## Quick Start
 
 There are **two different install paths** with very different surface areas. Pick based on what you need (#1744):

@@ -45,7 +45,6 @@
 
 ---
 
-![Swarmlo Plugins](./swarmlo-plugins.gif)
 
 ## 快速开始
 

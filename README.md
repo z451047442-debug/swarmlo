@@ -47,7 +47,6 @@ User --> Swarmlo (CLI/MCP) --> Router --> Swarm --> Agents --> Memory --> LLM Pr
 
 ---
 
-![Swarmlo Plugins](./swarmlo-plugins.gif)
 
 ## Quick Start
 
