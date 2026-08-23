@@ -252,7 +252,7 @@ const Index = () => {
     showStats: true,
     compactMode: false,
     enableAI: true,
-    aiModel: "google/gemini-2.5-flash",
+    aiModel: import.meta.env.VITE_AI_MODEL || "google/gemini-2.5-flash",
   });
   const [showCustomizer, setShowCustomizer] = useState(false);
   const restored = getRestoredSession();
