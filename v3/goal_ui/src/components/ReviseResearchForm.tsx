@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useI18n } from "@/i18n";
 
 interface ReviseResearchFormProps {
   currentGoal: string;
@@ -97,6 +98,7 @@ export interface ResearchConfig {
 
 export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialConfig, primaryColor = "#8b5cf6", accentColor = "#22c55e", backgroundColor = "#1a1a1a" }: ReviseResearchFormProps) => {
   const { toast } = useToast();
+  const { t, lang } = useI18n();
   const [config, setConfig] = useState<ResearchConfig>(
     initialConfig || {
       goal: currentGoal,
@@ -168,22 +170,42 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
   const [excludeTopicInput, setExcludeTopicInput] = useState("");
   const [excludeDomainInput, setExcludeDomainInput] = useState("");
 
+  // Preset labels/descriptions are i18n keys, translated at render time.
   const presets = [
-    { id: 'academic-deep', label: '学术研究', icon: FlaskConical, color: '#3b82f6', desc: '深入严谨的学术分析' },
-    { id: 'industry-quick', label: '行业快速扫描', icon: Zap, color: '#f59e0b', desc: '快速的商业洞察' },
-    { id: 'competitive-analysis', label: '竞争情报', icon: TrendingUp, color: '#ef4444', desc: '市场与竞品分析' },
-    { id: 'technical-feasibility', label: '技术研究', icon: Settings, color: '#8b5cf6', desc: '工程可行性' },
-    { id: 'market-trends', label: '市场趋势', icon: LineChart, color: '#10b981', desc: '趋势分析与预测' },
-    { id: 'medical-clinical', label: '医疗/临床', icon: Shield, color: '#ec4899', desc: '循证医学研究' },
-    { id: 'startup-validation', label: '创业验证', icon: Rocket, color: '#06b6d4', desc: '商业创意验证' },
-    { id: 'policy-regulatory', label: '政策与法规', icon: Building2, color: '#84cc16', desc: '合规与法律研究' },
+    { id: 'academic-deep', labelKey: 'report.form.preset.academicDeep', icon: FlaskConical, color: '#3b82f6', descKey: 'report.form.preset.academicDeepDesc' },
+    { id: 'industry-quick', labelKey: 'report.form.preset.industryQuick', icon: Zap, color: '#f59e0b', descKey: 'report.form.preset.industryQuickDesc' },
+    { id: 'competitive-analysis', labelKey: 'report.form.preset.competitiveAnalysis', icon: TrendingUp, color: '#ef4444', descKey: 'report.form.preset.competitiveAnalysisDesc' },
+    { id: 'technical-feasibility', labelKey: 'report.form.preset.technicalFeasibility', icon: Settings, color: '#8b5cf6', descKey: 'report.form.preset.technicalFeasibilityDesc' },
+    { id: 'market-trends', labelKey: 'report.form.preset.marketTrends', icon: LineChart, color: '#10b981', descKey: 'report.form.preset.marketTrendsDesc' },
+    { id: 'medical-clinical', labelKey: 'report.form.preset.medicalClinical', icon: Shield, color: '#ec4899', descKey: 'report.form.preset.medicalClinicalDesc' },
+    { id: 'startup-validation', labelKey: 'report.form.preset.startupValidation', icon: Rocket, color: '#06b6d4', descKey: 'report.form.preset.startupValidationDesc' },
+    { id: 'policy-regulatory', labelKey: 'report.form.preset.policyRegulatory', icon: Building2, color: '#84cc16', descKey: 'report.form.preset.policyRegulatoryDesc' },
+  ];
+
+  // Replanning trigger checkbox options: value stays the server-side literal,
+  // label is an i18n key.
+  const replanningTriggerOptions = [
+    { value: "动作失败", key: "report.form.trigger.actionFailure" },
+    { value: "低置信度结果", key: "report.form.trigger.lowConfidence" },
+    { value: "缺少前置条件", key: "report.form.trigger.missingPreconditions" },
+    { value: "超时", key: "report.form.trigger.timeout" },
+    { value: "状态不匹配", key: "report.form.trigger.stateMismatch" },
+  ];
+
+  const languageOptions = [
+    { code: "en", key: "report.form.lang.en" },
+    { code: "es", key: "report.form.lang.es" },
+    { code: "fr", key: "report.form.lang.fr" },
+    { code: "de", key: "report.form.lang.de" },
+    { code: "zh", key: "report.form.lang.zh" },
+    { code: "ja", key: "report.form.lang.ja" },
   ];
 
   const optimizeConfig = async (preset: string) => {
     setIsOptimizing(true);
     try {
       const { data, error } = await supabase.functions.invoke('optimize-research-config', {
-        body: { preset, currentGoal: config.goal }
+        body: { preset, currentGoal: config.goal, language: lang }
       });
 
       if (error) throw error;
@@ -214,15 +236,15 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
         });
         
         toast({
-          title: "配置已优化",
-          description: `已针对 ${preset.replace(/-/g, ' ')} 优化设置`,
+          title: t("report.form.toast.optimized"),
+          description: t("report.form.toast.optimizedDesc", { preset: preset.replace(/-/g, ' ') }),
         });
       }
     } catch (error) {
       console.error('Error optimizing config:', error);
       toast({
-        title: "优化失败",
-        description: "无法优化设置，请重试。",
+        title: t("report.form.toast.failed"),
+        description: t("report.form.toast.failedDesc"),
         variant: "destructive",
       });
     } finally {
@@ -316,7 +338,7 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4" style={{ color: primaryColor }} />
           <span className="text-sm font-medium" style={{ color: primaryColor }}>
-            按研究类型 AI 优化设置：
+            {t("report.form.aiOptimizeTitle")}
           </span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -331,20 +353,20 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                 borderColor: isOptimizing ? preset.color : '#404040',
                 backgroundColor: '#262626',
               }}
-              title={preset.desc}
+              title={t(preset.descKey)}
             >
               <div className="flex items-center gap-1.5 w-full">
                 <preset.icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: preset.color }} />
-                <span className="font-medium text-foreground text-left leading-tight">{preset.label}</span>
+                <span className="font-medium text-foreground text-left leading-tight">{t(preset.labelKey)}</span>
               </div>
-              <span className="text-[10px] text-muted-foreground leading-tight">{preset.desc}</span>
+              <span className="text-[10px] text-muted-foreground leading-tight">{t(preset.descKey)}</span>
             </button>
           ))}
         </div>
         {isOptimizing && (
           <p className="text-xs flex items-center gap-1.5" style={{ color: primaryColor }}>
             <Sparkles className="w-3 h-3 animate-spin" />
-            正在优化研究配置...
+            {t("report.form.optimizing")}
           </p>
         )}
       </div>
@@ -358,7 +380,7 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
         }}
       >
         <p className="text-sm text-muted-foreground">
-          通过配置 GOAP 规划参数、AI 提示词、执行设置和来源过滤器，精细调整 AI 的研究方式。
+          {t("report.form.description")}
         </p>
       </div>
 
@@ -366,8 +388,8 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
         <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 gap-1 h-auto p-1 bg-muted/50">
           <TabsTrigger value="guidance" className="text-xs py-2.5 gap-1 data-[state=active]:bg-background">
             <Target className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">研究引导</span>
-            <span className="sm:hidden">引导</span>
+            <span className="hidden sm:inline">{t("report.form.tab.guidance")}</span>
+            <span className="sm:hidden">{t("report.form.tab.guidanceShort")}</span>
           </TabsTrigger>
           <TabsTrigger value="goap" className="text-xs py-2.5 gap-1 data-[state=active]:bg-background">
             <Workflow className="w-3.5 h-3.5" />
@@ -375,23 +397,23 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
           </TabsTrigger>
           <TabsTrigger value="prompts" className="text-xs py-2.5 gap-1 data-[state=active]:bg-background">
             <Sparkles className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">提示词</span>
+            <span className="hidden sm:inline">{t("report.form.tab.prompts")}</span>
             <span className="sm:hidden">AI</span>
           </TabsTrigger>
           <TabsTrigger value="parameters" className="text-xs py-2.5 gap-1 data-[state=active]:bg-background">
             <Sliders className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">参数</span>
-            <span className="sm:hidden">参数</span>
+            <span className="hidden sm:inline">{t("report.form.tab.parameters")}</span>
+            <span className="sm:hidden">{t("report.form.tab.parametersShort")}</span>
           </TabsTrigger>
           <TabsTrigger value="actions" className="text-xs py-2.5 gap-1 data-[state=active]:bg-background">
             <Settings className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">动作</span>
-            <span className="sm:hidden">动作</span>
+            <span className="hidden sm:inline">{t("report.form.tab.actions")}</span>
+            <span className="sm:hidden">{t("report.form.tab.actionsShort")}</span>
           </TabsTrigger>
           <TabsTrigger value="filters" className="text-xs py-2.5 gap-1 data-[state=active]:bg-background">
             <Filter className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">过滤器</span>
-            <span className="sm:hidden">过滤</span>
+            <span className="hidden sm:inline">{t("report.form.tab.filters")}</span>
+            <span className="sm:hidden">{t("report.form.tab.filtersShort")}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -400,35 +422,35 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Target className="w-4 h-4" style={{ color: primaryColor }} />
-                研究引导
+                {t("report.form.guidance.title")}
               </CardTitle>
               <CardDescription className="text-xs">
-                定义研究范围与方向
+                {t("report.form.guidance.description")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 pt-0">
               <div className="space-y-1.5">
-                <Label htmlFor="goal" className="text-xs font-medium">研究目标</Label>
+                <Label htmlFor="goal" className="text-xs font-medium">{t("report.form.goal")}</Label>
                 <Textarea
                   id="goal"
                   value={config.goal}
                   onChange={(e) => setConfig({ ...config, goal: e.target.value })}
-                  placeholder="输入你的研究目标..."
+                  placeholder={t("report.form.goalPlaceholder")}
                   className="min-h-[70px] text-sm resize-none"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium">重点关注领域 <span className="text-muted-foreground font-normal">（需要重点关注的特定主题）</span></Label>
+                <Label className="text-xs font-medium">{t("report.form.focusAreas")} <span className="text-muted-foreground font-normal">{t("report.form.focusAreasHint")}</span></Label>
                 <div className="flex gap-2">
                   <Input
                     value={focusAreaInput}
                     onChange={(e) => setFocusAreaInput(e.target.value)}
-                    placeholder="例如：量子算法、纠错"
+                    placeholder={t("report.form.focusAreasPlaceholder")}
                     onKeyPress={(e) => e.key === "Enter" && addFocusArea()}
                     className="text-sm h-9"
                   />
-                  <Button onClick={addFocusArea} size="sm" className="h-9 px-3 text-xs">添加</Button>
+                  <Button onClick={addFocusArea} size="sm" className="h-9 px-3 text-xs">{t("report.form.add")}</Button>
                 </div>
                 {config.researchGuidance.focusAreas.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-2">
@@ -455,16 +477,16 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium">排除主题</Label>
+                <Label className="text-xs font-medium">{t("report.form.excludeTopics")}</Label>
                 <div className="flex gap-2">
                   <Input
                     value={excludeTopicInput}
                     onChange={(e) => setExcludeTopicInput(e.target.value)}
-                    placeholder="例如：仅理论、消费类产品"
+                    placeholder={t("report.form.excludeTopicsPlaceholder")}
                     onKeyPress={(e) => e.key === "Enter" && addExcludeTopic()}
                     className="text-sm h-9"
                   />
-                  <Button onClick={addExcludeTopic} size="sm" variant="outline" className="h-9 px-3 text-xs">添加</Button>
+                  <Button onClick={addExcludeTopic} size="sm" variant="outline" className="h-9 px-3 text-xs">{t("report.form.add")}</Button>
                 </div>
                 {config.researchGuidance.excludeTopics.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-2">
@@ -488,7 +510,7 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">研究深度</Label>
+                  <Label className="text-xs font-medium">{t("report.form.depth")}</Label>
                   <Select
                     value={config.researchGuidance.depth}
                     onValueChange={(value: "surface" | "moderate" | "deep") =>
@@ -502,15 +524,15 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="surface">浅层（快速概览）</SelectItem>
-                      <SelectItem value="moderate">中等（标准深度）</SelectItem>
-                      <SelectItem value="deep">深入（全面分析）</SelectItem>
+                      <SelectItem value="surface">{t("report.form.depth.surface")}</SelectItem>
+                      <SelectItem value="moderate">{t("report.form.depth.moderate")}</SelectItem>
+                      <SelectItem value="deep">{t("report.form.depth.deep")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">视角</Label>
+                  <Label className="text-xs font-medium">{t("report.form.perspective")}</Label>
                   <Select
                     value={config.researchGuidance.perspective}
                     onValueChange={(value) =>
@@ -524,17 +546,17 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="technical">技术/科学</SelectItem>
-                      <SelectItem value="business">商业/商务</SelectItem>
-                      <SelectItem value="academic">学术/研究</SelectItem>
-                      <SelectItem value="practical">实践/应用</SelectItem>
+                      <SelectItem value="technical">{t("report.form.perspective.technical")}</SelectItem>
+                      <SelectItem value="business">{t("report.form.perspective.business")}</SelectItem>
+                      <SelectItem value="academic">{t("report.form.perspective.academic")}</SelectItem>
+                      <SelectItem value="practical">{t("report.form.perspective.practical")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium">时间范围</Label>
+                <Label className="text-xs font-medium">{t("report.form.timeframe")}</Label>
                 <Select
                   value={config.researchGuidance.timeframe}
                   onValueChange={(value) =>
@@ -548,11 +570,11 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="recent">近期（最近 6 个月）</SelectItem>
-                    <SelectItem value="current-year">本年度</SelectItem>
-                    <SelectItem value="past-year">过去一年</SelectItem>
-                    <SelectItem value="past-2-years">过去两年</SelectItem>
-                    <SelectItem value="all-time">全部时间</SelectItem>
+                    <SelectItem value="recent">{t("report.form.timeframe.recent")}</SelectItem>
+                    <SelectItem value="current-year">{t("report.form.timeframe.currentYear")}</SelectItem>
+                    <SelectItem value="past-year">{t("report.form.timeframe.pastYear")}</SelectItem>
+                    <SelectItem value="past-2-years">{t("report.form.timeframe.past2Years")}</SelectItem>
+                    <SelectItem value="all-time">{t("report.form.timeframe.allTime")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -565,15 +587,15 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Workflow className="w-5 h-5" />
-                GOAP 配置
+                {t("report.form.goap.title")}
               </CardTitle>
               <CardDescription>
-                配置目标导向行动规划（GOAP）参数
+                {t("report.form.goap.description")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>执行模式</Label>
+                <Label>{t("report.form.executionMode")}</Label>
                 <Select
                   value={config.goapConfig.executionMode}
                   onValueChange={(value: "focused" | "closed" | "open") =>
@@ -587,22 +609,22 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="focused">聚焦（直接执行）</SelectItem>
-                    <SelectItem value="closed">封闭（单领域规划）</SelectItem>
-                    <SelectItem value="open">开放（创造性问题求解）</SelectItem>
+                    <SelectItem value="focused">{t("report.form.executionMode.focused")}</SelectItem>
+                    <SelectItem value="closed">{t("report.form.executionMode.closed")}</SelectItem>
+                    <SelectItem value="open">{t("report.form.executionMode.open")}</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  {config.goapConfig.executionMode === "focused" && "执行具体动作并进行前置条件检查"}
-                  {config.goapConfig.executionMode === "closed" && "在既定动作集合内规划，具备类型安全"}
-                  {config.goapConfig.executionMode === "open" && "探索所有动作并发现新的组合"}
+                  {config.goapConfig.executionMode === "focused" && t("report.form.executionMode.focusedHint")}
+                  {config.goapConfig.executionMode === "closed" && t("report.form.executionMode.closedHint")}
+                  {config.goapConfig.executionMode === "open" && t("report.form.executionMode.openHint")}
                 </p>
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>启用重新规划</Label>
-                  <p className="text-xs text-muted-foreground">动作失败时调整计划</p>
+                  <Label>{t("report.form.enableReplanning")}</Label>
+                  <p className="text-xs text-muted-foreground">{t("report.form.enableReplanningHint")}</p>
                 </div>
                 <Switch
                   checked={config.goapConfig.enableReplanning}
@@ -620,8 +642,8 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>成本优化</Label>
-                  <p className="text-xs text-muted-foreground">寻找最高效的动作路径</p>
+                  <Label>{t("report.form.costOptimization")}</Label>
+                  <p className="text-xs text-muted-foreground">{t("report.form.costOptimizationHint")}</p>
                 </div>
                 <Switch
                   checked={config.goapConfig.costOptimization}
@@ -639,8 +661,8 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>并行执行</Label>
-                  <p className="text-xs text-muted-foreground">同时运行独立动作</p>
+                  <Label>{t("report.form.parallelExecution")}</Label>
+                  <p className="text-xs text-muted-foreground">{t("report.form.parallelExecutionHint")}</p>
                 </div>
                 <Switch
                   checked={config.goapConfig.parallelExecution}
@@ -657,17 +679,17 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
               </div>
 
               <div className="space-y-2">
-                <Label>重新规划触发器</Label>
+                <Label>{t("report.form.replanningTriggers")}</Label>
                 <div className="space-y-2">
-                  {["动作失败", "低置信度结果", "缺少前置条件", "超时", "状态不匹配"].map((trigger) => (
-                    <div key={trigger} className="flex items-center space-x-2">
+                  {replanningTriggerOptions.map((option) => (
+                    <div key={option.value} className="flex items-center space-x-2">
                       <Switch
-                        id={trigger}
-                        checked={config.goapConfig.replanningTriggers.includes(trigger)}
+                        id={option.value}
+                        checked={config.goapConfig.replanningTriggers.includes(option.value)}
                         onCheckedChange={(checked) => {
                           const newTriggers = checked
-                            ? [...config.goapConfig.replanningTriggers, trigger]
-                            : config.goapConfig.replanningTriggers.filter((t) => t !== trigger);
+                            ? [...config.goapConfig.replanningTriggers, option.value]
+                            : config.goapConfig.replanningTriggers.filter((tr) => tr !== option.value);
                           setConfig({
                             ...config,
                             goapConfig: { ...config.goapConfig, replanningTriggers: newTriggers },
@@ -677,8 +699,8 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                           ['--primary' as any]: primaryColor,
                         }}
                       />
-                      <Label htmlFor={trigger} className="cursor-pointer text-sm">
-                        {trigger}
+                      <Label htmlFor={option.value} className="cursor-pointer text-sm">
+                        {t(option.key)}
                       </Label>
                     </div>
                   ))}
@@ -693,15 +715,15 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5" />
-                AI 提示词配置
+                {t("report.form.prompts.title")}
               </CardTitle>
               <CardDescription>
-                自定义研究过程中使用的 AI 提示词
+                {t("report.form.prompts.description")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="systemPrompt">系统提示词</Label>
+                <Label htmlFor="systemPrompt">{t("report.form.systemPrompt")}</Label>
                 <Textarea
                   id="systemPrompt"
                   value={config.prompts.systemPrompt}
@@ -711,13 +733,13 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                       prompts: { ...config.prompts, systemPrompt: e.target.value },
                     })
                   }
-                  placeholder="定义 AI 的角色与行为..."
+                  placeholder={t("report.form.systemPromptPlaceholder")}
                   className="min-h-[100px] font-mono text-sm"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="searchQuery">搜索查询模板</Label>
+                <Label htmlFor="searchQuery">{t("report.form.searchQuery")}</Label>
                 <Textarea
                   id="searchQuery"
                   value={config.prompts.searchQueryTemplate}
@@ -727,16 +749,16 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                       prompts: { ...config.prompts, searchQueryTemplate: e.target.value },
                     })
                   }
-                  placeholder="使用 {topic} 和 {year} 占位符..."
+                  placeholder={t("report.form.searchQueryPlaceholder")}
                   className="min-h-[80px] font-mono text-sm"
                 />
                 <p className="text-xs text-muted-foreground">
-                  可用变量：{"{topic}"}、{"{year}"}、{"{keywords}"}
+                  {t("report.form.availableVariables")}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="analysisPrompt">文档分析提示词</Label>
+                <Label htmlFor="analysisPrompt">{t("report.form.analysisPrompt")}</Label>
                 <Textarea
                   id="analysisPrompt"
                   value={config.prompts.analysisPrompt}
@@ -746,13 +768,13 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                       prompts: { ...config.prompts, analysisPrompt: e.target.value },
                     })
                   }
-                  placeholder="分析文档的指令..."
+                  placeholder={t("report.form.analysisPromptPlaceholder")}
                   className="min-h-[80px] font-mono text-sm"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="synthesisPrompt">综合提示词</Label>
+                <Label htmlFor="synthesisPrompt">{t("report.form.synthesisPrompt")}</Label>
                 <Textarea
                   id="synthesisPrompt"
                   value={config.prompts.synthesisPrompt}
@@ -762,7 +784,7 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                       prompts: { ...config.prompts, synthesisPrompt: e.target.value },
                     })
                   }
-                  placeholder="综合研究结果的指令..."
+                  placeholder={t("report.form.synthesisPromptPlaceholder")}
                   className="min-h-[80px] font-mono text-sm"
                 />
               </div>
@@ -775,16 +797,16 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sliders className="w-5 h-5" />
-                研究参数
+                {t("report.form.parameters.title")}
               </CardTitle>
               <CardDescription>
-                精细调整研究执行设置
+                {t("report.form.parameters.description")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <Label>最大来源数</Label>
+                  <Label>{t("report.form.maxSources")}</Label>
                   <span className="text-sm text-muted-foreground">{config.parameters.maxSources}</span>
                 </div>
                 <Slider
@@ -803,7 +825,7 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
 
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <Label>最低置信度 (%)</Label>
+                  <Label>{t("report.form.minConfidence")}</Label>
                   <span className="text-sm text-muted-foreground">{config.parameters.minConfidence}%</span>
                 </div>
                 <Slider
@@ -822,7 +844,7 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
 
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <Label>最大研究步骤数</Label>
+                  <Label>{t("report.form.maxSteps")}</Label>
                   <span className="text-sm text-muted-foreground">{config.parameters.maxSteps}</span>
                 </div>
                 <Slider
@@ -841,7 +863,7 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
 
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <Label>并行 Agent 数</Label>
+                  <Label>{t("report.form.parallelAgents")}</Label>
                   <span className="text-sm text-muted-foreground">{config.parameters.parallelAgents}</span>
                 </div>
                 <Slider
@@ -860,7 +882,7 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
 
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <Label>超时（秒）</Label>
+                  <Label>{t("report.form.timeout")}</Label>
                   <span className="text-sm text-muted-foreground">{config.parameters.timeout}s</span>
                 </div>
                 <Slider
@@ -885,16 +907,16 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Settings className="w-5 h-5" />
-                动作配置
+                {t("report.form.actions.title")}
               </CardTitle>
               <CardDescription>
-                配置动作的验证与执行方式
+                {t("report.form.actions.description")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <Label>最大动作成本</Label>
+                  <Label>{t("report.form.maxActionCost")}</Label>
                   <span className="text-sm text-muted-foreground">{config.actionConfig.maxActionCost}</span>
                 </div>
                 <Slider
@@ -910,14 +932,14 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                   step={1}
                 />
                 <p className="text-xs text-muted-foreground">
-                  限制计划中单个动作的复杂度
+                  {t("report.form.maxActionCostHint")}
                 </p>
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>启用后备动作</Label>
-                  <p className="text-xs text-muted-foreground">主动作失败时使用备选动作</p>
+                  <Label>{t("report.form.enableFallbacks")}</Label>
+                  <p className="text-xs text-muted-foreground">{t("report.form.enableFallbacksHint")}</p>
                 </div>
                 <Switch
                   checked={config.actionConfig.enableFallbacks}
@@ -935,8 +957,8 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>验证前置条件</Label>
-                  <p className="text-xs text-muted-foreground">执行动作前检查所有要求</p>
+                  <Label>{t("report.form.validatePreconditions")}</Label>
+                  <p className="text-xs text-muted-foreground">{t("report.form.validatePreconditionsHint")}</p>
                 </div>
                 <Switch
                   checked={config.actionConfig.validatePreconditions}
@@ -954,8 +976,8 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>跟踪效果</Label>
-                  <p className="text-xs text-muted-foreground">监控每个动作引起的状态变化</p>
+                  <Label>{t("report.form.trackEffects")}</Label>
+                  <p className="text-xs text-muted-foreground">{t("report.form.trackEffectsHint")}</p>
                 </div>
                 <Switch
                   checked={config.actionConfig.trackEffects}
@@ -979,15 +1001,15 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Filter className="w-5 h-5" />
-                来源过滤器
+                {t("report.form.filters.title")}
               </CardTitle>
               <CardDescription>
-                控制研究中包含哪些来源
+                {t("report.form.filters.description")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>日期范围</Label>
+                <Label>{t("report.form.dateRange")}</Label>
                 <Select
                   value={config.filters.dateRange}
                   onValueChange={(value) =>
@@ -1001,19 +1023,19 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="past-week">过去一周</SelectItem>
-                    <SelectItem value="past-month">过去一个月</SelectItem>
-                    <SelectItem value="past-3-months">过去 3 个月</SelectItem>
-                    <SelectItem value="past-6-months">过去 6 个月</SelectItem>
-                    <SelectItem value="past-year">过去一年</SelectItem>
-                    <SelectItem value="past-2-years">过去两年</SelectItem>
-                    <SelectItem value="all">全部时间</SelectItem>
+                    <SelectItem value="past-week">{t("report.form.dateRange.pastWeek")}</SelectItem>
+                    <SelectItem value="past-month">{t("report.form.dateRange.pastMonth")}</SelectItem>
+                    <SelectItem value="past-3-months">{t("report.form.dateRange.past3Months")}</SelectItem>
+                    <SelectItem value="past-6-months">{t("report.form.dateRange.past6Months")}</SelectItem>
+                    <SelectItem value="past-year">{t("report.form.dateRange.pastYear")}</SelectItem>
+                    <SelectItem value="past-2-years">{t("report.form.dateRange.past2Years")}</SelectItem>
+                    <SelectItem value="all">{t("report.form.dateRange.all")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>来源类型</Label>
+                <Label>{t("report.form.sourceTypes")}</Label>
                 <div className="space-y-2">
                   {["academic", "technical", "industry", "news", "blogs", "documentation"].map((type) => (
                     <div key={type} className="flex items-center space-x-2">
@@ -1031,7 +1053,7 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                         }}
                       />
                       <Label htmlFor={type} className="capitalize cursor-pointer">
-                        {type}
+                        {t(`report.form.sourceType.${type}`)}
                       </Label>
                     </div>
                   ))}
@@ -1039,15 +1061,15 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
               </div>
 
               <div className="space-y-2">
-                <Label>排除域名</Label>
+                <Label>{t("report.form.excludeDomains")}</Label>
                 <div className="flex gap-2">
                   <Input
                     value={excludeDomainInput}
                     onChange={(e) => setExcludeDomainInput(e.target.value)}
-                    placeholder="例如：example.com"
+                    placeholder={t("report.form.excludeDomainsPlaceholder")}
                     onKeyPress={(e) => e.key === "Enter" && addExcludeDomain()}
                   />
-                  <Button onClick={addExcludeDomain} size="sm">添加</Button>
+                  <Button onClick={addExcludeDomain} size="sm">{t("report.form.add")}</Button>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {config.filters.excludeDomains.map((domain, index) => (
@@ -1068,16 +1090,9 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
               </div>
 
               <div className="space-y-2">
-                <Label>语言</Label>
+                <Label>{t("report.form.languages")}</Label>
                 <div className="space-y-2">
-                  {[
-                    { code: "en", label: "英语" },
-                    { code: "es", label: "西班牙语" },
-                    { code: "fr", label: "法语" },
-                    { code: "de", label: "德语" },
-                    { code: "zh", label: "中文" },
-                    { code: "ja", label: "日语" },
-                  ].map(({ code, label }) => (
+                  {languageOptions.map(({ code, key }) => (
                     <div key={code} className="flex items-center space-x-2">
                       <Switch
                         id={code}
@@ -1093,7 +1108,7 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                         }}
                       />
                       <Label htmlFor={code} className="cursor-pointer">
-                        {label}
+                        {t(key)}
                       </Label>
                     </div>
                   ))}
@@ -1106,11 +1121,11 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
 
       <div className="flex justify-end gap-3 pt-4 border-t">
         <Button variant="outline" onClick={onCancel}>
-          取消
+          {t("report.form.cancel")}
         </Button>
         <Button onClick={handleSubmit} className="gap-2">
           <RotateCcw className="w-4 h-4" />
-          开始修订后的研究
+          {t("report.form.submit")}
         </Button>
       </div>
     </div>

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, Palette, Type, Copy, Check, Sliders } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 interface WidgetConfig {
   primaryColor: string;
@@ -40,6 +41,7 @@ interface WidgetCustomizerProps {
 }
 
 export const WidgetCustomizer = ({ config, onConfigChange, onGenerate }: WidgetCustomizerProps) => {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const [showEmbedCode, setShowEmbedCode] = useState(false);
 
@@ -96,7 +98,7 @@ export const WidgetCustomizer = ({ config, onConfigChange, onGenerate }: WidgetC
       <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <p className="text-xs sm:text-sm text-muted-foreground">
-          定制可嵌入研究 Widget 的外观与内容
+          {t("main.customizerIntro")}
         </p>
         <Button
           onClick={() => {
@@ -109,76 +111,76 @@ export const WidgetCustomizer = ({ config, onConfigChange, onGenerate }: WidgetC
           variant={showEmbedCode ? "outline" : "default"}
           className="w-full sm:w-auto text-xs sm:text-sm whitespace-nowrap"
         >
-          {showEmbedCode ? "隐藏代码" : "生成嵌入代码"}
+          {showEmbedCode ? t("main.hideCode") : t("main.generateEmbedCode")}
         </Button>
       </div>
 
       <Tabs defaultValue="colors" className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
-          <TabsTrigger value="colors" className="text-xs sm:text-sm">颜色</TabsTrigger>
-          <TabsTrigger value="content" className="text-xs sm:text-sm">内容</TabsTrigger>
-          <TabsTrigger value="layout" className="text-xs sm:text-sm">布局</TabsTrigger>
-          <TabsTrigger value="ai" className="text-xs sm:text-sm">AI 设置</TabsTrigger>
+          <TabsTrigger value="colors" className="text-xs sm:text-sm">{t("main.tabColors")}</TabsTrigger>
+          <TabsTrigger value="content" className="text-xs sm:text-sm">{t("main.tabContent")}</TabsTrigger>
+          <TabsTrigger value="layout" className="text-xs sm:text-sm">{t("main.tabLayout")}</TabsTrigger>
+          <TabsTrigger value="ai" className="text-xs sm:text-sm">{t("main.tabAiSettings")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="colors" className="space-y-4 mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
-              <h3 className="text-xs sm:text-sm font-medium text-foreground">主颜色</h3>
+              <h3 className="text-xs sm:text-sm font-medium text-foreground">{t("main.colorsPrimaryTitle")}</h3>
               <ColorInput
                 id="primaryColor"
-                label="主颜色"
+                label={t("main.colorPrimary")}
                 value={config.primaryColor}
                 onChange={(value) => updateConfig("primaryColor", value)}
               />
               <ColorInput
                 id="accentColor"
-                label="强调色"
+                label={t("main.colorAccent")}
                 value={config.accentColor}
                 onChange={(value) => updateConfig("accentColor", value)}
               />
               <ColorInput
                 id="successColor"
-                label="成功色"
+                label={t("main.colorSuccess")}
                 value={config.successColor}
                 onChange={(value) => updateConfig("successColor", value)}
               />
             </div>
 
             <div className="space-y-3">
-              <h3 className="text-xs sm:text-sm font-medium text-foreground">背景与卡片颜色</h3>
+              <h3 className="text-xs sm:text-sm font-medium text-foreground">{t("main.colorsBackgroundTitle")}</h3>
               <ColorInput
                 id="backgroundColor"
-                label="背景颜色"
+                label={t("main.colorBackground")}
                 value={config.backgroundColor}
                 onChange={(value) => updateConfig("backgroundColor", value)}
               />
               <ColorInput
                 id="cardBackgroundColor"
-                label="卡片背景"
+                label={t("main.colorCardBackground")}
                 value={config.cardBackgroundColor}
                 onChange={(value) => updateConfig("cardBackgroundColor", value)}
               />
               <ColorInput
                 id="cardBorderColor"
-                label="卡片边框"
+                label={t("main.colorCardBorder")}
                 value={config.cardBorderColor}
                 onChange={(value) => updateConfig("cardBorderColor", value)}
               />
             </div>
 
             <div className="space-y-3 md:col-span-2">
-              <h3 className="text-xs sm:text-sm font-medium text-foreground">文字颜色</h3>
+              <h3 className="text-xs sm:text-sm font-medium text-foreground">{t("main.colorsTextTitle")}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <ColorInput
                   id="textColor"
-                  label="主要文字"
+                  label={t("main.colorPrimaryText")}
                   value={config.textColor}
                   onChange={(value) => updateConfig("textColor", value)}
                 />
                 <ColorInput
                   id="secondaryTextColor"
-                  label="次要文字"
+                  label={t("main.colorSecondaryText")}
                   value={config.secondaryTextColor}
                   onChange={(value) => updateConfig("secondaryTextColor", value)}
                 />
@@ -191,53 +193,53 @@ export const WidgetCustomizer = ({ config, onConfigChange, onGenerate }: WidgetC
           <div className="space-y-3">
             <div>
               <Label htmlFor="title" className="text-xs text-muted-foreground">
-                Widget 标题
+                {t("main.contentWidgetTitle")}
               </Label>
               <Input
                 id="title"
                 value={config.title}
                 onChange={(e) => updateConfig("title", e.target.value)}
                 className="mt-1"
-                placeholder="目标导向行动规划"
+                placeholder={t("main.contentWidgetTitlePlaceholder")}
               />
             </div>
 
             <div>
               <Label htmlFor="description" className="text-xs text-muted-foreground">
-                描述
+                {t("main.contentDescription")}
               </Label>
               <Textarea
                 id="description"
                 value={config.description}
                 onChange={(e) => updateConfig("description", e.target.value)}
                 className="mt-1 min-h-[80px]"
-                placeholder="基于 AI 的研究规划..."
+                placeholder={t("main.contentDescriptionPlaceholder")}
               />
             </div>
 
             <div>
               <Label htmlFor="brandName" className="text-xs text-muted-foreground">
-                品牌名称（可选）
+                {t("main.contentBrandName")}
               </Label>
               <Input
                 id="brandName"
                 value={config.brandName}
                 onChange={(e) => updateConfig("brandName", e.target.value)}
                 className="mt-1"
-                placeholder="你的公司"
+                placeholder={t("main.contentBrandNamePlaceholder")}
               />
             </div>
 
             <div>
               <Label htmlFor="defaultGoal" className="text-xs text-muted-foreground">
-                默认研究目标
+                {t("main.contentDefaultGoal")}
               </Label>
               <Input
                 id="defaultGoal"
                 value={config.defaultGoal}
                 onChange={(e) => updateConfig("defaultGoal", e.target.value)}
                 className="mt-1"
-                placeholder="研究最新 AI 进展"
+                placeholder={t("main.contentDefaultGoalPlaceholder")}
               />
             </div>
           </div>
@@ -246,10 +248,10 @@ export const WidgetCustomizer = ({ config, onConfigChange, onGenerate }: WidgetC
         <TabsContent value="layout" className="space-y-4 mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
-              <h3 className="text-xs sm:text-sm font-medium text-foreground">字体与间距</h3>
+              <h3 className="text-xs sm:text-sm font-medium text-foreground">{t("main.layoutTypography")}</h3>
               <div>
                 <Label htmlFor="fontFamily" className="text-xs text-muted-foreground">
-                  字体
+                  {t("main.layoutFontFamily")}
                 </Label>
                 <Select value={config.fontFamily} onValueChange={(value) => updateConfig("fontFamily", value)}>
                   <SelectTrigger className="mt-1">
@@ -261,69 +263,69 @@ export const WidgetCustomizer = ({ config, onConfigChange, onGenerate }: WidgetC
                     <SelectItem value="Roboto, sans-serif">Roboto</SelectItem>
                     <SelectItem value="'Open Sans', sans-serif">Open Sans</SelectItem>
                     <SelectItem value="'Poppins', sans-serif">Poppins</SelectItem>
-                    <SelectItem value="monospace">等宽字体</SelectItem>
+                    <SelectItem value="monospace">{t("main.fontMonospace")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
                 <Label htmlFor="borderRadius" className="text-xs text-muted-foreground">
-                  圆角
+                  {t("main.layoutBorderRadius")}
                 </Label>
                 <Select value={config.borderRadius} onValueChange={(value) => updateConfig("borderRadius", value)}>
                   <SelectTrigger className="mt-1">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="0">无（0px）</SelectItem>
-                    <SelectItem value="0.25rem">小（4px）</SelectItem>
-                    <SelectItem value="0.5rem">中（8px）</SelectItem>
-                    <SelectItem value="0.75rem">大（12px）</SelectItem>
-                    <SelectItem value="1rem">特大（16px）</SelectItem>
+                    <SelectItem value="0">{t("main.radiusNone")}</SelectItem>
+                    <SelectItem value="0.25rem">{t("main.radiusSmall")}</SelectItem>
+                    <SelectItem value="0.5rem">{t("main.radiusMedium")}</SelectItem>
+                    <SelectItem value="0.75rem">{t("main.radiusLarge")}</SelectItem>
+                    <SelectItem value="1rem">{t("main.radiusXl")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
                 <Label htmlFor="cardSpacing" className="text-xs text-muted-foreground">
-                  卡片间距
+                  {t("main.layoutCardSpacing")}
                 </Label>
                 <Select value={config.cardSpacing} onValueChange={(value) => updateConfig("cardSpacing", value)}>
                   <SelectTrigger className="mt-1">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="0.5rem">紧凑</SelectItem>
-                    <SelectItem value="1rem">标准</SelectItem>
-                    <SelectItem value="1.5rem">宽松</SelectItem>
-                    <SelectItem value="2rem">松散</SelectItem>
+                    <SelectItem value="0.5rem">{t("main.spacingTight")}</SelectItem>
+                    <SelectItem value="1rem">{t("main.spacingNormal")}</SelectItem>
+                    <SelectItem value="1.5rem">{t("main.spacingRelaxed")}</SelectItem>
+                    <SelectItem value="2rem">{t("main.spacingLoose")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
                 <Label htmlFor="animationSpeed" className="text-xs text-muted-foreground">
-                  动画速度
+                  {t("main.layoutAnimationSpeed")}
                 </Label>
                 <Select value={config.animationSpeed} onValueChange={(value) => updateConfig("animationSpeed", value)}>
                   <SelectTrigger className="mt-1">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="fast">快速</SelectItem>
-                    <SelectItem value="normal">标准</SelectItem>
-                    <SelectItem value="slow">缓慢</SelectItem>
+                    <SelectItem value="fast">{t("main.animFast")}</SelectItem>
+                    <SelectItem value="normal">{t("main.animNormal")}</SelectItem>
+                    <SelectItem value="slow">{t("main.animSlow")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div className="space-y-3">
-              <h3 className="text-xs sm:text-sm font-medium text-foreground">显示选项</h3>
+              <h3 className="text-xs sm:text-sm font-medium text-foreground">{t("main.layoutDisplayOptions")}</h3>
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="showMetrics" className="text-xs text-muted-foreground">
-                    显示指标
+                    {t("main.showMetrics")}
                   </Label>
                   <Switch
                     id="showMetrics"
@@ -334,7 +336,7 @@ export const WidgetCustomizer = ({ config, onConfigChange, onGenerate }: WidgetC
 
                 <div className="flex items-center justify-between">
                   <Label htmlFor="showStats" className="text-xs text-muted-foreground">
-                    显示统计
+                    {t("main.showStats")}
                   </Label>
                   <Switch
                     id="showStats"
@@ -345,7 +347,7 @@ export const WidgetCustomizer = ({ config, onConfigChange, onGenerate }: WidgetC
 
                 <div className="flex items-center justify-between">
                   <Label htmlFor="compactMode" className="text-xs text-muted-foreground">
-                    紧凑模式
+                    {t("main.compactMode")}
                   </Label>
                   <Switch
                     id="compactMode"
@@ -361,18 +363,18 @@ export const WidgetCustomizer = ({ config, onConfigChange, onGenerate }: WidgetC
         <TabsContent value="ai" className="space-y-4 mt-4">
           <div className="space-y-4">
             <div className="space-y-3">
-              <h3 className="text-xs sm:text-sm font-medium text-foreground">AI 研究设置</h3>
+              <h3 className="text-xs sm:text-sm font-medium text-foreground">{t("main.aiResearchSettings")}</h3>
               <p className="text-xs text-muted-foreground">
-                使用 Google Gemini 模型配置 AI 研究数据生成
+                {t("main.aiResearchSettingsDesc")}
               </p>
               
               <div className="flex items-center justify-between pt-2">
                 <div className="space-y-0.5">
                   <Label htmlFor="enableAI" className="text-xs text-muted-foreground">
-                    启用 AI 研究
+                    {t("main.enableAiResearch")}
                   </Label>
                   <p className="text-[10px] text-muted-foreground/70">
-                    使用 AI 生成真实研究数据而非模拟数据
+                    {t("main.enableAiResearchHint")}
                   </p>
                 </div>
                 <Switch
@@ -385,7 +387,7 @@ export const WidgetCustomizer = ({ config, onConfigChange, onGenerate }: WidgetC
               {config.enableAI && (
                 <div className="space-y-2 pt-2">
                   <Label htmlFor="aiModel" className="text-xs text-muted-foreground">
-                    AI 模型
+                    {t("main.aiModel")}
                   </Label>
                   <Select value={config.aiModel} onValueChange={(value) => updateConfig("aiModel", value)}>
                     <SelectTrigger className="mt-1">
@@ -393,20 +395,20 @@ export const WidgetCustomizer = ({ config, onConfigChange, onGenerate }: WidgetC
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="google/gemini-2.5-flash">
-                        Gemini 2.5 Flash（均衡）
+                        {t("main.modelFlash")}
                       </SelectItem>
                       <SelectItem value="google/gemini-2.5-pro">
-                        Gemini 2.5 Pro（最强）
+                        {t("main.modelPro")}
                       </SelectItem>
                       <SelectItem value="google/gemini-2.5-flash-lite">
-                        Gemini 2.5 Flash Lite（最快）
+                        {t("main.modelFlashLite")}
                       </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-[10px] text-muted-foreground/70">
-                    {config.aiModel === "google/gemini-2.5-pro" && "最适合复杂推理与高精度任务"}
-                    {config.aiModel === "google/gemini-2.5-flash" && "性能与速度均衡"}
-                    {config.aiModel === "google/gemini-2.5-flash-lite" && "针对速度与成本优化"}
+                    {config.aiModel === "google/gemini-2.5-pro" && t("main.modelProHint")}
+                    {config.aiModel === "google/gemini-2.5-flash" && t("main.modelFlashHint")}
+                    {config.aiModel === "google/gemini-2.5-flash-lite" && t("main.modelFlashLiteHint")}
                   </p>
                 </div>
               )}
@@ -419,7 +421,7 @@ export const WidgetCustomizer = ({ config, onConfigChange, onGenerate }: WidgetC
       {showEmbedCode && (
         <div className="space-y-3 animate-fade-in border-t border-border pt-6">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-foreground">嵌入代码</Label>
+            <Label className="text-sm font-medium text-foreground">{t("main.embedCodeTitle")}</Label>
             <Button
               onClick={copyEmbedCode}
               size="sm"
@@ -429,12 +431,12 @@ export const WidgetCustomizer = ({ config, onConfigChange, onGenerate }: WidgetC
               {copied ? (
                 <>
                   <Check className="w-3 h-3" />
-                  已复制！
+                  {t("main.copied")}
                 </>
               ) : (
                 <>
                   <Copy className="w-3 h-3" />
-                  复制代码
+                  {t("main.copyCode")}
                 </>
               )}
             </Button>
@@ -445,7 +447,7 @@ export const WidgetCustomizer = ({ config, onConfigChange, onGenerate }: WidgetC
             </pre>
           </div>
           <p className="text-xs text-muted-foreground">
-            复制此代码并粘贴到你希望 Widget 显示的网站位置。
+            {t("main.embedCodeHint")}
           </p>
         </div>
       )}

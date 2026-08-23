@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Shield, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { useI18n } from "@/i18n";
 
 interface QualityMetrics {
   compileCheck: boolean;
@@ -14,26 +15,34 @@ interface QualityGatesProps {
 }
 
 export const QualityGates = ({ metrics }: QualityGatesProps) => {
+  const { t } = useI18n();
+
   const gates = [
     {
-      name: "编译检查",
+      name: t('agents.quality.compileCheck'),
       status: metrics.compileCheck ? "passed" : "failed",
       icon: metrics.compileCheck ? CheckCircle2 : XCircle,
       color: metrics.compileCheck ? "text-green-500" : "text-red-500",
     },
     {
-      name: "测试覆盖率",
+      name: t('agents.quality.testCoverage'),
       status: metrics.testCoverage >= 80 ? "passed" : metrics.testCoverage >= 60 ? "warning" : "failed",
       value: metrics.testCoverage,
       threshold: 80,
     },
     {
-      name: "安全扫描",
+      name: t('agents.quality.securityScan'),
       status: metrics.securityScore >= 90 ? "passed" : metrics.securityScore >= 70 ? "warning" : "failed",
       value: metrics.securityScore,
       threshold: 90,
     },
   ];
+
+  const statusLabel = (status: string): string => {
+    if (status === "passed") return t('agents.quality.passed');
+    if (status === "warning") return t('agents.comm.type.warning');
+    return t('agents.quality.failed');
+  };
 
   return (
     <div className="space-y-6">
@@ -41,9 +50,9 @@ export const QualityGates = ({ metrics }: QualityGatesProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-green-500" />
-            质量门禁
+            {t('agents.quality.title')}
           </CardTitle>
-          <CardDescription>自动化质量保证检查点</CardDescription>
+          <CardDescription>{t('agents.quality.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {gates.map((gate, idx) => (
@@ -70,7 +79,7 @@ export const QualityGates = ({ metrics }: QualityGatesProps) => {
                       : "destructive"
                   }
                 >
-                  {gate.status === "passed" ? "通过" : gate.status === "warning" ? "警告" : "失败"}
+                  {statusLabel(gate.status)}
                 </Badge>
               </div>
 
@@ -78,8 +87,8 @@ export const QualityGates = ({ metrics }: QualityGatesProps) => {
                 <>
                   <Progress value={gate.value} className="h-2" />
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <span>当前：{gate.value}%</span>
-                    <span>阈值：{gate.threshold}%</span>
+                    <span>{t('agents.quality.current', { value: gate.value })}</span>
+                    <span>{t('agents.quality.threshold', { threshold: gate.threshold })}</span>
                   </div>
                 </>
               )}

@@ -2,39 +2,42 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, ArrowRight } from "lucide-react";
+import { useI18n } from "@/i18n";
 
 export const CommunicationLog = () => {
+  const { t } = useI18n();
+
   const messages = [
     {
       id: 1,
-      from: "架构",
-      to: "实现",
-      message: "数据库结构设计已完成，可开始实现。",
-      timestamp: "2 分钟前",
+      from: "agents.agent.arch",
+      to: "agents.agent.impl",
+      message: "agents.comm.msg1",
+      timestamp: "agents.comm.ts1",
       type: "info",
     },
     {
       id: 2,
-      from: "实现",
-      to: "测试",
-      message: "认证模块已实现，请编写单元测试。",
-      timestamp: "1 分钟前",
+      from: "agents.agent.impl",
+      to: "agents.agent.test",
+      message: "agents.comm.msg2",
+      timestamp: "agents.comm.ts2",
       type: "request",
     },
     {
       id: 3,
-      from: "测试",
-      to: "代码审查",
-      message: "测试覆盖率已达 85%，可开始审查。",
-      timestamp: "30 秒前",
+      from: "agents.agent.test",
+      to: "agents.agent.review",
+      message: "agents.comm.msg3",
+      timestamp: "agents.comm.ts3",
       type: "success",
     },
     {
       id: 4,
-      from: "代码审查",
-      to: "实现",
-      message: "在认证中间件中发现安全隐患，请修复。",
-      timestamp: "10 秒前",
+      from: "agents.agent.review",
+      to: "agents.agent.impl",
+      message: "agents.comm.msg4",
+      timestamp: "agents.comm.ts4",
       type: "warning",
     },
   ];
@@ -46,14 +49,21 @@ export const CommunicationLog = () => {
     warning: "bg-yellow-500/20 text-yellow-500",
   };
 
+  const typeLabel = (type: string): string => {
+    if (type === "info") return t('agents.comm.type.info');
+    if (type === "request") return t('agents.comm.type.request');
+    if (type === "success") return t('agents.comm.type.success');
+    return t('agents.comm.type.warning');
+  };
+
   return (
     <Card className="border-2 border-primary/20">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-primary" />
-          Agent 间通信
+          {t('agents.comm.title')}
         </CardTitle>
-        <CardDescription>Agent 之间的实时消息交换</CardDescription>
+        <CardDescription>{t('agents.comm.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[300px] pr-4">
@@ -65,18 +75,18 @@ export const CommunicationLog = () => {
               >
                 <div className="flex items-center gap-2 mb-2">
                   <Badge variant="outline" className="text-xs">
-                    {msg.from}
+                    {t(msg.from)}
                   </Badge>
                   <ArrowRight className="w-3 h-3 text-muted-foreground" />
                   <Badge variant="outline" className="text-xs">
-                    {msg.to}
+                    {t(msg.to)}
                   </Badge>
                   <Badge className={`ml-auto text-xs ${typeColors[msg.type as keyof typeof typeColors]}`}>
-                    {msg.type === "info" ? "信息" : msg.type === "request" ? "请求" : msg.type === "success" ? "成功" : "警告"}
+                    {typeLabel(msg.type)}
                   </Badge>
                 </div>
-                <p className="text-sm">{msg.message}</p>
-                <p className="text-xs text-muted-foreground mt-2">{msg.timestamp}</p>
+                <p className="text-sm">{t(msg.message)}</p>
+                <p className="text-xs text-muted-foreground mt-2">{t(msg.timestamp)}</p>
               </div>
             ))}
           </div>

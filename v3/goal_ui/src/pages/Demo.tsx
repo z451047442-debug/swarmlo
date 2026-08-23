@@ -4,8 +4,10 @@ import { ArrowLeft, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useI18n } from "@/i18n";
 
 const Demo = () => {
+  const { t } = useI18n();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [widgetLoaded, setWidgetLoaded] = useState(false);
@@ -57,8 +59,8 @@ const Demo = () => {
 
         if (!jsCheck.ok || !cssCheck.ok) {
           toast({
-            title: "Widget 尚未构建",
-            description: "运行：npm run build:widget",
+            title: t("misc.demoWidgetNotBuilt"),
+            description: t("misc.demoWidgetNotBuiltDesc"),
             variant: "destructive",
           });
           return;
@@ -71,8 +73,8 @@ const Demo = () => {
         link.onerror = () => {
           console.error("[Demo] Failed to load widget.css");
           toast({
-            title: "Widget CSS 加载失败",
-            description: "无法加载 Widget 样式",
+            title: t("misc.demoCssLoadFailed"),
+            description: t("misc.demoCssLoadFailedDesc"),
             variant: "destructive",
           });
         };
@@ -93,16 +95,16 @@ const Demo = () => {
           if ((window as any).SwarmloResearchWidget) {
             console.log("[Demo] Widget version:", (window as any).SwarmloResearchWidget.version);
             toast({
-              title: "Widget 就绪",
-              description: "Swarmlo Research Widget 加载成功",
+              title: t("misc.demoWidgetReady"),
+              description: t("misc.demoWidgetReadyDesc"),
             });
           }
         };
         script.onerror = () => {
           console.error("[Demo] Failed to load widget.js");
           toast({
-            title: "Widget 加载失败",
-            description: "请检查控制台错误。运行：npm run build:widget",
+            title: t("misc.demoWidgetLoadFailed"),
+            description: t("misc.demoWidgetLoadFailedDesc"),
             variant: "destructive",
           });
         };
@@ -111,8 +113,8 @@ const Demo = () => {
       } catch (error) {
         console.error("[Demo] Widget check failed:", error);
         toast({
-          title: "Widget 检查失败",
-          description: "无法确认 Widget 文件是否存在",
+          title: t("misc.demoWidgetCheckFailed"),
+          description: t("misc.demoWidgetCheckFailedDesc"),
           variant: "destructive",
         });
       }
@@ -138,14 +140,14 @@ const Demo = () => {
         if (cleanupFn) cleanupFn();
       });
     };
-  }, [toast]);
+  }, [toast, t]);
 
   const copyEmbedCode = () => {
     navigator.clipboard.writeText(embedCode);
     setCopied(true);
     toast({
-      title: "已复制！",
-      description: "嵌入代码已复制到剪贴板",
+      title: t("misc.demoCopied"),
+      description: t("misc.demoCopiedDesc"),
     });
     setTimeout(() => setCopied(false), 2000);
   };
@@ -157,29 +159,28 @@ const Demo = () => {
           <Link to="/">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              返回应用
+              {t("misc.backToApp")}
             </Button>
           </Link>
           <div className="text-sm text-muted-foreground">
-            {widgetLoaded ? "✅ Widget 已激活" : "⏳ 正在加载 Widget..."}
+            {widgetLoaded ? t("misc.demoWidgetActive") : t("misc.demoWidgetLoading")}
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">可嵌入 Widget 演示</h1>
+          <h1 className="text-4xl font-bold mb-2">{t("misc.demoTitle")}</h1>
           <p className="text-muted-foreground">
-            此页面演示 GOAP Widget 在外部网站嵌入时的工作方式
+            {t("misc.demoSubtitle")}
           </p>
         </div>
 
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>嵌入代码</CardTitle>
+            <CardTitle>{t("misc.demoEmbedCode")}</CardTitle>
             <CardDescription>
-              复制此代码即可将 Widget 嵌入你的网站。Widget 完全自包含，
-              已启用 CORS，支持第三方嵌入。
+              {t("misc.demoEmbedCodeDesc")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -196,12 +197,12 @@ const Demo = () => {
                 {copied ? (
                   <>
                     <Check className="mr-2 h-3 w-3" />
-                    已复制
+                    {t("misc.copied")}
                   </>
                 ) : (
                   <>
                     <Copy className="mr-2 h-3 w-3" />
-                    复制
+                    {t("misc.copy")}
                   </>
                 )}
               </Button>
@@ -209,23 +210,23 @@ const Demo = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
               <div>
-                <h4 className="text-sm font-semibold mb-2">Widget 功能</h4>
+                <h4 className="text-sm font-semibold mb-2">{t("misc.demoFeatures")}</h4>
                 <ul className="text-xs text-muted-foreground space-y-1">
-                  <li>✅ 完全独立（无依赖）</li>
-                  <li>✅ 已启用 CORS，支持跨域使用</li>
-                  <li>✅ 可自定义颜色与样式</li>
-                  <li>✅ 移动端响应式设计</li>
-                  <li>✅ AI 驱动的研究工作流</li>
+                  <li>{t("misc.demoFeatureStandalone")}</li>
+                  <li>{t("misc.demoFeatureCors")}</li>
+                  <li>{t("misc.demoFeatureCustomizable")}</li>
+                  <li>{t("misc.demoFeatureResponsive")}</li>
+                  <li>{t("misc.demoFeatureAi")}</li>
                 </ul>
               </div>
               <div>
-                <h4 className="text-sm font-semibold mb-2">配置选项</h4>
+                <h4 className="text-sm font-semibold mb-2">{t("misc.demoConfigOptions")}</h4>
                 <ul className="text-xs text-muted-foreground space-y-1">
-                  <li>• <code>primaryColor</code> - 主主题颜色</li>
-                  <li>• <code>accentColor</code> - 强调色/成功颜色</li>
-                  <li>• <code>backgroundColor</code> - 页面背景色</li>
-                  <li>• <code>defaultGoal</code> - 预填的目标文本</li>
-                  <li>• <a href="/WIDGET-INTEGRATION.md" target="_blank" className="text-primary hover:underline">查看完整文档 →</a></li>
+                  <li>• <code>primaryColor</code> - {t("misc.demoConfigPrimaryColor")}</li>
+                  <li>• <code>accentColor</code> - {t("misc.demoConfigAccentColor")}</li>
+                  <li>• <code>backgroundColor</code> - {t("misc.demoConfigBackgroundColor")}</li>
+                  <li>• <code>defaultGoal</code> - {t("misc.demoConfigDefaultGoal")}</li>
+                  <li>• <a href="/WIDGET-INTEGRATION.md" target="_blank" className="text-primary hover:underline">{t("misc.demoViewFullDocs")}</a></li>
                 </ul>
               </div>
             </div>
@@ -233,20 +234,19 @@ const Demo = () => {
         </Card>
 
         <div className="border-t border-border pt-8">
-          <h2 className="text-2xl font-semibold mb-4">Widget 实时预览</h2>
+          <h2 className="text-2xl font-semibold mb-4">{t("misc.demoLivePreview")}</h2>
           <p className="text-sm text-muted-foreground mb-6">
-            这是 Widget 在外部站点上的实际效果。下方 Widget 使用
-            与上方完全相同的代码加载。
+            {t("misc.demoLivePreviewDesc")}
           </p>
 
           {!widgetLoaded && (
             <div className="mb-4 p-4 rounded-lg bg-muted border border-border">
               <div className="flex items-center gap-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                <p className="text-sm">正在加载 Widget...</p>
+                <p className="text-sm">{t("misc.demoLoadingWidget")}</p>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                如果 Widget 未加载，请运行： <code className="bg-background px-2 py-0.5 rounded">npm run build:widget</code>
+                {t("misc.demoNotLoadedHint")}<code className="bg-background px-2 py-0.5 rounded">npm run build:widget</code>
               </p>
             </div>
           )}

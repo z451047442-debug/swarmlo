@@ -12,6 +12,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { GitBranch, Clock } from 'lucide-react';
+import { useI18n } from '@/i18n';
 
 interface Action {
   id: string;
@@ -33,11 +34,14 @@ export function PlanVisualization({
   completedActionIds,
   onActionClick
 }: PlanVisualizationProps) {
+  const { t } = useI18n();
   const [viewMode, setViewMode] = useState<'graph' | 'timeline'>('graph');
 
   const { nodes, edges } = useMemo(() => {
-    return convertPlanToGraph(actions, currentActionId, completedActionIds);
-  }, [actions, currentActionId, completedActionIds]);
+    return convertPlanToGraph(actions, currentActionId, completedActionIds, (cost: number) =>
+      t('agents.exec.cost', { value: cost })
+    );
+  }, [actions, currentActionId, completedActionIds, t]);
 
   const totalCost = actions.reduce((sum, a) => sum + a.cost, 0);
 
@@ -47,18 +51,18 @@ export function PlanVisualization({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <GitBranch className="w-5 h-5 text-purple-500" />
-            执行计划
+            {t('agents.exec.plan')}
           </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="outline">
-              {actions.length} 个操作
+              {t('agents.dash.actions', { count: actions.length })}
             </Badge>
             <Badge variant="outline">
-              成本：{totalCost}
+              {t('agents.exec.cost', { value: totalCost })}
             </Badge>
             <Badge variant="outline" className="gap-1">
               <Clock className="w-3 h-3" />
-              预计 {Math.ceil(totalCost * 0.5)} 分钟
+              {t('agents.plan.estMinutes', { minutes: Math.ceil(totalCost * 0.5) })}
             </Badge>
           </div>
         </div>
@@ -66,8 +70,8 @@ export function PlanVisualization({
       <CardContent>
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
           <TabsList className="mb-4">
-            <TabsTrigger value="graph">图视图</TabsTrigger>
-            <TabsTrigger value="timeline">时间线视图</TabsTrigger>
+            <TabsTrigger value="graph">{t('agents.exec.graphView')}</TabsTrigger>
+            <TabsTrigger value="timeline">{t('agents.exec.timelineView')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="graph" className="h-[500px] border rounded-lg">
@@ -93,7 +97,7 @@ export function PlanVisualization({
             {actions.map((action, index) => {
               const isCompleted = completedActionIds.includes(action.id);
               const isCurrent = action.id === currentActionId;
-              
+
               return (
                 <div
                   key={action.id}
@@ -119,7 +123,7 @@ export function PlanVisualization({
                         )}
                       </div>
                     </div>
-                    <Badge variant="outline">成本：{action.cost}</Badge>
+                    <Badge variant="outline">{t('agents.exec.cost', { value: action.cost })}</Badge>
                   </div>
                 </div>
               );
@@ -134,7 +138,8 @@ export function PlanVisualization({
 function convertPlanToGraph(
   actions: Action[],
   currentActionId?: string,
-  completedActionIds: string[] = []
+  completedActionIds: string[] = [],
+  formatCost?: (cost: number) => string
 ): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = actions.map((action, index) => {
     const isCompleted = completedActionIds.includes(action.id);
@@ -147,7 +152,7 @@ function convertPlanToGraph(
         label: (
           <div className="text-center">
             <div className="font-semibold text-sm">{action.name}</div>
-            <div className="text-xs text-muted-foreground">成本：{action.cost}</div>
+            <div className="text-xs text-muted-foreground">{formatCost ? formatCost(action.cost) : action.cost}</div>
           </div>
         )
       },

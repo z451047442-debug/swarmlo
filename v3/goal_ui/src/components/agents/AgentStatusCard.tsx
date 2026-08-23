@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LucideIcon } from "lucide-react";
+import { useI18n } from "@/i18n";
 
 interface Agent {
   id: string;
@@ -15,12 +16,13 @@ interface AgentStatusCardProps {
 }
 
 const statusConfig = {
-  idle: { color: "bg-muted text-muted-foreground", label: "空闲", pulse: false },
-  working: { color: "bg-green-500/20 text-green-500 border-green-500/50", label: "工作中", pulse: true },
-  blocked: { color: "bg-red-500/20 text-red-500 border-red-500/50", label: "受阻", pulse: false },
+  idle: { color: "bg-muted text-muted-foreground", label: "agents.status.idle", pulse: false },
+  working: { color: "bg-green-500/20 text-green-500 border-green-500/50", label: "agents.status.working", pulse: true },
+  blocked: { color: "bg-red-500/20 text-red-500 border-red-500/50", label: "agents.status.blocked", pulse: false },
 };
 
 export const AgentStatusCard = ({ agent }: AgentStatusCardProps) => {
+  const { t } = useI18n();
   const Icon = agent.icon;
   const config = statusConfig[agent.status];
 
@@ -32,11 +34,11 @@ export const AgentStatusCard = ({ agent }: AgentStatusCardProps) => {
             <Icon className="w-5 h-5 text-primary" />
             {agent.name}
           </div>
-          <Badge 
-            variant="outline" 
+          <Badge
+            variant="outline"
             className={`${config.color} ${config.pulse ? 'animate-pulse' : ''}`}
           >
-            {config.label}
+            {t(config.label)}
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -44,7 +46,7 @@ export const AgentStatusCard = ({ agent }: AgentStatusCardProps) => {
         {agent.currentTask ? (
           <p className="text-xs text-muted-foreground">{agent.currentTask}</p>
         ) : (
-          <p className="text-xs text-muted-foreground italic">等待任务分配...</p>
+          <p className="text-xs text-muted-foreground italic">{t("agents.statusCard.waiting")}</p>
         )}
       </CardContent>
     </Card>

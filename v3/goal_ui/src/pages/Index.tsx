@@ -40,6 +40,7 @@ import { GOAPConfigDisplay } from "@/components/GOAPConfigDisplay";
 import { GOAPPlanner, parseGoal, type Step, type DataItem } from "@/lib/goapPlanner";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/i18n";
 
 interface WidgetConfig {
   primaryColor: string;
@@ -165,9 +166,11 @@ function getRestoredSession(): PersistedResearchSession | null {
       return null;
     }
     const parsed = JSON.parse(raw) as Partial<PersistedResearchSession> & { v?: number; steps?: Step[] };
-    if (parsed.v !== 2 || !Array.isArray(parsed.steps) || parsed.steps.length === 0) {
+    if (parsed.v !== 3 || !Array.isArray(parsed.steps) || parsed.steps.length === 0) {
       // v1 sessions predate the Chinese UI translation and would restore English
       // template copy — discard them (v1 was never released, so nothing real is lost).
+      // v2 sessions hard-coded Chinese template copy — discarded for the same reason
+      // (v3 persists the i18n-aware session).
       try {
         localStorage.removeItem(RESEARCH_SESSION_KEY);
       } catch (cleanupErr) {
@@ -212,6 +215,22 @@ function getRestoredSession(): PersistedResearchSession | null {
 
 const Index = () => {
   const { toast } = useToast();
+  const { t, lang } = useI18n();
+  // defaultResearchConfig.stateGaps / replanningTriggers are stored as raw
+  // strings; translate them at render time so persisted sessions (any schema
+  // version) display in the active language.
+  const gapKeys: Record<string, string> = {
+    "需要收集信息": "main.stateGapGather",
+    "需要进行分析": "main.stateGapAnalyze",
+    "需要生成洞察": "main.stateGapInsights",
+  };
+  const triggerKeys: Record<string, string> = {
+    "动作失败": "main.triggerActionFailure",
+    "低置信度结果": "main.triggerLowConfidence",
+    "缺少前置条件": "main.triggerMissingPreconditions",
+  };
+  const translateGap = (gap: string) => (gapKeys[gap] ? t(gapKeys[gap]) : gap);
+  const translateTrigger = (trigger: string) => (triggerKeys[trigger] ? t(triggerKeys[trigger]) : trigger);
   const [widgetConfig, setWidgetConfig] = useState<WidgetConfig>({
     primaryColor: "#8b5cf6",
     accentColor: "#22c55e",
@@ -221,10 +240,10 @@ const Index = () => {
     textColor: "#ffffff",
     secondaryTextColor: "#a3a3a3",
     successColor: "#22c55e",
-    title: "目标导向行动规划",
-    description: "基于 A* 寻路与动态 Agent 协同的 AI 研究规划",
+    title: t("main.widgetDefaultTitle"),
+    description: t("main.widgetDefaultDescription"),
     brandName: "",
-    defaultGoal: "研究量子计算的最新进展",
+    defaultGoal: t("main.widgetDefaultGoal"),
     fontFamily: "system-ui",
     borderRadius: "0.5rem",
     animationSpeed: "normal",
@@ -269,45 +288,45 @@ const Index = () => {
         effects: { goalParsed: true },
         stepGenerator: (userGoal: string) => ({
           id: "1",
-          title: "目标分析",
-          description: `正在分析 "${userGoal.slice(0, 60)}..." 并将其拆解为可执行的子目标。`,
+          title: t("main.stepGoalAnalysisTitle"),
+          description: t("main.stepGoalAnalysisDesc", { goal: userGoal.slice(0, 60) }),
           icon: Target,
           status: "pending" as StepStatus,
           data: [
-            { 
-              text: "解析目标",
+            {
+              text: t("main.parseObjective"),
               icon: FileText,
               details: {
-                objective: "从自然语言输入中提取并结构化高层目标",
-                preconditions: ["已接收用户输入", "NLP 模块已初始化"],
-                effects: ["已创建结构化目标对象", "已识别子目标"],
-                agents: ["解析 Agent", "NLP Agent"],
+                objective: t("main.parseObjectiveDetail"),
+                preconditions: [t("main.precUserInputReceived"), t("main.precNlpInitialized")],
+                effects: [t("main.effectGoalObjectCreated"), t("main.effectSubGoalsIdentified")],
+                agents: [t("main.agentParser"), t("main.agentNlp")],
               }
             },
-            { 
-              text: "识别依赖",
+            {
+              text: t("main.identifyDependencies"),
               icon: Link,
               details: {
-                objective: "映射动作与其需求之间的关系",
-                preconditions: ["目标已解析", "动作库已加载"],
-                effects: ["已生成依赖图", "已识别关键路径"],
-                agents: ["依赖分析 Agent", "图构建 Agent"],
-                sources: ["动作注册表", "状态定义"]
+                objective: t("main.identifyDependenciesDetail"),
+                preconditions: [t("main.precGoalParsed"), t("main.precActionLibLoaded")],
+                effects: [t("main.effectDependencyGraph"), t("main.effectCriticalPath")],
+                agents: [t("main.agentDependencyAnalyzer"), t("main.agentGraphBuilder")],
+                sources: [t("main.sourceActionRegistry"), t("main.sourceStateDefinitions")]
               }
             },
-            { 
-              text: "映射状态转换",
+            {
+              text: t("main.mapStateTransitions"),
               icon: Workflow,
               details: {
-                objective: "定义每个动作如何转换世界状态",
-                preconditions: ["依赖已映射", "状态空间已定义"],
-                effects: ["已创建转换矩阵", "已确认状态可达性"],
-                agents: ["状态映射 Agent", "验证 Agent"],
+                objective: t("main.mapStateTransitionsDetail"),
+                preconditions: [t("main.precDepsMapped"), t("main.precStateSpaceDefined")],
+                effects: [t("main.effectTransitionMatrix"), t("main.effectReachability")],
+                agents: [t("main.agentStateMapper"), t("main.agentValidator")],
                 citations: ["GOAP: Goal-Oriented Action Planning - Orkin, J. (2006)"]
               }
             },
           ],
-          metrics: [{ label: "子目标", value: "3" }, { label: "动作", value: "7" }],
+          metrics: [{ label: t("main.metricSubGoals"), value: "3" }, { label: t("main.metricActions"), value: "7" }],
         }),
       },
       {
@@ -317,36 +336,36 @@ const Index = () => {
         effects: { stateAssessed: true },
         stepGenerator: () => ({
           id: "2",
-          title: "状态评估",
-          description: `正在评估关于 ${domain} 的现有知识并识别信息缺口。`,
+          title: t("main.stepStateAssessmentTitle"),
+          description: t("main.stepStateAssessmentDesc", { domain }),
           icon: Brain,
           status: "pending" as StepStatus,
           data: [
-            { 
-              text: "正在评估当前状态...",
+            {
+              text: t("main.assessingCurrentState"),
               icon: Database,
               details: {
-                objective: `评估 ${goal} 的现有知识与能力状态`,
-                effects: ["已建立基线", "已识别差距"],
-                agents: ["状态评估 Agent"],
+                objective: t("main.assessingCurrentStateDetail", { goal }),
+                effects: [t("main.effectBaseline"), t("main.effectGapsIdentified")],
+                agents: [t("main.agentStateAssessor")],
               }
             },
-            { 
-              text: "正在定义成功标准...",
+            {
+              text: t("main.definingSuccessCriteria"),
               icon: CheckCircle2,
               details: {
-                objective: `为 ${domain} 定义成功标准与验证要求`,
-                preconditions: ["目标已定义"],
-                effects: ["已设定验证标准", "已定义验收测试"],
+                objective: t("main.definingSuccessCriteriaDetail", { domain }),
+                preconditions: [t("main.precGoalsDefined")],
+                effects: [t("main.effectValidationCriteria"), t("main.effectAcceptanceTests")],
               }
             },
-            { 
-              text: "正在分析差距...",
+            {
+              text: t("main.analyzingGaps"),
               icon: TrendingUp,
               details: {
-                objective: `量化 ${domain} 中 ${action} 的当前状态与目标状态之间的差异`,
-                effects: ["已生成优先级列表", "已识别资源需求"],
-                agents: ["差距分析 Agent", "优先级排序 Agent"],
+                objective: t("main.analyzingGapsDetail", { domain, action }),
+                effects: [t("main.effectPriorityList"), t("main.effectResourceNeeds")],
+                agents: [t("main.agentGapAnalyzer"), t("main.agentPriorityRanker")],
               }
             },
           ],
@@ -360,34 +379,34 @@ const Index = () => {
         effects: { informationGathered: true },
         stepGenerator: () => ({
           id: "3",
-          title: "网络搜索",
-          description: `正在针对以下关键词执行智能搜索：${keywordStr}`,
+          title: t("main.stepWebSearchTitle"),
+          description: t("main.stepWebSearchDesc", { keywords: keywordStr }),
           icon: Search,
           status: "pending" as StepStatus,
           data: [
-            { 
-              text: `正在搜索 ${action} ${keywords[0] || "方法"}...`,
+            {
+              text: t("main.searchingFor", { action, method: keywords[0] || t("main.methods") }),
               icon: Search,
               details: {
-                objective: `针对 ${goal} 执行定向网络搜索`,
+                objective: t("main.searchingForDetail", { goal }),
                 sources: ["arXiv.org", "Google Scholar", "ACM Digital Library"],
-                agents: ["搜索 Agent", "查询优化 Agent"],
+                agents: [t("main.agentSearch"), t("main.agentQueryOptimizer")],
               }
             },
-            { 
-              text: "正在收集来源...",
+            {
+              text: t("main.gatheringSources"),
               icon: Database,
               details: {
-                objective: `聚合并编目 ${domain} 的信息来源`,
-                effects: ["已填充来源数据库", "已分配相关性评分"],
+                objective: t("main.gatheringSourcesDetail", { domain }),
+                effects: [t("main.effectSourceDbPopulated"), t("main.effectRelevanceScores")],
               }
             },
-            { 
-              text: "正在计算相关性...",
+            {
+              text: t("main.calculatingRelevance"),
               icon: TrendingUp,
               details: {
-                objective: `为 ${keywordStr} 计算信息质量与适用性指标`,
-                agents: ["相关性评分 Agent", "ML 分类器"],
+                objective: t("main.calculatingRelevanceDetail", { keywords: keywordStr }),
+                agents: [t("main.agentRelevanceScorer"), t("main.agentMlClassifier")],
                 citations: ["Information Retrieval Metrics - Manning et al."]
               }
             },
@@ -402,42 +421,42 @@ const Index = () => {
         effects: { documentsAnalyzed: true },
         stepGenerator: () => ({
           id: "4",
-          title: "文档分析",
-          description: `正在处理与 ${domain} 相关的文档以提取关键洞察。`,
+          title: t("main.stepDocumentAnalysisTitle"),
+          description: t("main.stepDocumentAnalysisDesc", { domain }),
           icon: FileSearch,
           status: "pending" as StepStatus,
           data: [
-            { 
-              text: "正在解析文档...",
+            {
+              text: t("main.parsingDocuments"),
               icon: FileText,
               details: {
-                objective: `从 ${domain} 文档中提取结构化数据，用于 ${goal}`,
-                preconditions: ["已获取文档", "解析模块已加载"],
-                effects: ["已提取内容", "已编目元数据"],
-                agents: ["文档解析 Agent", "文本提取 Agent"],
-                sources: ["PDF 解析器", "HTML 抓取器", "API 响应"]
+                objective: t("main.parsingDocumentsDetail", { domain, goal }),
+                preconditions: [t("main.precDocsRetrieved"), t("main.precParserLoaded")],
+                effects: [t("main.effectContentExtracted"), t("main.effectMetadataCatalogued")],
+                agents: [t("main.agentDocumentParser"), t("main.agentTextExtractor")],
+                sources: [t("main.sourcePdfParser"), t("main.sourceHtmlScraper"), t("main.sourceApiResponses")]
               }
             },
-            { 
-              text: "正在提取洞察...",
+            {
+              text: t("main.extractingInsights"),
               icon: Lightbulb,
               details: {
-                objective: `识别关于 ${keywordStr} 的关键发现`,
-                preconditions: ["文档已解析", "NLP 模型已就绪"],
-                effects: ["已填充洞察数据库", "已突出关键要点"],
-                agents: ["洞察提取 Agent", "NLP 分析 Agent", "模式识别 Agent"],
+                objective: t("main.extractingInsightsDetail", { keywords: keywordStr }),
+                preconditions: [t("main.precDocsParsed"), t("main.precNlpReady")],
+                effects: [t("main.effectInsightsDb"), t("main.effectKeyPoints")],
+                agents: [t("main.agentInsightExtractor"), t("main.agentNlpAnalyzer"), t("main.agentPatternRecognizer")],
                 citations: ["Named Entity Recognition - Nadeau & Sekine"]
               }
             },
-            { 
-              text: "正在验证论断...",
+            {
+              text: t("main.validatingClaims"),
               icon: Shield,
               details: {
-                objective: `验证 ${domain} 中 ${action} 的事实准确性`,
-                preconditions: ["洞察已提取", "验证规则已定义"],
-                effects: ["已分配准确性评分", "已标记不可靠来源"],
-                agents: ["事实核查 Agent", "来源验证 Agent", "交叉引用 Agent"],
-                sources: ["事实核查 API", "引用数据库"]
+                objective: t("main.validatingClaimsDetail", { domain, action }),
+                preconditions: [t("main.precInsightsExtracted"), t("main.precValidationRules")],
+                effects: [t("main.effectAccuracyScores"), t("main.effectUnreliableFlagged")],
+                agents: [t("main.agentFactChecker"), t("main.agentSourceValidator"), t("main.agentCrossReferencer")],
+                sources: [t("main.sourceFactCheckApis"), t("main.sourceCitationDatabases")]
               }
             },
           ],
@@ -451,46 +470,46 @@ const Index = () => {
         effects: { knowledgeSynthesized: true },
         stepGenerator: () => ({
           id: "5",
-          title: "知识综合",
-          description: `正在综合多个 ${domain} 来源的信息。`,
+          title: t("main.stepKnowledgeSynthesisTitle"),
+          description: t("main.stepKnowledgeSynthesisDesc", { domain }),
           icon: GitBranch,
           status: "pending" as StepStatus,
           data: [
-            { 
-              text: "正在交叉引用来源...",
+            {
+              text: t("main.crossReferencingSources"),
               icon: Link,
               details: {
-                objective: `为 ${goal} 关联多个来源的 ${domain} 信息`,
-                preconditions: ["多个来源已验证", "关联规则已设定"],
-                effects: ["已映射来源连接", "已调整置信度"],
-                agents: ["交叉引用 Agent", "关联分析 Agent"],
-                sources: ["学术论文", "行业报告", "技术文档"]
+                objective: t("main.crossReferencingSourcesDetail", { goal, domain }),
+                preconditions: [t("main.precSourcesValidated"), t("main.precCorrelationRules")],
+                effects: [t("main.effectSourceConnections"), t("main.effectConfidenceAdjusted")],
+                agents: [t("main.agentCrossReferencer"), t("main.agentCorrelationAnalyzer")],
+                sources: [t("main.sourceAcademicPapers"), t("main.sourceIndustryReports"), t("main.sourceTechnicalDocs")]
               }
             },
-            { 
-              text: "正在合并概念...",
+            {
+              text: t("main.mergingConcepts"),
               icon: GitBranch,
               details: {
-                objective: `将 ${keywordStr} 相关概念合并为统一的知识结构`,
-                preconditions: ["概念已识别", "关系已定义"],
-                effects: ["知识图谱已更新", "概念分类已细化"],
-                agents: ["概念合并 Agent", "本体构建 Agent", "语义分析 Agent"],
+                objective: t("main.mergingConceptsDetail", { keywords: keywordStr }),
+                preconditions: [t("main.precConceptsIdentified"), t("main.precRelationshipsDefined")],
+                effects: [t("main.effectKnowledgeGraph"), t("main.effectTaxonomyRefined")],
+                agents: [t("main.agentConceptMerger"), t("main.agentOntologyBuilder"), t("main.agentSemanticAnalyzer")],
                 citations: ["Knowledge Graphs - Hogan et al. (2021)"]
               }
             },
-            { 
-              text: "正在解决冲突...",
+            {
+              text: t("main.resolvingConflicts"),
               icon: CheckCircle2,
               details: {
-                objective: `处理 ${domain} 中关于 ${action} 的矛盾信息`,
-                preconditions: ["已检测到冲突", "解决策略已加载"],
-                effects: ["已达成共识", "冲突解决已记录"],
-                agents: ["冲突解决 Agent", "证据权衡 Agent", "决策 Agent"],
-                sources: ["来源可信度评分", "时序数据", "专家系统"]
+                objective: t("main.resolvingConflictsDetail", { domain, action }),
+                preconditions: [t("main.precConflictsDetected"), t("main.precResolutionStrategies")],
+                effects: [t("main.effectConsensusReached"), t("main.effectConflictLogged")],
+                agents: [t("main.agentConflictResolver"), t("main.agentEvidenceWeigher"), t("main.agentDecisionMaker")],
+                sources: [t("main.sourceCredibilityScores"), t("main.sourceTemporalData"), t("main.sourceExpertSystems")]
               }
             },
           ],
-          metrics: [{ label: "来源", value: "18" }, { label: "概念", value: "12" }],
+          metrics: [{ label: t("main.metricSources"), value: "18" }, { label: t("main.metricConcepts"), value: "12" }],
         }),
       },
       {
@@ -500,42 +519,42 @@ const Index = () => {
         effects: { insightsGenerated: true },
         stepGenerator: () => ({
           id: "6",
-          title: "洞察生成",
-          description: `正在基于研究结果为 ${domain} 生成可执行的洞察。`,
+          title: t("main.stepInsightGenerationTitle"),
+          description: t("main.stepInsightGenerationDesc", { domain }),
           icon: Lightbulb,
           status: "pending" as StepStatus,
           data: [
-            { 
-              text: "正在生成洞察...",
+            {
+              text: t("main.generatingInsights"),
               icon: Zap,
               details: {
-                objective: `基于 ${goal} 的综合 ${domain} 知识创造新结论`,
-                preconditions: ["知识已综合", "分析已完成"],
-                effects: ["已创建可执行的洞察", "已制定建议"],
-                agents: ["洞察生成 Agent", "建议引擎", "推理 Agent"],
+                objective: t("main.generatingInsightsDetail", { goal, domain }),
+                preconditions: [t("main.precKnowledgeSynthesized"), t("main.precAnalysisComplete")],
+                effects: [t("main.effectActionableInsights"), t("main.effectRecommendations")],
+                agents: [t("main.agentInsightGenerator"), t("main.agentRecommendationEngine"), t("main.agentInferenceAgent")],
                 citations: ["Automated Reasoning - Robinson (1965)", "AI Planning - Ghallab et al."]
               }
             },
-            { 
-              text: "正在按影响力排序...",
+            {
+              text: t("main.prioritizingByImpact"),
               icon: TrendingUp,
               details: {
-                objective: `按潜在价值与适用性对 ${keywordStr} 相关洞察排序`,
-                preconditions: ["洞察已生成", "影响力指标已定义"],
-                effects: ["已分配优先级评分", "已设定实施顺序"],
-                agents: ["优先级排序 Agent", "影响力分析 Agent", "ROI 计算器"],
-                sources: ["业务指标", "历史结果", "专家经验法则"]
+                objective: t("main.prioritizingByImpactDetail", { keywords: keywordStr }),
+                preconditions: [t("main.precInsightsGenerated"), t("main.precImpactMetrics")],
+                effects: [t("main.effectPriorityScores"), t("main.effectImplementationOrder")],
+                agents: [t("main.agentPriorityRanker"), t("main.agentImpactAnalyzer"), t("main.agentRoiCalculator")],
+                sources: [t("main.sourceBusinessMetrics"), t("main.sourceHistoricalOutcomes"), t("main.sourceExpertHeuristics")]
               }
             },
-            { 
-              text: "正在验证可行性...",
+            {
+              text: t("main.validatingFeasibility"),
               icon: CheckCircle2,
               details: {
-                objective: `评估 ${domain} 中 ${action} 建议的实用性`,
-                preconditions: ["洞察已排序", "约束数据库可用"],
-                effects: ["已计算可行性评分", "已估算资源需求"],
-                agents: ["可行性验证 Agent", "资源规划 Agent", "约束检查 Agent"],
-                sources: ["可用资源", "技术约束", "时间线要求"]
+                objective: t("main.validatingFeasibilityDetail", { domain, action }),
+                preconditions: [t("main.precInsightsPrioritized"), t("main.precConstraintDb")],
+                effects: [t("main.effectFeasibilityScores"), t("main.effectResourcesEstimated")],
+                agents: [t("main.agentFeasibilityValidator"), t("main.agentResourcePlanner"), t("main.agentConstraintChecker")],
+                sources: [t("main.sourceAvailableResources"), t("main.sourceTechnicalConstraints"), t("main.sourceTimelineRequirements")]
               }
             },
           ],
@@ -549,42 +568,42 @@ const Index = () => {
         effects: { verified: true },
         stepGenerator: () => ({
           id: "7",
-          title: "验证",
-          description: "在最终呈现前交叉核对研究结果并确保准确性。",
+          title: t("main.stepVerificationTitle"),
+          description: t("main.stepVerificationDesc"),
           icon: CheckCircle2,
           status: "pending" as StepStatus,
           data: [
-            { 
-              text: "正在验证洞察...",
+            {
+              text: t("main.verifyingInsights"),
               icon: Shield,
               details: {
-                objective: `对 ${goal} 的 ${domain} 洞察执行最终质量保证`,
-                preconditions: ["洞察已验证", "验证标准已设定"],
-                effects: ["质量已确认", "错误已修正"],
-                agents: ["质量保证 Agent", "验证机器人", "审计 Agent"],
-                sources: ["质量标准", "最佳实践", "验证协议"]
+                objective: t("main.verifyingInsightsDetail", { goal, domain }),
+                preconditions: [t("main.precInsightsValidated"), t("main.precVerificationCriteria")],
+                effects: [t("main.effectQualityConfirmed"), t("main.effectErrorsCorrected")],
+                agents: [t("main.agentQaAgent"), t("main.agentVerificationBot"), t("main.agentAuditAgent")],
+                sources: [t("main.sourceQualityStandards"), t("main.sourceBestPractices"), t("main.sourceValidationProtocols")]
               }
             },
-            { 
-              text: "正在检查来源...",
+            {
+              text: t("main.checkingSources"),
               icon: Filter,
               details: {
-                objective: `重新验证用于最终输出的全部 ${keywordStr} 信息来源`,
-                preconditions: ["来源已编目", "验证已完成"],
-                effects: ["来源可靠性已确认", "引用已验证"],
-                agents: ["来源检查 Agent", "引用验证 Agent", "溯源跟踪 Agent"],
+                objective: t("main.checkingSourcesDetail", { keywords: keywordStr }),
+                preconditions: [t("main.precSourcesCatalogued"), t("main.precVerificationComplete")],
+                effects: [t("main.effectSourceReliability"), t("main.effectCitationsVerified")],
+                agents: [t("main.agentSourceChecker"), t("main.agentCitationValidator"), t("main.agentProvenanceTracker")],
                 citations: ["Information Provenance - Buneman et al. (2001)"]
               }
             },
-            { 
-              text: "正在计算置信度...",
+            {
+              text: t("main.calculatingConfidence"),
               icon: TrendingUp,
               details: {
-                objective: `计算 ${action} 研究结果的总体置信度`,
-                preconditions: ["所有检查已完成", "置信度模型已加载"],
-                effects: ["已计算最终置信度评分", "报告就绪"],
-                agents: ["置信度计算 Agent", "统计分析 Agent", "元评估 Agent"],
-                sources: ["验证结果", "来源质量评分", "交叉引用匹配"]
+                objective: t("main.calculatingConfidenceDetail", { action }),
+                preconditions: [t("main.precAllChecksComplete"), t("main.precConfidenceModel")],
+                effects: [t("main.effectConfidenceScore"), t("main.effectReportReady")],
+                agents: [t("main.agentConfidenceCalculator"), t("main.agentStatisticalAnalyzer"), t("main.agentMetaEvaluator")],
+                sources: [t("main.sourceValidationResults"), t("main.sourceQualityScores"), t("main.sourceCrossReferenceMatches")]
               }
             },
           ],
@@ -652,8 +671,8 @@ const Index = () => {
 
     if (plan.length === 0) {
       toast({
-        title: "规划失败",
-        description: "无法为该目标生成有效的计划。",
+        title: t("main.toastPlanningFailed"),
+        description: t("main.toastPlanningFailedDesc"),
         variant: "destructive",
       });
       setIsPlanning(false);
@@ -663,14 +682,14 @@ const Index = () => {
     // Update Goal Analysis step with adaptive metrics
     if (plan[0]) {
       plan[0].metrics = [
-        { label: "子目标", value: String(adaptiveSubGoals) },
-        { label: "动作", value: String(adaptiveActions) }
+        { label: t("main.metricSubGoals"), value: String(adaptiveSubGoals) },
+        { label: t("main.metricActions"), value: String(adaptiveActions) }
       ];
     }
 
     toast({
-      title: "计划已生成",
-      description: `已使用 GOAP 算法创建 ${plan.length} 步研究流程。`,
+      title: t("main.toastPlanGenerated"),
+      description: t("main.toastPlanGeneratedDesc", { count: plan.length }),
     });
 
     setSteps(plan);
@@ -761,6 +780,7 @@ const Index = () => {
           const { data, error } = await supabase.functions.invoke('research-step', {
             body: {
               goal: researchGoal || userGoal,
+              language: lang,
               stepTitle: currentStep.title,
               stepDescription: currentStep.description,
               stepType: currentStep.id,
@@ -777,24 +797,26 @@ const Index = () => {
 
           if (error) {
             console.error('❌ Error fetching research data:', error);
-            
+
             // Check if replanning is enabled
             if (researchConfig.goapConfig.enableReplanning) {
               console.log('🔄 Replanning enabled - checking triggers');
-              const shouldReplan = researchConfig.goapConfig.replanningTriggers.includes("动作失败");
+              const shouldReplan = researchConfig.goapConfig.replanningTriggers
+                .map(translateTrigger)
+                .includes(t("main.triggerActionFailure"));
 
               if (shouldReplan) {
                 console.log('🔄 Replanning triggered due to action failure');
                 toast({
-                  title: "已触发重新规划",
-                  description: "动作失败——GOAP 系统正在调整计划...",
+                  title: t("main.toastReplanningTriggered"),
+                  description: t("main.toastReplanningTriggeredDesc"),
                 });
               }
             }
-            
+
             toast({
-              title: "AI 研究错误",
-              description: error.message || "生成研究数据失败",
+              title: t("main.toastAiResearchError"),
+              description: error.message || t("main.toastAiResearchErrorDesc"),
               variant: "destructive",
             });
           } else if (data && Array.isArray(data)) {
@@ -828,8 +850,8 @@ const Index = () => {
         } catch (err) {
           console.error('Exception calling research-step:', err);
           toast({
-            title: "AI 研究错误",
-            description: "无法连接到研究服务",
+            title: t("main.toastAiResearchError"),
+            description: t("main.toastAiConnectErrorDesc"),
             variant: "destructive",
           });
         }
@@ -878,6 +900,7 @@ const Index = () => {
         const { data, error } = await supabase.functions.invoke('research-step', {
           body: {
             goal: researchGoal || userGoal,
+            language: lang,
             stepTitle: "Final Recommendations",
             stepDescription: `Based on all research findings, provide specific, actionable recommendations that directly answer: "${researchGoal || userGoal}". Include concrete suggestions with supporting data from the research.`,
             stepType: "final-report",
@@ -928,8 +951,8 @@ const Index = () => {
     setUserGoal(config.goal);
     handleGoalSubmit(config.goal);
     toast({
-      title: "研究方案已修订",
-      description: "正在使用更新后的参数开始新的研究...",
+      title: t("main.toastResearchRevised"),
+      description: t("main.toastResearchRevisedDesc"),
     });
   };
 
@@ -944,15 +967,15 @@ const Index = () => {
     }
     
     toast({
-      title: "高级设置已应用",
-      description: "研究参数已配置完成，提交研究目标即可开始。",
+      title: t("main.toastAdvancedSettingsApplied"),
+      description: t("main.toastAdvancedSettingsAppliedDesc"),
     });
   };
 
   const handleGenerateWidget = () => {
     toast({
-      title: "Widget 代码已生成",
-      description: "复制嵌入代码并粘贴到你的网站中。",
+      title: t("main.toastWidgetCodeGenerated"),
+      description: t("main.toastWidgetCodeGeneratedDesc"),
     });
   };
 
@@ -1001,7 +1024,7 @@ const Index = () => {
     if (!planGenerated || steps.length === 0) return;
     try {
       localStorage.setItem(RESEARCH_SESSION_KEY, JSON.stringify({
-        v: 2,
+        v: 3,
         userGoal,
         steps,
         finalRecommendations,
@@ -1037,7 +1060,7 @@ const Index = () => {
               }}
             >
               <Network className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="text-xs sm:text-sm">{widgetConfig.brandName || "GOAP 多 Agent 系统"}</span>
+              <span className="text-xs sm:text-sm">{widgetConfig.brandName || t("main.heroBrandFallback")}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold mb-2 sm:mb-3 px-2" style={{ color: "#f5f5f5" }}>
               {widgetConfig.title}
@@ -1054,7 +1077,7 @@ const Index = () => {
                   className="gap-2 text-xs sm:text-sm"
                 >
                   <RotateCcw className="w-3 h-3 sm:w-4 sm:h-4" />
-                  新研究
+                  {t("main.newResearch")}
                 </Button>
               )}
               <RouterLink to="/demo">
@@ -1064,8 +1087,8 @@ const Index = () => {
                   className="gap-2 text-xs sm:text-sm"
                 >
                   <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Widget 演示</span>
-                  <span className="sm:hidden">演示</span>
+                  <span className="hidden sm:inline">{t("main.widgetDemo")}</span>
+                  <span className="sm:hidden">{t("main.demoShort")}</span>
                 </Button>
               </RouterLink>
               <RouterLink to="/agents">
@@ -1075,8 +1098,8 @@ const Index = () => {
                   className="gap-2 text-xs sm:text-sm"
                 >
                   <Code className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Agent 集群</span>
-                  <span className="sm:hidden">Agent</span>
+                  <span className="hidden sm:inline">{t("main.agentSwarm")}</span>
+                  <span className="sm:hidden">{t("main.agentsShort")}</span>
                 </Button>
               </RouterLink>
               <Button
@@ -1086,8 +1109,8 @@ const Index = () => {
                 className="gap-2 text-xs sm:text-sm"
               >
                 <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">{showCustomizer ? "关闭" : "创建 Widget"}</span>
-                <span className="sm:hidden">{showCustomizer ? "关闭" : "Widget"}</span>
+                <span className="hidden sm:inline">{showCustomizer ? t("main.close") : t("main.createWidget")}</span>
+                <span className="sm:hidden">{showCustomizer ? t("main.close") : t("main.widgetShort")}</span>
               </Button>
             </div>
           </div>
@@ -1100,7 +1123,7 @@ const Index = () => {
         <Dialog open={showCustomizer} onOpenChange={setShowCustomizer}>
           <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader>
-              <DialogTitle>Widget 定制</DialogTitle>
+              <DialogTitle>{t("main.widgetCustomizationTitle")}</DialogTitle>
             </DialogHeader>
             <WidgetCustomizer
               config={widgetConfig}
@@ -1163,9 +1186,9 @@ const Index = () => {
             <div className="flex items-center gap-3">
               <Sparkles className="w-5 h-5 animate-spin" style={{ color: widgetConfig.primaryColor }} />
               <div>
-                <h3 className="font-medium" style={{ color: "#f5f5f5" }}>正在规划研究流程</h3>
+                <h3 className="font-medium" style={{ color: "#f5f5f5" }}>{t("main.planningWorkflow")}</h3>
                 <p className="text-sm" style={{ color: "#a3a3a3" }}>
-                  正在分析目标、识别前置条件、计算最优动作序列...
+                  {t("main.planningWorkflowDesc")}
                 </p>
               </div>
             </div>
@@ -1188,7 +1211,7 @@ const Index = () => {
                   <StateAssessmentCard
                     currentState={currentGOAPState}
                     goalState={researchConfig.stateDefinition.goalState}
-                    stateGaps={researchConfig.stateDefinition.stateGaps}
+                    stateGaps={researchConfig.stateDefinition.stateGaps.map(translateGap)}
                     primaryColor={widgetConfig.primaryColor}
                     accentColor={widgetConfig.accentColor}
                   />
@@ -1203,7 +1226,7 @@ const Index = () => {
                   <GOAPConfigDisplay
                     executionMode={researchConfig.goapConfig.executionMode}
                     enableReplanning={researchConfig.goapConfig.enableReplanning}
-                    replanningTriggers={researchConfig.goapConfig.replanningTriggers}
+                    replanningTriggers={researchConfig.goapConfig.replanningTriggers.map(translateTrigger)}
                     costOptimization={researchConfig.goapConfig.costOptimization}
                     parallelExecution={researchConfig.goapConfig.parallelExecution}
                     maxActionCost={researchConfig.actionConfig.maxActionCost}
@@ -1223,10 +1246,10 @@ const Index = () => {
                 className="gap-2"
               >
                 <RotateCcw className="w-4 h-4" />
-                新研究
+                {t("main.newResearch")}
               </Button>
               <div className="text-xs sm:text-sm flex-1 min-w-0 text-center px-4" style={{ color: "#a3a3a3" }}>
-                <span className="font-medium" style={{ color: "#f5f5f5" }}>目标：</span> <span className="break-words">{userGoal}</span>
+                <span className="font-medium" style={{ color: "#f5f5f5" }}>{t("main.objectiveLabel")}</span> <span className="break-words">{userGoal}</span>
               </div>
               {/* Issue #1694: explicit "Start Research" gate so the plan is reviewable before execution. */}
               {!isRunning && visibleSteps <= 1 ? (
@@ -1237,7 +1260,7 @@ const Index = () => {
                   style={{ backgroundColor: widgetConfig.primaryColor, color: "#fff" }}
                 >
                   <Play className="w-4 h-4" />
-                  开始研究
+                  {t("main.startResearch")}
                 </Button>
               ) : (
                 <div className="w-[120px]" />
@@ -1304,11 +1327,11 @@ const Index = () => {
                   <div className="text-2xl font-semibold mb-1" style={{ color: widgetConfig.primaryColor }}>
                     {steps.filter((s) => s.status === "completed").length}
                   </div>
-                  <div className="text-xs" style={{ color: "#a3a3a3" }}>已完成</div>
+                  <div className="text-xs" style={{ color: "#a3a3a3" }}>{t("main.statCompleted")}</div>
                 </div>
-                <div 
+                <div
                   className="border p-4 text-center"
-                  style={{ 
+                  style={{
                     backgroundColor: `${widgetConfig.backgroundColor}dd`,
                     borderColor: `${widgetConfig.primaryColor}40`,
                     borderRadius: widgetConfig.borderRadius,
@@ -1317,7 +1340,7 @@ const Index = () => {
                   <div className="text-2xl font-semibold mb-1" style={{ color: widgetConfig.primaryColor }}>
                     {steps.filter((s) => s.status === "active").length}
                   </div>
-                  <div className="text-xs" style={{ color: "#a3a3a3" }}>进行中</div>
+                  <div className="text-xs" style={{ color: "#a3a3a3" }}>{t("main.statActive")}</div>
                 </div>
                 <div 
                   className="border p-4 text-center"
@@ -1330,7 +1353,7 @@ const Index = () => {
                   <div className="text-2xl font-semibold mb-1" style={{ color: "#737373" }}>
                     {steps.filter((s) => s.status === "pending").length}
                   </div>
-                  <div className="text-xs" style={{ color: "#a3a3a3" }}>待执行</div>
+                  <div className="text-xs" style={{ color: "#a3a3a3" }}>{t("main.statPending")}</div>
                 </div>
               </div>
             )}
@@ -1361,32 +1384,32 @@ const Index = () => {
                     
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold mb-2 flex items-center gap-2" style={{ color: widgetConfig.accentColor }}>
-                        最终研究报告
+                        {t("main.reportFinalTitle")}
                         <CheckCircle2 className="w-5 h-5" />
                       </h3>
                       <p className="text-sm mb-4" style={{ color: "#a3a3a3" }}>
-                        由多 Agent GOAP 研究系统生成的综合分析
+                        {t("main.reportFinalSubtitle")}
                       </p>
-                      
+
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
                         <div className="rounded p-3" style={{ backgroundColor: `${widgetConfig.backgroundColor}80` }}>
-                          <div className="text-xs mb-1" style={{ color: "#a3a3a3" }}>总步骤数</div>
+                          <div className="text-xs mb-1" style={{ color: "#a3a3a3" }}>{t("main.reportTotalSteps")}</div>
                           <div className="text-xl font-semibold" style={{ color: "#f5f5f5" }}>{steps.length}</div>
                         </div>
                         <div className="rounded p-3" style={{ backgroundColor: `${widgetConfig.backgroundColor}80` }}>
-                          <div className="text-xs mb-1" style={{ color: "#a3a3a3" }}>数据点</div>
+                          <div className="text-xs mb-1" style={{ color: "#a3a3a3" }}>{t("main.reportDataPoints")}</div>
                           <div className="text-xl font-semibold" style={{ color: "#f5f5f5" }}>
                             {steps.reduce((acc, step) => acc + (step.data?.length || 0), 0)}
                           </div>
                         </div>
                         <div className="rounded p-3" style={{ backgroundColor: `${widgetConfig.backgroundColor}80` }}>
-                          <div className="text-xs mb-1" style={{ color: "#a3a3a3" }}>置信度</div>
+                          <div className="text-xs mb-1" style={{ color: "#a3a3a3" }}>{t("main.reportConfidence")}</div>
                           <div className="text-xl font-semibold" style={{ color: widgetConfig.accentColor }}>94%</div>
                         </div>
                         <div className="rounded p-3" style={{ backgroundColor: `${widgetConfig.backgroundColor}80` }}>
                           <div className="text-xs mb-1 flex items-center gap-1" style={{ color: "#a3a3a3" }}>
                             <Clock className="w-3 h-3" />
-                            耗时
+                            {t("main.reportDuration")}
                           </div>
                           <div className="text-xl font-semibold" style={{ color: "#f5f5f5" }}>
                             {Math.round(steps.length * 3.5)}s
@@ -1409,12 +1432,10 @@ const Index = () => {
                 >
                   <h4 className="text-lg font-semibold mb-3 flex items-center gap-2" style={{ color: widgetConfig.textColor }}>
                     <Target className="w-5 h-5" style={{ color: widgetConfig.primaryColor }} />
-                    执行摘要
+                    {t("main.reportExecutiveSummary")}
                   </h4>
                   <p className="text-sm leading-relaxed" style={{ color: widgetConfig.secondaryTextColor }}>
-                    本研究通过 <span style={{ color: widgetConfig.accentColor, fontWeight: 600 }}>"{userGoal}"</span> 的
-                    {steps.length} 步目标导向行动规划（GOAP）流程，成功完成了分析。系统协调多个专业 Agent
-                    收集信息、分析文档、综合知识并生成可执行的洞察，所有验证检查均获得高置信度评分。
+                    {t("main.reportExecutiveSummaryBody", { goal: userGoal, count: steps.length })}
                   </p>
                 </div>
 
@@ -1437,8 +1458,8 @@ const Index = () => {
                       }}
                     >
                       <Sparkles className="w-4 h-4 mr-1 md:mr-2" />
-                      <span className="hidden sm:inline">直接回答</span>
-                      <span className="sm:hidden">回答</span>
+                      <span className="hidden sm:inline">{t("main.tabDirectAnswer")}</span>
+                      <span className="sm:hidden">{t("main.tabAnswerShort")}</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="key-findings"
@@ -1448,8 +1469,8 @@ const Index = () => {
                       }}
                     >
                       <Lightbulb className="w-4 h-4 mr-1 md:mr-2" />
-                      <span className="hidden sm:inline">关键发现</span>
-                      <span className="sm:hidden">发现</span>
+                      <span className="hidden sm:inline">{t("main.tabKeyFindings")}</span>
+                      <span className="sm:hidden">{t("main.tabFindingsShort")}</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="methodology"
@@ -1459,8 +1480,8 @@ const Index = () => {
                       }}
                     >
                       <Workflow className="w-4 h-4 mr-1 md:mr-2" />
-                      <span className="hidden sm:inline">研究方法</span>
-                      <span className="sm:hidden">方法</span>
+                      <span className="hidden sm:inline">{t("main.tabMethodology")}</span>
+                      <span className="sm:hidden">{t("main.tabMethodShort")}</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="next-steps"
@@ -1470,8 +1491,8 @@ const Index = () => {
                       }}
                     >
                       <TrendingUp className="w-4 h-4 mr-1 md:mr-2" />
-                      <span className="hidden sm:inline">后续步骤</span>
-                      <span className="sm:hidden">步骤</span>
+                      <span className="hidden sm:inline">{t("main.tabNextSteps")}</span>
+                      <span className="sm:hidden">{t("main.tabStepsShort")}</span>
                     </TabsTrigger>
                   </TabsList>
 
@@ -1493,7 +1514,7 @@ const Index = () => {
                               <div className="font-medium mb-1" style={{ color: widgetConfig.textColor }}>{rec.title}</div>
                               <p className="text-sm" style={{ color: widgetConfig.secondaryTextColor }}>{rec.content}</p>
                               {rec.source && (
-                                <div className="mt-2 text-xs" style={{ color: widgetConfig.accentColor }}>来源：{rec.source}</div>
+                                <div className="mt-2 text-xs" style={{ color: widgetConfig.accentColor }}>{t("main.reportSourceLabel", { source: rec.source })}</div>
                               )}
                             </div>
                           ))}
@@ -1510,7 +1531,7 @@ const Index = () => {
                         }}
                       >
                         <p className="text-sm" style={{ color: widgetConfig.secondaryTextColor }}>
-                          暂无直接回答，完成研究后即可查看结果。
+                          {t("main.reportNoDirectAnswer")}
                         </p>
                       </div>
                     )}
@@ -1622,10 +1643,10 @@ const Index = () => {
                     >
                       <ul className="space-y-2">
                         {[
-                          "复核收集到的所有数据点并交叉核对研究结果",
-                          "与领域专家和利益相关方验证洞察",
-                          "基于已排序的建议制定实施计划",
-                          "持续监控结果并迭代初始策略"
+                          t("main.reportNextStep1"),
+                          t("main.reportNextStep2"),
+                          t("main.reportNextStep3"),
+                          t("main.reportNextStep4")
                         ].map((rec, idx) => (
                           <li 
                             key={idx}
@@ -1654,7 +1675,7 @@ const Index = () => {
                   <div className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="w-4 h-4" style={{ color: widgetConfig.successColor }} />
                     <span style={{ color: widgetConfig.successColor, fontWeight: 500 }}>
-                      所有验证检查均已通过
+                      {t("main.reportAllChecksPassed")}
                     </span>
                   </div>
                   <Button
@@ -1664,19 +1685,19 @@ const Index = () => {
                     className="gap-2"
                   >
                     <RotateCcw className="w-4 h-4" />
-                    新研究
+                    {t("main.newResearch")}
                   </Button>
                   <Button
                     onClick={() => setShowReportModal(true)}
                     size="sm"
                     className="gap-2"
-                    style={{ 
+                    style={{
                       backgroundColor: widgetConfig.accentColor,
                       color: '#fff'
                     }}
                   >
                     <FileText className="w-4 h-4" />
-                    查看完整报告
+                    {t("main.reportViewFull")}
                   </Button>
                 </div>
               </div>
@@ -1706,7 +1727,7 @@ const Index = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <RotateCcw className="w-5 h-5" />
-              修订研究配置
+              {t("main.reviseConfigTitle")}
             </DialogTitle>
           </DialogHeader>
           <ReviseResearchForm
@@ -1726,7 +1747,7 @@ const Index = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              高级研究设置
+              {t("main.advancedSettingsTitle")}
             </DialogTitle>
           </DialogHeader>
           <ReviseResearchForm

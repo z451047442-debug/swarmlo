@@ -8,6 +8,7 @@ const corsHeaders = {
 
 interface ActionItemsRequest {
   goal: string;
+  language?: "en" | "zh";
   researchContext: Array<{
     stepTitle: string;
     findings: Array<{
@@ -26,8 +27,12 @@ export async function handler(req: Request): Promise<Response> {
   }
 
   try {
-    const { goal, researchContext, totalSteps, totalDataPoints }: ActionItemsRequest = await req.json();
-    
+    const { goal, language, researchContext, totalSteps, totalDataPoints }: ActionItemsRequest = await req.json();
+
+    const outputLanguageInstruction = language === "en"
+      ? "\n\nIMPORTANT: Write all output strictly in English."
+      : "\n\n重要：所有输出请使用简体中文撰写。";
+
     console.log('Generating action items for goal:', goal);
 
     const AI_BASE_URL = Deno.env.get('AI_BASE_URL') ?? 'https://ai.gateway.lovable.dev/v1';
@@ -122,7 +127,7 @@ ${researchSummary}
       body: JSON.stringify({
         model: Deno.env.get('AI_MODEL') ?? 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: systemPrompt },
+          { role: 'system', content: systemPrompt + outputLanguageInstruction },
           { role: 'user', content: userPrompt }
         ],
         tools: [

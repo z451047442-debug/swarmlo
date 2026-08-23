@@ -2,19 +2,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Zap, Clock, Coins, Activity } from "lucide-react";
+import { useI18n } from "@/i18n";
 
 interface ExecutionMonitorProps {
   isRunning: boolean;
 }
 
 export const ExecutionMonitor = ({ isRunning }: ExecutionMonitorProps) => {
+  const { t } = useI18n();
+
   const metrics = {
     parallelTasks: 3,
     apiTokensUsed: 12450,
     apiTokensLimit: 50000,
-    elapsedTime: "2分34秒",
-    estimatedCompletion: "8分15秒",
-    throughput: "4.2 任务/分钟",
+    elapsedTime: t('agents.monitor.elapsedTimeValue'),
+    estimatedCompletion: t('agents.monitor.estimatedCompletionValue'),
+    throughput: t('agents.monitor.throughputValue'),
   };
 
   return (
@@ -23,13 +26,13 @@ export const ExecutionMonitor = ({ isRunning }: ExecutionMonitorProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="w-5 h-5 text-primary" />
-            并行执行监控
+            {t('agents.monitor.title')}
           </CardTitle>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            状态：{isRunning ? (
-              <Badge variant="default" className="animate-pulse">运行中</Badge>
+            {t('agents.monitor.status')}{isRunning ? (
+              <Badge variant="default" className="animate-pulse">{t('agents.monitor.active')}</Badge>
             ) : (
-              <Badge variant="secondary">空闲</Badge>
+              <Badge variant="secondary">{t('agents.status.idle')}</Badge>
             )}
           </div>
         </CardHeader>
@@ -39,7 +42,7 @@ export const ExecutionMonitor = ({ isRunning }: ExecutionMonitorProps) => {
             <div className="space-y-2 p-4 rounded-lg border bg-card/50">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Activity className="w-4 h-4" />
-                并行任务
+                {t('agents.monitor.parallelTasks')}
               </div>
               <div className="text-2xl font-bold">{metrics.parallelTasks}</div>
             </div>
@@ -47,7 +50,7 @@ export const ExecutionMonitor = ({ isRunning }: ExecutionMonitorProps) => {
             <div className="space-y-2 p-4 rounded-lg border bg-card/50">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="w-4 h-4" />
-                已用时间
+                {t('agents.monitor.elapsedTime')}
               </div>
               <div className="text-2xl font-bold">{metrics.elapsedTime}</div>
             </div>
@@ -55,7 +58,7 @@ export const ExecutionMonitor = ({ isRunning }: ExecutionMonitorProps) => {
             <div className="space-y-2 p-4 rounded-lg border bg-card/50">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Zap className="w-4 h-4" />
-                吞吐量
+                {t('agents.monitor.throughput')}
               </div>
               <div className="text-2xl font-bold">{metrics.throughput}</div>
             </div>
@@ -66,21 +69,21 @@ export const ExecutionMonitor = ({ isRunning }: ExecutionMonitorProps) => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Coins className="w-4 h-4 text-primary" />
-                <span className="font-semibold">API Token 消耗</span>
+                <span className="font-semibold">{t('agents.monitor.apiTokenUsage')}</span>
               </div>
               <span className="text-sm text-muted-foreground">
                 {metrics.apiTokensUsed.toLocaleString()} / {metrics.apiTokensLimit.toLocaleString()}
               </span>
             </div>
-            <Progress 
-              value={(metrics.apiTokensUsed / metrics.apiTokensLimit) * 100} 
+            <Progress
+              value={(metrics.apiTokensUsed / metrics.apiTokensLimit) * 100}
               className="h-2"
             />
           </div>
 
           {/* Estimated Completion */}
           <div className="flex items-center justify-between p-4 rounded-lg border bg-primary/5">
-            <span className="text-sm font-medium">预计完成</span>
+            <span className="text-sm font-medium">{t('agents.monitor.estimatedCompletion')}</span>
             <span className="text-sm font-mono text-primary">{metrics.estimatedCompletion}</span>
           </div>
         </CardContent>

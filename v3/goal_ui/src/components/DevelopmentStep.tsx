@@ -1,6 +1,7 @@
 import { LucideIcon, ChevronRight, Loader2, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
+import { useI18n } from "@/i18n";
 
 export type StepStatus = "pending" | "active" | "completed" | "error";
 
@@ -36,6 +37,7 @@ export const DevelopmentStep = ({
   data = [],
   metrics = [],
 }: DevelopmentStepProps) => {
+  const { t } = useI18n();
   const [loadingItems, setLoadingItems] = useState<Set<number>>(new Set());
   const [completedItems, setCompletedItems] = useState<Set<number>>(new Set());
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
@@ -110,10 +112,10 @@ export const DevelopmentStep = ({
                   status === "completed" && "bg-green-500/20 text-green-500"
                 )}
               >
-                {status === "pending" && "排队中"}
-                {status === "active" && "构建中..."}
-                {status === "completed" && "完成"}
-                {status === "error" && "失败"}
+                {status === "pending" && t("report.devstep.queued")}
+                {status === "active" && t("report.devstep.building")}
+                {status === "completed" && t("report.devstep.done")}
+                {status === "error" && t("report.devstep.failed")}
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
@@ -215,13 +217,13 @@ export const DevelopmentStep = ({
                     >
                       {item.details.objective && (
                         <div className="animate-fade-in" style={{ animationDelay: "50ms" }}>
-                          <span className="text-primary font-semibold">目标：</span>
+                          <span className="text-primary font-semibold">{t("report.devstep.objective")}</span>
                           <p className="text-foreground/90 mt-1">{item.details.objective}</p>
                         </div>
                       )}
                       {item.details.files && item.details.files.length > 0 && (
                         <div className="animate-fade-in" style={{ animationDelay: "100ms" }}>
-                          <span className="text-primary font-semibold">修改的文件：</span>
+                          <span className="text-primary font-semibold">{t("report.devstep.filesModified")}</span>
                           <div className="mt-1 space-y-1">
                             {item.details.files.map((f, i) => (
                               <div key={i} className="font-mono text-[11px] text-foreground/80 bg-background/50 px-2 py-1 rounded">
@@ -233,7 +235,7 @@ export const DevelopmentStep = ({
                       )}
                       {item.details.effects && item.details.effects.length > 0 && (
                         <div className="animate-fade-in" style={{ animationDelay: "150ms" }}>
-                          <span className="text-primary font-semibold">已完成：</span>
+                          <span className="text-primary font-semibold">{t("report.devstep.completed")}</span>
                           <ul className="text-foreground/80 mt-1 space-y-1">
                             {item.details.effects.map((e, i) => (
                               <li key={i} className="flex items-start gap-2">
@@ -246,7 +248,7 @@ export const DevelopmentStep = ({
                       )}
                       {item.details.agents && item.details.agents.length > 0 && (
                         <div className="animate-fade-in" style={{ animationDelay: "200ms" }}>
-                          <span className="text-primary font-semibold">Agent：</span>
+                          <span className="text-primary font-semibold">{t("report.devstep.agents")}</span>
                           <div className="flex flex-wrap gap-1.5 mt-1">
                             {item.details.agents.map((a, i) => (
                               <span key={i} className="bg-primary/10 text-primary px-2 py-1 rounded-md font-medium">
@@ -258,7 +260,7 @@ export const DevelopmentStep = ({
                       )}
                       {item.details.metrics && item.details.metrics.length > 0 && (
                         <div className="animate-fade-in" style={{ animationDelay: "250ms" }}>
-                          <span className="text-primary font-semibold">指标：</span>
+                          <span className="text-primary font-semibold">{t("report.devstep.metrics")}</span>
                           <div className="flex flex-wrap gap-3 mt-1">
                             {item.details.metrics.map((m, i) => (
                               <div key={i} className="flex items-center gap-1.5">

@@ -5,6 +5,7 @@ import { Target, Sparkles, Settings, TrendingUp, Building2, Heart, GraduationCap
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useI18n } from "@/i18n";
 
 interface GoalInputProps {
   onSubmit: (goal: string) => void;
@@ -17,6 +18,7 @@ export const GoalInput = ({ onSubmit, isPlanning, onAdvancedSettings, onConfigUp
   const [goal, setGoal] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,14 +39,14 @@ export const GoalInput = ({ onSubmit, isPlanning, onAdvancedSettings, onConfigUp
   };
 
   const categories = [
-    { id: 'finance', label: '金融', icon: TrendingUp, color: '#10b981' },
-    { id: 'business', label: '商业', icon: Building2, color: '#3b82f6' },
-    { id: 'marketing', label: '营销', icon: Megaphone, color: '#f97316' },
-    { id: 'medical', label: '医疗', icon: Heart, color: '#ef4444' },
-    { id: 'education', label: '教育', icon: GraduationCap, color: '#f59e0b' },
-    { id: 'coding', label: '编程', icon: Code, color: '#8b5cf6' },
-    { id: 'technical', label: '技术', icon: Cpu, color: '#06b6d4' },
-    { id: 'ai-ml', label: 'AI 与机器学习', icon: Brain, color: '#ec4899' },
+    { id: 'finance', label: t("main.catFinance"), icon: TrendingUp, color: '#10b981' },
+    { id: 'business', label: t("main.catBusiness"), icon: Building2, color: '#3b82f6' },
+    { id: 'marketing', label: t("main.catMarketing"), icon: Megaphone, color: '#f97316' },
+    { id: 'medical', label: t("main.catMedical"), icon: Heart, color: '#ef4444' },
+    { id: 'education', label: t("main.catEducation"), icon: GraduationCap, color: '#f59e0b' },
+    { id: 'coding', label: t("main.catCoding"), icon: Code, color: '#8b5cf6' },
+    { id: 'technical', label: t("main.catTechnical"), icon: Cpu, color: '#06b6d4' },
+    { id: 'ai-ml', label: t("main.catAiMl"), icon: Brain, color: '#ec4899' },
   ];
 
   const generateGoals = async (category: string) => {
@@ -75,15 +77,15 @@ export const GoalInput = ({ onSubmit, isPlanning, onAdvancedSettings, onConfigUp
         }
         
         toast({
-          title: "目标与设置已优化",
-          description: `已为 ${category} 生成研究目标并优化设置`,
+          title: t("main.toastGoalSettingsOptimized"),
+          description: t("main.toastGoalSettingsOptimizedDesc", { category }),
         });
       }
     } catch (error) {
       console.error('Error generating goals:', error);
       toast({
-        title: "生成失败",
-        description: "无法生成研究目标，请重试。",
+        title: t("main.toastGenerationFailed"),
+        description: t("main.toastGenerationFailedDesc"),
         variant: "destructive",
       });
     } finally {
@@ -96,7 +98,7 @@ export const GoalInput = ({ onSubmit, isPlanning, onAdvancedSettings, onConfigUp
       <div className="flex items-center justify-between mb-3 sm:mb-4">
         <div className="flex items-center gap-2">
           <Target className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
-          <h2 className="text-base sm:text-lg font-semibold text-foreground">定义研究目标</h2>
+          <h2 className="text-base sm:text-lg font-semibold text-foreground">{t("main.defineResearchObjective")}</h2>
         </div>
         {onAdvancedSettings && (
           <Button
@@ -108,7 +110,7 @@ export const GoalInput = ({ onSubmit, isPlanning, onAdvancedSettings, onConfigUp
             className="gap-2"
           >
             <Settings className="w-4 h-4" />
-            <span className="hidden sm:inline text-xs">高级设置</span>
+            <span className="hidden sm:inline text-xs">{t("main.advancedSettingsShort")}</span>
           </Button>
         )}
       </div>
@@ -118,19 +120,19 @@ export const GoalInput = ({ onSubmit, isPlanning, onAdvancedSettings, onConfigUp
           <Textarea
             value={goal}
             onChange={(e) => setGoal(e.target.value)}
-            placeholder="输入你的研究目标或主题..."
+            placeholder={t("main.goalPlaceholder")}
             className="min-h-[80px] sm:min-h-[100px] resize-none bg-background border-border text-foreground text-sm"
             disabled={isPlanning}
           />
           <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5 sm:mt-2">
-            GOAP 系统将分析你的目标并规划最优研究流程
+            {t("main.goalHint")}
           </p>
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-3 h-3 text-primary" />
-            <span className="text-xs font-medium text-foreground">按分类 AI 生成：</span>
+            <span className="text-xs font-medium text-foreground">{t("main.aiGenerateByCategory")}</span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {categories.map((cat) => (
@@ -157,7 +159,7 @@ export const GoalInput = ({ onSubmit, isPlanning, onAdvancedSettings, onConfigUp
           {isGenerating && (
             <p className="text-xs text-primary flex items-center gap-1.5 mt-2">
               <Sparkles className="w-3 h-3 animate-spin" />
-              正在生成研究目标...
+              {t("main.generatingGoals")}
             </p>
           )}
         </div>
@@ -170,12 +172,12 @@ export const GoalInput = ({ onSubmit, isPlanning, onAdvancedSettings, onConfigUp
           {isPlanning ? (
             <>
               <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-2 animate-spin" />
-              <span className="text-xs sm:text-sm">正在规划研究流程...</span>
+              <span className="text-xs sm:text-sm">{t("main.planningWorkflowShort")}</span>
             </>
           ) : (
             <>
               <Target className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-              <span className="text-xs sm:text-sm">生成研究计划</span>
+              <span className="text-xs sm:text-sm">{t("main.generatePlan")}</span>
             </>
           )}
         </Button>

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Search, Download, Filter, MessageSquare } from 'lucide-react';
+import { useI18n } from '@/i18n';
 
 interface AgenticFlowEvent {
   type: string;
@@ -18,6 +19,7 @@ interface RealTimeEventLogProps {
 }
 
 export function RealTimeEventLog({ events, maxEvents = 100 }: RealTimeEventLogProps) {
+  const { t } = useI18n();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
 
@@ -55,11 +57,11 @@ export function RealTimeEventLog({ events, maxEvents = 100 }: RealTimeEventLogPr
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-green-500" />
-            事件日志
+            {t('agents.exec.eventLog')}
             <Badge variant="outline">{filteredEvents.length}</Badge>
           </CardTitle>
           <Button size="sm" variant="outline" onClick={handleExport}>
-            <Download className="w-4 h-4 mr-1" /> 导出
+            <Download className="w-4 h-4 mr-1" /> {t('agents.dash.export')}
           </Button>
         </div>
       </CardHeader>
@@ -69,7 +71,7 @@ export function RealTimeEventLog({ events, maxEvents = 100 }: RealTimeEventLogPr
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="搜索事件..."
+              placeholder={t('agents.dash.searchEvents')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"
@@ -128,7 +130,7 @@ export function RealTimeEventLog({ events, maxEvents = 100 }: RealTimeEventLogPr
               ))
             ) : (
               <div className="text-center text-muted-foreground py-8">
-                {events.length === 0 ? '暂无事件...' : '没有符合筛选条件的事件'}
+                {events.length === 0 ? t('agents.rtel.noEvents') : t('agents.rtel.noMatch')}
               </div>
             )}
           </div>

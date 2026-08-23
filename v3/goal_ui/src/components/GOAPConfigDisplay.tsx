@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Settings, Zap, Shield, RefreshCw } from "lucide-react";
+import { useI18n } from "@/i18n";
 
 interface GOAPConfigDisplayProps {
   executionMode: "focused" | "closed" | "open";
@@ -21,10 +22,11 @@ export const GOAPConfigDisplay = ({
   maxActionCost,
   primaryColor,
 }: GOAPConfigDisplayProps) => {
-  const modeDescriptions = {
-    focused: "直接执行动作并检查前置条件",
-    closed: "单领域规划，具备类型安全",
-    open: "跨领域创造性问题求解",
+  const { t } = useI18n();
+  const modeDescriptions: Record<"focused" | "closed" | "open", string> = {
+    focused: t("main.modeFocusedDesc"),
+    closed: t("main.modeClosedDesc"),
+    open: t("main.modeOpenDesc"),
   };
 
   return (
@@ -32,16 +34,16 @@ export const GOAPConfigDisplay = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Settings className="w-4 h-4" style={{ color: primaryColor }} />
-          GOAP 配置
+          {t("main.goapConfigTitle")}
         </CardTitle>
         <CardDescription className="text-xs">
-          当前规划与执行设置
+          {t("main.goapConfigDesc")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium">执行模式</span>
+            <span className="text-xs font-medium">{t("main.executionMode")}</span>
             <Badge variant="outline" className="text-xs capitalize">
               {executionMode}
             </Badge>
@@ -56,7 +58,7 @@ export const GOAPConfigDisplay = ({
             ) : (
               <Zap className="w-3 h-3 text-muted-foreground" />
             )}
-            <span className="text-xs">成本优化</span>
+            <span className="text-xs">{t("main.costOptimization")}</span>
           </div>
           <div className="flex items-center gap-2">
             {parallelExecution ? (
@@ -64,7 +66,7 @@ export const GOAPConfigDisplay = ({
             ) : (
               <RefreshCw className="w-3 h-3 text-muted-foreground" />
             )}
-            <span className="text-xs">并行执行</span>
+            <span className="text-xs">{t("main.parallelExecution")}</span>
           </div>
           <div className="flex items-center gap-2">
             {enableReplanning ? (
@@ -72,16 +74,16 @@ export const GOAPConfigDisplay = ({
             ) : (
               <Shield className="w-3 h-3 text-muted-foreground" />
             )}
-            <span className="text-xs">已启用重新规划</span>
+            <span className="text-xs">{t("main.replanningEnabled")}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono">最大成本：{maxActionCost}</span>
+            <span className="text-xs font-mono">{t("main.maxCost", { value: maxActionCost })}</span>
           </div>
         </div>
 
         {enableReplanning && replanningTriggers.length > 0 && (
           <div className="space-y-2 pt-2 border-t">
-            <span className="text-xs font-medium">活动触发器（{replanningTriggers.length}）</span>
+            <span className="text-xs font-medium">{t("main.activeTriggers", { count: replanningTriggers.length })}</span>
             <div className="flex flex-wrap gap-1">
               {replanningTriggers.map((trigger) => (
                 <Badge key={trigger} variant="secondary" className="text-xs">

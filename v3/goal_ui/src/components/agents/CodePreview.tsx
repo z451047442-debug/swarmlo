@@ -3,8 +3,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Code, FileText } from "lucide-react";
+import { useI18n } from "@/i18n";
 
 export const CodePreview = () => {
+  const { t } = useI18n();
+
   const files = [
     {
       name: "auth.ts",
@@ -14,11 +17,11 @@ import jwt from 'jsonwebtoken';
 
 export const authenticate = async (req: Request, res: Response) => {
   const token = req.headers.authorization?.split(' ')[1];
-  
+
   if (!token) {
     return res.status(401).json({ error: 'No token provided' });
   }
-  
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
@@ -27,7 +30,7 @@ export const authenticate = async (req: Request, res: Response) => {
     return res.status(401).json({ error: 'Invalid token' });
   }
 };`,
-      agent: "实现",
+      agent: "agents.agent.impl",
       status: "modified",
     },
     {
@@ -43,16 +46,16 @@ describe('Authentication', () => {
       status: jest.fn().mockReturnThis(),
       json: jest.fn()
     } as unknown as Response;
-    
+
     await authenticate(req, res);
-    
+
     expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith({ 
-      error: 'No token provided' 
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'No token provided'
     });
   });
 });`,
-      agent: "测试",
+      agent: "agents.agent.test",
       status: "new",
     },
   ];
@@ -63,9 +66,9 @@ describe('Authentication', () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Eye className="w-5 h-5 text-primary" />
-            实时代码预览
+            {t('agents.preview.title')}
           </CardTitle>
-          <CardDescription>实时查看生成的代码</CardDescription>
+          <CardDescription>{t('agents.preview.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue={files[0].name}>
@@ -78,7 +81,7 @@ describe('Authentication', () => {
                     variant={file.status === "new" ? "default" : "secondary"}
                     className="text-xs ml-2"
                   >
-                    {file.status === "new" ? "新增" : "已修改"}
+                    {file.status === "new" ? t('agents.preview.new') : t('agents.preview.modified')}
                   </Badge>
                 </TabsTrigger>
               ))}
@@ -89,7 +92,7 @@ describe('Authentication', () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Badge variant="outline">{file.language}</Badge>
-                    <Badge variant="outline">Agent：{file.agent}</Badge>
+                    <Badge variant="outline">{t('agents.preview.agent', { name: t(file.agent) })}</Badge>
                   </div>
 
                   <ScrollArea className="h-[500px] w-full">

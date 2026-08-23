@@ -41,6 +41,7 @@ interface ResearchRequest {
   stepDescription: string;
   stepType: string;
   aiModel?: string;
+  language?: "en" | "zh";
   config?: ResearchConfig;
   previousStepsData?: Array<{
     stepTitle: string;
@@ -63,7 +64,7 @@ export async function handler(req: Request): Promise<Response> {
   }
 
   try {
-    const { goal, stepTitle, stepDescription, stepType, aiModel, config, previousStepsData }: ResearchRequest = await req.json();
+    const { goal, stepTitle, stepDescription, stepType, aiModel, language, config, previousStepsData }: ResearchRequest = await req.json();
     
     console.log('Research request:', { 
       goal, 
@@ -125,11 +126,16 @@ export async function handler(req: Request): Promise<Response> {
       ? `\n\n排除项：不要包含与以下主题相关的信息：${config.researchGuidance.excludeTopics.join(', ')}`
       : '';
 
-    const systemPrompt = (config?.prompts?.systemPrompt || defaultSystemPrompt) 
-      + depthModifier 
-      + perspectiveModifier 
+    const outputLanguageInstruction = language === "en"
+      ? "\n\nIMPORTANT: Write all output strictly in English."
+      : "\n\n重要：所有输出请使用简体中文撰写。";
+
+    const systemPrompt = (config?.prompts?.systemPrompt || defaultSystemPrompt)
+      + depthModifier
+      + perspectiveModifier
       + focusAreasModifier
-      + excludeTopicsModifier;
+      + excludeTopicsModifier
+      + outputLanguageInstruction;
     
     // Build context from previous steps
     let previousContext = '';

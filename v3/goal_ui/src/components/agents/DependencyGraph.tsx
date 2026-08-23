@@ -1,13 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GitBranch, ArrowRight } from "lucide-react";
+import { useI18n } from "@/i18n";
 
 export const DependencyGraph = () => {
+  const { t } = useI18n();
+
   const dependencies = [
-    { from: "架构", to: "实现", status: "complete" },
-    { from: "实现", to: "测试", status: "active" },
-    { from: "测试", to: "代码审查", status: "pending" },
-    { from: "代码审查", to: "文档", status: "pending" },
-    { from: "文档", to: "DevOps", status: "pending" },
+    { from: "agents.agent.arch", to: "agents.agent.impl", status: "complete" },
+    { from: "agents.agent.impl", to: "agents.agent.test", status: "active" },
+    { from: "agents.agent.test", to: "agents.agent.review", status: "pending" },
+    { from: "agents.agent.review", to: "agents.agent.docs", status: "pending" },
+    { from: "agents.agent.docs", to: "agents.agent.devops", status: "pending" },
   ];
 
   return (
@@ -15,9 +18,9 @@ export const DependencyGraph = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <GitBranch className="w-5 h-5 text-purple-500" />
-          任务依赖
+          {t('agents.tasksDependencies')}
         </CardTitle>
-        <CardDescription>工作流执行顺序</CardDescription>
+        <CardDescription>{t('agents.dep.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
@@ -26,9 +29,9 @@ export const DependencyGraph = () => {
               key={idx}
               className="flex items-center gap-3 p-3 rounded-lg border bg-card/50"
             >
-              <div className="flex-1 text-sm font-medium">{dep.from}</div>
+              <div className="flex-1 text-sm font-medium">{t(dep.from)}</div>
               <ArrowRight className="w-4 h-4 text-muted-foreground" />
-              <div className="flex-1 text-sm font-medium">{dep.to}</div>
+              <div className="flex-1 text-sm font-medium">{t(dep.to)}</div>
               <div
                 className={`w-2 h-2 rounded-full ${
                   dep.status === "complete"

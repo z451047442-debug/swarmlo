@@ -39,6 +39,7 @@ interface ResearchRequest {
   };
   aiModel?: string;
   stream?: boolean;
+  language?: "en" | "zh";
 }
 
 interface ResearchStep {
@@ -60,7 +61,7 @@ export async function handler(req: Request): Promise<Response> {
       throw new Error('AI_API_KEY is not configured (set AI_API_KEY or LOVABLE_API_KEY)');
     }
 
-    const { goal, config = {}, aiModel = Deno.env.get('AI_MODEL') ?? 'google/gemini-2.5-flash', stream: enableStreaming = true }: ResearchRequest = await req.json();
+    const { goal, config = {}, aiModel = Deno.env.get('AI_MODEL') ?? 'google/gemini-2.5-flash', stream: enableStreaming = true, language }: ResearchRequest = await req.json();
 
     if (!goal) {
       return new Response(
@@ -91,7 +92,7 @@ export async function handler(req: Request): Promise<Response> {
       const allFindings = [];
       
       for (const step of researchSteps) {
-        const stepResult = await executeResearchStep(step, goal, config, aiModel, AI_API_KEY);
+        const stepResult = await executeResearchStep(step, goal, config, aiModel, AI_API_KEY, language);
         allFindings.push(stepResult);
       }
 
@@ -134,7 +135,7 @@ export async function handler(req: Request): Promise<Response> {
             })}\n\n`));
 
             // Execute step
-            const stepResult = await executeResearchStep(step, goal, config, aiModel, AI_API_KEY);
+            const stepResult = await executeResearchStep(step, goal, config, aiModel, AI_API_KEY, language);
 
             // Send step complete event
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({
@@ -192,10 +193,15 @@ async function executeResearchStep(
   goal: string,
   config: any,
   aiModel: string,
-  apiKey: string
+  apiKey: string,
+  language?: "en" | "zh"
 ) {
   const AI_BASE_URL = Deno.env.get('AI_BASE_URL') ?? 'https://ai.gateway.lovable.dev/v1';
-  const systemPrompt = config.prompts?.systemPrompt || buildSystemPrompt(config);
+  const outputLanguageInstruction = language === "en"
+    ? "\n\nIMPORTANT: Write all output strictly in English."
+    : "\n\n重要：所有输出请使用简体中文撰写。";
+
+  const systemPrompt = (config.prompts?.systemPrompt || buildSystemPrompt(config)) + outputLanguageInstruction;
   const userPrompt = buildUserPrompt(step, goal, config);
 
   console.log(`Executing step ${step.stepNumber}: ${step.stepTitle}`);

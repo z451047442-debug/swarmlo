@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Play, Pause, SkipForward, RotateCcw, Zap, Bot, CheckCircle2, ArrowRight } from 'lucide-react';
+import { useI18n } from '@/i18n';
 
 interface StepExecutionPanelProps {
   currentAction: {
@@ -38,29 +39,39 @@ export function StepExecutionPanel({
   onRetry,
   isPaused
 }: StepExecutionPanelProps) {
+  const { t } = useI18n();
+
+  const getProgressLabel = (value: number): string => {
+    if (value < 25) return t('agents.step.init');
+    if (value < 50) return t('agents.step.processing');
+    if (value < 75) return t('agents.step.executing');
+    if (value < 100) return t('agents.step.finalizing');
+    return t('agents.step.complete');
+  };
+
   return (
     <Card className="border-2 border-primary/20">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Zap className="w-5 h-5 text-yellow-500 animate-pulse" />
-            当前步骤
+            {t('agents.exec.currentStep')}
           </CardTitle>
           <div className="flex gap-2">
             {isPaused ? (
               <Button size="sm" variant="outline" onClick={onResume}>
-                <Play className="w-4 h-4 mr-1" /> 继续
+                <Play className="w-4 h-4 mr-1" /> {t('agents.exec.resume')}
               </Button>
             ) : (
               <Button size="sm" variant="outline" onClick={onPause}>
-                <Pause className="w-4 h-4 mr-1" /> 暂停
+                <Pause className="w-4 h-4 mr-1" /> {t('agents.step.pause')}
               </Button>
             )}
             <Button size="sm" variant="outline" onClick={onSkip}>
-              <SkipForward className="w-4 h-4 mr-1" /> 跳过
+              <SkipForward className="w-4 h-4 mr-1" /> {t('agents.exec.skip')}
             </Button>
             <Button size="sm" variant="outline" onClick={onRetry}>
-              <RotateCcw className="w-4 h-4 mr-1" /> 重试
+              <RotateCcw className="w-4 h-4 mr-1" /> {t('agents.exec.retry')}
             </Button>
           </div>
         </div>
@@ -70,7 +81,7 @@ export function StepExecutionPanel({
         <div>
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-semibold text-lg">{currentAction.name}</h4>
-            <Badge variant="outline">成本：{currentAction.cost}</Badge>
+            <Badge variant="outline">{t('agents.exec.cost', { value: currentAction.cost })}</Badge>
           </div>
           {currentAction.description && (
             <p className="text-sm text-muted-foreground">
@@ -97,14 +108,14 @@ export function StepExecutionPanel({
                 : 'secondary'
             }
           >
-            {assignedAgent.status === 'working' ? '工作中' : assignedAgent.status === 'blocked' ? '受阻' : '空闲'}
+            {assignedAgent.status === 'working' ? t('agents.status.working') : assignedAgent.status === 'blocked' ? t('agents.status.blocked') : t('agents.status.idle')}
           </Badge>
         </div>
 
         {/* Progress */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-medium">进度</span>
+            <span className="font-medium">{t('agents.dash.progress')}</span>
             <span className="font-bold text-lg" style={{ color: '#a855f7' }}>{progress}%</span>
           </div>
           <Progress value={progress} className="h-3" />
@@ -120,7 +131,7 @@ export function StepExecutionPanel({
               <div>
                 <h5 className="text-sm font-semibold mb-2 flex items-center gap-1">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  前置条件
+                  {t('agents.exec.preconditions')}
                 </h5>
                 <div className="space-y-1">
                   {Object.entries(currentAction.preconditions).map(([key, value]) => (
@@ -139,7 +150,7 @@ export function StepExecutionPanel({
               <div>
                 <h5 className="text-sm font-semibold mb-2 flex items-center gap-1">
                   <ArrowRight className="w-4 h-4 text-blue-500" />
-                  效果
+                  {t('agents.exec.effects')}
                 </h5>
                 <div className="space-y-1">
                   {Object.entries(currentAction.effects).map(([key, value]) => (
@@ -159,7 +170,7 @@ export function StepExecutionPanel({
 
         {/* Real-time Logs */}
         <div>
-          <h5 className="text-sm font-semibold mb-2">执行日志</h5>
+          <h5 className="text-sm font-semibold mb-2">{t('agents.exec.log')}</h5>
           <ScrollArea className="h-[150px] rounded-md border bg-muted/30 p-3">
             <div className="space-y-1 font-mono text-xs">
               {logs.map((log, index) => (
@@ -172,7 +183,7 @@ export function StepExecutionPanel({
               ))}
               {logs.length === 0 && (
                 <div className="text-center text-muted-foreground py-4">
-                  暂无日志...
+                  {t('agents.step.noLogs')}
                 </div>
               )}
             </div>
@@ -181,12 +192,4 @@ export function StepExecutionPanel({
       </CardContent>
     </Card>
   );
-}
-
-function getProgressLabel(progress: number): string {
-  if (progress < 25) return '正在初始化...';
-  if (progress < 50) return '正在处理...';
-  if (progress < 75) return '正在执行...';
-  if (progress < 100) return '正在收尾...';
-  return '已完成！';
 }

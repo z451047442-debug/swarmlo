@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Edit3, Target, GitBranch, Code, TestTube, FileText } from "lucide-react";
 import { useState } from "react";
+import { useI18n } from "@/i18n";
 
 interface ResearchReviewCardProps {
   onApprove: () => void;
@@ -12,6 +13,7 @@ interface ResearchReviewCardProps {
 }
 
 export const ResearchReviewCard = ({ onApprove, onRevise, goal }: ResearchReviewCardProps) => {
+  const { t } = useI18n();
   const [feedback, setFeedback] = useState("");
   const [showFeedback, setShowFeedback] = useState(false);
 
@@ -32,10 +34,10 @@ export const ResearchReviewCard = ({ onApprove, onRevise, goal }: ResearchReview
           <div className="space-y-2">
             <CardTitle className="flex items-center gap-2 text-2xl">
               <CheckCircle2 className="w-6 h-6 text-primary" />
-              研究完成 - 可开始审核
+              {t("report.review.title")}
             </CardTitle>
             <CardDescription className="text-base">
-              在启动开发之前，请先审核研究结果与执行计划
+              {t("report.review.description")}
             </CardDescription>
           </div>
         </div>
@@ -45,7 +47,7 @@ export const ResearchReviewCard = ({ onApprove, onRevise, goal }: ResearchReview
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
             <Target className="w-4 h-4" />
-            项目目标
+            {t("report.review.projectGoal")}
           </div>
           <p className="text-foreground pl-6">{goal}</p>
         </div>
@@ -55,37 +57,37 @@ export const ResearchReviewCard = ({ onApprove, onRevise, goal }: ResearchReview
           <div className="space-y-2 p-4 rounded-lg bg-card border">
             <div className="flex items-center gap-2">
               <Target className="w-5 h-5 text-primary" />
-              <span className="font-medium">目标评估</span>
+              <span className="font-medium">{t("report.review.goalAssessment")}</span>
             </div>
-            <Badge variant="secondary" className="w-fit">已完成</Badge>
-            <p className="text-sm text-muted-foreground">需求已分析，Agent 已识别</p>
+            <Badge variant="secondary" className="w-fit">{t("report.review.completed")}</Badge>
+            <p className="text-sm text-muted-foreground">{t("report.review.goalAssessmentDesc")}</p>
           </div>
 
           <div className="space-y-2 p-4 rounded-lg bg-card border">
             <div className="flex items-center gap-2">
               <GitBranch className="w-5 h-5 text-purple-500" />
-              <span className="font-medium">架构</span>
+              <span className="font-medium">{t("report.review.architecture")}</span>
             </div>
-            <Badge variant="secondary" className="w-fit">已完成</Badge>
-            <p className="text-sm text-muted-foreground">系统设计与 API 契约已规划</p>
+            <Badge variant="secondary" className="w-fit">{t("report.review.completed")}</Badge>
+            <p className="text-sm text-muted-foreground">{t("report.review.architectureDesc")}</p>
           </div>
 
           <div className="space-y-2 p-4 rounded-lg bg-card border">
             <div className="flex items-center gap-2">
               <Code className="w-5 h-5 text-blue-500" />
-              <span className="font-medium">实现</span>
+              <span className="font-medium">{t("report.review.implementation")}</span>
             </div>
-            <Badge variant="secondary" className="w-fit">就绪</Badge>
-            <p className="text-sm text-muted-foreground">已规划 42 个文件、1,247 行代码</p>
+            <Badge variant="secondary" className="w-fit">{t("report.review.ready")}</Badge>
+            <p className="text-sm text-muted-foreground">{t("report.review.implementationDesc")}</p>
           </div>
 
           <div className="space-y-2 p-4 rounded-lg bg-card border">
             <div className="flex items-center gap-2">
               <TestTube className="w-5 h-5 text-green-500" />
-              <span className="font-medium">测试</span>
+              <span className="font-medium">{t("report.review.testing")}</span>
             </div>
-            <Badge variant="secondary" className="w-fit">就绪</Badge>
-            <p className="text-sm text-muted-foreground">目标 124 项测试、87% 覆盖率</p>
+            <Badge variant="secondary" className="w-fit">{t("report.review.ready")}</Badge>
+            <p className="text-sm text-muted-foreground">{t("report.review.testingDesc")}</p>
           </div>
         </div>
 
@@ -93,24 +95,24 @@ export const ResearchReviewCard = ({ onApprove, onRevise, goal }: ResearchReview
         <div className="space-y-3 p-4 rounded-lg bg-muted/30 border border-muted">
           <h4 className="font-semibold flex items-center gap-2">
             <FileText className="w-4 h-4 text-primary" />
-            执行计划摘要
+            {t("report.review.planSummary")}
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
-              <span className="text-muted-foreground">总阶段数：</span>
-              <p className="font-medium">5 个阶段</p>
+              <span className="text-muted-foreground">{t("report.review.totalPhases")}</span>
+              <p className="font-medium">{t("report.review.phases")}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">预计耗时：</span>
-              <p className="font-medium">约 40 秒</p>
+              <span className="text-muted-foreground">{t("report.review.estimatedDuration")}</span>
+              <p className="font-medium">{t("report.review.duration")}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">所需 Agent 数：</span>
-              <p className="font-medium">6 个 Agent</p>
+              <span className="text-muted-foreground">{t("report.review.agentsRequired")}</span>
+              <p className="font-medium">{t("report.review.agents")}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">复杂度：</span>
-              <p className="font-medium">中等</p>
+              <span className="text-muted-foreground">{t("report.review.complexity")}</span>
+              <p className="font-medium">{t("report.review.complexityValue")}</p>
             </div>
           </div>
         </div>
@@ -118,9 +120,9 @@ export const ResearchReviewCard = ({ onApprove, onRevise, goal }: ResearchReview
         {/* Revision Feedback */}
         {showFeedback && (
           <div className="space-y-2 animate-fade-in">
-            <label className="text-sm font-medium">修订反馈（可选）</label>
+            <label className="text-sm font-medium">{t("report.review.feedbackLabel")}</label>
             <Textarea
-              placeholder="请描述研究或计划中需要修改的内容..."
+              placeholder={t("report.review.feedbackPlaceholder")}
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
               className="min-h-[100px]"
@@ -136,7 +138,7 @@ export const ResearchReviewCard = ({ onApprove, onRevise, goal }: ResearchReview
             className="flex-1 gap-2 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
           >
             <CheckCircle2 className="w-5 h-5" />
-            批准并启动开发
+            {t("report.review.approve")}
           </Button>
           <Button
             onClick={handleRevise}
@@ -145,7 +147,7 @@ export const ResearchReviewCard = ({ onApprove, onRevise, goal }: ResearchReview
             className="gap-2"
           >
             <Edit3 className="w-5 h-5" />
-            {showFeedback ? "提交修订请求" : "请求修订"}
+            {showFeedback ? t("report.review.submitRevision") : t("report.review.requestRevision")}
           </Button>
         </div>
       </CardContent>
