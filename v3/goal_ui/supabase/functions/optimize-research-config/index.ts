@@ -27,94 +27,94 @@ export async function handler(req: Request): Promise<Response> {
       throw new Error('AI_API_KEY is not configured (set AI_API_KEY or LOVABLE_API_KEY)');
     }
 
-    const systemPrompt = `You are an expert research workflow architect specializing in GOAP (Goal-Oriented Action Planning) configuration optimization.
+    const systemPrompt = `你是一名资深研究工作流架构师，专精于 GOAP（Goal-Oriented Action Planning，目标导向行动规划）配置优化。
 
-Generate optimized research configuration settings based on the given preset/objective. Your configuration should maximize research effectiveness for the specific use case.
+请根据给定的预设/目标生成优化的研究配置。你的配置应针对具体使用场景最大化研究效果。
 
-Consider:
-- Research depth appropriate for the objective
-- Source types and quality thresholds matching the domain
-- Execution parameters balancing speed and thoroughness
-- Perspective and focus areas relevant to the preset
-- GOAP settings for optimal planning and replanning
+请考虑：
+- 与目标相匹配的研究深度
+- 与领域相契合的来源类型与质量门槛
+- 在速度与全面性之间取得平衡的执行参数
+- 与该预设相关的视角与重点领域
+- 用于最优规划与再规划的 GOAP 设置
 
-Be specific and practical - these settings will directly control AI research behavior.`;
+请具体且务实——这些设置将直接控制 AI 的研究行为。请使用简体中文输出全部研究内容。`;
 
     const presetPrompts: Record<string, string> = {
-      'academic-deep': `Optimize for: Academic/Scientific Deep Research
-      - Maximum depth and rigor
-      - Academic and peer-reviewed sources prioritized
-      - High confidence thresholds (90%+)
-      - Comprehensive analysis with extensive cross-referencing
-      - Focus: Methodology, citations, reproducibility
-      - Timeframe: Include seminal works, not just recent
-      Goal: ${currentGoal || 'Scientific research with publication-grade rigor'}`,
+      'academic-deep': `优化目标：学术/科学深度研究
+      - 最大深度与严谨性
+      - 优先学术与同行评审来源
+      - 高置信度阈值（90% 以上）
+      - 全面分析并配合大量交叉验证
+      - 重点：研究方法、引用规范、可复现性
+      - 时间范围：涵盖奠基性经典文献，而不仅限于近期成果
+      目标：${currentGoal || '达到发表级严谨性的科学研究'}`,
 
-      'industry-quick': `Optimize for: Industry Quick Scan
-      - Speed and actionable insights prioritized
-      - Industry reports, market data, business sources
-      - Moderate confidence acceptable (75%+)
-      - Surface to moderate depth
-      - Focus: Practical applications, ROI, trends
-      - Timeframe: Recent only (past 6-12 months)
-      Goal: ${currentGoal || 'Fast industry insights for business decisions'}`,
+      'industry-quick': `优化目标：行业快速扫描
+      - 优先速度与可执行的洞察
+      - 行业报告、市场数据、商业来源
+      - 可接受中等置信度（75% 以上）
+      - 浅层至中等深度
+      - 重点：实际应用、投资回报率、趋势
+      - 时间范围：仅近期（过去 6-12 个月）
+      目标：${currentGoal || '为商业决策提供快速的行业洞察'}`,
 
-      'competitive-analysis': `Optimize for: Competitive Intelligence & Analysis
-      - Comprehensive competitor research
-      - Industry reports, news, company filings, social media
-      - Focus: Market positioning, strategies, strengths/weaknesses
-      - Moderate to deep depth
-      - Business and strategic perspective
-      - Parallel execution for multiple competitors
-      Goal: ${currentGoal || 'Competitive landscape analysis'}`,
+      'competitive-analysis': `优化目标：竞争情报与分析
+      - 全面的竞争对手研究
+      - 行业报告、新闻、公司披露文件、社交媒体
+      - 重点：市场定位、战略、优势与劣势
+      - 中等到深入的研究深度
+      - 商业与战略视角
+      - 针对多个竞争对手并行执行
+      目标：${currentGoal || '竞争格局分析'}`,
 
-      'technical-feasibility': `Optimize for: Technical Feasibility Study
-      - Technical and engineering focus
-      - Academic papers, technical documentation, GitHub
-      - Deep analysis of implementation details
-      - Focus: Architecture, performance, limitations, trade-offs
-      - High confidence for technical claims (85%+)
-      - Technical perspective with practical considerations
-      Goal: ${currentGoal || 'Technical implementation feasibility assessment'}`,
+      'technical-feasibility': `优化目标：技术可行性研究
+      - 技术与工程重点
+      - 学术论文、技术文档、GitHub
+      - 对实现细节进行深入分析
+      - 重点：架构、性能、局限性、权衡取舍
+      - 技术要求高置信度（85% 以上）
+      - 技术视角并兼顾实际考量
+      目标：${currentGoal || '技术实现可行性评估'}`,
 
-      'market-trends': `Optimize for: Market Trends & Predictions
-      - Trend analysis and future predictions
-      - Industry reports, market research, financial data
-      - Focus: Growth patterns, emerging opportunities, disruptions
-      - Moderate depth with broad coverage
-      - Business and analytical perspective
-      - Recent timeframe with historical context
-      Goal: ${currentGoal || 'Market trend analysis and forecasting'}`,
+      'market-trends': `优化目标：市场趋势与预测
+      - 趋势分析与未来预测
+      - 行业报告、市场研究、财务数据
+      - 重点：增长模式、新兴机遇、颠覆性变化
+      - 中等深度并覆盖广泛
+      - 商业与分析视角
+      - 近期时间范围并辅以历史背景
+      目标：${currentGoal || '市场趋势分析与预测'}`,
 
-      'medical-clinical': `Optimize for: Medical/Clinical Research
-      - Medical journals, clinical trials, PubMed prioritized
-      - Very high confidence required (90%+)
-      - Deep analysis with safety/efficacy focus
-      - Focus: Clinical evidence, patient outcomes, safety profiles
-      - Academic and clinical perspective
-      - Exclude non-peer-reviewed sources
-      Goal: ${currentGoal || 'Clinical research with evidence-based analysis'}`,
+      'medical-clinical': `优化目标：医学/临床研究
+      - 优先医学期刊、临床试验、PubMed
+      - 要求非常高的置信度（90% 以上）
+      - 深入分析并重点关注安全性与有效性
+      - 重点：临床证据、患者预后、安全性档案
+      - 学术与临床视角
+      - 排除未经同行评审的来源
+      目标：${currentGoal || '基于循证分析的临床研究'}`,
 
-      'startup-validation': `Optimize for: Startup/Business Idea Validation
-      - Market size, competition, customer needs
-      - Industry reports, surveys, competitor analysis
-      - Practical and business perspective
-      - Focus: Market gaps, validation metrics, go-to-market
-      - Moderate depth, broad coverage
-      - Cost-effective with parallel research
-      Goal: ${currentGoal || 'Startup idea validation and market assessment'}`,
+      'startup-validation': `优化目标：创业/商业创意验证
+      - 市场规模、竞争格局、客户需求
+      - 行业报告、调研、竞品分析
+      - 务实与商业视角
+      - 重点：市场空白、验证指标、进入市场策略
+      - 中等深度、覆盖广泛
+      - 兼顾成本效益与并行研究
+      目标：${currentGoal || '创业创意验证与市场评估'}`,
 
-      'policy-regulatory': `Optimize for: Policy & Regulatory Research
-      - Government sources, legal documents, policy papers
-      - High accuracy and recency critical
-      - Focus: Compliance, legal frameworks, regulatory trends
-      - Deep analysis with risk assessment
-      - Academic and legal perspective
-      - Exclude opinion pieces, prioritize official sources
-      Goal: ${currentGoal || 'Policy and regulatory compliance research'}`
+      'policy-regulatory': `优化目标：政策与监管研究
+      - 政府来源、法律文件、政策文件
+      - 高准确度与时效性至关重要
+      - 重点：合规、法律框架、监管趋势
+      - 深入分析并配合风险评估
+      - 学术与法律视角
+      - 排除观点性文章，优先官方来源
+      目标：${currentGoal || '政策与监管合规研究'}`
     };
 
-    const userPrompt = presetPrompts[preset.toLowerCase()] || `Optimize research settings for: ${preset}. Goal: ${currentGoal || 'general research'}`;
+    const userPrompt = presetPrompts[preset.toLowerCase()] || `为以下预设优化研究设置：${preset}。目标：${currentGoal || '通用研究'}`;
 
     const response = await fetch(`${AI_BASE_URL}/chat/completions`, {
       method: 'POST',

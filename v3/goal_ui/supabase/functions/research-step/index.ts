@@ -85,43 +85,44 @@ export async function handler(req: Request): Promise<Response> {
     }
 
     // Use custom system prompt if provided, otherwise use default
-    const defaultSystemPrompt = `You are a senior research analyst with expertise in conducting comprehensive research and generating substantive findings.
+    const defaultSystemPrompt = `你是一名资深研究分析师，擅长开展全面研究并产出实质性发现。
 
-CRITICAL INSTRUCTIONS:
-- You MUST provide ACTUAL research findings, not task descriptions
-- Include specific data points, statistics, percentages, and numbers
-- Reference real-world developments, breakthroughs, or trends
-- Provide concrete examples, case studies, or citations
-- Generate findings as if you just completed real research
+关键指令（CRITICAL INSTRUCTIONS）：
+- 你必须提供真实的研究发现，而不是任务描述
+- 包含具体的数据点、统计数据、百分比和数值
+- 引用现实世界中的进展、突破或趋势
+- 提供具体的示例、案例研究或引用
+- 生成发现时，应像刚刚完成真实研究一样
+- 使用简体中文撰写所有研究内容和建议
 
-BAD EXAMPLE (task description): "Analyze quantum computing developments"
-GOOD EXAMPLE (actual finding): "Google's Willow quantum chip achieved breakthrough in quantum error correction using surface codes with 99.9% fidelity (Nature Physics, Dec 2024), reducing error rates by 50% compared to previous generation."
+错误示例（任务描述）："分析量子计算的发展"
+正确示例（真实发现）："谷歌的 Willow 量子芯片在量子纠错方面取得突破，利用表面码实现了 99.9% 的保真度（Nature Physics，2024 年 12 月），与上一代相比错误率降低了 50%。"
 
-BAD EXAMPLE: "Identify market opportunities"  
-GOOD EXAMPLE: "Quantum computing market projected to reach $125B by 2030 (McKinsey, 2024), with pharmaceutical simulation representing 38% of near-term revenue. Key opportunity: NISQ algorithms for drug discovery showing 10x speedup over classical methods."
+错误示例："识别市场机会"
+正确示例："预计到 2030 年量子计算市场规模将达到 1250 亿美元（McKinsey，2024 年），其中制药模拟将占近期收入的 38%。关键机会：用于药物发现的 NISQ 算法较经典方法实现了 10 倍加速。"
 
-Your findings must be SPECIFIC, DETAILED, and SUBSTANTIVE.`;
+你的发现必须具体、详细且内容充实。`;
 
     // Apply research depth modifier
-    const depthModifier = config?.researchGuidance?.depth === 'deep' 
-      ? '\n\nDEPTH: Provide comprehensive, in-depth analysis with extensive details, multiple examples, and thorough exploration of nuances (7-10 sentences per finding).'
+    const depthModifier = config?.researchGuidance?.depth === 'deep'
+      ? '\n\n深度要求：提供全面、深入的分析，包含大量细节、多个示例，并深入探讨细微差别（每条发现 7-10 句）。'
       : config?.researchGuidance?.depth === 'surface'
-      ? '\n\nDEPTH: Provide concise, high-level overview with key points only (2-3 sentences per finding).'
-      : '\n\nDEPTH: Provide balanced analysis with solid detail and examples (4-5 sentences per finding).';
+      ? '\n\n深度要求：提供简洁、高层级的概述，仅包含要点（每条发现 2-3 句）。'
+      : '\n\n深度要求：提供均衡的分析，包含扎实的细节和示例（每条发现 4-5 句）。';
     
     // Apply perspective modifier
-    const perspectiveModifier = config?.researchGuidance?.perspective 
-      ? `\n\nPERSPECTIVE: Approach this research from a ${config.researchGuidance.perspective} perspective, focusing on relevant aspects for that viewpoint.`
+    const perspectiveModifier = config?.researchGuidance?.perspective
+      ? `\n\n视角要求：请从${config.researchGuidance.perspective}的视角开展这项研究，重点关注与该视角相关的方面。`
       : '';
 
     // Apply focus areas guidance
     const focusAreasModifier = config?.researchGuidance?.focusAreas && config.researchGuidance.focusAreas.length > 0
-      ? `\n\nFOCUS AREAS: Emphasize these specific topics: ${config.researchGuidance.focusAreas.join(', ')}`
+      ? `\n\n重点领域：请重点突出以下具体主题：${config.researchGuidance.focusAreas.join(', ')}`
       : '';
 
     // Apply exclude topics guidance  
     const excludeTopicsModifier = config?.researchGuidance?.excludeTopics && config.researchGuidance.excludeTopics.length > 0
-      ? `\n\nEXCLUDE: Do NOT include information about: ${config.researchGuidance.excludeTopics.join(', ')}`
+      ? `\n\n排除项：不要包含与以下主题相关的信息：${config.researchGuidance.excludeTopics.join(', ')}`
       : '';
 
     const systemPrompt = (config?.prompts?.systemPrompt || defaultSystemPrompt) 
@@ -133,118 +134,119 @@ Your findings must be SPECIFIC, DETAILED, and SUBSTANTIVE.`;
     // Build context from previous steps
     let previousContext = '';
     if (previousStepsData && previousStepsData.length > 0) {
-      previousContext = '\n\nPREVIOUS RESEARCH FINDINGS (build upon these):\n';
+      previousContext = '\n\n此前研究发现（请在此基础上继续）：\n';
       previousStepsData.forEach((step, idx) => {
         previousContext += `\n${step.stepTitle}:\n`;
         step.data.forEach((item) => {
           previousContext += `• ${item.title}: ${item.content}\n`;
         });
       });
-      previousContext += '\n**Your findings must reference and extend these previous discoveries.**\n';
+      previousContext += '\n**你的发现必须引用并扩展这些此前的发现。**\n';
     }
     
     // Special handling for final report - provide answer-focused synthesis
     const isFinalReport = stepType === "final-report";
     
     const userPrompt = isFinalReport ? `
-RESEARCH GOAL: ${goal}
+研究目标：${goal}
 ${previousContext}
 
-Based on ALL the research findings above, generate 3-5 SPECIFIC, ACTIONABLE RECOMMENDATIONS that directly answer the research goal.
+根据以上所有研究发现，生成 3-5 条具体、可执行的建议，直接回答研究目标。
 
-CRITICAL: Your response must ANSWER THE QUESTION, not just summarize research steps.
+关键要求（CRITICAL）：你的回答必须直接回答问题本身，而不是仅仅总结研究步骤。请使用简体中文撰写所有研究内容和建议。
 
-For example, if the goal is "best family car in 2025 ontario canada":
-- BAD: "Analysis of search queries shows SUV dominance"
-- GOOD: "Honda CR-V Hybrid 2025 - Best Overall Family SUV for Ontario. Offers AWD for winter driving, 40 MPG fuel efficiency, and excellent safety ratings (IIHS Top Safety Pick+). Price: $38,000 CAD. Resale value after 5 years: 65% (highest in class)."
+例如，如果目标是"2025 年安大略省最佳家庭用车"：
+- 错误示例："对搜索查询的分析显示 SUV 占主导地位"
+- 正确示例："2025 款本田 CR-V Hybrid——安大略省最佳综合家庭 SUV。配备 AWD 四驱系统以应对冬季驾驶，40 MPG 燃油效率，安全评级出色（IIHS Top Safety Pick+）。价格：38,000 加元。5 年后保值率为 65%（同级最高）。"
 
-Each recommendation MUST include:
+每条建议必须包含：
 
-1. **title**: Specific recommendation or answer (not a task or analysis description)
-   - If recommending a product: Include model name/year
-   - If recommending an action: State the specific action
-   - If answering a question: Provide the direct answer
-   - Examples: "2025 Toyota Sienna Hybrid - Best Family Minivan", "Implement Zero-Trust Architecture with Cloudflare Access", "Yes, quantum computing is commercially viable for drug discovery"
+1. **title**：具体建议或答案（不是任务或分析描述）
+   - 如果推荐产品：包含型号/年份
+   - 如果推荐行动：说明具体行动
+   - 如果回答问题：给出直接答案
+   - 示例："2025 款丰田 Sienna Hybrid——最佳家庭 MPV"、"通过 Cloudflare Access 实施零信任架构"、"是的，量子计算对药物发现已具备商业可行性"
 
-2. **content**: DETAILED justification with specifics (minimum 5-6 sentences):
-   - WHY this recommendation answers the goal
-   - SPECIFIC data from research findings (reference previous steps)
-   - Key benefits with quantified metrics
-   - Practical considerations or trade-offs
-   - Supporting evidence from research
-   - Examples:
-     * "The 2025 Toyota Sienna Hybrid dominates the minivan segment in Ontario based on multiple criteria from our research. It features AWD (critical for Ontario winters per our State Assessment findings), achieving 36 MPG combined fuel economy which translates to approximately $1,200 annual fuel savings vs non-hybrid competitors. Safety analysis revealed it earned IIHS Top Safety Pick+ with standard Toyota Safety Sense 3.0. Our Document Analysis phase identified its superior reliability rating (4.5/5 Consumer Reports) and strongest resale value in class at 58% after 5 years. Starting MSRP of $42,500 CAD positions it competitively while our Web Search findings show average dealer discounts of $2,000 in Ontario markets."
+2. **content**：包含具体细节的详细论证（至少 5-6 句）：
+   - 为什么这条建议能够回答目标
+   - 来自研究发现的具体数据（引用之前的步骤）
+   - 带量化指标的关键收益
+   - 实际考量或权衡取舍
+   - 来自研究的支持证据
+   - 示例：
+     * "根据我们研究中的多项标准，2025 款丰田 Sienna Hybrid 在安大略省 MPV 细分市场占据主导地位。它配备 AWD 四驱系统（根据我们环境评估的发现，这对安大略省的冬季至关重要），综合油耗 36 MPG，与燃油竞品相比每年可节省约 1,200 加元的油费。安全分析显示，它凭借标配的丰田 Safety Sense 3.0 获得了 IIHS Top Safety Pick+ 评级。我们的文档分析阶段发现其可靠性评级出色（Consumer Reports 4.5/5 分），5 年后 58% 的保值率位居同级最强。42,500 加元的起售价使其具有竞争力，同时我们的网络搜索结果显示，安大略省市场的平均经销商折扣为 2,000 加元。"
 
-3. **source**: Real source from research OR credible industry source
-   - Reference findings from previous research steps when applicable
-   - Examples: "Web Search findings + Consumer Reports 2024", "Document Analysis + edmunds.com", "Knowledge Synthesis + Motor Trend 2025 Buyer's Guide"
+3. **source**：来自研究的真实来源或可信的行业来源
+   - 在适用时引用之前研究步骤中的发现
+   - 示例："网络搜索发现 + Consumer Reports 2024"、"文档分析 + edmunds.com"、"知识综合 + Motor Trend 2025 购车指南"
 
-4. **confidence**: 0.80-0.95 based on research depth
+4. **confidence**：根据研究深度取值 0.80-0.95
 
-REMEMBER: The user wants ANSWERS, not research summaries. Be specific, actionable, and directly address their goal.
+请记住：用户想要的是答案，而不是研究摘要。要具体、可执行，并直接针对他们的目标作答。
 
-Format:
+输出格式：
 {
-  "title": "Specific Recommendation/Answer [directly addressing ${goal}]",
-  "content": "Detailed justification with data from research findings, benefits, metrics, and practical advice...",
-  "source": "Source from research OR industry authority (Year)",
+  "title": "具体建议/答案 [直接针对 ${goal}]",
+  "content": "结合研究发现的数据、收益、指标和实用建议的详细论证……",
+  "source": "来自研究或行业权威机构的来源（年份）",
   "confidence": 0.88
 }` : `
-RESEARCH GOAL: ${goal}
-CURRENT ANALYSIS STEP: ${stepTitle}
-STEP OBJECTIVE: ${stepDescription}
+研究目标：${goal}
+当前分析步骤：${stepTitle}
+步骤目标：${stepDescription}
 ${previousContext}
 
-Generate ${config?.parameters?.maxSources ? `up to ${config.parameters.maxSources}` : '3-5'} ACTUAL research findings with substantive content. Each finding MUST include:
+生成 ${config?.parameters?.maxSources ? `最多 ${config.parameters.maxSources} 条` : '3-5'}具有实质性内容的真实研究发现。每条发现必须包含：
 
-1. **title**: Specific discovery or insight (what was found, not what to find)
-   - Include key metrics, names, or breakthrough details in the title
-   - Examples: "IBM's 433-Qubit Osprey Processor Achieves Quantum Advantage", "87% of Fortune 500 Investing in AI Infrastructure"
+1. **title**：具体发现或洞察（已经发现了什么，而不是要发现什么）
+   - 在标题中包含关键指标、名称或突破细节
+   - 示例："IBM 433 量子比特 Osprey 处理器实现量子优势"、"87% 的财富 500 强企业正在投资 AI 基础设施"
 
-2. **content**: DETAILED research findings (${config?.researchGuidance?.depth === 'deep' ? '7-10 sentences' : config?.researchGuidance?.depth === 'surface' ? '2-3 sentences' : '4-5 sentences'} minimum):
-   - Start with the core finding and supporting data
-   - Include specific numbers, percentages, or metrics
-   - Mention real companies, technologies, or research when relevant
-   - Explain implications and significance
-   - Reference previous step findings to show progression
-   - Examples:
-     * "IBM's latest 433-qubit Osprey processor demonstrated quantum advantage in solving optimization problems 120x faster than classical supercomputers (IBM Research, Nov 2024). The system achieved 99.7% two-qubit gate fidelity using dynamic error suppression. This breakthrough enables practical applications in logistics optimization, with DHL reporting 15% cost reduction in route planning trials. The technology utilizes heavy-hexagonal qubit topology for improved connectivity."
-     * "Analysis of 156 quantum computing research papers (2023-2024) reveals strong consensus on topological qubits as the most promising path to fault-tolerant quantum computing. Current limitations include decoherence times averaging 85 microseconds and error rates of 0.1% for two-qubit gates. Leading institutions (Google, IBM, IonQ) are converging on surface code implementations, with projections suggesting 1000+ logical qubit systems by 2027."
+2. **content**：详细的研究发现（至少 ${config?.researchGuidance?.depth === 'deep' ? '7-10 句' : config?.researchGuidance?.depth === 'surface' ? '2-3 句' : '4-5 句'}）：
+   - 从核心发现和支持数据开始
+   - 包含具体的数字、百分比或指标
+   - 在相关时提及真实的公司、技术或研究
+   - 解释影响和意义
+   - 引用之前步骤的发现以展示进展
+   - 示例：
+     * "IBM 最新的 433 量子比特 Osprey 处理器在求解优化问题方面展示了量子优势，比经典超级计算机快 120 倍（IBM Research，2024 年 11 月）。该系统通过动态误差抑制实现了 99.7% 的双量子比特门保真度。这一突破使物流优化等实际应用成为可能，DHL 报告称其在路线规划试验中成本降低了 15%。该技术采用重六角形量子比特拓扑以改善连接性。"
+     * "对 156 篇量子计算研究论文（2023-2024）的分析显示，业界对拓扑量子比特作为实现容错量子计算最有希望的路径已形成强烈共识。目前的局限包括退相干时间平均为 85 微秒、双量子比特门误差率为 0.1%。Google、IBM、IonQ 等领先机构正在趋同于表面码实现，预计到 2027 年将出现拥有 1000 多个逻辑量子比特的系统。"
 
-3. **source**: REQUIRED - Credible source with year (MUST be provided for every finding)
-   - Examples: "Nature Physics (2024)", "McKinsey Quantum Report 2024", "IEEE Quantum Computing Survey (Dec 2024)"
-   - Use Google Search grounding to find real sources
-   - ${config?.filters?.sourceTypes && config.filters.sourceTypes.length > 0 
-      ? `Prioritize these source types: ${config.filters.sourceTypes.join(', ')}` 
-      : 'If no specific source available, use: "Industry Analysis (2024)" or "Market Research (2024)"'}
+3. **source**：必填——带有年份的可信来源（每条发现都必须提供）
+   - 示例："Nature Physics (2024)"、"McKinsey Quantum Report 2024"、"IEEE Quantum Computing Survey (Dec 2024)"
+   - 使用 Google 搜索的 grounding 检索查找真实来源
+   - ${config?.filters?.sourceTypes && config.filters.sourceTypes.length > 0
+      ? `优先采用这些来源类型：${config.filters.sourceTypes.join(', ')}`
+      : '如果没有可用的特定来源，请使用："行业分析（2024）"或"市场研究（2024）"'}
    - ${config?.filters?.excludeDomains && config.filters.excludeDomains.length > 0
-      ? `DO NOT use sources from these domains: ${config.filters.excludeDomains.join(', ')}`
+      ? `不要使用来自以下域名的来源：${config.filters.excludeDomains.join(', ')}`
       : ''}
 
-4. **confidence**: REQUIRED - Realistic score ${config?.parameters?.minConfidence ? `${config.parameters.minConfidence / 100}-0.95` : '0.7-0.95'} based on finding specificity
+4. **confidence**：必填——基于发现的具体程度给出合理的分数 ${config?.parameters?.minConfidence ? `${config.parameters.minConfidence / 100}-0.95` : '0.7-0.95'}
 
-CRITICAL REQUIREMENTS:
-- DO NOT generate generic task descriptions like "Analyze X" or "Identify Y"
-- Generate ACTUAL findings as if research was just completed, with real data and insights
-- EVERY finding MUST have a source citation - this is non-negotiable
-- Use Google Search results to find real, current information specific to the query
-- ONLY include information that is directly relevant to: "${goal || stepTitle}"
-- DO NOT include unrelated topics (e.g., quantum computing when researching marketing trends)
-- Verify each finding relates to the actual research goal before including it
-${config?.filters?.dateRange ? `\n- Focus on information from: ${config.filters.dateRange}` : ''}
+关键要求（CRITICAL REQUIREMENTS）：
+- 不要生成"分析 X"或"识别 Y"之类的通用任务描述
+- 生成真实发现，就像刚刚完成研究一样，包含真实数据和见解
+- 每条发现都必须有来源引用——这一点没有商量余地
+- 使用 Google 搜索结果查找与查询相关的真实、最新信息
+- 只包含与以下内容直接相关的信息："${goal || stepTitle}"
+- 不要包含无关主题（例如，研究营销趋势时不要涉及量子计算）
+- 在纳入每条发现之前，先核实它与实际研究目标相关
+- 使用简体中文撰写所有研究内容和建议
+${config?.filters?.dateRange ? `\n- 重点采用来自以下时间段的信息：${config.filters.dateRange}` : ''}
 
-IMPORTANT: Every finding MUST:
-1. Be directly relevant to the research goal: "${goal || stepTitle}"
-2. Include a source citation from Google Search results
-3. Contain current, verifiable information
-4. ${config?.parameters?.minConfidence ? `Meet minimum confidence threshold of ${config.parameters.minConfidence}%` : 'Have realistic confidence score'}
+重要提示（IMPORTANT）：每条发现必须：
+1. 与研究目标直接相关："${goal || stepTitle}"
+2. 包含来自 Google 搜索结果来源的引用
+3. 包含当前可验证的信息
+4. ${config?.parameters?.minConfidence ? `满足最低置信度阈值 ${config.parameters.minConfidence}%` : '具有合理的置信度评分'}
 
-Format (all fields required):
+输出格式（所有字段必填）：
 {
-  "title": "Specific Finding with Key Metric [directly related to ${goal || stepTitle}]",
-  "content": "Detailed research findings with data, examples, implications...",
-  "source": "Source Name (Year)", // REQUIRED - NEVER omit this
-  "confidence": ${config?.parameters?.minConfidence ? (config.parameters.minConfidence / 100) : 0.85} // REQUIRED - Must be between ${config?.parameters?.minConfidence ? `${config.parameters.minConfidence / 100}` : '0.7'} and 0.95
+  "title": "带有关键指标的具体发现 [与 ${goal || stepTitle} 直接相关]",
+  "content": "包含数据、示例和影响等的详细研究发现……",
+  "source": "来源名称（年份）", // 必填——绝不能省略
+  "confidence": ${config?.parameters?.minConfidence ? (config.parameters.minConfidence / 100) : 0.85} // 必填——必须介于 ${config?.parameters?.minConfidence ? `${config.parameters.minConfidence / 100}` : '0.7'} 与 0.95 之间
 }`;
 
     const response = await fetch(`${AI_BASE_URL}/chat/completions`, {

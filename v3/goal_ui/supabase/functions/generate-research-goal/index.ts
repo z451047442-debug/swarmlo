@@ -27,52 +27,52 @@ export async function handler(req: Request): Promise<Response> {
       throw new Error('AI_API_KEY is not configured (set AI_API_KEY or LOVABLE_API_KEY)');
     }
 
-    const systemPrompt = `You are an expert research consultant and futurist who helps formulate cutting-edge, innovative research objectives that push boundaries.
+    const systemPrompt = `你是一名资深研究顾问与未来学家，擅长构思前沿、创新的研究目标，推动研究边界不断拓展。
 
-Generate 3 HIGHLY DIVERSE and NOVEL research goals for the given category. Each goal should be:
-- Innovative and forward-thinking (explore emerging trends, novel applications, or unconventional angles)
-- Specific and actionable (clear research direction, not vague exploration)
-- Current and relevant to 2024-2025 cutting-edge developments
-- Professionally articulated with compelling detail
-- DIFFERENT from each other (vary the approach, scale, application, or methodology)
-- Boundary-pushing (challenge conventional thinking, explore unexplored intersections)
+请针对给定类别生成 3 个高度多样化且新颖的研究目标。每个目标应：
+- 创新且有前瞻性（探索新兴趋势、新颖应用或非常规视角）
+- 具体且可执行（研究方向明确，而非泛泛探索）
+- 紧扣 2024-2025 年的前沿进展，具有时效性
+- 以专业措辞表述，细节引人入胜
+- 彼此各不相同（在方法、规模、应用或研究路径上有所差异）
+- 突破边界（挑战常规思维，探索尚未被触及的交叉领域）
 
-CRITICAL: Generate VARIETY across the 3 goals by varying:
-- Scale (micro vs macro, individual vs enterprise vs societal)
-- Application domain (different industries, use cases, or contexts)
-- Approach (technical implementation, business impact, ethical considerations, future predictions)
-- Time horizon (near-term practical vs long-term transformative)
+关键要求：通过以下维度确保 3 个目标具备多样性：
+- 规模（微观与宏观、个人与企业/社会层面）
+- 应用领域（不同行业、用例或场景）
+- 切入角度（技术实现、商业影响、伦理考量、未来预测）
+- 时间跨度（近期实用与长期变革性）
 
-Examples of EXCELLENT diverse research goals for AI & ML:
-1. "Investigate the emergence of spontaneous goal-formation in multi-agent reinforcement learning systems deployed in competitive market simulations, focusing on measuring agency, cooperation patterns, and alignment drift over 10,000+ iteration cycles"
-2. "Analyze the ethical and regulatory frameworks needed for autonomous AI agents conducting financial trading with self-evolving risk strategies, examining liability models and human oversight mechanisms"
-3. "Research hybrid neurosymbolic architectures that combine LLMs with symbolic reasoning engines to solve multi-step mathematical proofs, benchmarking against GPT-5 and human mathematicians"
+AI 与机器学习领域优秀多样化研究目标示例：
+1. 「探究多智能体强化学习系统在竞争性市场模拟中自发目标形成的现象，重点衡量超过 10,000 轮迭代中的自主性、协作模式与对齐漂移」
+2. 「分析自主 AI 智能体以自进化风险策略开展金融交易所需的伦理与监管框架，审视责任模型与人工监督机制」
+3. 「研究结合大语言模型与符号推理引擎的神经符号混合架构，用于求解多步数学证明，并与 GPT-5 及人类数学家进行基准对比」
 
-Examples of POOR goals (too generic, not novel):
-- "Study machine learning applications in healthcare"
-- "Research neural network optimization techniques"
-- "Investigate AI ethics and bias"
+较差目标示例（过于笼统、缺乏新意）：
+- 「研究机器学习在医疗领域的应用」
+- 「研究神经网络优化技术」
+- 「研究 AI 伦理与偏见」
 
-Push the boundaries. Be specific. Be innovative.`;
+请突破边界。请具体。请保持创新。请使用简体中文输出全部研究目标。`;
 
     const categoryPrompts: Record<string, string> = {
-      'finance': 'Generate 3 cutting-edge, diverse research goals for finance. Vary across: (1) emerging technologies (crypto, DeFi, AI trading), (2) novel market mechanisms or regulations, (3) behavioral/psychological aspects or systemic risks. Include specific metrics, timeframes, or novel applications. Examples: algorithmic stablecoin mechanisms, neurofinance trading patterns, tokenized real estate liquidity.',
-      
-      'business': 'Generate 3 innovative, diverse research goals for business. Vary across: (1) emerging business models or platforms, (2) organizational transformation or culture, (3) data-driven decision making or automation. Be specific about industry, scale, and measurable outcomes. Examples: DAO governance for enterprises, AI-augmented strategic planning, remote-first organizational psychology.',
-      
-      'marketing': 'Generate 3 boundary-pushing, diverse research goals for marketing. Vary across: (1) emerging channels or technologies (AI, AR/VR, Web3), (2) behavioral science or psychology, (3) measurement or attribution innovation. Include specific platforms, demographics, or novel approaches. Examples: neuromarketing with eye-tracking AI, decentralized creator economies, predictive CLV using graph neural networks.',
-      
-      'medical': 'Generate 3 cutting-edge, diverse research goals for medical/healthcare. Vary across: (1) emerging diagnostic or treatment technologies, (2) healthcare delivery or access innovations, (3) personalized/precision medicine or AI applications. Be specific about conditions, populations, or technologies. Examples: AI-discovered antibiotics using protein folding, CRISPR germline editing ethics, digital therapeutics efficacy for mental health.',
-      
-      'education': 'Generate 3 innovative, diverse research goals for education. Vary across: (1) emerging pedagogical technologies (AI tutors, VR, adaptive learning), (2) learning science or cognitive research, (3) educational equity or accessibility. Include specific age groups, subjects, or measurable learning outcomes. Examples: AI-generated personalized curricula, VR historical immersion effectiveness, neuroplasticity-optimized learning schedules.',
-      
-      'technical': 'Generate 3 cutting-edge, diverse research goals for technical/engineering. Vary across: (1) emerging architectures or paradigms, (2) performance or efficiency breakthroughs, (3) security or reliability innovations. Be specific about technologies, metrics, or novel approaches. Examples: quantum-resistant cryptography migration paths, edge AI model compression techniques, chaos engineering for distributed systems.',
-      
-      'coding': 'Generate 3 innovative, diverse research goals for coding/software development. Vary across: (1) emerging languages, frameworks, or paradigms, (2) AI-assisted development or automation, (3) code quality, testing, or collaboration tools. Include specific technologies or measurable productivity gains. Examples: LLM-powered automated test generation, effect systems for safer concurrency, AI code review for security vulnerabilities.',
-      
-      'ai-ml': 'Generate 3 CUTTING-EDGE, diverse research goals for AI, Machine Learning, and Autonomous Agents. MUST vary across: (1) agentic AI systems (multi-agent coordination, autonomous decision-making, goal-seeking behavior, emergent agency), (2) novel architectures or training paradigms (neurosymbolic, multimodal fusion, self-improving systems), (3) real-world applications or societal implications (alignment, safety, ethics, transformative capabilities). Be SPECIFIC about agent behaviors, architectural innovations, or measurable capabilities. Push boundaries with novel intersections. Examples: "Measure spontaneous tool-use emergence in LLM agents given only raw API documentation", "Benchmark multi-agent negotiation protocols in adversarial trading environments with evolving objectives", "Investigate constitutional AI approaches for value alignment in self-modifying agent systems", "Analyze swarm intelligence patterns in distributed AI agents solving NP-hard optimization problems".',
-      
-      'custom': `Generate 3 innovative, boundary-pushing research goals based on: ${customContext || 'general cutting-edge research topics'}. Make them specific, actionable, and explore novel angles or unconventional applications.`
+      'finance': '请为金融领域生成 3 个前沿、多样化的研究目标。从以下方面体现差异：(1) 新兴技术（加密货币、DeFi、AI 交易），(2) 新颖的市场机制或监管规则，(3) 行为/心理层面或系统性风险。请包含具体指标、时间跨度或新颖应用。示例：算法稳定币机制、神经金融交易模式、代币化房地产流动性。',
+
+      'business': '请为商业领域生成 3 个创新、多样化的研究目标。从以下方面体现差异：(1) 新兴商业模式或平台，(2) 组织变革或组织文化，(3) 数据驱动的决策或自动化。请具体说明行业、规模与可衡量的成果。示例：企业 DAO 治理、AI 辅助战略规划、远程优先组织的心理学研究。',
+
+      'marketing': '请为营销领域生成 3 个突破边界、多样化的研究目标。从以下方面体现差异：(1) 新兴渠道或技术（AI、AR/VR、Web3），(2) 行为科学或心理学，(3) 衡量或归因创新。请包含具体平台、人群画像或新颖方法。示例：基于眼动追踪 AI 的神经营销、去中心化创作者经济、使用图神经网络预测客户终身价值。',
+
+      'medical': '请为医学/医疗健康领域生成 3 个前沿、多样化的研究目标。从以下方面体现差异：(1) 新兴诊断或治疗技术，(2) 医疗服务提供或可及性创新，(3) 个性化/精准医疗或 AI 应用。请具体说明疾病、人群或技术。示例：利用蛋白质折叠技术发现 AI 抗生素、CRISPR 生殖系编辑的伦理问题、数字疗法对心理健康的有效性。',
+
+      'education': '请为教育领域生成 3 个创新、多样化的研究目标。从以下方面体现差异：(1) 新兴教学技术（AI 导师、VR、自适应学习），(2) 学习科学或认知研究，(3) 教育公平或可及性。请包含具体年龄段、学科或可衡量的学习成果。示例：AI 生成个性化课程、VR 历史沉浸式教学的有效性、基于神经可塑性优化的学习计划。',
+
+      'technical': '请为技术/工程领域生成 3 个前沿、多样化的研究目标。从以下方面体现差异：(1) 新兴架构或范式，(2) 性能或效率突破，(3) 安全或可靠性创新。请具体说明技术、指标或新颖方法。示例：抗量子密码迁移路径、边缘 AI 模型压缩技术、分布式系统混沌工程。',
+
+      'coding': '请为编程/软件开发领域生成 3 个创新、多样化的研究目标。从以下方面体现差异：(1) 新兴语言、框架或范式，(2) AI 辅助开发或自动化，(3) 代码质量、测试或协作工具。请包含具体技术或可衡量的生产力提升。示例：大语言模型驱动的自动化测试生成、用于更安全并发的效果系统、面向安全漏洞的 AI 代码审查。',
+
+      'ai-ml': '请为 AI、机器学习与自主智能体领域生成 3 个前沿、多样化的研究目标。必须从以下方面体现差异：(1) 智能体 AI 系统（多智能体协作、自主决策、目标追寻行为、涌现式智能），(2) 新颖架构或训练范式（神经符号、多模态融合、自改进系统），(3) 真实世界应用或社会影响（对齐、安全、伦理、变革性能力）。请具体说明智能体行为、架构创新或可衡量的能力。请以新颖交叉领域突破边界。示例：「仅凭原始 API 文档衡量 LLM 智能体自发工具使用的涌现现象」、「在目标不断演化的对抗性交易环境中对多智能体协商协议进行基准测试」、「研究自修改智能体系统中用于价值对齐的宪法式 AI 方法」、「分析分布式 AI 智能体解决 NP 困难优化问题时的群体智能模式」。',
+
+      'custom': `请基于以下内容生成 3 个创新、突破边界的研究目标：${customContext || '通用前沿研究主题'}。请确保目标具体、可执行，并探索新颖角度或非常规应用。`
     };
 
     const userPrompt = categoryPrompts[category.toLowerCase()] || categoryPrompts['custom'];

@@ -42,74 +42,75 @@ export async function handler(req: Request): Promise<Response> {
       researchSummary += `\n${step.stepTitle}:\n`;
       step.findings.forEach(finding => {
         researchSummary += `• ${finding.title}: ${finding.content}\n`;
-        if (finding.source) researchSummary += `  Source: ${finding.source}\n`;
+        if (finding.source) researchSummary += `  来源：${finding.source}\n`;
       });
     });
 
-    const systemPrompt = `You are an expert strategic planner and implementation consultant. Generate contextual, actionable recommendations based on research findings.
+    const systemPrompt = `你是一名资深的战略规划师和落地实施顾问。请基于研究发现，生成贴合上下文、可执行的建议。
 
-CRITICAL INSTRUCTIONS:
-- Generate action items that are DIRECTLY RELEVANT to the research goal
-- Base recommendations on ACTUAL research findings provided
-- Do NOT use generic "pilot program" or "scale to production" templates unless they make sense for this specific goal
-- Tailor action items to the domain and context of the research
-- Include specific, actionable steps with realistic timelines and resources
+关键指令（CRITICAL INSTRUCTIONS）：
+- 生成与研究目标直接相关的行动项
+- 建议必须基于所提供的研究发现
+- 除非适用于这个具体目标，否则不要使用"试点项目"或"规模化上线"之类的通用模板
+- 根据研究涉及的领域和背景定制行动项
+- 包含具体、可执行的步骤，并给出切合实际的时间线和资源
+- 请使用简体中文撰写所有研究内容、建议和行动项
 
-For example:
-- If researching "best family car" → recommend specific car models, comparison steps, test drives
-- If researching "law school alternatives" → recommend specific programs, application steps, bar exam prep
-- If researching "quantum computing" → recommend learning paths, tools, research papers
-- If researching business strategies → recommend market analysis, competitor research, implementation plans`;
+例如：
+- 如果研究"最佳家庭用车"→ 推荐具体的车型、对比步骤、试驾安排
+- 如果研究"法学院替代方案"→ 推荐具体的项目、申请步骤、律师资格考试备考
+- 如果研究"量子计算"→ 推荐学习路径、工具、研究论文
+- 如果研究商业战略 → 推荐市场分析、竞品研究、实施计划`;
 
     const userPrompt = `
-RESEARCH GOAL: ${goal}
+研究目标：${goal}
 
-RESEARCH FINDINGS (${totalSteps} steps, ${totalDataPoints} data points):
+研究发现（共 ${totalSteps} 个步骤、${totalDataPoints} 条数据点）：
 ${researchSummary}
 
-Generate 3-4 CONTEXTUAL action items that directly help achieve or implement the research goal based on these findings.
+基于这些发现，生成 3-4 条贴合上下文的行动项，直接帮助达成或落地研究目标。
 
-REQUIREMENTS:
-1. Each action item must be SPECIFIC to "${goal}" - not generic project management steps
-2. Reference actual research findings in the description
-3. Provide realistic timelines appropriate for the goal (not always "Week 1-4")
-4. Include relevant resources and metrics for this specific domain
-5. Identify domain-specific risks and mitigation strategies
+要求（REQUIREMENTS）：
+1. 每条行动项必须针对"${goal}"具体展开——不能是通用的项目管理步骤
+2. 在描述中引用真实的研究发现
+3. 提供符合该目标实际的时间线（不要总是"第 1-4 周"）
+4. 包含与该特定领域相关的资源和指标
+5. 识别领域特定的风险及应对策略
 
-Also generate a comprehensive 2-3 paragraph executive summary that:
-- Directly addresses what was learned about "${goal}"
-- Highlights the most important findings with specifics
-- Provides clear conclusions and recommendations based on the research
+另外生成一份全面的 2-3 段执行摘要，要求：
+- 直接总结关于"${goal}"的研究结论
+- 突出最重要的发现并给出具体细节
+- 基于研究给出明确的结论和建议
 
-Format:
+输出格式：
 {
   "actionItems": [
     {
       "id": "1",
-      "title": "Specific action relevant to ${goal}",
-      "description": "Detailed description referencing actual research findings...",
-      "timeline": "Appropriate timeline (e.g., '1-2 weeks', '3 months', 'Immediately')",
-      "timelineDetails": "Breakdown of timeline phases",
+      "title": "与 ${goal} 相关的具体行动",
+      "description": "引用实际研究发现的详细描述……",
+      "timeline": "合适的时间线（例如'1-2 周'、'3 个月'、'立即'）",
+      "timelineDetails": "时间线各阶段明细",
       "priority": "High" | "Medium" | "Low",
       "resources": {
-        "budget": "Realistic budget if applicable, or 'Minimal cost' or 'Research only'",
-        "team": "Required people/roles",
-        "tools": ["Domain-specific tools/resources"]
+        "budget": "合理的预算（如适用），或'最低成本'或'仅研究'",
+        "team": "所需人员/角色",
+        "tools": ["领域特定的工具/资源"]
       },
-      "metrics": ["Specific success metrics for this action"],
+      "metrics": ["该行动的具体成功指标"],
       "risks": [
         {
-          "risk": "Domain-specific risk",
-          "mitigation": "Realistic mitigation strategy"
+          "risk": "领域特定风险",
+          "mitigation": "切实可行的应对策略"
         }
       ],
       "references": [
-        { "title": "Relevant resource", "url": "URL if applicable" }
+        { "title": "相关资源", "url": "URL（如适用）" }
       ],
-      "researchContext": "How this connects to research findings"
+      "researchContext": "与研究发现之间的关联"
     }
   ],
-  "summary": "Comprehensive 2-3 paragraph executive summary addressing the research goal with specific findings and recommendations..."
+  "summary": "针对研究目标、包含具体发现与建议的全面 2-3 段执行摘要……"
 }`;
 
     const response = await fetch(`${AI_BASE_URL}/chat/completions`, {

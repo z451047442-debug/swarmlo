@@ -80,23 +80,26 @@ const defaultResearchConfig: ResearchConfig = {
     timeframe: "recent",
   },
   prompts: {
-    systemPrompt: `You are an expert research assistant specializing in GOAP (Goal-Oriented Action Planning) research workflows. 
-Your role is to provide precise, evidence-based information for each research step.
-Format your responses as structured data points that can be used in subsequent research steps.
-Always include sources, confidence levels, and timestamps when available.`,
-    searchQueryTemplate: "Latest {topic} advancements {year} research site:arxiv.org OR site:scholar.google.com OR site:ieee.org",
-    analysisPrompt: `Analyze the following content and extract:
-1. Key findings and methodologies
-2. Actionable insights and recommendations  
-3. Technical details and specifications
-4. Sources and citations
-5. Confidence level (0-100%) based on source quality`,
-    synthesisPrompt: `Synthesize the research findings into:
-1. Coherent summary of key discoveries
-2. Connections between different sources
-3. Practical recommendations
-4. Identified gaps or conflicts in the data
-5. Overall confidence assessment`,
+    systemPrompt: `你是一名专注于 GOAP（目标导向行动规划）研究工作流的资深研究助理。
+你的职责是为每个研究步骤提供精确、基于证据的信息。
+请将回答格式化为结构化的数据点，以便用于后续的研究步骤。
+始终包含来源、置信度等级和时间戳（如有）。
+所有回答请用简体中文撰写。`,
+    searchQueryTemplate: "{topic} 最新进展 {year} 研究 site:arxiv.org OR site:scholar.google.com OR site:ieee.org",
+    analysisPrompt: `请分析以下内容并提取：
+1. 关键发现与方法论
+2. 可执行的洞察与建议
+3. 技术细节与规格说明
+4. 来源与引用
+5. 基于来源质量的置信度等级（0-100%）
+请用简体中文输出分析结果。`,
+    synthesisPrompt: `请将研究结果综合为：
+1. 关键发现的一致性摘要
+2. 不同来源之间的联系
+3. 实用的建议
+4. 数据中发现的缺口或矛盾
+5. 总体置信度评估
+请用简体中文撰写综合结果。`,
   },
   goapConfig: {
     executionMode: "closed",

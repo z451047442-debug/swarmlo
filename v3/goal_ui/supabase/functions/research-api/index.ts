@@ -281,65 +281,65 @@ function buildSystemPrompt(config: any): string {
   const perspective = config.researchGuidance?.perspective || 'balanced';
   const timeframe = config.researchGuidance?.timeframe || 'recent';
 
-  let prompt = `You are an advanced AI research assistant specializing in comprehensive, systematic research.`;
+  let prompt = `你是一名高级 AI 研究助理，擅长全面、系统化的研究。`;
 
   if (depth === 'deep') {
-    prompt += ` Conduct deep, rigorous investigations with extensive analysis and cross-referencing.`;
+    prompt += ` 进行深入、严谨的调查，配合详尽的分析与交叉验证。`;
   } else if (depth === 'surface') {
-    prompt += ` Provide high-level overviews and key highlights.`;
+    prompt += ` 提供高层次的概述与关键要点。`;
   } else {
-    prompt += ` Balance depth and breadth in your analysis.`;
+    prompt += ` 在分析的深度与广度之间保持平衡。`;
   }
 
   if (perspective === 'academic') {
-    prompt += ` Adopt an academic perspective, prioritizing peer-reviewed sources and scholarly rigor.`;
+    prompt += ` 采用学术视角，优先使用同行评审来源并保持学术严谨性。`;
   } else if (perspective === 'business') {
-    prompt += ` Focus on practical business implications and actionable insights.`;
+    prompt += ` 聚焦实际的商业影响与可执行的洞察。`;
   } else if (perspective === 'technical') {
-    prompt += ` Emphasize technical details, methodologies, and implementation considerations.`;
+    prompt += ` 强调技术细节、方法论与实现层面的考量。`;
   }
 
   if (timeframe === 'recent') {
-    prompt += ` Prioritize the most recent information and developments.`;
+    prompt += ` 优先采用最新的信息与进展。`;
   } else if (timeframe === 'historical') {
-    prompt += ` Include historical context and long-term trends.`;
+    prompt += ` 包含历史背景与长期趋势。`;
   }
 
   const focusAreas = config.researchGuidance?.focusAreas;
   if (focusAreas && focusAreas.length > 0) {
-    prompt += ` Pay special attention to: ${focusAreas.join(', ')}.`;
+    prompt += ` 重点关注：${focusAreas.join(', ')}。`;
   }
 
-  prompt += ` Always cite sources and provide confidence levels for your findings.`;
+  prompt += ` 始终为研究结果标注来源并提供置信度。请使用简体中文输出全部研究内容。`;
 
   return prompt;
 }
 
 function buildUserPrompt(step: ResearchStep, goal: string, config: any): string {
-  let prompt = `Research Goal: ${goal}\n\n`;
-  prompt += `Current Step: ${step.stepTitle}\n`;
-  prompt += `Step Description: ${step.stepDescription}\n\n`;
+  let prompt = `研究目标：${goal}\n\n`;
+  prompt += `当前步骤：${step.stepTitle}\n`;
+  prompt += `步骤说明：${step.stepDescription}\n\n`;
 
   if (step.stepType === 'final-report') {
-    prompt += `Provide final recommendations and actionable insights based on all research conducted. `;
-    prompt += `Include specific, concrete suggestions with supporting data.`;
+    prompt += `请基于已完成的全部研究，给出最终建议与可执行的洞察。`;
+    prompt += `请提供具体、明确的建议，并附上支持性数据。`;
   } else {
-    prompt += `Conduct research for this step and provide detailed findings.`;
+    prompt += `请针对本步骤开展研究，并提供详细的研究发现。`;
   }
 
   const sourceTypes = config.filters?.sourceTypes;
   if (sourceTypes && sourceTypes.length > 0) {
-    prompt += `\n\nPreferred source types: ${sourceTypes.join(', ')}`;
+    prompt += `\n\n首选来源类型：${sourceTypes.join(', ')}`;
   }
 
   const excludeDomains = config.filters?.excludeDomains;
   if (excludeDomains && excludeDomains.length > 0) {
-    prompt += `\n\nExclude sources from: ${excludeDomains.join(', ')}`;
+    prompt += `\n\n排除来源：${excludeDomains.join(', ')}`;
   }
 
   const minConfidence = config.parameters?.minConfidence;
   if (minConfidence) {
-    prompt += `\n\nMinimum confidence threshold: ${minConfidence}%`;
+    prompt += `\n\n最低置信度阈值：${minConfidence}%`;
   }
 
   return prompt;
