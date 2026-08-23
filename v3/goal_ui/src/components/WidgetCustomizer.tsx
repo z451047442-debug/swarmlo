@@ -403,12 +403,20 @@ export const WidgetCustomizer = ({ config, onConfigChange, onGenerate }: WidgetC
                       <SelectItem value="google/gemini-2.5-flash-lite">
                         {t("main.modelFlashLite")}
                       </SelectItem>
+                      <SelectItem value="deepseek-v4-pro">
+                        {t("main.modelDeepseekPro")}
+                      </SelectItem>
+                      <SelectItem value="deepseek-v4-flash">
+                        {t("main.modelDeepseekFlash")}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-[10px] text-muted-foreground/70">
                     {config.aiModel === "google/gemini-2.5-pro" && t("main.modelProHint")}
                     {config.aiModel === "google/gemini-2.5-flash" && t("main.modelFlashHint")}
                     {config.aiModel === "google/gemini-2.5-flash-lite" && t("main.modelFlashLiteHint")}
+                    {config.aiModel === "deepseek-v4-pro" && t("main.modelDeepseekProHint")}
+                    {config.aiModel === "deepseek-v4-flash" && t("main.modelDeepseekFlashHint")}
                   </p>
                 </div>
               )}
