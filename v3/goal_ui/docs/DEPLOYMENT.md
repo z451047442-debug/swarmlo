@@ -4,9 +4,14 @@
 > 托管演示：[goal.ruv.io](https://goal.ruv.io/)（目标规划）· [goal.ruv.io/agents](https://goal.ruv.io/agents)（实时智能体仪表盘）。
 > 源码：`v3/goal_ui/`。技术栈：React 18 · TypeScript 5 · Vite 5 · Tailwind 3 · Supabase（Postgres + Auth + Edge Functions）· GOAP A* 规划器。
 
-## 0. 部署架构速览
+## 0. 部署路径一览
 
-本项目是**前端与后端分离**的两段式部署，缺一不可：
+| 路径 | 适用场景 | 后端 | 前端 | 小节 |
+|------|---------|------|------|------|
+| 纯本地部署 | 个人使用 / 离线调试，无任何云账号 | 5 个函数以 Deno 直跑 + `scripts/local-router.ts` | `npm run dev`（localhost:8080） | §2 |
+| 云端部署 | 公网访问（托管演示 goal.ruv.io 即此路径） | Supabase Edge Functions | Netlify 静态托管 | §3 |
+
+云端路径的两段式架构：
 
 ```
 浏览器
@@ -23,9 +28,8 @@
       generate-action-items / optimize-research-config
 ```
 
-- **前端部署**：Netlify（本文 §4）；任何能托管静态文件的平台（Vercel / Cloudflare Pages / Nginx）同理。
-- **后端部署**：Supabase Edge Functions（本文 §3）。
-- 托管演示 goal.ruv.io 即按本文流程部署：Netlify + 自定义域名 + Supabase 托管后端。
+- 5 个函数已改造成**双用途模块**（`export handler` + `if (import.meta.main)` 守卫）：本地可直接跑，云端仍可 `supabase functions deploy`，两条路互不破坏。
+- 任何能托管静态文件的平台（Vercel / Cloudflare Pages / Nginx）都可替代 Netlify（§3.4）。
 
 ---
 
@@ -38,10 +42,9 @@
 | Node.js | **18+**（Netlify 构建需 `NODE_VERSION=18` 或更高） | 本地开发 / 构建 |
 | npm | 9+（随 Node 附带） | 依赖安装 |
 | Git | 任意近期版本 | 克隆仓库 / Netlify Git 集成 |
-| Supabase CLI | 1.150+（**仅部署 Edge Functions 时需要**） | 登录、关联项目、函数部署 |
+| Deno | 2.x（**仅纯本地路径**） | 本机运行 5 个函数 |
+| Supabase CLI | 1.150+（**仅云端路径**） | 登录、关联项目、函数部署 |
 | Netlify CLI | 任意近期版本（可选，CLI 手动部署时需要） | `netlify deploy` |
-
-> 只做本地开发的话，Node.js + Git 就够了；Supabase 后端可以直接连托管演示的云端项目（配置见 §3.4，需要你有该项目的 publishable key）。
 
 ### 1.2 Windows 安装
 
@@ -53,9 +56,10 @@
 winget install OpenJS.NodeJS.LTS
 winget install Git.Git          # ⚠ 必须装 Git for Windows——见下方"cp 坑"
 
-# CLI 工具（全局安装，按需）
-npm install -g supabase
-npm install -g netlify-cli
+# CLI 工具（按部署路径选择，按需）
+winget install DenoLand.Deno                  # 纯本地路径
+npm install -g supabase                       # 云端路径
+npm install -g netlify-cli                    # 云端路径（可选）
 ```
 
 > **⚠ Windows 重要坑：npm 脚本里的 `cp`。** `package.json` 的 `copy:widget` /
@@ -82,14 +86,26 @@ nvm install 20 && nvm use 20
 # 或发行版包管理器（版本可能偏旧，确认 >= 18）
 # sudo apt update && sudo apt install -y nodejs npm
 
-# CLI 工具（全局安装，按需）
+# Deno（纯本地路径）
+curl -fsSL https://deno.land/install.sh | sh
+
+# CLI 工具（云端路径，按需）
 npm install -g supabase
 npm install -g netlify-cli
 ```
 
 ---
 
-## 2. 本地运行
+## 2. 纯本地部署（无 Supabase / 无 Docker，推荐个人使用）
+
+不想用任何云服务时，前端照常跑，5 个函数在本机以 Deno 运行，`scripts/local-router.ts`
+在 `localhost:54321` 把 `/functions/v1/<name>` 分发到 5 个 handler——URL 约定与前端
+`supabase.functions.invoke()` 完全一致，前端代码零改动。
+
+> ⚠ 本地化去掉的是 Supabase，**不是** Lovable AI 网关：每次研究调用仍会请求
+> `ai.gateway.lovable.dev`（按量计费、走公网），`LOVABLE_API_KEY` 依然必需（§2.2）。
+
+### 2.1 前端准备
 
 ```bash
 # Windows：在 Git Bash 中执行；Linux：直接执行
@@ -98,15 +114,31 @@ cd swarmlo/v3/goal_ui
 npm install
 ```
 
-配置环境变量（§3.4 有详细说明）：
+复制 `example.env` → `.env`，改为本地值（`.env` 已被 gitignore 覆盖）：
+
+```env
+VITE_SUPABASE_URL=http://localhost:54321
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_local_dev_only   # 本地函数不校验 JWT，占位即可
+VITE_SUPABASE_PROJECT_ID=local
+```
+
+### 2.2 后端：Deno + 本地路由
 
 ```bash
-# Windows（PowerShell）
-Copy-Item example.env .env     # 然后编辑 .env
+# 装 Deno（§1）；winget 安装后需新开终端才能直接用 deno 命令
 
-# Windows（Git Bash）/ Linux
-cp example.env .env            # 然后编辑 .env
+# 放 Lovable key（.env.local 已被 .gitignore 的 *.local 规则覆盖，不会误提交）
+echo "LOVABLE_API_KEY=你的key" > .env.local
+
+# 启动后端（v3/goal_ui 目录内）
+deno run --allow-net --allow-env --env-file=.env.local scripts/local-router.ts
+# → [local-router] serving 5 functions on http://localhost:54321
 ```
+
+> 首次运行会自动下载远程依赖（`deno.land/std@0.168.0` 等），版本由仓库内的
+> `deno.lock` 钉住——该文件应随仓库提交，保证任何时候拉下来运行结果一致。
+
+### 2.3 启动前端
 
 ```bash
 npm run dev
@@ -114,35 +146,41 @@ npm run dev
 # → http://localhost:8080/agents （智能体仪表盘）
 ```
 
-Widget 开发模式（产出 `dist/widget.js` + `dist/widget.css`，并复制进 `public/`）：
+无 key 冒烟测试（路由连通性零成本可验证）：
 
 ```bash
-npm run widget:dev
+curl http://localhost:54321/functions/v1/nonexistent
+# → 404 + 可用函数清单（路由活着）
+curl -X POST http://localhost:54321/functions/v1/research-step \
+  -H "Content-Type: application/json" -d '{}'
+# → 500 "LOVABLE_API_KEY is not configured"（分发到真实 handler 且密钥检查生效）
 ```
 
-生产构建与本地预览：
+限制：仅本机可访问（无公网 URL），widget 无法被第三方站点嵌入；需要公网走 §3。
+
+### 2.4 常用命令
 
 ```bash
-npm run build                  # widget 构建 → 主应用构建 → 产物归位到 dist/
-npm run preview                # → http://localhost:4173（含 /demo 演示页）
+npm run widget:dev               # Widget 开发模式（产出 dist/widget.js + dist/widget.css，复制进 public/）
+npm run build                    # widget 构建 → 主应用构建 → 产物归位到 dist/
+npm run preview                  # → http://localhost:4173（含 /demo 演示页，纯本地生产形态）
 ```
 
-> 本地不部署 Supabase 时，主页面会在调用 Edge Functions 时报错——属正常现象；
-> 连接云端 Supabase 项目（§3.4）后即可全功能运行。
+> ℹ 数据说明：goal_ui 没有数据库。设置等少量数据存浏览器 localStorage；**研究目标、
+> 步骤与结果保存在页面内存（React state）中，刷新页面即丢失**。纯本地模式没有任何
+> 数据离开你的电脑——唯一例外是每次研究调用发给 Lovable AI 网关的请求内容。
 
 ---
 
-## 3. Supabase 后端配置（Edge Functions）
+## 3. 云端部署（Supabase + Netlify，托管演示路径）
 
-### 3.1 创建 Supabase 项目
+### 3.1 创建 Supabase 项目并关联
 
 1. 打开 [supabase.com/dashboard](https://supabase.com/dashboard)，Sign in 后 **New project**。
 2. 记下关键信息：
    - **Project ID / Reference**（如 `abcdefghijklm`）→ 对应 `VITE_SUPABASE_PROJECT_ID`
    - **Project URL**（如 `https://abcdefghijklm.supabase.co`）→ 对应 `VITE_SUPABASE_URL`
 3. 免费层即可跑通全部 5 个函数（注意免费项目闲置 7 天会暂停，需要去 Dashboard 手动恢复）。
-
-### 3.2 登录与关联项目（Windows / Linux 命令一致）
 
 ```bash
 supabase login                 # 浏览器完成 OAuth 授权
@@ -151,7 +189,7 @@ supabase login                 # 浏览器完成 OAuth 授权
 supabase link --project-ref <你的-project-id>
 ```
 
-### 3.3 部署 5 个 Edge Functions
+### 3.2 部署 5 个 Edge Functions
 
 ```bash
 # 部署全部函数（一次性）
@@ -171,55 +209,36 @@ supabase functions list
 
 函数源文件在 `supabase/functions/<函数名>/index.ts`，修改后重新执行上面的 deploy 即可热更新（旧实例立即被替换）。
 
-### 3.4 前端环境变量（随 Vite 构建注入）
+### 3.3 Edge Functions 服务端 Secrets
 
-复制 `example.env` → `.env`，填三个值（**全部为客户端可公开的 publishable 变量**）：
-
-```env
-VITE_SUPABASE_URL=https://<你的-project-id>.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=<publishable key>
-VITE_SUPABASE_PROJECT_ID=<你的-project-id>
-```
-
-取值位置：Supabase Dashboard → **Project Settings → API Keys**：
-- Project URL → `VITE_SUPABASE_URL`
-- **Publishable key**（以 `sb_publishable_` 开头）→ `VITE_SUPABASE_PUBLISHABLE_KEY`
-
-> ⚠ 不要用 `anon` key 或 `service_role` key 填 `VITE_SUPABASE_PUBLISHABLE_KEY`：
-> 前端代码（`src/integrations/supabase/client.ts`）明确读取 publishable key，
-> 且 `service_role` key 会绕过行级安全策略，**绝不能**出现在浏览器代码里。
-> 旧版文档中 `VITE_SUPABASE_ANON_KEY` 的说法已过时，以 `example.env` 为准。
-
-### 3.5 Edge Functions 服务端 Secrets
-
-函数内部需要 Supabase 服务端凭据时（如 `SUPABASE_SERVICE_ROLE_KEY`），**不要**放在前端 `.env`：
+**`LOVABLE_API_KEY` 是 5 个函数全部必配的 secret**（缺了所有研究调用返回 500
+`"LOVABLE_API_KEY is not configured"`）。函数内部需要的其他服务端凭据（如
+`SUPABASE_SERVICE_ROLE_KEY`）同理，**不要**放在前端 `.env`：
 
 1. Dashboard → **Edge Functions → Secrets** → Add secret。
-2. 填入函数实际读取的 key（参考 `example.env` 注释段：`SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_DB_URL` 等）。
+2. 填入 `LOVABLE_API_KEY` 及函数实际读取的其他 key（参考 `example.env` 注释段）。
 3. Secrets 在函数运行时通过环境变量注入，重新部署函数后生效。
 
----
-
-## 4. Netlify 部署（前端）
+### 3.4 Netlify 部署（前端）
 
 仓库内的 `netlify.toml` 已配好全部规则，无需额外配置：
 
 | 配置项 | 值 | 说明 |
-|--------|----|------|
+|--------|-----|------|
 | Build command | `npm run build` | widget → 主应用 → 产物归位 dist/ |
 | Publish directory | `dist` | Vite 构建产物 |
 | SPA 回退 | `/* → /index.html`（200） | 支持 `/agents` 等客户端路由直链 |
 | CORS 头 | `/widget.js`、`/widget.css` | 供第三方站点跨域嵌入 |
 | 缓存 | `/assets/*` 1 年 immutable | 静态资源长缓存 |
 
-### 4.1 方式 A：Git 集成自动部署（推荐）
+**方式 A：Git 集成自动部署（推荐）**
 
 1. [app.netlify.com](https://app.netlify.com) → **Add new site → Import an existing project**，连接 GitHub，选中 `z451047442-debug/swarmlo`。
 2. **Base directory** 设为 `v3/goal_ui`。
 3. Build settings 会自动读取 `netlify.toml`；在 Environment variables 中确认 `NODE_VERSION=18`（或更高）。
 4. Deploy。此后每次 push 自动构建发布。
 
-### 4.2 方式 B：CLI 手动部署（Windows / Linux 命令一致）
+**方式 B：CLI 手动部署（Windows / Linux 命令一致）**
 
 ```bash
 # 在 v3/goal_ui 目录内（Windows 记得在 Git Bash 里执行）
@@ -233,18 +252,44 @@ netlify init
 netlify deploy --prod --dir=dist
 ```
 
-### 4.3 环境变量配置（Netlify 侧）
+### 3.5 前端环境变量与自定义域名
 
-Netlify 站点 → **Site configuration → Environment variables**，添加 §3.4 中的三个 `VITE_*` 变量。
+Netlify 站点 → **Site configuration → Environment variables**，添加 §4.1 中的三个 `VITE_*` 变量。
 由于是构建时注入，**修改后必须重新触发一次部署**（Retry deploy 即可）才会生效。
 
-### 4.4 自定义域名
+域名（可选）：
 
 1. 站点 → **Domain settings → Add a domain**，输入你的域名（托管演示即 `goal.ruv.io`）。
 2. 按提示到你的 DNS 服务商添加记录：
    - 裸域名：`A` 记录指向 Netlify 负载均衡地址，或 `ALIAS`/`ANAME`（取决于服务商）
    - 子域名（推荐，如 `goal.example.com`）：`CNAME` 指向 `apex-loadbalancer.netlify.com`
 3. 等待 DNS 生效，Netlify 自动签发 Let's Encrypt 证书并启用 HTTPS。
+
+---
+
+## 4. 环境变量参考
+
+### 4.1 前端（`.env` / Netlify，随 Vite 构建注入）
+
+| 变量 | 纯本地 | 云端 | 说明 |
+|------|:------:|:----:|------|
+| `VITE_SUPABASE_URL` | `http://localhost:54321` | ✅ | Supabase 项目 URL（本地指向 local-router） |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | 占位 `sb_publishable_*` 即可 | ✅ | 浏览器可公开的 publishable key |
+| `VITE_SUPABASE_PROJECT_ID` | `local` | ✅ | Supabase Project Reference |
+
+取值位置（云端）：Supabase Dashboard → **Project Settings → API Keys**。
+
+> ⚠ 不要用 `anon` key 或 `service_role` key 填 `VITE_SUPABASE_PUBLISHABLE_KEY`：
+> 前端代码（`src/integrations/supabase/client.ts`）明确读取 publishable key，
+> 且 `service_role` key 会绕过行级安全策略，**绝不能**出现在浏览器代码里。
+> 旧版文档中 `VITE_SUPABASE_ANON_KEY` 的说法已过时，以 `example.env` 为准。
+
+### 4.2 服务端（仅 Edge Functions Secrets / `.env.local`，禁止进前端）
+
+| 变量 | 必填 | 说明 |
+|------|:----:|------|
+| `LOVABLE_API_KEY` | ✅ | Lovable AI 网关 key——5 个函数全部依赖，缺失即 500 |
+| `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_DB_URL` | 按需 | 函数需要 Supabase 服务端凭据时配置（云端 §3.3） |
 
 ---
 
@@ -256,6 +301,7 @@ Netlify 站点 → **Site configuration → Environment variables**，添加 §3
 | 复制 .env | `Copy-Item example.env .env`（PowerShell）或 `cp`（Git Bash） | `cp example.env .env` |
 | 多行环境变量 | PowerShell 用反引号 `` ` `` 续行 | bash 用 `\` 续行 |
 | Node 安装 | 官网 MSI / `winget install OpenJS.NodeJS.LTS` | `nvm install 20` |
+| Deno 安装 | `winget install DenoLand.Deno`（装完新开终端） | `curl -fsSL https://deno.land/install.sh \| sh` |
 | CLI 全局安装 | `npm install -g supabase`（同上） | 同上 |
 | 端口占用排查 | `netstat -ano \| findstr :8080` | `ss -tulpn \| grep 8080` |
 
@@ -284,33 +330,34 @@ SPA 回退必须放在**最后一条** redirect 规则之后生效。`netlify.to
 
 ### 6.5 页面报 Supabase 连接失败 / key 无效
 
-1. `.env` 或 Netlify 环境变量缺失 → 检查三个 `VITE_*` 是否齐全。
-2. key 类型错误 → 必须是 **publishable key**（`sb_publishable_` 前缀），见 §3.4。
+1. `.env` 或 Netlify 环境变量缺失 → 检查三个 `VITE_*` 是否齐全（§4.1）。
+2. key 类型错误 → 云端必须是 **publishable key**（`sb_publishable_` 前缀）；纯本地为占位值即可。
 3. 改了 Netlify 环境变量但没重新部署 → 构建时注入，需 Retry deploy。
 
-### 6.6 Edge Function 调用返回 500
+### 6.6 研究功能调用返回 500
 
-1. 函数未部署：`supabase functions list` 确认 5 个函数 ACTIVE。
-2. Secrets 未配置：Dashboard → Edge Functions → Secrets 补齐服务端 key。
-3. 免费项目被暂停：Dashboard 检查项目状态，手动 Restore。
+1. 纯本地：`LOVABLE_API_KEY` 未放 `.env.local` 或路由未启动 → 见 §2.2 / §2.3 冒烟测试。
+2. 云端：函数未部署（`supabase functions list` 确认 5 个函数 ACTIVE）；Secrets 缺 `LOVABLE_API_KEY`（§3.3）；免费项目被暂停（Dashboard 手动 Restore）。
 
 ### 6.7 本地 dev 能跑但生产空白
 
 生产走 `npm run build`（含 widget 构建步骤），dev 走 `vite dev`——两者产物不同。
 务必用 `npm run build && npm run preview` 验证生产产物后再部署。
 
+### 6.8 本地路由端口 54321 被占用
+
+换端口启动并同步前端配置：
+
+```bash
+PORT=54322 deno run --allow-net --allow-env --env-file=.env.local scripts/local-router.ts
+# 同时把 .env 的 VITE_SUPABASE_URL 改为 http://localhost:54322
+```
+
+Windows 排查占用：`netstat -ano | findstr :54321`；Linux：`ss -tulpn | grep 54321`。
+
 ---
 
-## 7. 环境变量参考
-
-| 变量 | 位置 | 必填 | 说明 |
-|------|------|:----:|------|
-| `VITE_SUPABASE_URL` | 前端 `.env` / Netlify | ✅ | Supabase 项目 URL |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | 前端 `.env` / Netlify | ✅ | 浏览器可公开的 publishable key |
-| `VITE_SUPABASE_PROJECT_ID` | 前端 `.env` / Netlify | ✅ | Supabase Project Reference |
-| `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` 等 | **仅** Edge Functions Secrets | 按需 | 服务端凭据，禁止进前端 |
-
-## 8. Widget 嵌入（部署后可用）
+## 7. Widget 嵌入（部署后可用）
 
 ```html
 <div id="swarmlo-research-widget-container"></div>
