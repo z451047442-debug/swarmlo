@@ -57,7 +57,7 @@ interface ResearchDataItem {
   timestamp: string;
 }
 
-serve(async (req) => {
+export async function handler(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -394,5 +394,9 @@ Format (all fields required):
       }
     );
   }
-});
+}
+
+if (import.meta.main) {
+  serve(handler);
+}
 

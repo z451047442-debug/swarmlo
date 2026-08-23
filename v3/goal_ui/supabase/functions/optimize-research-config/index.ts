@@ -11,7 +11,7 @@ interface OptimizeConfigRequest {
   currentGoal?: string;
 }
 
-serve(async (req) => {
+export async function handler(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -310,4 +310,8 @@ Be specific and practical - these settings will directly control AI research beh
       }
     );
   }
-});
+}
+
+if (import.meta.main) {
+  serve(handler);
+}

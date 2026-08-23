@@ -11,7 +11,7 @@ interface GenerateGoalRequest {
   customContext?: string;
 }
 
-serve(async (req) => {
+export async function handler(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -179,4 +179,8 @@ Push the boundaries. Be specific. Be innovative.`;
       }
     );
   }
-});
+}
+
+if (import.meta.main) {
+  serve(handler);
+}

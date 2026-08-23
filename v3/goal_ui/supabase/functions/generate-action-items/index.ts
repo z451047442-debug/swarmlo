@@ -20,7 +20,7 @@ interface ActionItemsRequest {
   totalDataPoints: number;
 }
 
-serve(async (req) => {
+export async function handler(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -234,4 +234,8 @@ Format:
       }
     );
   }
-});
+}
+
+if (import.meta.main) {
+  serve(handler);
+}
