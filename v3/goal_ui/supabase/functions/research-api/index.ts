@@ -54,12 +54,13 @@ export async function handler(req: Request): Promise<Response> {
   }
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const AI_BASE_URL = Deno.env.get('AI_BASE_URL') ?? 'https://ai.gateway.lovable.dev/v1';
+    const AI_API_KEY = Deno.env.get('AI_API_KEY') ?? Deno.env.get('LOVABLE_API_KEY');
+    if (!AI_API_KEY) {
+      throw new Error('AI_API_KEY is not configured (set AI_API_KEY or LOVABLE_API_KEY)');
     }
 
-    const { goal, config = {}, aiModel = 'google/gemini-2.5-flash', stream: enableStreaming = true }: ResearchRequest = await req.json();
+    const { goal, config = {}, aiModel = Deno.env.get('AI_MODEL') ?? 'google/gemini-2.5-flash', stream: enableStreaming = true }: ResearchRequest = await req.json();
 
     if (!goal) {
       return new Response(
@@ -90,7 +91,7 @@ export async function handler(req: Request): Promise<Response> {
       const allFindings = [];
       
       for (const step of researchSteps) {
-        const stepResult = await executeResearchStep(step, goal, config, aiModel, LOVABLE_API_KEY);
+        const stepResult = await executeResearchStep(step, goal, config, aiModel, AI_API_KEY);
         allFindings.push(stepResult);
       }
 
@@ -133,7 +134,7 @@ export async function handler(req: Request): Promise<Response> {
             })}\n\n`));
 
             // Execute step
-            const stepResult = await executeResearchStep(step, goal, config, aiModel, LOVABLE_API_KEY);
+            const stepResult = await executeResearchStep(step, goal, config, aiModel, AI_API_KEY);
 
             // Send step complete event
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({
@@ -193,12 +194,13 @@ async function executeResearchStep(
   aiModel: string,
   apiKey: string
 ) {
+  const AI_BASE_URL = Deno.env.get('AI_BASE_URL') ?? 'https://ai.gateway.lovable.dev/v1';
   const systemPrompt = config.prompts?.systemPrompt || buildSystemPrompt(config);
   const userPrompt = buildUserPrompt(step, goal, config);
 
   console.log(`Executing step ${step.stepNumber}: ${step.stepTitle}`);
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const response = await fetch(`${AI_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,

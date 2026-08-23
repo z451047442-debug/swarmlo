@@ -102,8 +102,9 @@ npm install -g netlify-cli
 在 `localhost:54321` 把 `/functions/v1/<name>` 分发到 5 个 handler——URL 约定与前端
 `supabase.functions.invoke()` 完全一致，前端代码零改动。
 
-> ⚠ 本地化去掉的是 Supabase，**不是** Lovable AI 网关：每次研究调用仍会请求
-> `ai.gateway.lovable.dev`（按量计费、走公网），`LOVABLE_API_KEY` 依然必需（§2.2）。
+> ⚠ 本地化去掉的是 Supabase，**不是** AI 推理本身：每次研究调用仍会请求模型端点。
+> 端点通过 `AI_BASE_URL` / `AI_API_KEY` 配置（默认指向 Lovable 网关，可换成任意
+> OpenAI 兼容供应商——DeepSeek、OpenRouter、本地 Ollama 等），见 §2.2。
 
 ### 2.1 前端准备
 
@@ -127,8 +128,8 @@ VITE_SUPABASE_PROJECT_ID=local
 ```bash
 # 装 Deno（§1）；winget 安装后需新开终端才能直接用 deno 命令
 
-# 放 Lovable key（.env.local 已被 .gitignore 的 *.local 规则覆盖，不会误提交）
-echo "LOVABLE_API_KEY=你的key" > .env.local
+# 放模型端点配置（.env.local 已被 .gitignore 的 *.local 规则覆盖，不会误提交）
+echo "AI_API_KEY=你的key" > .env.local
 
 # 启动后端（v3/goal_ui 目录内）
 deno run --allow-net --allow-env --env-file=.env.local scripts/local-router.ts
@@ -137,6 +138,20 @@ deno run --allow-net --allow-env --env-file=.env.local scripts/local-router.ts
 
 > 首次运行会自动下载远程依赖（`deno.land/std@0.168.0` 等），版本由仓库内的
 > `deno.lock` 钉住——该文件应随仓库提交，保证任何时候拉下来运行结果一致。
+
+常用端点示例（`.env.local` 里按需加 `AI_BASE_URL` / `AI_MODEL`）：
+
+```env
+# DeepSeek（国内直连、人民币计费）
+AI_BASE_URL=https://api.deepseek.com/v1
+AI_MODEL=deepseek-chat
+
+# 本地 Ollama（完全免费，需自备模型）
+# AI_BASE_URL=http://127.0.0.1:11434/v1
+# AI_MODEL=qwen2.5:14b
+
+# AI_ENABLE_SEARCH=1 时 research-step 附带 Gemini 联网搜索工具（仅支持的端点有效）
+```
 
 ### 2.3 启动前端
 
@@ -153,7 +168,7 @@ curl http://localhost:54321/functions/v1/nonexistent
 # → 404 + 可用函数清单（路由活着）
 curl -X POST http://localhost:54321/functions/v1/research-step \
   -H "Content-Type: application/json" -d '{}'
-# → 500 "LOVABLE_API_KEY is not configured"（分发到真实 handler 且密钥检查生效）
+# → 500 "AI_API_KEY is not configured"（分发到真实 handler 且密钥检查生效）
 ```
 
 限制：仅本机可访问（无公网 URL），widget 无法被第三方站点嵌入；需要公网走 §3。
@@ -211,12 +226,12 @@ supabase functions list
 
 ### 3.3 Edge Functions 服务端 Secrets
 
-**`LOVABLE_API_KEY` 是 5 个函数全部必配的 secret**（缺了所有研究调用返回 500
-`"LOVABLE_API_KEY is not configured"`）。函数内部需要的其他服务端凭据（如
-`SUPABASE_SERVICE_ROLE_KEY`）同理，**不要**放在前端 `.env`：
+**`AI_API_KEY` 是 5 个函数全部必配的 secret**（缺了所有研究调用返回 500
+`"AI_API_KEY is not configured"`；`LOVABLE_API_KEY` 仍可作回退）。函数内部需要的
+其他服务端凭据（如 `SUPABASE_SERVICE_ROLE_KEY`）同理，**不要**放在前端 `.env`：
 
 1. Dashboard → **Edge Functions → Secrets** → Add secret。
-2. 填入 `LOVABLE_API_KEY` 及函数实际读取的其他 key（参考 `example.env` 注释段）。
+2. 填入 `AI_API_KEY` 及函数实际读取的其他 key（如 `AI_BASE_URL` / `AI_MODEL`，参考 §4.2）。
 3. Secrets 在函数运行时通过环境变量注入，重新部署函数后生效。
 
 ### 3.4 Netlify 部署（前端）
@@ -288,7 +303,10 @@ Netlify 站点 → **Site configuration → Environment variables**，添加 §4
 
 | 变量 | 必填 | 说明 |
 |------|:----:|------|
-| `LOVABLE_API_KEY` | ✅ | Lovable AI 网关 key——5 个函数全部依赖，缺失即 500 |
+| `AI_API_KEY` | ✅ | 模型端点 key——5 个函数全部依赖，缺失即 500（旧名 `LOVABLE_API_KEY` 仍可作回退） |
+| `AI_BASE_URL` | 否 | OpenAI 兼容端点；默认 `https://ai.gateway.lovable.dev/v1` |
+| `AI_MODEL` | 否 | 模型名覆盖；默认 `google/gemini-2.5-flash`（如 DeepSeek 填 `deepseek-chat`） |
+| `AI_ENABLE_SEARCH` | 否 | `1` 时 research-step 附带 Gemini 联网搜索工具（仅支持的端点有效） |
 | `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_DB_URL` | 按需 | 函数需要 Supabase 服务端凭据时配置（云端 §3.3） |
 
 ---
@@ -336,8 +354,8 @@ SPA 回退必须放在**最后一条** redirect 规则之后生效。`netlify.to
 
 ### 6.6 研究功能调用返回 500
 
-1. 纯本地：`LOVABLE_API_KEY` 未放 `.env.local` 或路由未启动 → 见 §2.2 / §2.3 冒烟测试。
-2. 云端：函数未部署（`supabase functions list` 确认 5 个函数 ACTIVE）；Secrets 缺 `LOVABLE_API_KEY`（§3.3）；免费项目被暂停（Dashboard 手动 Restore）。
+1. 纯本地：`AI_API_KEY` 未放 `.env.local` 或路由未启动 → 见 §2.2 / §2.3 冒烟测试。
+2. 云端：函数未部署（`supabase functions list` 确认 5 个函数 ACTIVE）；Secrets 缺 `AI_API_KEY`（§3.3）；免费项目被暂停（Dashboard 手动 Restore）。
 
 ### 6.7 本地 dev 能跑但生产空白
 

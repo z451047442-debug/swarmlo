@@ -78,9 +78,10 @@ export async function handler(req: Request): Promise<Response> {
       focusAreas: config?.researchGuidance?.focusAreas?.length || 0
     });
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const AI_BASE_URL = Deno.env.get('AI_BASE_URL') ?? 'https://ai.gateway.lovable.dev/v1';
+    const AI_API_KEY = Deno.env.get('AI_API_KEY') ?? Deno.env.get('LOVABLE_API_KEY');
+    if (!AI_API_KEY) {
+      throw new Error('AI_API_KEY is not configured (set AI_API_KEY or LOVABLE_API_KEY)');
     }
 
     // Use custom system prompt if provided, otherwise use default
@@ -246,28 +247,30 @@ Format (all fields required):
   "confidence": ${config?.parameters?.minConfidence ? (config.parameters.minConfidence / 100) : 0.85} // REQUIRED - Must be between ${config?.parameters?.minConfidence ? `${config.parameters.minConfidence / 100}` : '0.7'} and 0.95
 }`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`${AI_BASE_URL}/chat/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${AI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: aiModel || 'google/gemini-2.5-flash',
+        model: aiModel || Deno.env.get('AI_MODEL') || 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
         tools: [
-          {
-            type: "google_search_retrieval",
-            google_search_retrieval: {
-              dynamic_retrieval_config: {
-                mode: "MODE_DYNAMIC",
-                dynamic_threshold: 0.3
-              }
-            }
-          },
+          ...(Deno.env.get('AI_ENABLE_SEARCH') === '1'
+            ? [{
+                type: "google_search_retrieval",
+                google_search_retrieval: {
+                  dynamic_retrieval_config: {
+                    mode: "MODE_DYNAMIC",
+                    dynamic_threshold: 0.3
+                  }
+                }
+              }]
+            : []),
           {
             type: "function",
             function: {

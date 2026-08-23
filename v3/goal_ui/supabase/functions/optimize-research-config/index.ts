@@ -21,9 +21,10 @@ export async function handler(req: Request): Promise<Response> {
     
     console.log('Optimize config request:', { preset, currentGoal });
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const AI_BASE_URL = Deno.env.get('AI_BASE_URL') ?? 'https://ai.gateway.lovable.dev/v1';
+    const AI_API_KEY = Deno.env.get('AI_API_KEY') ?? Deno.env.get('LOVABLE_API_KEY');
+    if (!AI_API_KEY) {
+      throw new Error('AI_API_KEY is not configured (set AI_API_KEY or LOVABLE_API_KEY)');
     }
 
     const systemPrompt = `You are an expert research workflow architect specializing in GOAP (Goal-Oriented Action Planning) configuration optimization.
@@ -115,14 +116,14 @@ Be specific and practical - these settings will directly control AI research beh
 
     const userPrompt = presetPrompts[preset.toLowerCase()] || `Optimize research settings for: ${preset}. Goal: ${currentGoal || 'general research'}`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`${AI_BASE_URL}/chat/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${AI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: Deno.env.get('AI_MODEL') ?? 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
