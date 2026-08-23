@@ -64,10 +64,10 @@ export const StateAssessmentCard = ({
           <div className="space-y-1">
             <CardTitle className="flex items-center gap-2">
               <Target className="w-5 h-5 animate-pulse" style={{ color: primaryColor }} />
-              GOAP State Assessment
+              GOAP 状态评估
             </CardTitle>
             <CardDescription>
-              Real-time state progression tracking
+              实时状态进度跟踪
             </CardDescription>
           </div>
           <div className="text-right">
@@ -75,7 +75,7 @@ export const StateAssessmentCard = ({
               {progressPercentage}%
             </div>
             <div className="text-xs text-muted-foreground">
-              {completedCount}/{totalCount} complete
+              已完成 {completedCount}/{totalCount}
             </div>
           </div>
         </div>
@@ -99,9 +99,9 @@ export const StateAssessmentCard = ({
           <div className="space-y-3">
             <div className="flex items-center gap-2 pb-2 border-b">
               <Circle className="w-4 h-4" style={{ color: primaryColor }} />
-              <h4 className="text-sm font-semibold">System State</h4>
+              <h4 className="text-sm font-semibold">系统状态</h4>
               <Badge variant="outline" className="ml-auto text-xs">
-                Current
+                当前
               </Badge>
             </div>
             <div className="space-y-1">
@@ -158,10 +158,10 @@ export const StateAssessmentCard = ({
             <div className="flex items-center gap-2 pb-2 border-b">
               <CheckCircle2 className="w-4 h-4" style={{ color: accentColor }} />
               <h4 className="text-sm font-semibold" style={{ color: accentColor }}>
-                Goal State
+                目标状态
               </h4>
               <Badge variant="outline" className="ml-auto text-xs" style={{ borderColor: accentColor, color: accentColor }}>
-                Target
+                目标
               </Badge>
             </div>
             <div className="space-y-1">
@@ -221,7 +221,7 @@ export const StateAssessmentCard = ({
         <div className="pt-2 border-t">
           <div className="flex items-center gap-2 mb-2">
             <ArrowRight className="w-4 h-4" style={{ color: primaryColor }} />
-            <h4 className="text-sm font-semibold">State Transitions</h4>
+            <h4 className="text-sm font-semibold">状态转换</h4>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             {currentStateEntries.slice(0, 3).map(([key, currentValue], index) => {
@@ -269,9 +269,9 @@ export const StateAssessmentCard = ({
           <div className="space-y-3 pt-4 border-t">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4" style={{ color: primaryColor }} />
-              <h4 className="text-sm font-semibold">Action Plan</h4>
+              <h4 className="text-sm font-semibold">行动计划</h4>
               <Badge variant="outline" className="ml-auto text-xs">
-                {stateGaps.length} steps remaining
+                剩余 {stateGaps.length} 步
               </Badge>
             </div>
             <div className="space-y-2">

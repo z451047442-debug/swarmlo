@@ -47,18 +47,18 @@ export function PlanVisualization({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <GitBranch className="w-5 h-5 text-purple-500" />
-            Execution Plan
+            执行计划
           </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="outline">
-              {actions.length} Actions
+              {actions.length} 个操作
             </Badge>
             <Badge variant="outline">
-              Cost: {totalCost}
+              成本：{totalCost}
             </Badge>
             <Badge variant="outline" className="gap-1">
               <Clock className="w-3 h-3" />
-              Est. {Math.ceil(totalCost * 0.5)}m
+              预计 {Math.ceil(totalCost * 0.5)} 分钟
             </Badge>
           </div>
         </div>
@@ -66,8 +66,8 @@ export function PlanVisualization({
       <CardContent>
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
           <TabsList className="mb-4">
-            <TabsTrigger value="graph">Graph View</TabsTrigger>
-            <TabsTrigger value="timeline">Timeline View</TabsTrigger>
+            <TabsTrigger value="graph">图视图</TabsTrigger>
+            <TabsTrigger value="timeline">时间线视图</TabsTrigger>
           </TabsList>
 
           <TabsContent value="graph" className="h-[500px] border rounded-lg">
@@ -119,7 +119,7 @@ export function PlanVisualization({
                         )}
                       </div>
                     </div>
-                    <Badge variant="outline">Cost: {action.cost}</Badge>
+                    <Badge variant="outline">成本：{action.cost}</Badge>
                   </div>
                 </div>
               );
@@ -147,7 +147,7 @@ function convertPlanToGraph(
         label: (
           <div className="text-center">
             <div className="font-semibold text-sm">{action.name}</div>
-            <div className="text-xs text-muted-foreground">Cost: {action.cost}</div>
+            <div className="text-xs text-muted-foreground">成本：{action.cost}</div>
           </div>
         )
       },

@@ -249,13 +249,13 @@ export const AgentStep = ({
                       >
                         {item.details.objective && (
                           <div className="animate-fade-in" style={{ animationDelay: "50ms" }}>
-                            <span className="text-muted-foreground font-medium">Objective:</span>
+                            <span className="text-muted-foreground font-medium">目标：</span>
                             <p className="text-foreground/80 mt-0.5">{item.details.objective}</p>
                           </div>
                         )}
                         {item.details.preconditions && item.details.preconditions.length > 0 && (
                           <div className="animate-fade-in" style={{ animationDelay: "100ms" }}>
-                            <span className="text-muted-foreground font-medium">Preconditions:</span>
+                            <span className="text-muted-foreground font-medium">前置条件：</span>
                             <ul className="text-foreground/80 mt-0.5 space-y-0.5">
                               {item.details.preconditions.map((p, i) => (
                                 <li key={i}>• {p}</li>
@@ -265,7 +265,7 @@ export const AgentStep = ({
                         )}
                         {item.details.effects && item.details.effects.length > 0 && (
                           <div className="animate-fade-in" style={{ animationDelay: "150ms" }}>
-                            <span className="text-muted-foreground font-medium">Effects:</span>
+                            <span className="text-muted-foreground font-medium">效果：</span>
                             <ul className="text-foreground/80 mt-0.5 space-y-0.5">
                               {item.details.effects.map((e, i) => (
                                 <li key={i}>• {e}</li>
@@ -275,7 +275,7 @@ export const AgentStep = ({
                         )}
                         {item.details.agents && item.details.agents.length > 0 && (
                           <div className="animate-fade-in" style={{ animationDelay: "200ms" }}>
-                            <span className="text-muted-foreground font-medium">Agents:</span>
+                            <span className="text-muted-foreground font-medium">Agent：</span>
                             <div className="flex flex-wrap gap-1 mt-0.5">
                               {item.details.agents.map((a, i) => (
                                 <span key={i} className="bg-muted/50 px-1.5 py-0.5 rounded text-foreground/80">{a}</span>
@@ -285,7 +285,7 @@ export const AgentStep = ({
                         )}
                         {item.details.sources && item.details.sources.length > 0 && (
                           <div className="animate-fade-in" style={{ animationDelay: "250ms" }}>
-                            <span className="text-muted-foreground font-medium">Sources:</span>
+                            <span className="text-muted-foreground font-medium">来源：</span>
                             <ul className="text-foreground/80 mt-0.5 space-y-0.5">
                               {item.details.sources.map((s, i) => (
                                 <li key={i}>• {s}</li>
@@ -295,7 +295,7 @@ export const AgentStep = ({
                         )}
                         {item.details.citations && item.details.citations.length > 0 && (
                           <div className="animate-fade-in" style={{ animationDelay: "300ms" }}>
-                            <span className="text-muted-foreground font-medium">Citations:</span>
+                            <span className="text-muted-foreground font-medium">引用：</span>
                             <ul className="text-foreground/80 mt-0.5 space-y-0.5">
                               {item.details.citations.map((c, i) => (
                                 <li key={i} className="italic">"{c}"</li>
@@ -332,10 +332,10 @@ export const AgentStep = ({
             color: status === "pending" ? secondaryTextColor : status === "active" ? primaryColor : status === "completed" ? successColor : secondaryTextColor,
           }}
         >
-          {status === "pending" && "Pending"}
-          {status === "active" && "Researching..."}
-          {status === "completed" && "Complete"}
-          {status === "error" && "Error"}
+          {status === "pending" && "待执行"}
+          {status === "active" && "研究中..."}
+          {status === "completed" && "已完成"}
+          {status === "error" && "错误"}
         </div>
       </div>
     </div>

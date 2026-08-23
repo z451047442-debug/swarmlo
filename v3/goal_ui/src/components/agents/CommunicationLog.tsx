@@ -7,34 +7,34 @@ export const CommunicationLog = () => {
   const messages = [
     {
       id: 1,
-      from: "Architecture",
-      to: "Implementation",
-      message: "Database schema design completed. Ready for implementation.",
-      timestamp: "2m ago",
+      from: "架构",
+      to: "实现",
+      message: "数据库结构设计已完成，可开始实现。",
+      timestamp: "2 分钟前",
       type: "info",
     },
     {
       id: 2,
-      from: "Implementation",
-      to: "Testing",
-      message: "Auth module implemented. Please write unit tests.",
-      timestamp: "1m ago",
+      from: "实现",
+      to: "测试",
+      message: "认证模块已实现，请编写单元测试。",
+      timestamp: "1 分钟前",
       type: "request",
     },
     {
       id: 3,
-      from: "Testing",
-      to: "Code Review",
-      message: "Test coverage at 85%. Ready for review.",
-      timestamp: "30s ago",
+      from: "测试",
+      to: "代码审查",
+      message: "测试覆盖率已达 85%，可开始审查。",
+      timestamp: "30 秒前",
       type: "success",
     },
     {
       id: 4,
-      from: "Code Review",
-      to: "Implementation",
-      message: "Security concern found in auth middleware. Please fix.",
-      timestamp: "10s ago",
+      from: "代码审查",
+      to: "实现",
+      message: "在认证中间件中发现安全隐患，请修复。",
+      timestamp: "10 秒前",
       type: "warning",
     },
   ];
@@ -51,9 +51,9 @@ export const CommunicationLog = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-primary" />
-          Inter-Agent Communication
+          Agent 间通信
         </CardTitle>
-        <CardDescription>Real-time message exchange between agents</CardDescription>
+        <CardDescription>Agent 之间的实时消息交换</CardDescription>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[300px] pr-4">
@@ -72,7 +72,7 @@ export const CommunicationLog = () => {
                     {msg.to}
                   </Badge>
                   <Badge className={`ml-auto text-xs ${typeColors[msg.type as keyof typeof typeColors]}`}>
-                    {msg.type}
+                    {msg.type === "info" ? "信息" : msg.type === "request" ? "请求" : msg.type === "success" ? "成功" : "警告"}
                   </Badge>
                 </div>
                 <p className="text-sm">{msg.message}</p>

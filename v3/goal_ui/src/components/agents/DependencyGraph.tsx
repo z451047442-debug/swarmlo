@@ -3,11 +3,11 @@ import { GitBranch, ArrowRight } from "lucide-react";
 
 export const DependencyGraph = () => {
   const dependencies = [
-    { from: "Architecture", to: "Implementation", status: "complete" },
-    { from: "Implementation", to: "Testing", status: "active" },
-    { from: "Testing", to: "Code Review", status: "pending" },
-    { from: "Code Review", to: "Documentation", status: "pending" },
-    { from: "Documentation", to: "DevOps", status: "pending" },
+    { from: "架构", to: "实现", status: "complete" },
+    { from: "实现", to: "测试", status: "active" },
+    { from: "测试", to: "代码审查", status: "pending" },
+    { from: "代码审查", to: "文档", status: "pending" },
+    { from: "文档", to: "DevOps", status: "pending" },
   ];
 
   return (
@@ -15,9 +15,9 @@ export const DependencyGraph = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <GitBranch className="w-5 h-5 text-purple-500" />
-          Task Dependencies
+          任务依赖
         </CardTitle>
-        <CardDescription>Workflow execution order</CardDescription>
+        <CardDescription>工作流执行顺序</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">

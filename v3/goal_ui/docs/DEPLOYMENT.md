@@ -181,9 +181,10 @@ npm run build                    # widget 构建 → 主应用构建 → 产物�
 npm run preview                  # → http://localhost:4173（含 /demo 演示页，纯本地生产形态）
 ```
 
-> ℹ 数据说明：goal_ui 没有数据库。设置等少量数据存浏览器 localStorage；**研究目标、
-> 步骤与结果保存在页面内存（React state）中，刷新页面即丢失**。纯本地模式没有任何
-> 数据离开你的电脑——唯一例外是每次研究调用发给 Lovable AI 网关的请求内容。
+> ℹ 数据说明：goal_ui 没有数据库。设置与会话状态都持久化在浏览器 localStorage：
+> 研究会话（目标、计划、步骤结果、最终建议）存于 `swarmlo-research-session-v1`，
+> **刷新页面自动恢复上次会话**，点 "New Research" 即清空。纯本地模式没有任何数据
+> 离开你的电脑——唯一例外是每次研究调用发给 AI 端点（默认 Lovable 网关，可配置）的请求内容。
 
 ---
 

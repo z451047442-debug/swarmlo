@@ -26,6 +26,7 @@ import {
   Code,
   Play,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { AgentStep, StepStatus } from "@/components/AgentStep";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -69,7 +70,7 @@ const defaultResearchConfig: ResearchConfig = {
   stateDefinition: {
     currentState: { goalDefined: true, informationGathered: false },
     goalState: { verified: true, insightsGenerated: true },
-    stateGaps: ["Information needs to be gathered", "Analysis required", "Insights need generation"],
+    stateGaps: ["需要收集信息", "需要进行分析", "需要生成洞察"],
   },
   researchGuidance: {
     focusAreas: [],
@@ -100,7 +101,7 @@ Always include sources, confidence levels, and timestamps when available.`,
   goapConfig: {
     executionMode: "closed",
     enableReplanning: true,
-    replanningTriggers: ["Action failure", "Low confidence results", "Missing preconditions"],
+    replanningTriggers: ["动作失败", "低置信度结果", "缺少前置条件"],
     costOptimization: true,
     parallelExecution: true,
   },
@@ -125,6 +126,87 @@ Always include sources, confidence levels, and timestamps when available.`,
   },
 };
 
+const RESEARCH_SESSION_KEY = "swarmlo-research-session-v1";
+
+interface PersistedResearchSession {
+  userGoal: string;
+  steps: Step[];
+  finalRecommendations: unknown[];
+  researchConfig: ResearchConfig;
+  currentGOAPState: Record<string, boolean | string | number>;
+  visibleSteps: number;
+  planGenerated: boolean;
+  showFinalAnalysis: boolean;
+}
+
+// Step icons are lucide components (functions) — JSON.stringify drops them, so
+// re-attach by step id when restoring. Step ids come from createGOAPActions.
+const STEP_ICONS: Record<string, LucideIcon> = {
+  "1": Target,
+  "2": Brain,
+  "3": Search,
+  "4": FileSearch,
+  "5": GitBranch,
+  "6": Lightbulb,
+  "7": CheckCircle2,
+};
+
+let cachedRestoredSession: PersistedResearchSession | null | undefined;
+
+function getRestoredSession(): PersistedResearchSession | null {
+  if (cachedRestoredSession !== undefined) return cachedRestoredSession;
+  try {
+    const raw = localStorage.getItem(RESEARCH_SESSION_KEY);
+    if (!raw) {
+      cachedRestoredSession = null;
+      return null;
+    }
+    const parsed = JSON.parse(raw) as Partial<PersistedResearchSession> & { v?: number; steps?: Step[] };
+    if (parsed.v !== 2 || !Array.isArray(parsed.steps) || parsed.steps.length === 0) {
+      // v1 sessions predate the Chinese UI translation and would restore English
+      // template copy — discard them (v1 was never released, so nothing real is lost).
+      try {
+        localStorage.removeItem(RESEARCH_SESSION_KEY);
+      } catch (cleanupErr) {
+        console.warn("Failed to clear stale session:", cleanupErr);
+      }
+      cachedRestoredSession = null;
+      return null;
+    }
+    cachedRestoredSession = {
+      userGoal: parsed.userGoal ?? "",
+      steps: parsed.steps.map((step) => ({
+        ...step,
+        icon: STEP_ICONS[step.id] ?? CheckCircle2,
+        // A run interrupted by a refresh can't be resumed; show the step as pending again.
+        status: step.status === "active" ? "pending" : step.status,
+        // Persisted icons are unusable: lucide components survive JSON.stringify as
+        // empty objects ({}), so always re-attach a real component by content shape.
+        data: step.data?.map((item) => {
+          const details = item.details as (DataItem["details"] & { timestamp?: string; source?: string; confidence?: number }) | undefined;
+          return { ...item, icon: details?.timestamp || details?.source || details?.confidence ? Sparkles : FileText };
+        }),
+      })),
+      finalRecommendations: parsed.finalRecommendations ?? [],
+      researchConfig: parsed.researchConfig ?? defaultResearchConfig,
+      currentGOAPState: parsed.currentGOAPState ?? defaultResearchConfig.stateDefinition.currentState,
+      visibleSteps: parsed.visibleSteps ?? 1,
+      planGenerated: parsed.planGenerated ?? true,
+      showFinalAnalysis: parsed.showFinalAnalysis ?? false,
+    };
+    return cachedRestoredSession;
+  } catch (err) {
+    console.warn("Failed to restore research session, starting fresh:", err);
+    try {
+      localStorage.removeItem(RESEARCH_SESSION_KEY);
+    } catch (cleanupErr) {
+      console.warn("Failed to clear corrupted session:", cleanupErr);
+    }
+    cachedRestoredSession = null;
+    return null;
+  }
+}
+
 const Index = () => {
   const { toast } = useToast();
   const [widgetConfig, setWidgetConfig] = useState<WidgetConfig>({
@@ -136,10 +218,10 @@ const Index = () => {
     textColor: "#ffffff",
     secondaryTextColor: "#a3a3a3",
     successColor: "#22c55e",
-    title: "Goal-Oriented Action Planning",
-    description: "AI-powered research planning using A* pathfinding and dynamic agent coordination",
+    title: "目标导向行动规划",
+    description: "基于 A* 寻路与动态 Agent 协同的 AI 研究规划",
     brandName: "",
-    defaultGoal: "Research the latest advancements in quantum computing",
+    defaultGoal: "研究量子计算的最新进展",
     fontFamily: "system-ui",
     borderRadius: "0.5rem",
     animationSpeed: "normal",
@@ -151,20 +233,21 @@ const Index = () => {
     aiModel: "google/gemini-2.5-flash",
   });
   const [showCustomizer, setShowCustomizer] = useState(false);
-  const [userGoal, setUserGoal] = useState<string>("");
+  const restored = getRestoredSession();
+  const [userGoal, setUserGoal] = useState<string>(restored?.userGoal ?? "");
   const [isPlanning, setIsPlanning] = useState(false);
-  const [planGenerated, setPlanGenerated] = useState(false);
-  const [steps, setSteps] = useState<Step[]>([]);
+  const [planGenerated, setPlanGenerated] = useState(restored?.planGenerated ?? false);
+  const [steps, setSteps] = useState<Step[]>(restored?.steps ?? []);
   const [isRunning, setIsRunning] = useState(false);
-  const [visibleSteps, setVisibleSteps] = useState<number>(1);
-  const [showFinalAnalysis, setShowFinalAnalysis] = useState(false);
+  const [visibleSteps, setVisibleSteps] = useState<number>(restored?.visibleSteps ?? 1);
+  const [showFinalAnalysis, setShowFinalAnalysis] = useState(restored?.showFinalAnalysis ?? false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showReviseForm, setShowReviseForm] = useState(false);
-  const [finalRecommendations, setFinalRecommendations] = useState<any[]>([]);
+  const [finalRecommendations, setFinalRecommendations] = useState<any[]>(restored?.finalRecommendations ?? []);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
-  const [researchConfig, setResearchConfig] = useState<ResearchConfig>(defaultResearchConfig);
-  const [currentGOAPState, setCurrentGOAPState] = useState<Record<string, boolean | string | number>>(defaultResearchConfig.stateDefinition.currentState);
-  const [showGOAPCards, setShowGOAPCards] = useState(false);
+  const [researchConfig, setResearchConfig] = useState<ResearchConfig>(restored?.researchConfig ?? defaultResearchConfig);
+  const [currentGOAPState, setCurrentGOAPState] = useState<Record<string, boolean | string | number>>(restored?.currentGOAPState ?? defaultResearchConfig.stateDefinition.currentState);
+  const [showGOAPCards, setShowGOAPCards] = useState(restored ? restored.steps.some((s) => s.status === "completed") : false);
   const activeStepRef = useRef<HTMLDivElement>(null);
   const goapCardsRef = useRef<HTMLDivElement>(null);
   const objectiveRef = useRef<HTMLDivElement>(null);
@@ -183,45 +266,45 @@ const Index = () => {
         effects: { goalParsed: true },
         stepGenerator: (userGoal: string) => ({
           id: "1",
-          title: "Goal Analysis",
-          description: `Analyzing "${userGoal.slice(0, 60)}..." and breaking it down into actionable sub-goals.`,
+          title: "目标分析",
+          description: `正在分析 "${userGoal.slice(0, 60)}..." 并将其拆解为可执行的子目标。`,
           icon: Target,
           status: "pending" as StepStatus,
           data: [
             { 
-              text: "Parse objective", 
+              text: "解析目标",
               icon: FileText,
               details: {
-                objective: "Extract and structure the high-level goal from natural language input",
-                preconditions: ["User input received", "NLP module initialized"],
-                effects: ["Structured goal object created", "Sub-goals identified"],
-                agents: ["Parser Agent", "NLP Agent"],
+                objective: "从自然语言输入中提取并结构化高层目标",
+                preconditions: ["已接收用户输入", "NLP 模块已初始化"],
+                effects: ["已创建结构化目标对象", "已识别子目标"],
+                agents: ["解析 Agent", "NLP Agent"],
               }
             },
             { 
-              text: "Identify dependencies", 
+              text: "识别依赖",
               icon: Link,
               details: {
-                objective: "Map relationships between actions and their requirements",
-                preconditions: ["Goal parsed", "Action library loaded"],
-                effects: ["Dependency graph generated", "Critical path identified"],
-                agents: ["Dependency Analyzer", "Graph Builder"],
-                sources: ["Action Registry", "State Definitions"]
+                objective: "映射动作与其需求之间的关系",
+                preconditions: ["目标已解析", "动作库已加载"],
+                effects: ["已生成依赖图", "已识别关键路径"],
+                agents: ["依赖分析 Agent", "图构建 Agent"],
+                sources: ["动作注册表", "状态定义"]
               }
             },
             { 
-              text: "Map state transitions", 
+              text: "映射状态转换",
               icon: Workflow,
               details: {
-                objective: "Define how each action transforms the world state",
-                preconditions: ["Dependencies mapped", "State space defined"],
-                effects: ["Transition matrix created", "State reachability confirmed"],
-                agents: ["State Mapper", "Validator Agent"],
+                objective: "定义每个动作如何转换世界状态",
+                preconditions: ["依赖已映射", "状态空间已定义"],
+                effects: ["已创建转换矩阵", "已确认状态可达性"],
+                agents: ["状态映射 Agent", "验证 Agent"],
                 citations: ["GOAP: Goal-Oriented Action Planning - Orkin, J. (2006)"]
               }
             },
           ],
-          metrics: [{ label: "Sub-goals", value: "3" }, { label: "Actions", value: "7" }],
+          metrics: [{ label: "子目标", value: "3" }, { label: "动作", value: "7" }],
         }),
       },
       {
@@ -231,36 +314,36 @@ const Index = () => {
         effects: { stateAssessed: true },
         stepGenerator: () => ({
           id: "2",
-          title: "State Assessment",
-          description: `Evaluating current knowledge about ${domain} and identifying information gaps.`,
+          title: "状态评估",
+          description: `正在评估关于 ${domain} 的现有知识并识别信息缺口。`,
           icon: Brain,
           status: "pending" as StepStatus,
           data: [
             { 
-              text: "Assessing current state...", 
+              text: "正在评估当前状态...",
               icon: Database,
               details: {
-                objective: `Assess current knowledge and capability state for ${goal}`,
-                effects: ["Baseline established", "Gaps identified"],
-                agents: ["State Assessor"],
+                objective: `评估 ${goal} 的现有知识与能力状态`,
+                effects: ["已建立基线", "已识别差距"],
+                agents: ["状态评估 Agent"],
               }
             },
             { 
-              text: "Defining success criteria...", 
+              text: "正在定义成功标准...",
               icon: CheckCircle2,
               details: {
-                objective: `Define success criteria and validation requirements for ${domain}`,
-                preconditions: ["Goals defined"],
-                effects: ["Validation criteria set", "Acceptance tests defined"],
+                objective: `为 ${domain} 定义成功标准与验证要求`,
+                preconditions: ["目标已定义"],
+                effects: ["已设定验证标准", "已定义验收测试"],
               }
             },
             { 
-              text: "Analyzing gaps...", 
+              text: "正在分析差距...",
               icon: TrendingUp,
               details: {
-                objective: `Quantify differences between current and target state for ${action} in ${domain}`,
-                effects: ["Priority list generated", "Resource needs identified"],
-                agents: ["Gap Analyzer", "Priority Ranker"],
+                objective: `量化 ${domain} 中 ${action} 的当前状态与目标状态之间的差异`,
+                effects: ["已生成优先级列表", "已识别资源需求"],
+                agents: ["差距分析 Agent", "优先级排序 Agent"],
               }
             },
           ],
@@ -274,34 +357,34 @@ const Index = () => {
         effects: { informationGathered: true },
         stepGenerator: () => ({
           id: "3",
-          title: "Web Search",
-          description: `Conducting intelligent searches for: ${keywordStr}`,
+          title: "网络搜索",
+          description: `正在针对以下关键词执行智能搜索：${keywordStr}`,
           icon: Search,
           status: "pending" as StepStatus,
           data: [
             { 
-              text: `Searching for ${action} ${keywords[0] || "methods"}...`, 
+              text: `正在搜索 ${action} ${keywords[0] || "方法"}...`,
               icon: Search,
               details: {
-                objective: `Execute targeted web searches for ${goal}`,
+                objective: `针对 ${goal} 执行定向网络搜索`,
                 sources: ["arXiv.org", "Google Scholar", "ACM Digital Library"],
-                agents: ["Search Agent", "Query Optimizer"],
+                agents: ["搜索 Agent", "查询优化 Agent"],
               }
             },
             { 
-              text: "Gathering sources...", 
+              text: "正在收集来源...",
               icon: Database,
               details: {
-                objective: `Aggregate and catalog information sources for ${domain}`,
-                effects: ["Source database populated", "Relevance scores assigned"],
+                objective: `聚合并编目 ${domain} 的信息来源`,
+                effects: ["已填充来源数据库", "已分配相关性评分"],
               }
             },
             { 
-              text: "Calculating relevance...", 
+              text: "正在计算相关性...",
               icon: TrendingUp,
               details: {
-                objective: `Calculate information quality and applicability metrics for ${keywordStr}`,
-                agents: ["Relevance Scorer", "ML Classifier"],
+                objective: `为 ${keywordStr} 计算信息质量与适用性指标`,
+                agents: ["相关性评分 Agent", "ML 分类器"],
                 citations: ["Information Retrieval Metrics - Manning et al."]
               }
             },
@@ -316,42 +399,42 @@ const Index = () => {
         effects: { documentsAnalyzed: true },
         stepGenerator: () => ({
           id: "4",
-          title: "Document Analysis",
-          description: `Processing documents related to ${domain} to extract key insights.`,
+          title: "文档分析",
+          description: `正在处理与 ${domain} 相关的文档以提取关键洞察。`,
           icon: FileSearch,
           status: "pending" as StepStatus,
           data: [
             { 
-              text: "Parsing documents...", 
+              text: "正在解析文档...",
               icon: FileText,
               details: {
-                objective: `Extract structured data from ${domain} documents for ${goal}`,
-                preconditions: ["Documents retrieved", "Parser modules loaded"],
-                effects: ["Content extracted", "Metadata catalogued"],
-                agents: ["Document Parser", "Text Extractor"],
-                sources: ["PDF Parser", "HTML Scraper", "API Responses"]
+                objective: `从 ${domain} 文档中提取结构化数据，用于 ${goal}`,
+                preconditions: ["已获取文档", "解析模块已加载"],
+                effects: ["已提取内容", "已编目元数据"],
+                agents: ["文档解析 Agent", "文本提取 Agent"],
+                sources: ["PDF 解析器", "HTML 抓取器", "API 响应"]
               }
             },
             { 
-              text: "Extracting insights...", 
+              text: "正在提取洞察...",
               icon: Lightbulb,
               details: {
-                objective: `Identify key findings about ${keywordStr}`,
-                preconditions: ["Documents parsed", "NLP models ready"],
-                effects: ["Insights database populated", "Key points highlighted"],
-                agents: ["Insight Extractor", "NLP Analyzer", "Pattern Recognizer"],
+                objective: `识别关于 ${keywordStr} 的关键发现`,
+                preconditions: ["文档已解析", "NLP 模型已就绪"],
+                effects: ["已填充洞察数据库", "已突出关键要点"],
+                agents: ["洞察提取 Agent", "NLP 分析 Agent", "模式识别 Agent"],
                 citations: ["Named Entity Recognition - Nadeau & Sekine"]
               }
             },
             { 
-              text: "Validating claims...", 
+              text: "正在验证论断...",
               icon: Shield,
               details: {
-                objective: `Verify factual accuracy for ${action} in ${domain}`,
-                preconditions: ["Insights extracted", "Validation rules defined"],
-                effects: ["Accuracy scores assigned", "Unreliable sources flagged"],
-                agents: ["Fact Checker", "Source Validator", "Cross-Referencer"],
-                sources: ["Fact-checking APIs", "Citation Databases"]
+                objective: `验证 ${domain} 中 ${action} 的事实准确性`,
+                preconditions: ["洞察已提取", "验证规则已定义"],
+                effects: ["已分配准确性评分", "已标记不可靠来源"],
+                agents: ["事实核查 Agent", "来源验证 Agent", "交叉引用 Agent"],
+                sources: ["事实核查 API", "引用数据库"]
               }
             },
           ],
@@ -365,46 +448,46 @@ const Index = () => {
         effects: { knowledgeSynthesized: true },
         stepGenerator: () => ({
           id: "5",
-          title: "Knowledge Synthesis",
-          description: `Synthesizing information from multiple ${domain} sources.`,
+          title: "知识综合",
+          description: `正在综合多个 ${domain} 来源的信息。`,
           icon: GitBranch,
           status: "pending" as StepStatus,
           data: [
             { 
-              text: "Cross-referencing sources...", 
+              text: "正在交叉引用来源...",
               icon: Link,
               details: {
-                objective: `Correlate ${domain} information across multiple sources for ${goal}`,
-                preconditions: ["Multiple sources validated", "Correlation rules set"],
-                effects: ["Source connections mapped", "Confidence levels adjusted"],
-                agents: ["Cross-Referencer", "Correlation Analyzer"],
-                sources: ["Academic papers", "Industry reports", "Technical documentation"]
+                objective: `为 ${goal} 关联多个来源的 ${domain} 信息`,
+                preconditions: ["多个来源已验证", "关联规则已设定"],
+                effects: ["已映射来源连接", "已调整置信度"],
+                agents: ["交叉引用 Agent", "关联分析 Agent"],
+                sources: ["学术论文", "行业报告", "技术文档"]
               }
             },
             { 
-              text: "Merging concepts...", 
+              text: "正在合并概念...",
               icon: GitBranch,
               details: {
-                objective: `Combine ${keywordStr} concepts into unified knowledge structures`,
-                preconditions: ["Concepts identified", "Relationships defined"],
-                effects: ["Knowledge graph updated", "Concept taxonomy refined"],
-                agents: ["Concept Merger", "Ontology Builder", "Semantic Analyzer"],
+                objective: `将 ${keywordStr} 相关概念合并为统一的知识结构`,
+                preconditions: ["概念已识别", "关系已定义"],
+                effects: ["知识图谱已更新", "概念分类已细化"],
+                agents: ["概念合并 Agent", "本体构建 Agent", "语义分析 Agent"],
                 citations: ["Knowledge Graphs - Hogan et al. (2021)"]
               }
             },
             { 
-              text: "Resolving conflicts...", 
+              text: "正在解决冲突...",
               icon: CheckCircle2,
               details: {
-                objective: `Handle contradictory information about ${action} in ${domain}`,
-                preconditions: ["Conflicts detected", "Resolution strategies loaded"],
-                effects: ["Consensus reached", "Conflict resolution logged"],
-                agents: ["Conflict Resolver", "Evidence Weigher", "Decision Maker"],
-                sources: ["Source credibility scores", "Temporal data", "Expert systems"]
+                objective: `处理 ${domain} 中关于 ${action} 的矛盾信息`,
+                preconditions: ["已检测到冲突", "解决策略已加载"],
+                effects: ["已达成共识", "冲突解决已记录"],
+                agents: ["冲突解决 Agent", "证据权衡 Agent", "决策 Agent"],
+                sources: ["来源可信度评分", "时序数据", "专家系统"]
               }
             },
           ],
-          metrics: [{ label: "Sources", value: "18" }, { label: "Concepts", value: "12" }],
+          metrics: [{ label: "来源", value: "18" }, { label: "概念", value: "12" }],
         }),
       },
       {
@@ -414,42 +497,42 @@ const Index = () => {
         effects: { insightsGenerated: true },
         stepGenerator: () => ({
           id: "6",
-          title: "Insight Generation",
-          description: `Generating actionable insights for ${domain} based on research findings.`,
+          title: "洞察生成",
+          description: `正在基于研究结果为 ${domain} 生成可执行的洞察。`,
           icon: Lightbulb,
           status: "pending" as StepStatus,
           data: [
             { 
-              text: "Generating insights...", 
+              text: "正在生成洞察...",
               icon: Zap,
               details: {
-                objective: `Create novel conclusions from synthesized ${domain} knowledge for ${goal}`,
-                preconditions: ["Knowledge synthesized", "Analysis complete"],
-                effects: ["Actionable insights created", "Recommendations formulated"],
-                agents: ["Insight Generator", "Recommendation Engine", "Inference Agent"],
+                objective: `基于 ${goal} 的综合 ${domain} 知识创造新结论`,
+                preconditions: ["知识已综合", "分析已完成"],
+                effects: ["已创建可执行的洞察", "已制定建议"],
+                agents: ["洞察生成 Agent", "建议引擎", "推理 Agent"],
                 citations: ["Automated Reasoning - Robinson (1965)", "AI Planning - Ghallab et al."]
               }
             },
             { 
-              text: "Prioritizing by impact...", 
+              text: "正在按影响力排序...",
               icon: TrendingUp,
               details: {
-                objective: `Rank insights about ${keywordStr} by potential value and applicability`,
-                preconditions: ["Insights generated", "Impact metrics defined"],
-                effects: ["Priority scores assigned", "Implementation order set"],
-                agents: ["Priority Ranker", "Impact Analyzer", "ROI Calculator"],
-                sources: ["Business metrics", "Historical outcomes", "Expert heuristics"]
+                objective: `按潜在价值与适用性对 ${keywordStr} 相关洞察排序`,
+                preconditions: ["洞察已生成", "影响力指标已定义"],
+                effects: ["已分配优先级评分", "已设定实施顺序"],
+                agents: ["优先级排序 Agent", "影响力分析 Agent", "ROI 计算器"],
+                sources: ["业务指标", "历史结果", "专家经验法则"]
               }
             },
             { 
-              text: "Validating feasibility...", 
+              text: "正在验证可行性...",
               icon: CheckCircle2,
               details: {
-                objective: `Assess practicality of ${action} recommendations for ${domain}`,
-                preconditions: ["Insights prioritized", "Constraint database available"],
-                effects: ["Feasibility scores computed", "Resource needs estimated"],
-                agents: ["Feasibility Validator", "Resource Planner", "Constraint Checker"],
-                sources: ["Available resources", "Technical constraints", "Timeline requirements"]
+                objective: `评估 ${domain} 中 ${action} 建议的实用性`,
+                preconditions: ["洞察已排序", "约束数据库可用"],
+                effects: ["已计算可行性评分", "已估算资源需求"],
+                agents: ["可行性验证 Agent", "资源规划 Agent", "约束检查 Agent"],
+                sources: ["可用资源", "技术约束", "时间线要求"]
               }
             },
           ],
@@ -463,42 +546,42 @@ const Index = () => {
         effects: { verified: true },
         stepGenerator: () => ({
           id: "7",
-          title: "Verification",
-          description: "Cross-checking findings and ensuring accuracy before final presentation.",
+          title: "验证",
+          description: "在最终呈现前交叉核对研究结果并确保准确性。",
           icon: CheckCircle2,
           status: "pending" as StepStatus,
           data: [
             { 
-              text: "Verifying insights...", 
+              text: "正在验证洞察...",
               icon: Shield,
               details: {
-                objective: `Perform final quality assurance on ${domain} insights for ${goal}`,
-                preconditions: ["Insights validated", "Verification criteria set"],
-                effects: ["Quality confirmed", "Errors corrected"],
-                agents: ["Quality Assurance Agent", "Verification Bot", "Audit Agent"],
-                sources: ["Quality standards", "Best practices", "Validation protocols"]
+                objective: `对 ${goal} 的 ${domain} 洞察执行最终质量保证`,
+                preconditions: ["洞察已验证", "验证标准已设定"],
+                effects: ["质量已确认", "错误已修正"],
+                agents: ["质量保证 Agent", "验证机器人", "审计 Agent"],
+                sources: ["质量标准", "最佳实践", "验证协议"]
               }
             },
             { 
-              text: "Checking sources...", 
+              text: "正在检查来源...",
               icon: Filter,
               details: {
-                objective: `Re-validate all ${keywordStr} information sources for final output`,
-                preconditions: ["Sources catalogued", "Verification complete"],
-                effects: ["Source reliability confirmed", "Citations verified"],
-                agents: ["Source Checker", "Citation Validator", "Provenance Tracker"],
+                objective: `重新验证用于最终输出的全部 ${keywordStr} 信息来源`,
+                preconditions: ["来源已编目", "验证已完成"],
+                effects: ["来源可靠性已确认", "引用已验证"],
+                agents: ["来源检查 Agent", "引用验证 Agent", "溯源跟踪 Agent"],
                 citations: ["Information Provenance - Buneman et al. (2001)"]
               }
             },
             { 
-              text: "Calculating confidence...", 
+              text: "正在计算置信度...",
               icon: TrendingUp,
               details: {
-                objective: `Calculate overall confidence in ${action} research findings`,
-                preconditions: ["All checks complete", "Confidence model loaded"],
-                effects: ["Final confidence score computed", "Report ready"],
-                agents: ["Confidence Calculator", "Statistical Analyzer", "Meta-Evaluator"],
-                sources: ["Validation results", "Source quality scores", "Cross-reference matches"]
+                objective: `计算 ${action} 研究结果的总体置信度`,
+                preconditions: ["所有检查已完成", "置信度模型已加载"],
+                effects: ["已计算最终置信度评分", "报告就绪"],
+                agents: ["置信度计算 Agent", "统计分析 Agent", "元评估 Agent"],
+                sources: ["验证结果", "来源质量评分", "交叉引用匹配"]
               }
             },
           ],
@@ -566,8 +649,8 @@ const Index = () => {
 
     if (plan.length === 0) {
       toast({
-        title: "Planning Failed",
-        description: "Could not generate a valid plan for this objective.",
+        title: "规划失败",
+        description: "无法为该目标生成有效的计划。",
         variant: "destructive",
       });
       setIsPlanning(false);
@@ -577,14 +660,14 @@ const Index = () => {
     // Update Goal Analysis step with adaptive metrics
     if (plan[0]) {
       plan[0].metrics = [
-        { label: "Sub-goals", value: String(adaptiveSubGoals) },
-        { label: "Actions", value: String(adaptiveActions) }
+        { label: "子目标", value: String(adaptiveSubGoals) },
+        { label: "动作", value: String(adaptiveActions) }
       ];
     }
 
     toast({
-      title: "Plan Generated",
-      description: `Created ${plan.length}-step research workflow using GOAP algorithm.`,
+      title: "计划已生成",
+      description: `已使用 GOAP 算法创建 ${plan.length} 步研究流程。`,
     });
 
     setSteps(plan);
@@ -695,20 +778,20 @@ const Index = () => {
             // Check if replanning is enabled
             if (researchConfig.goapConfig.enableReplanning) {
               console.log('🔄 Replanning enabled - checking triggers');
-              const shouldReplan = researchConfig.goapConfig.replanningTriggers.includes("Action failure");
-              
+              const shouldReplan = researchConfig.goapConfig.replanningTriggers.includes("动作失败");
+
               if (shouldReplan) {
                 console.log('🔄 Replanning triggered due to action failure');
                 toast({
-                  title: "Replanning Triggered",
-                  description: "Action failed - GOAP system is adapting the plan...",
+                  title: "已触发重新规划",
+                  description: "动作失败——GOAP 系统正在调整计划...",
                 });
               }
             }
             
             toast({
-              title: "AI Research Error",
-              description: error.message || "Failed to generate research data",
+              title: "AI 研究错误",
+              description: error.message || "生成研究数据失败",
               variant: "destructive",
             });
           } else if (data && Array.isArray(data)) {
@@ -742,8 +825,8 @@ const Index = () => {
         } catch (err) {
           console.error('Exception calling research-step:', err);
           toast({
-            title: "AI Research Error",
-            description: "Failed to connect to research service",
+            title: "AI 研究错误",
+            description: "无法连接到研究服务",
             variant: "destructive",
           });
         }
@@ -828,6 +911,11 @@ const Index = () => {
     setResearchConfig(defaultResearchConfig);
     setCurrentGOAPState(defaultResearchConfig.stateDefinition.currentState);
     setVisibleSteps(1);
+    try {
+      localStorage.removeItem(RESEARCH_SESSION_KEY);
+    } catch (err) {
+      console.warn("Failed to clear persisted research session:", err);
+    }
   };
 
   const handleReviseSubmit = (config: ResearchConfig) => {
@@ -837,8 +925,8 @@ const Index = () => {
     setUserGoal(config.goal);
     handleGoalSubmit(config.goal);
     toast({
-      title: "Research Revised",
-      description: "Starting new research with updated parameters...",
+      title: "研究方案已修订",
+      description: "正在使用更新后的参数开始新的研究...",
     });
   };
 
@@ -853,15 +941,15 @@ const Index = () => {
     }
     
     toast({
-      title: "Advanced Settings Applied",
-      description: "Research parameters have been configured. Submit your research goal to begin.",
+      title: "高级设置已应用",
+      description: "研究参数已配置完成，提交研究目标即可开始。",
     });
   };
 
   const handleGenerateWidget = () => {
     toast({
-      title: "Widget Code Generated",
-      description: "Copy the embed code and paste it into your website.",
+      title: "Widget 代码已生成",
+      description: "复制嵌入代码并粘贴到你的网站中。",
     });
   };
 
@@ -905,6 +993,26 @@ const Index = () => {
     }
   }, [showFinalAnalysis]);
 
+  // Persist the research session so a refresh restores goal, plan, findings and report.
+  useEffect(() => {
+    if (!planGenerated || steps.length === 0) return;
+    try {
+      localStorage.setItem(RESEARCH_SESSION_KEY, JSON.stringify({
+        v: 2,
+        userGoal,
+        steps,
+        finalRecommendations,
+        researchConfig,
+        currentGOAPState,
+        visibleSteps,
+        planGenerated,
+        showFinalAnalysis,
+      }));
+    } catch (err) {
+      console.warn("Failed to persist research session:", err);
+    }
+  }, [userGoal, steps, finalRecommendations, researchConfig, currentGOAPState, visibleSteps, planGenerated, showFinalAnalysis]);
+
   return (
     <div 
       className="min-h-screen transition-colors duration-300"
@@ -926,7 +1034,7 @@ const Index = () => {
               }}
             >
               <Network className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="text-xs sm:text-sm">{widgetConfig.brandName || "GOAP Multi-Agent System"}</span>
+              <span className="text-xs sm:text-sm">{widgetConfig.brandName || "GOAP 多 Agent 系统"}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold mb-2 sm:mb-3 px-2" style={{ color: "#f5f5f5" }}>
               {widgetConfig.title}
@@ -943,7 +1051,7 @@ const Index = () => {
                   className="gap-2 text-xs sm:text-sm"
                 >
                   <RotateCcw className="w-3 h-3 sm:w-4 sm:h-4" />
-                  New Research
+                  新研究
                 </Button>
               )}
               <RouterLink to="/demo">
@@ -953,8 +1061,8 @@ const Index = () => {
                   className="gap-2 text-xs sm:text-sm"
                 >
                   <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Widget Demo</span>
-                  <span className="sm:hidden">Demo</span>
+                  <span className="hidden sm:inline">Widget 演示</span>
+                  <span className="sm:hidden">演示</span>
                 </Button>
               </RouterLink>
               <RouterLink to="/agents">
@@ -964,8 +1072,8 @@ const Index = () => {
                   className="gap-2 text-xs sm:text-sm"
                 >
                   <Code className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Agent Swarm</span>
-                  <span className="sm:hidden">Agents</span>
+                  <span className="hidden sm:inline">Agent 集群</span>
+                  <span className="sm:hidden">Agent</span>
                 </Button>
               </RouterLink>
               <Button
@@ -975,8 +1083,8 @@ const Index = () => {
                 className="gap-2 text-xs sm:text-sm"
               >
                 <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">{showCustomizer ? "Close" : "Create Widget"}</span>
-                <span className="sm:hidden">{showCustomizer ? "Close" : "Widget"}</span>
+                <span className="hidden sm:inline">{showCustomizer ? "关闭" : "创建 Widget"}</span>
+                <span className="sm:hidden">{showCustomizer ? "关闭" : "Widget"}</span>
               </Button>
             </div>
           </div>
@@ -989,7 +1097,7 @@ const Index = () => {
         <Dialog open={showCustomizer} onOpenChange={setShowCustomizer}>
           <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader>
-              <DialogTitle>Widget Customization</DialogTitle>
+              <DialogTitle>Widget 定制</DialogTitle>
             </DialogHeader>
             <WidgetCustomizer
               config={widgetConfig}
@@ -1052,9 +1160,9 @@ const Index = () => {
             <div className="flex items-center gap-3">
               <Sparkles className="w-5 h-5 animate-spin" style={{ color: widgetConfig.primaryColor }} />
               <div>
-                <h3 className="font-medium" style={{ color: "#f5f5f5" }}>Planning Research Workflow</h3>
+                <h3 className="font-medium" style={{ color: "#f5f5f5" }}>正在规划研究流程</h3>
                 <p className="text-sm" style={{ color: "#a3a3a3" }}>
-                  Analyzing objective, identifying preconditions, calculating optimal action sequence...
+                  正在分析目标、识别前置条件、计算最优动作序列...
                 </p>
               </div>
             </div>
@@ -1112,10 +1220,10 @@ const Index = () => {
                 className="gap-2"
               >
                 <RotateCcw className="w-4 h-4" />
-                New Research
+                新研究
               </Button>
               <div className="text-xs sm:text-sm flex-1 min-w-0 text-center px-4" style={{ color: "#a3a3a3" }}>
-                <span className="font-medium" style={{ color: "#f5f5f5" }}>Objective:</span> <span className="break-words">{userGoal}</span>
+                <span className="font-medium" style={{ color: "#f5f5f5" }}>目标：</span> <span className="break-words">{userGoal}</span>
               </div>
               {/* Issue #1694: explicit "Start Research" gate so the plan is reviewable before execution. */}
               {!isRunning && visibleSteps <= 1 ? (
@@ -1126,7 +1234,7 @@ const Index = () => {
                   style={{ backgroundColor: widgetConfig.primaryColor, color: "#fff" }}
                 >
                   <Play className="w-4 h-4" />
-                  Start Research
+                  开始研究
                 </Button>
               ) : (
                 <div className="w-[120px]" />
@@ -1193,7 +1301,7 @@ const Index = () => {
                   <div className="text-2xl font-semibold mb-1" style={{ color: widgetConfig.primaryColor }}>
                     {steps.filter((s) => s.status === "completed").length}
                   </div>
-                  <div className="text-xs" style={{ color: "#a3a3a3" }}>Completed</div>
+                  <div className="text-xs" style={{ color: "#a3a3a3" }}>已完成</div>
                 </div>
                 <div 
                   className="border p-4 text-center"
@@ -1206,7 +1314,7 @@ const Index = () => {
                   <div className="text-2xl font-semibold mb-1" style={{ color: widgetConfig.primaryColor }}>
                     {steps.filter((s) => s.status === "active").length}
                   </div>
-                  <div className="text-xs" style={{ color: "#a3a3a3" }}>Active</div>
+                  <div className="text-xs" style={{ color: "#a3a3a3" }}>进行中</div>
                 </div>
                 <div 
                   className="border p-4 text-center"
@@ -1219,7 +1327,7 @@ const Index = () => {
                   <div className="text-2xl font-semibold mb-1" style={{ color: "#737373" }}>
                     {steps.filter((s) => s.status === "pending").length}
                   </div>
-                  <div className="text-xs" style={{ color: "#a3a3a3" }}>Pending</div>
+                  <div className="text-xs" style={{ color: "#a3a3a3" }}>待执行</div>
                 </div>
               </div>
             )}
@@ -1250,32 +1358,32 @@ const Index = () => {
                     
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold mb-2 flex items-center gap-2" style={{ color: widgetConfig.accentColor }}>
-                        Final Research Report
+                        最终研究报告
                         <CheckCircle2 className="w-5 h-5" />
                       </h3>
                       <p className="text-sm mb-4" style={{ color: "#a3a3a3" }}>
-                        Comprehensive analysis generated by multi-agent GOAP research system
+                        由多 Agent GOAP 研究系统生成的综合分析
                       </p>
                       
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
                         <div className="rounded p-3" style={{ backgroundColor: `${widgetConfig.backgroundColor}80` }}>
-                          <div className="text-xs mb-1" style={{ color: "#a3a3a3" }}>Total Steps</div>
+                          <div className="text-xs mb-1" style={{ color: "#a3a3a3" }}>总步骤数</div>
                           <div className="text-xl font-semibold" style={{ color: "#f5f5f5" }}>{steps.length}</div>
                         </div>
                         <div className="rounded p-3" style={{ backgroundColor: `${widgetConfig.backgroundColor}80` }}>
-                          <div className="text-xs mb-1" style={{ color: "#a3a3a3" }}>Data Points</div>
+                          <div className="text-xs mb-1" style={{ color: "#a3a3a3" }}>数据点</div>
                           <div className="text-xl font-semibold" style={{ color: "#f5f5f5" }}>
                             {steps.reduce((acc, step) => acc + (step.data?.length || 0), 0)}
                           </div>
                         </div>
                         <div className="rounded p-3" style={{ backgroundColor: `${widgetConfig.backgroundColor}80` }}>
-                          <div className="text-xs mb-1" style={{ color: "#a3a3a3" }}>Confidence</div>
+                          <div className="text-xs mb-1" style={{ color: "#a3a3a3" }}>置信度</div>
                           <div className="text-xl font-semibold" style={{ color: widgetConfig.accentColor }}>94%</div>
                         </div>
                         <div className="rounded p-3" style={{ backgroundColor: `${widgetConfig.backgroundColor}80` }}>
                           <div className="text-xs mb-1 flex items-center gap-1" style={{ color: "#a3a3a3" }}>
                             <Clock className="w-3 h-3" />
-                            Duration
+                            耗时
                           </div>
                           <div className="text-xl font-semibold" style={{ color: "#f5f5f5" }}>
                             {Math.round(steps.length * 3.5)}s
@@ -1298,13 +1406,12 @@ const Index = () => {
                 >
                   <h4 className="text-lg font-semibold mb-3 flex items-center gap-2" style={{ color: widgetConfig.textColor }}>
                     <Target className="w-5 h-5" style={{ color: widgetConfig.primaryColor }} />
-                    Executive Summary
+                    执行摘要
                   </h4>
                   <p className="text-sm leading-relaxed" style={{ color: widgetConfig.secondaryTextColor }}>
-                    This research successfully analyzed <span style={{ color: widgetConfig.accentColor, fontWeight: 600 }}>"{userGoal}"</span> through 
-                    a {steps.length}-step Goal-Oriented Action Planning (GOAP) workflow. The system coordinated multiple specialized agents 
-                    to gather information, analyze documents, synthesize knowledge, and generate actionable insights with 
-                    high confidence scores across all validation checks.
+                    本研究通过 <span style={{ color: widgetConfig.accentColor, fontWeight: 600 }}>"{userGoal}"</span> 的
+                    {steps.length} 步目标导向行动规划（GOAP）流程，成功完成了分析。系统协调多个专业 Agent
+                    收集信息、分析文档、综合知识并生成可执行的洞察，所有验证检查均获得高置信度评分。
                   </p>
                 </div>
 
@@ -1327,8 +1434,8 @@ const Index = () => {
                       }}
                     >
                       <Sparkles className="w-4 h-4 mr-1 md:mr-2" />
-                      <span className="hidden sm:inline">Direct Answer</span>
-                      <span className="sm:hidden">Answer</span>
+                      <span className="hidden sm:inline">直接回答</span>
+                      <span className="sm:hidden">回答</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="key-findings"
@@ -1338,8 +1445,8 @@ const Index = () => {
                       }}
                     >
                       <Lightbulb className="w-4 h-4 mr-1 md:mr-2" />
-                      <span className="hidden sm:inline">Key Findings</span>
-                      <span className="sm:hidden">Findings</span>
+                      <span className="hidden sm:inline">关键发现</span>
+                      <span className="sm:hidden">发现</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="methodology"
@@ -1349,8 +1456,8 @@ const Index = () => {
                       }}
                     >
                       <Workflow className="w-4 h-4 mr-1 md:mr-2" />
-                      <span className="hidden sm:inline">Methodology</span>
-                      <span className="sm:hidden">Method</span>
+                      <span className="hidden sm:inline">研究方法</span>
+                      <span className="sm:hidden">方法</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="next-steps"
@@ -1360,8 +1467,8 @@ const Index = () => {
                       }}
                     >
                       <TrendingUp className="w-4 h-4 mr-1 md:mr-2" />
-                      <span className="hidden sm:inline">Next Steps</span>
-                      <span className="sm:hidden">Steps</span>
+                      <span className="hidden sm:inline">后续步骤</span>
+                      <span className="sm:hidden">步骤</span>
                     </TabsTrigger>
                   </TabsList>
 
@@ -1383,7 +1490,7 @@ const Index = () => {
                               <div className="font-medium mb-1" style={{ color: widgetConfig.textColor }}>{rec.title}</div>
                               <p className="text-sm" style={{ color: widgetConfig.secondaryTextColor }}>{rec.content}</p>
                               {rec.source && (
-                                <div className="mt-2 text-xs" style={{ color: widgetConfig.accentColor }}>Source: {rec.source}</div>
+                                <div className="mt-2 text-xs" style={{ color: widgetConfig.accentColor }}>来源：{rec.source}</div>
                               )}
                             </div>
                           ))}
@@ -1400,7 +1507,7 @@ const Index = () => {
                         }}
                       >
                         <p className="text-sm" style={{ color: widgetConfig.secondaryTextColor }}>
-                          No direct answers available yet. Complete the research to see results.
+                          暂无直接回答，完成研究后即可查看结果。
                         </p>
                       </div>
                     )}
@@ -1512,10 +1619,10 @@ const Index = () => {
                     >
                       <ul className="space-y-2">
                         {[
-                          "Review all gathered data points and cross-reference findings",
-                          "Validate insights with domain experts and stakeholders",
-                          "Develop implementation plan based on prioritized recommendations",
-                          "Monitor outcomes and iterate on initial strategies"
+                          "复核收集到的所有数据点并交叉核对研究结果",
+                          "与领域专家和利益相关方验证洞察",
+                          "基于已排序的建议制定实施计划",
+                          "持续监控结果并迭代初始策略"
                         ].map((rec, idx) => (
                           <li 
                             key={idx}
@@ -1544,7 +1651,7 @@ const Index = () => {
                   <div className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="w-4 h-4" style={{ color: widgetConfig.successColor }} />
                     <span style={{ color: widgetConfig.successColor, fontWeight: 500 }}>
-                      All verification checks passed
+                      所有验证检查均已通过
                     </span>
                   </div>
                   <Button
@@ -1554,7 +1661,7 @@ const Index = () => {
                     className="gap-2"
                   >
                     <RotateCcw className="w-4 h-4" />
-                    New Research
+                    新研究
                   </Button>
                   <Button
                     onClick={() => setShowReportModal(true)}
@@ -1566,7 +1673,7 @@ const Index = () => {
                     }}
                   >
                     <FileText className="w-4 h-4" />
-                    View Full Report
+                    查看完整报告
                   </Button>
                 </div>
               </div>
@@ -1596,7 +1703,7 @@ const Index = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <RotateCcw className="w-5 h-5" />
-              Revise Research Configuration
+              修订研究配置
             </DialogTitle>
           </DialogHeader>
           <ReviseResearchForm
@@ -1616,7 +1723,7 @@ const Index = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              Advanced Research Settings
+              高级研究设置
             </DialogTitle>
           </DialogHeader>
           <ReviseResearchForm

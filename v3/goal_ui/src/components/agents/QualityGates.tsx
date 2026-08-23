@@ -16,19 +16,19 @@ interface QualityGatesProps {
 export const QualityGates = ({ metrics }: QualityGatesProps) => {
   const gates = [
     {
-      name: "Compile Check",
+      name: "编译检查",
       status: metrics.compileCheck ? "passed" : "failed",
       icon: metrics.compileCheck ? CheckCircle2 : XCircle,
       color: metrics.compileCheck ? "text-green-500" : "text-red-500",
     },
     {
-      name: "Test Coverage",
+      name: "测试覆盖率",
       status: metrics.testCoverage >= 80 ? "passed" : metrics.testCoverage >= 60 ? "warning" : "failed",
       value: metrics.testCoverage,
       threshold: 80,
     },
     {
-      name: "Security Scan",
+      name: "安全扫描",
       status: metrics.securityScore >= 90 ? "passed" : metrics.securityScore >= 70 ? "warning" : "failed",
       value: metrics.securityScore,
       threshold: 90,
@@ -41,9 +41,9 @@ export const QualityGates = ({ metrics }: QualityGatesProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-green-500" />
-            Quality Gates
+            质量门禁
           </CardTitle>
-          <CardDescription>Automated quality assurance checkpoints</CardDescription>
+          <CardDescription>自动化质量保证检查点</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {gates.map((gate, idx) => (
@@ -70,7 +70,7 @@ export const QualityGates = ({ metrics }: QualityGatesProps) => {
                       : "destructive"
                   }
                 >
-                  {gate.status}
+                  {gate.status === "passed" ? "通过" : gate.status === "warning" ? "警告" : "失败"}
                 </Badge>
               </div>
 
@@ -78,8 +78,8 @@ export const QualityGates = ({ metrics }: QualityGatesProps) => {
                 <>
                   <Progress value={gate.value} className="h-2" />
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <span>Current: {gate.value}%</span>
-                    <span>Threshold: {gate.threshold}%</span>
+                    <span>当前：{gate.value}%</span>
+                    <span>阈值：{gate.threshold}%</span>
                   </div>
                 </>
               )}

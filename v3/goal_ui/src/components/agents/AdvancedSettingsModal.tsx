@@ -94,23 +94,23 @@ const defaultSettings: AdvancedSettings = {
 
 const presets = {
   development: {
-    name: 'Development',
-    description: 'Fast iteration, verbose logging',
+    name: '开发',
+    description: '快速迭代，详细日志',
     badge: 'default' as const,
   },
   production: {
-    name: 'Production',
-    description: 'Optimized performance, strict validation',
+    name: '生产',
+    description: '优化性能，严格校验',
     badge: 'default' as const,
   },
   budget: {
-    name: 'Budget',
-    description: 'Cost-optimized, slower execution',
+    name: '预算',
+    description: '成本优化，执行较慢',
     badge: 'secondary' as const,
   },
   quality: {
-    name: 'Quality',
-    description: 'Maximum quality, higher cost',
+    name: '质量',
+    description: '最高质量，成本较高',
     badge: 'destructive' as const,
   },
 };
@@ -126,8 +126,8 @@ export function AdvancedSettingsModal() {
   const handleSave = () => {
     localStorage.setItem('agenticflow-settings', JSON.stringify(settings));
     toast({
-      title: "Settings Saved",
-      description: "Your advanced configuration has been saved.",
+      title: "设置已保存",
+      description: "你的高级配置已保存。",
     });
     setOpen(false);
   };
@@ -135,8 +135,8 @@ export function AdvancedSettingsModal() {
   const handleReset = () => {
     setSettings(defaultSettings);
     toast({
-      title: "Settings Reset",
-      description: "Configuration has been reset to defaults.",
+      title: "设置已重置",
+      description: "配置已恢复为默认值。",
     });
   };
 
@@ -166,7 +166,7 @@ export function AdvancedSettingsModal() {
 
     setSettings({ ...settings, ...presetConfigs[presetName] });
     toast({
-      title: `${presets[presetName].name} Preset Applied`,
+      title: `${presets[presetName].name} 预设已应用`,
       description: presets[presetName].description,
     });
   };
@@ -176,23 +176,23 @@ export function AdvancedSettingsModal() {
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm" className="gap-2">
           <Settings2 className="w-4 h-4" />
-          Advanced Settings
+          高级设置
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings2 className="w-5 h-5 text-purple-500" />
-            Advanced Agent Configuration
+            高级 Agent 配置
           </DialogTitle>
           <DialogDescription>
-            Configure swarm topology, GOAP planning, execution strategy, and model routing
+            配置集群拓扑、GOAP 规划、执行策略与模型路由
           </DialogDescription>
         </DialogHeader>
 
         {/* Presets */}
         <div className="space-y-2">
-          <Label>Quick Presets</Label>
+          <Label>快捷预设</Label>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             {Object.entries(presets).map(([key, preset]) => (
               <Button
@@ -205,7 +205,7 @@ export function AdvancedSettingsModal() {
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-semibold">{preset.name}</span>
                   <Badge variant={preset.badge} className="text-xs">
-                    {key}
+                    {key === 'development' ? '开发' : key === 'production' ? '生产' : key === 'budget' ? '预算' : '质量'}
                   </Badge>
                 </div>
                 <span className="text-xs text-muted-foreground text-left">
@@ -218,16 +218,16 @@ export function AdvancedSettingsModal() {
 
         <Tabs defaultValue="swarm" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="swarm">Swarm</TabsTrigger>
+            <TabsTrigger value="swarm">集群</TabsTrigger>
             <TabsTrigger value="goap">GOAP</TabsTrigger>
-            <TabsTrigger value="execution">Execution</TabsTrigger>
-            <TabsTrigger value="model">Model</TabsTrigger>
+            <TabsTrigger value="execution">执行</TabsTrigger>
+            <TabsTrigger value="model">模型</TabsTrigger>
           </TabsList>
 
           {/* Swarm Configuration */}
           <TabsContent value="swarm" className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label htmlFor="topology">Topology</Label>
+              <Label htmlFor="topology">拓扑</Label>
               <Select
                 value={settings.swarm.topology}
                 onValueChange={(value: AdvancedSettings['swarm']['topology']) =>
@@ -238,16 +238,16 @@ export function AdvancedSettingsModal() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="mesh">Mesh - Fully connected, peer-to-peer</SelectItem>
-                  <SelectItem value="hierarchical">Hierarchical - Tree structure with coordinators</SelectItem>
-                  <SelectItem value="ring">Ring - Circular communication</SelectItem>
-                  <SelectItem value="star">Star - Centralized coordinator</SelectItem>
+                  <SelectItem value="mesh">Mesh - 全连接、点对点</SelectItem>
+                  <SelectItem value="hierarchical">Hierarchical - 带协调器的树状结构</SelectItem>
+                  <SelectItem value="ring">Ring - 环形通信</SelectItem>
+                  <SelectItem value="star">Star - 集中式协调器</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="maxAgents">Maximum Agents: {settings.swarm.maxAgents}</Label>
+              <Label htmlFor="maxAgents">最大 Agent 数量：{settings.swarm.maxAgents}</Label>
               <Slider
                 id="maxAgents"
                 min={1}
@@ -261,7 +261,7 @@ export function AdvancedSettingsModal() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="strategy">Distribution Strategy</Label>
+              <Label htmlFor="strategy">分发策略</Label>
               <Select
                 value={settings.swarm.strategy}
                 onValueChange={(value: AdvancedSettings['swarm']['strategy']) =>
@@ -272,16 +272,16 @@ export function AdvancedSettingsModal() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="balanced">Balanced - Evenly distribute tasks</SelectItem>
-                  <SelectItem value="specialized">Specialized - Assign based on capabilities</SelectItem>
-                  <SelectItem value="adaptive">Adaptive - Dynamic based on load</SelectItem>
+                  <SelectItem value="balanced">Balanced - 均衡分配任务</SelectItem>
+                  <SelectItem value="specialized">Specialized - 按能力分配</SelectItem>
+                  <SelectItem value="adaptive">Adaptive - 根据负载动态调整</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-4 border rounded-lg p-4 bg-muted/30">
               <div className="flex items-center justify-between">
-                <Label htmlFor="autoScaling">Auto-Scaling</Label>
+                <Label htmlFor="autoScaling">自动伸缩</Label>
                 <Switch
                   id="autoScaling"
                   checked={settings.swarm.autoScaling.enabled}
@@ -301,7 +301,7 @@ export function AdvancedSettingsModal() {
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Min Agents</Label>
+                      <Label>最小 Agent 数</Label>
                       <Input
                         type="number"
                         min={1}
@@ -321,7 +321,7 @@ export function AdvancedSettingsModal() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Max Agents</Label>
+                      <Label>最大 Agent 数</Label>
                       <Input
                         type="number"
                         min={1}
@@ -343,7 +343,7 @@ export function AdvancedSettingsModal() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Scale Up Threshold (%): {settings.swarm.autoScaling.scaleUpThreshold}</Label>
+                    <Label>扩容阈值（%）：{settings.swarm.autoScaling.scaleUpThreshold}</Label>
                     <Slider
                       min={0}
                       max={100}
@@ -362,7 +362,7 @@ export function AdvancedSettingsModal() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Scale Down Threshold (%): {settings.swarm.autoScaling.scaleDownThreshold}</Label>
+                    <Label>缩容阈值（%）：{settings.swarm.autoScaling.scaleDownThreshold}</Label>
                     <Slider
                       min={0}
                       max={100}
@@ -387,7 +387,7 @@ export function AdvancedSettingsModal() {
           {/* GOAP Configuration */}
           <TabsContent value="goap" className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label htmlFor="algorithm">Planning Algorithm</Label>
+              <Label htmlFor="algorithm">规划算法</Label>
               <Select
                 value={settings.goap.algorithm}
                 onValueChange={(value: AdvancedSettings['goap']['algorithm']) =>
@@ -398,17 +398,17 @@ export function AdvancedSettingsModal() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="a-star">A* - Optimal pathfinding</SelectItem>
-                  <SelectItem value="greedy">Greedy - Fast, not optimal</SelectItem>
-                  <SelectItem value="dijkstra">Dijkstra - Guaranteed optimal</SelectItem>
-                  <SelectItem value="bfs">BFS - Breadth-first search</SelectItem>
-                  <SelectItem value="dfs">DFS - Depth-first search</SelectItem>
+                  <SelectItem value="a-star">A* - 最优路径规划</SelectItem>
+                  <SelectItem value="greedy">Greedy - 快速，非最优</SelectItem>
+                  <SelectItem value="dijkstra">Dijkstra - 保证最优</SelectItem>
+                  <SelectItem value="bfs">BFS - 广度优先搜索</SelectItem>
+                  <SelectItem value="dfs">DFS - 深度优先搜索</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="heuristic">Heuristic Function</Label>
+              <Label htmlFor="heuristic">启发函数</Label>
               <Select
                 value={settings.goap.heuristic}
                 onValueChange={(value: AdvancedSettings['goap']['heuristic']) =>
@@ -419,16 +419,16 @@ export function AdvancedSettingsModal() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="manhattan">Manhattan Distance</SelectItem>
-                  <SelectItem value="euclidean">Euclidean Distance</SelectItem>
-                  <SelectItem value="hamming">Hamming Distance</SelectItem>
-                  <SelectItem value="custom">Custom Heuristic</SelectItem>
+                  <SelectItem value="manhattan">曼哈顿距离</SelectItem>
+                  <SelectItem value="euclidean">欧几里得距离</SelectItem>
+                  <SelectItem value="hamming">汉明距离</SelectItem>
+                  <SelectItem value="custom">自定义启发函数</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="costMethod">Cost Calculation Method</Label>
+              <Label htmlFor="costMethod">成本计算方法</Label>
               <Select
                 value={settings.goap.costMethod}
                 onValueChange={(value: AdvancedSettings['goap']['costMethod']) =>
@@ -439,22 +439,22 @@ export function AdvancedSettingsModal() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="uniform">Uniform - All actions same cost</SelectItem>
-                  <SelectItem value="time">Time - Based on execution time</SelectItem>
-                  <SelectItem value="resources">Resources - Based on resource usage</SelectItem>
-                  <SelectItem value="tokens">Tokens - Based on token consumption</SelectItem>
-                  <SelectItem value="hybrid">Hybrid - Combination of factors</SelectItem>
+                  <SelectItem value="uniform">Uniform - 所有操作成本相同</SelectItem>
+                  <SelectItem value="time">Time - 按执行时间</SelectItem>
+                  <SelectItem value="resources">Resources - 按资源占用</SelectItem>
+                  <SelectItem value="tokens">Tokens - 按 Token 消耗</SelectItem>
+                  <SelectItem value="hybrid">Hybrid - 多因素组合</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-4 border rounded-lg p-4 bg-muted/30">
-              <Label>Optimization Options</Label>
+              <Label>优化选项</Label>
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Enable Optimization</Label>
-                  <p className="text-xs text-muted-foreground">Optimize generated plans</p>
+                  <Label>启用优化</Label>
+                  <p className="text-xs text-muted-foreground">优化生成的计划</p>
                 </div>
                 <Switch
                   checked={settings.goap.optimization.enabled}
@@ -469,8 +469,8 @@ export function AdvancedSettingsModal() {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Detect Parallel Actions</Label>
-                  <p className="text-xs text-muted-foreground">Find actions that can run concurrently</p>
+                  <Label>检测并行操作</Label>
+                  <p className="text-xs text-muted-foreground">查找可并发执行的操作</p>
                 </div>
                 <Switch
                   checked={settings.goap.optimization.detectParallel}
@@ -485,8 +485,8 @@ export function AdvancedSettingsModal() {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Remove Redundant Actions</Label>
-                  <p className="text-xs text-muted-foreground">Eliminate unnecessary steps</p>
+                  <Label>移除冗余操作</Label>
+                  <p className="text-xs text-muted-foreground">消除不必要的步骤</p>
                 </div>
                 <Switch
                   checked={settings.goap.optimization.removeRedundant}
@@ -504,7 +504,7 @@ export function AdvancedSettingsModal() {
           {/* Execution Configuration */}
           <TabsContent value="execution" className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label htmlFor="execStrategy">Execution Strategy</Label>
+              <Label htmlFor="execStrategy">执行策略</Label>
               <Select
                 value={settings.execution.strategy}
                 onValueChange={(value: AdvancedSettings['execution']['strategy']) =>
@@ -515,16 +515,16 @@ export function AdvancedSettingsModal() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="sequential">Sequential - One task at a time</SelectItem>
-                  <SelectItem value="parallel">Parallel - Maximum concurrency</SelectItem>
-                  <SelectItem value="hybrid">Hybrid - Mixed approach</SelectItem>
-                  <SelectItem value="adaptive">Adaptive - Dynamic based on load</SelectItem>
+                  <SelectItem value="sequential">Sequential - 一次一个任务</SelectItem>
+                  <SelectItem value="parallel">Parallel - 最大并发</SelectItem>
+                  <SelectItem value="hybrid">Hybrid - 混合方式</SelectItem>
+                  <SelectItem value="adaptive">Adaptive - 根据负载动态调整</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="maxParallelTasks">Max Parallel Tasks: {settings.execution.maxParallelTasks}</Label>
+              <Label htmlFor="maxParallelTasks">最大并行任务数：{settings.execution.maxParallelTasks}</Label>
               <Slider
                 id="maxParallelTasks"
                 min={1}
@@ -538,7 +538,7 @@ export function AdvancedSettingsModal() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="timeout">Timeout (seconds): {settings.execution.timeout / 1000}</Label>
+              <Label htmlFor="timeout">超时时间（秒）：{settings.execution.timeout / 1000}</Label>
               <Slider
                 id="timeout"
                 min={30000}
@@ -553,9 +553,9 @@ export function AdvancedSettingsModal() {
 
             <div className="flex items-center justify-between border rounded-lg p-4 bg-muted/30">
               <div className="space-y-0.5">
-                <Label>Enable Quality Gates</Label>
+                <Label>启用质量门禁</Label>
                 <p className="text-xs text-muted-foreground">
-                  Run compile checks, test coverage, code quality, and security scans
+                  运行编译检查、测试覆盖率、代码质量与安全扫描
                 </p>
               </div>
               <Switch
@@ -570,7 +570,7 @@ export function AdvancedSettingsModal() {
           {/* Model Router Configuration */}
           <TabsContent value="model" className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label htmlFor="provider">Primary Provider</Label>
+              <Label htmlFor="provider">首选 Provider</Label>
               <Select
                 value={settings.modelRouter.primaryProvider}
                 onValueChange={(value: AdvancedSettings['modelRouter']['primaryProvider']) =>
@@ -581,16 +581,16 @@ export function AdvancedSettingsModal() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="anthropic">Anthropic - Highest quality</SelectItem>
-                  <SelectItem value="openrouter">OpenRouter - 99% cost savings</SelectItem>
-                  <SelectItem value="gemini">Gemini - Optimized for speed</SelectItem>
-                  <SelectItem value="local">Local - Privacy-focused (ONNX)</SelectItem>
+                  <SelectItem value="anthropic">Anthropic - 最高质量</SelectItem>
+                  <SelectItem value="openrouter">OpenRouter - 节省 99% 成本</SelectItem>
+                  <SelectItem value="gemini">Gemini - 速度优先</SelectItem>
+                  <SelectItem value="local">Local - 注重隐私（ONNX）</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="routingStrategy">Routing Strategy</Label>
+              <Label htmlFor="routingStrategy">路由策略</Label>
               <Select
                 value={settings.modelRouter.strategy}
                 onValueChange={(value: AdvancedSettings['modelRouter']['strategy']) =>
@@ -601,17 +601,17 @@ export function AdvancedSettingsModal() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cost">Cost - Prefer cheapest models</SelectItem>
-                  <SelectItem value="speed">Speed - Prefer fastest models</SelectItem>
-                  <SelectItem value="quality">Quality - Prefer highest quality</SelectItem>
-                  <SelectItem value="privacy">Privacy - Use local models only</SelectItem>
-                  <SelectItem value="balanced">Balanced - Optimize all factors</SelectItem>
+                  <SelectItem value="cost">Cost - 优先选择最便宜的模型</SelectItem>
+                  <SelectItem value="speed">Speed - 优先选择最快的模型</SelectItem>
+                  <SelectItem value="quality">Quality - 优先选择质量最高的模型</SelectItem>
+                  <SelectItem value="privacy">Privacy - 仅使用本地模型</SelectItem>
+                  <SelectItem value="balanced">Balanced - 综合优化所有因素</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="maxCost">Max Cost Per Request ($): {settings.modelRouter.maxCostPerRequest.toFixed(2)}</Label>
+              <Label htmlFor="maxCost">单次请求最大成本（$）：{settings.modelRouter.maxCostPerRequest.toFixed(2)}</Label>
               <Slider
                 id="maxCost"
                 min={0.01}
@@ -626,9 +626,9 @@ export function AdvancedSettingsModal() {
 
             <div className="flex items-center justify-between border rounded-lg p-4 bg-muted/30">
               <div className="space-y-0.5">
-                <Label>Enable Fallback</Label>
+                <Label>启用回退</Label>
                 <p className="text-xs text-muted-foreground">
-                  Automatically fallback to alternative providers on failure
+                  失败时自动回退到其他 Provider
                 </p>
               </div>
               <Switch
@@ -645,11 +645,11 @@ export function AdvancedSettingsModal() {
         <div className="flex items-center justify-between pt-4 border-t">
           <Button variant="outline" onClick={handleReset} className="gap-2">
             <RotateCcw className="w-4 h-4" />
-            Reset to Defaults
+            恢复默认设置
           </Button>
           <Button onClick={handleSave} className="gap-2">
             <Save className="w-4 h-4" />
-            Save Configuration
+            保存配置
           </Button>
         </div>
       </DialogContent>

@@ -44,23 +44,23 @@ export function StepExecutionPanel({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Zap className="w-5 h-5 text-yellow-500 animate-pulse" />
-            Current Step
+            当前步骤
           </CardTitle>
           <div className="flex gap-2">
             {isPaused ? (
               <Button size="sm" variant="outline" onClick={onResume}>
-                <Play className="w-4 h-4 mr-1" /> Resume
+                <Play className="w-4 h-4 mr-1" /> 继续
               </Button>
             ) : (
               <Button size="sm" variant="outline" onClick={onPause}>
-                <Pause className="w-4 h-4 mr-1" /> Pause
+                <Pause className="w-4 h-4 mr-1" /> 暂停
               </Button>
             )}
             <Button size="sm" variant="outline" onClick={onSkip}>
-              <SkipForward className="w-4 h-4 mr-1" /> Skip
+              <SkipForward className="w-4 h-4 mr-1" /> 跳过
             </Button>
             <Button size="sm" variant="outline" onClick={onRetry}>
-              <RotateCcw className="w-4 h-4 mr-1" /> Retry
+              <RotateCcw className="w-4 h-4 mr-1" /> 重试
             </Button>
           </div>
         </div>
@@ -70,7 +70,7 @@ export function StepExecutionPanel({
         <div>
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-semibold text-lg">{currentAction.name}</h4>
-            <Badge variant="outline">Cost: {currentAction.cost}</Badge>
+            <Badge variant="outline">成本：{currentAction.cost}</Badge>
           </div>
           {currentAction.description && (
             <p className="text-sm text-muted-foreground">
@@ -97,14 +97,14 @@ export function StepExecutionPanel({
                 : 'secondary'
             }
           >
-            {assignedAgent.status}
+            {assignedAgent.status === 'working' ? '工作中' : assignedAgent.status === 'blocked' ? '受阻' : '空闲'}
           </Badge>
         </div>
 
         {/* Progress */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-medium">Progress</span>
+            <span className="font-medium">进度</span>
             <span className="font-bold text-lg" style={{ color: '#a855f7' }}>{progress}%</span>
           </div>
           <Progress value={progress} className="h-3" />
@@ -120,7 +120,7 @@ export function StepExecutionPanel({
               <div>
                 <h5 className="text-sm font-semibold mb-2 flex items-center gap-1">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  Preconditions
+                  前置条件
                 </h5>
                 <div className="space-y-1">
                   {Object.entries(currentAction.preconditions).map(([key, value]) => (
@@ -139,7 +139,7 @@ export function StepExecutionPanel({
               <div>
                 <h5 className="text-sm font-semibold mb-2 flex items-center gap-1">
                   <ArrowRight className="w-4 h-4 text-blue-500" />
-                  Effects
+                  效果
                 </h5>
                 <div className="space-y-1">
                   {Object.entries(currentAction.effects).map(([key, value]) => (
@@ -159,7 +159,7 @@ export function StepExecutionPanel({
 
         {/* Real-time Logs */}
         <div>
-          <h5 className="text-sm font-semibold mb-2">Execution Log</h5>
+          <h5 className="text-sm font-semibold mb-2">执行日志</h5>
           <ScrollArea className="h-[150px] rounded-md border bg-muted/30 p-3">
             <div className="space-y-1 font-mono text-xs">
               {logs.map((log, index) => (
@@ -172,7 +172,7 @@ export function StepExecutionPanel({
               ))}
               {logs.length === 0 && (
                 <div className="text-center text-muted-foreground py-4">
-                  No logs yet...
+                  暂无日志...
                 </div>
               )}
             </div>
@@ -184,9 +184,9 @@ export function StepExecutionPanel({
 }
 
 function getProgressLabel(progress: number): string {
-  if (progress < 25) return 'Initializing...';
-  if (progress < 50) return 'Processing...';
-  if (progress < 75) return 'Executing...';
-  if (progress < 100) return 'Finalizing...';
-  return 'Complete!';
+  if (progress < 25) return '正在初始化...';
+  if (progress < 50) return '正在处理...';
+  if (progress < 75) return '正在执行...';
+  if (progress < 100) return '正在收尾...';
+  return '已完成！';
 }

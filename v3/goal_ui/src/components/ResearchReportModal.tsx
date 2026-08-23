@@ -173,178 +173,178 @@ export const ResearchReportModal = ({
     // Action 1: Pilot/Proof of Concept
     actionItems.push({
       id: "1",
-      title: `Launch Pilot Program Based on ${steps[0]?.title || 'Initial Research'}`,
-      description: `Initiate a controlled pilot to validate key findings from the research. ${keyInsights[0] ? `Focus on "${keyInsights[0]}"` : ''} to establish baseline metrics and identify implementation challenges early.`,
-      timeline: "Week 1-4",
-      timelineDetails: "Week 1: Team setup and requirements. Week 2-3: Pilot execution. Week 4: Analysis and reporting.",
+      title: `基于${steps[0]?.title || '初步研究'}启动试点项目`,
+      description: `启动受控试点，验证研究中的关键发现。${keyInsights[0] ? `重点关注"${keyInsights[0]}"` : ''}，以建立基线指标并及早识别实施挑战。`,
+      timeline: "第 1-4 周",
+      timelineDetails: "第 1 周：组建团队并梳理需求。第 2-3 周：执行试点。第 4 周：分析与汇报。",
       priority: "High",
       resources: {
-        budget: "$15,000 - $30,000 (pilot phase)",
-        team: "3-5 people: 1 project lead, 2 technical specialists, 1 analyst, 1 stakeholder liaison",
-        tools: isQuantum ? ["Quantum simulator", "QPU access", "Analysis toolkit"] :
-               isAI ? ["ML framework", "GPU compute", "Data pipeline"] :
-               isBlockchain ? ["Test network", "Smart contract tools", "Analytics platform"] :
-               ["Project management software", "Analytics tools", "Collaboration platform"]
+        budget: "$15,000 - $30,000（试点阶段）",
+        team: "3-5 人：1 名项目负责人、2 名技术专家、1 名分析师、1 名利益相关方联络人",
+        tools: isQuantum ? ["量子模拟器", "QPU 访问", "分析工具包"] :
+               isAI ? ["ML 框架", "GPU 算力", "数据管道"] :
+               isBlockchain ? ["测试网络", "智能合约工具", "分析平台"] :
+               ["项目管理软件", "分析工具", "协作平台"]
       },
       metrics: [
-        "Pilot success rate (target: >75%)",
-        "Time to first result (target: <2 weeks)",
-        "Cost per transaction/operation",
-        "User satisfaction score (target: >4/5)",
-        "Technical feasibility score"
+        "试点成功率（目标：>75%）",
+        "首次结果产出时间（目标：<2 周）",
+        "单次交易/操作成本",
+        "用户满意度评分（目标：>4/5）",
+        "技术可行性评分"
       ],
       risks: [
         {
-          risk: "Insufficient stakeholder buy-in during pilot phase",
-          mitigation: "Conduct pre-pilot workshops and establish clear communication channels with weekly updates"
+          risk: "试点阶段利益相关方支持不足",
+          mitigation: "开展试点前工作坊，建立清晰的沟通渠道并每周更新"
         },
         {
-          risk: "Technical challenges exceeding initial scope",
-          mitigation: "Build 30% buffer time into pilot timeline and have backup technical experts on standby"
+          risk: "技术挑战超出初始范围",
+          mitigation: "在试点时间线中预留 30% 缓冲时间，并安排后备技术专家待命"
         },
         {
-          risk: "Resource constraints or budget overruns",
-          mitigation: "Implement phased approach with clear go/no-go decision points after each phase"
+          risk: "资源受限或预算超支",
+          mitigation: "采用分阶段推进方式，每个阶段后设置明确的继续/终止决策点"
         }
       ],
       references: [
-        { title: "Pilot Program Best Practices", url: "https://www.pmi.org/learning/library/pilot-project-best-practices-6498" },
-        { title: "Measuring Pilot Success", url: "https://hbr.org/2018/11/how-to-design-a-pilot-study" }
+        { title: "试点项目最佳实践", url: "https://www.pmi.org/learning/library/pilot-project-best-practices-6498" },
+        { title: "如何衡量试点成功", url: "https://hbr.org/2018/11/how-to-design-a-pilot-study" }
       ],
-      researchContext: `Based on ${steps.length} research steps analyzing "${userGoal}", this pilot directly addresses findings from the initial goal analysis phase.`
+      researchContext: `基于分析 "${userGoal}" 的 ${steps.length} 个研究步骤，该试点直接针对初始目标分析阶段的研究发现。`
     });
 
     // Action 2: Scale Implementation
     actionItems.push({
       id: "2",
-      title: `Scale to Production: Full Implementation Rollout`,
-      description: `Based on successful pilot validation, scale the solution to production environment. ${keyInsights[1] ? `Leverage insight: "${keyInsights[1]}"` : ''} to optimize the deployment strategy and minimize disruption.`,
-      timeline: "Month 2-4",
-      timelineDetails: "Month 2: Infrastructure setup. Month 3: Staged rollout (10% → 50% → 100%). Month 4: Optimization and stabilization.",
+      title: `扩展至生产环境：全面实施上线`,
+      description: `在试点验证成功的基础上，将解决方案扩展至生产环境。${keyInsights[1] ? `利用洞察："${keyInsights[1]}"` : ''}优化部署策略并最大限度减少影响。`,
+      timeline: "第 2-4 个月",
+      timelineDetails: "第 2 个月：基础设施搭建。第 3 个月：分阶段上线（10% → 50% → 100%）。第 4 个月：优化与稳定。",
       priority: "High",
       resources: {
-        budget: "$100,000 - $250,000 (full implementation)",
-        team: "8-12 people: 1 program manager, 3-4 engineers, 2 QA specialists, 1 DevOps, 1 security lead, 2 business analysts",
-        tools: isQuantum ? ["Production QPU", "Error correction", "Monitoring suite", "Integration middleware"] :
-               isAI ? ["Production ML infrastructure", "Model registry", "Feature store", "Monitoring tools"] :
-               isBlockchain ? ["Mainnet deployment", "Security audit tools", "Node infrastructure", "Wallet integration"] :
-               ["CI/CD pipeline", "Production infrastructure", "Monitoring stack", "Security tools"]
+        budget: "$100,000 - $250,000（全面实施）",
+        team: "8-12 人：1 名项目经理、3-4 名工程师、2 名 QA 专员、1 名 DevOps、1 名安全负责人、2 名业务分析师",
+        tools: isQuantum ? ["生产级 QPU", "纠错", "监控套件", "集成中间件"] :
+               isAI ? ["生产级 ML 基础设施", "模型注册表", "特征存储", "监控工具"] :
+               isBlockchain ? ["主网上线", "安全审计工具", "节点基础设施", "钱包集成"] :
+               ["CI/CD 流水线", "生产基础设施", "监控栈", "安全工具"]
       },
       metrics: [
-        "System uptime (target: 99.5%+)",
-        "Deployment velocity (features/month)",
-        "Error rate (target: <0.1%)",
-        "Cost efficiency vs. baseline (target: 20% improvement)",
-        "User adoption rate (target: 70% within 3 months)",
-        "ROI timeline (target: break-even within 12 months)"
+        "系统可用性（目标：99.5%+）",
+        "部署速度（功能/月）",
+        "错误率（目标：<0.1%）",
+        "相比基线的成本效率（目标：提升 20%）",
+        "用户采用率（目标：3 个月内达到 70%）",
+        "ROI 时间线（目标：12 个月内回本）"
       ],
       risks: [
         {
-          risk: "Production issues impacting existing operations",
-          mitigation: "Implement blue-green deployment with instant rollback capability and 24/7 monitoring"
+          risk: "生产问题影响现有业务",
+          mitigation: "实施蓝绿部署，具备即时回滚能力并提供 24/7 监控"
         },
         {
-          risk: "Scaling costs exceeding projections",
-          mitigation: "Implement cost tracking dashboards with automated alerts at 80% budget thresholds"
+          risk: "扩展成本超出预期",
+          mitigation: "实施成本跟踪看板，在预算达到 80% 阈值时自动告警"
         },
         {
-          risk: "User resistance to new system",
-          mitigation: "Develop comprehensive training program and provide dedicated support team during transition"
+          risk: "用户对新系统的抵触",
+          mitigation: "制定全面的培训计划，并在过渡期提供专属支持团队"
         },
         {
-          risk: "Integration challenges with legacy systems",
-          mitigation: "Build abstraction layer and maintain parallel systems during transition period"
+          risk: "与遗留系统集成的挑战",
+          mitigation: "构建抽象层，并在过渡期并行维护新旧系统"
         }
       ],
       references: [
-        { title: "Scaling Best Practices", url: "https://aws.amazon.com/architecture/well-architected/" },
-        { title: "Production Readiness Checklist", url: "https://www.atlassian.com/incident-management/devops/production-ready" }
+        { title: "扩展最佳实践", url: "https://aws.amazon.com/architecture/well-architected/" },
+        { title: "生产就绪检查清单", url: "https://www.atlassian.com/incident-management/devops/production-ready" }
       ],
-      researchContext: `This phase builds on the ${totalDataPoints} data points collected during research, particularly insights from the verification and synthesis stages.`
+      researchContext: `该阶段建立在研究期间收集的 ${totalDataPoints} 个数据点之上，尤其是验证与综合阶段产生的洞察。`
     });
 
     // Action 3: Optimization & Enhancement
     actionItems.push({
       id: "3",
-      title: `Continuous Improvement: Optimize Based on Real-World Data`,
-      description: `Establish feedback loops and optimization cycles to continuously improve performance. ${keyInsights[2] ? `Apply research finding: "${keyInsights[2]}"` : ''} to drive iterative enhancements and competitive advantages.`,
-      timeline: "Month 4-6 (ongoing)",
-      timelineDetails: "Month 4: Baseline performance analysis. Month 5: Implement optimization v1. Month 6: A/B testing and refinement. Then quarterly improvement cycles.",
+      title: `持续改进：基于真实数据优化`,
+      description: `建立反馈回路与优化循环，持续提升性能。${keyInsights[2] ? `应用研究发现："${keyInsights[2]}"` : ''}推动迭代改进并形成竞争优势。`,
+      timeline: "第 4-6 个月（持续进行）",
+      timelineDetails: "第 4 个月：基线性能分析。第 5 个月：实施优化 v1。第 6 个月：A/B 测试与完善。之后按季度循环改进。",
       priority: "Medium",
       resources: {
-        budget: "$25,000 - $50,000 per quarter (optimization budget)",
-        team: "4-6 people: 1 optimization lead, 2 data scientists, 1 engineer, 1 UX researcher, 1 product analyst",
-        tools: ["A/B testing platform", "Analytics suite", "Performance monitoring", "User feedback tools", "Data visualization platform"]
+        budget: "每季度 $25,000 - $50,000（优化预算）",
+        team: "4-6 人：1 名优化负责人、2 名数据科学家、1 名工程师、1 名 UX 研究员、1 名产品分析师",
+        tools: ["A/B 测试平台", "分析套件", "性能监控", "用户反馈工具", "数据可视化平台"]
       },
       metrics: [
-        "Performance improvement rate (target: 10% per quarter)",
-        "User engagement increase (target: 15% growth)",
-        "Cost reduction achieved (target: 5% per quarter)",
-        "Feature adoption velocity",
-        "Customer satisfaction (NPS target: >50)",
-        "Mean time to resolution (MTTR) for issues"
+        "性能提升率（目标：每季度 10%）",
+        "用户参与度增长（目标：增长 15%）",
+        "成本降幅（目标：每季度 5%）",
+        "功能采用速度",
+        "客户满意度（NPS 目标：>50）",
+        "问题平均解决时间（MTTR）"
       ],
       risks: [
         {
-          risk: "Optimization causing unintended regressions",
-          mitigation: "Implement comprehensive test coverage (>80%) and gradual rollout of optimizations"
+          risk: "优化引发意外回退",
+          mitigation: "实施全面测试覆盖（>80%）并逐步上线优化"
         },
         {
-          risk: "Diminishing returns on optimization efforts",
-          mitigation: "Establish clear ROI thresholds and prioritize optimizations based on impact analysis"
+          risk: "优化投入的边际收益递减",
+          mitigation: "设定明确的 ROI 阈值，并基于影响分析确定优化优先级"
         },
         {
-          risk: "Team burnout from continuous changes",
-          mitigation: "Balance optimization sprints with stabilization periods and rotate team responsibilities"
+          risk: "持续变更导致团队倦怠",
+          mitigation: "在优化冲刺与稳定期之间保持平衡，并轮换团队职责"
         }
       ],
       references: [
-        { title: "Continuous Improvement Framework", url: "https://www.lean.org/lexicon-terms/continuous-improvement/" },
-        { title: "Data-Driven Optimization", url: "https://hbr.org/2012/09/big-data-the-management-revolution" }
+        { title: "持续改进框架", url: "https://www.lean.org/lexicon-terms/continuous-improvement/" },
+        { title: "数据驱动优化", url: "https://hbr.org/2012/09/big-data-the-management-revolution" }
       ],
-      researchContext: `Drawing from the knowledge synthesis and insight generation phases of the research, this ensures long-term value realization.`
+      researchContext: `借鉴研究中的知识综合与洞察生成阶段，确保长期价值实现。`
     });
 
     // Action 4: Knowledge Sharing & Scaling
     actionItems.push({
       id: "4",
-      title: `Document & Share Learnings Across Organization`,
-      description: `Create comprehensive documentation and training materials to scale adoption and build organizational capability. Capture lessons learned and best practices for future initiatives in this domain.`,
-      timeline: "Month 5-7",
-      timelineDetails: "Month 5: Documentation creation. Month 6: Training program development and pilot. Month 7: Organization-wide rollout and feedback collection.",
+      title: `组织内文档沉淀与知识共享`,
+      description: `创建全面的文档与培训材料，以扩大采用范围并建设组织能力。沉淀经验教训与最佳实践，供该领域未来项目使用。`,
+      timeline: "第 5-7 个月",
+      timelineDetails: "第 5 个月：文档编写。第 6 个月：培训项目开发与试点。第 7 个月：全组织推广与反馈收集。",
       priority: "Medium",
       resources: {
-        budget: "$20,000 - $40,000 (documentation and training)",
-        team: "3-5 people: 1 technical writer, 1 training specialist, 1 subject matter expert, 1 instructional designer, 1 community manager",
-        tools: ["Documentation platform", "Learning management system (LMS)", "Video recording tools", "Knowledge base software", "Community forum"]
+        budget: "$20,000 - $40,000（文档与培训）",
+        team: "3-5 人：1 名技术文档工程师、1 名培训专员、1 名领域专家、1 名课程设计师、1 名社区经理",
+        tools: ["文档平台", "学习管理系统（LMS）", "录屏工具", "知识库软件", "社区论坛"]
       },
       metrics: [
-        "Documentation completeness (target: 100% coverage)",
-        "Training completion rate (target: >85% of target audience)",
-        "Knowledge base engagement (views, searches, contributions)",
-        "Support ticket reduction (target: 30% decrease)",
-        "Cross-team adoption rate",
-        "Time to onboard new team members (target: <1 week)"
+        "文档完整度（目标：100% 覆盖）",
+        "培训完成率（目标：覆盖 >85% 目标人群）",
+        "知识库活跃度（浏览量、搜索量、贡献量）",
+        "支持工单减少（目标：下降 30%）",
+        "跨团队采用率",
+        "新成员上手时间（目标：<1 周）"
       ],
       risks: [
         {
-          risk: "Documentation becoming outdated quickly",
-          mitigation: "Assign documentation owners and implement quarterly review cycles with version control"
+          risk: "文档快速过时",
+          mitigation: "指定文档负责人，并实施带版本控制的季度审查周期"
         },
         {
-          risk: "Low engagement with training materials",
-          mitigation: "Gamify learning experience and tie completion to performance reviews or certifications"
+          risk: "培训材料参与度低",
+          mitigation: "游戏化学习体验，并将完成情况与绩效考核或认证挂钩"
         },
         {
-          risk: "Knowledge silos persisting despite documentation",
-          mitigation: "Establish communities of practice and regular knowledge-sharing sessions"
+          risk: "虽有文档但知识孤岛依然存在",
+          mitigation: "建立实践社区并定期开展知识分享会"
         }
       ],
       references: [
-        { title: "Documentation Best Practices", url: "https://documentation.divio.com/" },
-        { title: "Effective Knowledge Management", url: "https://www.mckinsey.com/capabilities/people-and-organizational-performance/our-insights/building-organizational-capabilities-knowledge-management" }
+        { title: "文档最佳实践", url: "https://documentation.divio.com/" },
+        { title: "高效知识管理", url: "https://www.mckinsey.com/capabilities/people-and-organizational-performance/our-insights/building-organizational-capabilities-knowledge-management" }
       ],
-      researchContext: `This ensures the research findings from all ${steps.length} steps are institutionalized and can benefit future projects.`
+      researchContext: `这确保全部 ${steps.length} 个步骤的研究发现得以制度化，并可为未来项目带来收益。`
     });
 
     return actionItems;
@@ -474,7 +474,7 @@ export const ResearchReportModal = ({
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <DialogTitle className="text-2xl font-bold mb-2">
-                Research Report
+                研究报告
               </DialogTitle>
               <DialogDescription className="text-base">
                 {userGoal}
@@ -488,7 +488,7 @@ export const ResearchReportModal = ({
                 className="gap-2"
               >
                 <Download className="w-4 h-4" />
-                Export
+                导出
               </Button>
               <Button
                 variant="outline"
@@ -497,7 +497,7 @@ export const ResearchReportModal = ({
                 className="gap-2"
               >
                 <RefreshCw className="w-4 h-4" />
-                Revise
+                修订
               </Button>
               <Button
                 variant="outline"
@@ -505,7 +505,7 @@ export const ResearchReportModal = ({
                 className="gap-2"
               >
                 <Share2 className="w-4 h-4" />
-                Share
+                分享
               </Button>
             </div>
           </div>
@@ -522,23 +522,23 @@ export const ResearchReportModal = ({
           <TabsList className="mx-6 mt-4 shrink-0">
             <TabsTrigger value="summary" className="gap-2">
               <FileText className="w-4 h-4" />
-              Summary
+              摘要
             </TabsTrigger>
             <TabsTrigger value="findings" className="gap-2">
               <Lightbulb className="w-4 h-4" />
-              Key Findings
+              关键发现
             </TabsTrigger>
             <TabsTrigger value="methodology" className="gap-2">
               <Target className="w-4 h-4" />
-              Methodology
+              研究方法
             </TabsTrigger>
             <TabsTrigger value="citations" className="gap-2">
               <BookOpen className="w-4 h-4" />
-              Citations ({allCitations.length})
+              引用文献（{allCitations.length}）
             </TabsTrigger>
             <TabsTrigger value="insights" className="gap-2">
               <TrendingUp className="w-4 h-4" />
-              Next Steps
+              后续步骤
             </TabsTrigger>
           </TabsList>
 
@@ -550,15 +550,15 @@ export const ResearchReportModal = ({
                   <div className="p-2 rounded-lg" style={{ backgroundColor: `${accentColor}33` }}>
                     <Sparkles className="w-5 h-5" style={{ color: accentColor }} />
                   </div>
-                  <h3 className="text-lg font-semibold">Executive Summary</h3>
+                  <h3 className="text-lg font-semibold">执行摘要</h3>
                 </div>
                 <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
-                  {aiSummary || `This comprehensive research successfully analyzed "${userGoal}" through a ${steps.length}-step Goal-Oriented Action Planning (GOAP) workflow. The system coordinated multiple specialized agents to gather information, analyze documents, synthesize knowledge, and generate actionable insights with high confidence scores across all validation checks.`}
+                  {aiSummary || `这项综合性研究通过 ${steps.length} 步目标导向行动规划（GOAP）流程，成功分析了 "${userGoal}"。系统协调多个专业 Agent 收集信息、分析文档、综合知识，并生成可执行的洞察，所有验证检查均获得高置信度评分。`}
                 </p>
                 {isGeneratingActions && (
                   <div className="mt-3 text-xs text-muted-foreground flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: accentColor, borderTopColor: 'transparent' }}></div>
-                    Generating contextual summary...
+                    正在生成上下文摘要...
                   </div>
                 )}
               </div>
@@ -566,26 +566,26 @@ export const ResearchReportModal = ({
               <div className="grid grid-cols-4 gap-4">
                 <div className="rounded-lg border p-4">
                   <div className="text-2xl font-bold mb-1">{steps.length}</div>
-                  <div className="text-xs text-muted-foreground">Research Steps</div>
+                  <div className="text-xs text-muted-foreground">研究步骤</div>
                 </div>
                 <div className="rounded-lg border p-4">
                   <div className="text-2xl font-bold mb-1">{totalDataPoints}</div>
-                  <div className="text-xs text-muted-foreground">Data Points</div>
+                  <div className="text-xs text-muted-foreground">数据点</div>
                 </div>
                 <div className="rounded-lg border p-4">
                   <div className="text-2xl font-bold mb-1" style={{ color: accentColor }}>94%</div>
-                  <div className="text-xs text-muted-foreground">Confidence</div>
+                  <div className="text-xs text-muted-foreground">置信度</div>
                 </div>
                 <div className="rounded-lg border p-4">
                   <div className="text-2xl font-bold mb-1">{allSources.size}</div>
-                  <div className="text-xs text-muted-foreground">Sources</div>
+                  <div className="text-xs text-muted-foreground">来源</div>
                 </div>
               </div>
 
               <div className="space-y-3">
                 <h4 className="font-semibold flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" style={{ color: successColor }} />
-                  Completed Steps
+                  已完成步骤
                 </h4>
                 {steps.map((step, idx) => (
                   <div key={idx} className="flex items-start gap-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors">
@@ -597,7 +597,7 @@ export const ResearchReportModal = ({
                       <p className="text-xs text-muted-foreground">{step.description}</p>
                     </div>
                     <Badge variant="outline" className="text-xs" style={{ borderColor: successColor, color: successColor }}>
-                      {step.data.length} items
+                      {step.data.length} 项
                     </Badge>
                   </div>
                 ))}
@@ -609,10 +609,10 @@ export const ResearchReportModal = ({
               <div className="rounded-lg border p-4 bg-muted/30">
                 <h3 className="font-semibold mb-2 flex items-center gap-2">
                   <Lightbulb className="w-4 h-4" style={{ color: accentColor }} />
-                  Key Research Findings
+                  关键研究发现
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Critical insights and discoveries from the research process
+                  研究过程中的关键洞察与发现
                 </p>
               </div>
 
@@ -630,7 +630,7 @@ export const ResearchReportModal = ({
                           <h5 className="font-medium text-sm flex-1">{item.text}</h5>
                           {details?.confidence && (
                             <Badge variant="secondary" className="text-xs">
-                              {Math.round(details.confidence * 100)}% confidence
+                              置信度 {Math.round(details.confidence * 100)}%
                             </Badge>
                           )}
                         </div>
@@ -640,7 +640,7 @@ export const ResearchReportModal = ({
                         {details?.source && (
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <BookOpen className="w-3 h-3" />
-                            Source: {details.source}
+                            来源：{details.source}
                           </div>
                         )}
                       </div>
@@ -655,10 +655,10 @@ export const ResearchReportModal = ({
               <div className="rounded-lg border p-4 bg-muted/30">
                 <h3 className="font-semibold mb-2 flex items-center gap-2">
                   <Target className="w-4 h-4" style={{ color: primaryColor }} />
-                  Research Methodology
+                  研究方法
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  GOAP-based systematic approach with sequential step execution
+                  基于 GOAP 的系统化方法，按顺序逐步执行
                 </p>
               </div>
 
@@ -692,7 +692,7 @@ export const ResearchReportModal = ({
                           ))}
                           {step.data.length > 3 && (
                             <Badge variant="outline" className="text-xs">
-                              +{step.data.length - 3} more
+                              还有 +{step.data.length - 3} 项
                             </Badge>
                           )}
                         </div>
@@ -708,10 +708,10 @@ export const ResearchReportModal = ({
               <div className="rounded-lg border p-4 bg-muted/30">
                 <h3 className="font-semibold mb-2 flex items-center gap-2">
                   <BookOpen className="w-4 h-4" style={{ color: primaryColor }} />
-                  References & Citations
+                  参考文献与引用
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Academic references and sources used in this research
+                  本研究使用的学术参考文献与来源
                 </p>
               </div>
 
@@ -734,7 +734,7 @@ export const ResearchReportModal = ({
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  No citations were generated for this research
+                  本次研究未生成引用文献
                 </div>
               )}
             </TabsContent>
@@ -745,7 +745,7 @@ export const ResearchReportModal = ({
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-4 h-4" style={{ color: accentColor }} />
-                    <h3 className="font-semibold">Actionable Next Steps</h3>
+                    <h3 className="font-semibold">可执行的后续步骤</h3>
                   </div>
                   <Button
                     onClick={exportActionItems}
@@ -754,18 +754,18 @@ export const ResearchReportModal = ({
                     className="gap-2 text-xs"
                   >
                     <FileDown className="w-3 h-3" />
-                    Export Checklist
+                    导出清单
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {isGeneratingActions 
-                    ? "Generating contextual action items based on your research..." 
-                    : "Contextualized recommendations with timelines, resources, metrics, and risk mitigation based on your research findings"}
+                  {isGeneratingActions
+                    ? "正在基于你的研究生成上下文行动项..."
+                    : "基于你的研究结果，提供包含时间线、资源、指标与风险应对的定制化建议"}
                 </p>
                 {isGeneratingActions && (
                   <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
                     <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: accentColor, borderTopColor: 'transparent' }}></div>
-                    AI is analyzing your research to generate relevant next steps...
+                    AI 正在分析你的研究以生成相关的后续步骤...
                   </div>
                 )}
               </div>
@@ -823,7 +823,7 @@ export const ResearchReportModal = ({
                           <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: `${primaryColor}0d` }}>
                             <div className="flex items-center gap-1.5 mb-1">
                               <Brain className="w-3 h-3" style={{ color: primaryColor }} />
-                              <span className="font-medium">Research Context</span>
+                              <span className="font-medium">研究背景</span>
                             </div>
                             <p className="text-muted-foreground">{action.researchContext}</p>
                           </div>
@@ -832,20 +832,20 @@ export const ResearchReportModal = ({
                           <div>
                             <div className="flex items-center gap-1.5 mb-2">
                               <Clock className="w-3 h-3" style={{ color: accentColor }} />
-                              <h6 className="text-xs font-semibold">Timeline Breakdown</h6>
+                              <h6 className="text-xs font-semibold">时间线明细</h6>
                             </div>
                             <p className="text-xs text-muted-foreground">{action.timelineDetails}</p>
                           </div>
 
                           {/* Resources */}
                           <div>
-                            <h6 className="text-xs font-semibold mb-2">Resource Requirements</h6>
+                            <h6 className="text-xs font-semibold mb-2">资源需求</h6>
                             <div className="space-y-2">
                               {action.resources.budget && (
                                 <div className="flex items-start gap-2 text-xs">
                                   <DollarSign className="w-3 h-3 mt-0.5 flex-shrink-0" style={{ color: accentColor }} />
                                   <div>
-                                    <span className="font-medium">Budget:</span>
+                                    <span className="font-medium">预算：</span>
                                     <span className="text-muted-foreground ml-1">{action.resources.budget}</span>
                                   </div>
                                 </div>
@@ -854,7 +854,7 @@ export const ResearchReportModal = ({
                                 <div className="flex items-start gap-2 text-xs">
                                   <Users className="w-3 h-3 mt-0.5 flex-shrink-0" style={{ color: accentColor }} />
                                   <div>
-                                    <span className="font-medium">Team:</span>
+                                    <span className="font-medium">团队：</span>
                                     <span className="text-muted-foreground ml-1">{action.resources.team}</span>
                                   </div>
                                 </div>
@@ -863,7 +863,7 @@ export const ResearchReportModal = ({
                                 <div className="flex items-start gap-2 text-xs">
                                   <Target className="w-3 h-3 mt-0.5 flex-shrink-0" style={{ color: accentColor }} />
                                   <div className="flex-1">
-                                    <span className="font-medium">Required Tools:</span>
+                                    <span className="font-medium">所需工具：</span>
                                     <div className="flex flex-wrap gap-1 mt-1">
                                       {action.resources.tools.map((tool, idx) => (
                                         <span key={idx} className="bg-muted px-2 py-0.5 rounded text-[10px]">
@@ -881,7 +881,7 @@ export const ResearchReportModal = ({
                           <div>
                             <div className="flex items-center gap-1.5 mb-2">
                               <BarChart3 className="w-3 h-3" style={{ color: accentColor }} />
-                              <h6 className="text-xs font-semibold">Success Metrics & KPIs</h6>
+                              <h6 className="text-xs font-semibold">成功指标与 KPI</h6>
                             </div>
                             <ul className="space-y-1">
                               {action.metrics.map((metric, idx) => (
@@ -897,7 +897,7 @@ export const ResearchReportModal = ({
                           <div>
                             <div className="flex items-center gap-1.5 mb-2">
                               <AlertTriangle className="w-3 h-3 text-orange-500" />
-                              <h6 className="text-xs font-semibold">Risks & Mitigation Strategies</h6>
+                              <h6 className="text-xs font-semibold">风险与应对策略</h6>
                             </div>
                             <div className="space-y-2">
                               {action.risks.map((risk, idx) => (
@@ -920,7 +920,7 @@ export const ResearchReportModal = ({
                             <div>
                               <div className="flex items-center gap-1.5 mb-2">
                                 <ExternalLink className="w-3 h-3" style={{ color: accentColor }} />
-                                <h6 className="text-xs font-semibold">Implementation Resources</h6>
+                                <h6 className="text-xs font-semibold">实施资源</h6>
                               </div>
                               <div className="space-y-1">
                                 {action.references.map((ref, idx) => (
@@ -949,23 +949,23 @@ export const ResearchReportModal = ({
               <div className="rounded-lg border p-4 mt-6" style={{ borderColor: `${successColor}4d`, backgroundColor: `${successColor}0d` }}>
                 <div className="flex items-center gap-2 mb-2">
                   <CheckCircle2 className="w-4 h-4" style={{ color: successColor }} />
-                  <h4 className="font-semibold text-sm">Implementation Ready</h4>
+                  <h4 className="font-semibold text-sm">实施就绪</h4>
                 </div>
                 <p className="text-xs text-muted-foreground mb-3">
-                  All research verification checks passed. These action items are directly derived from your {steps.length} research steps and {totalDataPoints} data points collected. Ready for stakeholder review and implementation planning.
+                  所有研究验证检查均已通过。这些行动项直接来源于你的 {steps.length} 个研究步骤和收集到的 {totalDataPoints} 个数据点，可随时供利益相关方审阅并制定实施计划。
                 </p>
                 <div className="flex flex-wrap gap-2 text-xs">
                   <Badge variant="outline" className="gap-1">
                     <CheckCircle2 className="w-3 h-3" />
-                    {actionItems.length} Action Items
+                    {actionItems.length} 个行动项
                   </Badge>
                   <Badge variant="outline" className="gap-1">
                     <Clock className="w-3 h-3" />
-                    {actionItems[0]?.timeline} to Start
+                    预计 {actionItems[0]?.timeline} 后启动
                   </Badge>
                   <Badge variant="outline" className="gap-1">
                     <Target className="w-3 h-3" />
-                    {actionItems.reduce((sum, item) => sum + item.metrics.length, 0)} Success Metrics
+                    {actionItems.reduce((sum, item) => sum + item.metrics.length, 0)} 个成功指标
                   </Badge>
                 </div>
               </div>

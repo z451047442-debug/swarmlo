@@ -8,19 +8,19 @@ interface TaskBoardProps {
 }
 
 const tasks = [
-  { id: 1, title: "Design database schema", agent: "Architecture", status: "todo", priority: "high" },
-  { id: 2, title: "Implement user authentication", agent: "Implementation", status: "in-progress", priority: "high" },
-  { id: 3, title: "Write unit tests for auth", agent: "Testing", status: "todo", priority: "medium" },
-  { id: 4, title: "Review authentication code", agent: "Code Review", status: "blocked", priority: "high" },
-  { id: 5, title: "Document API endpoints", agent: "Documentation", status: "todo", priority: "low" },
-  { id: 6, title: "Setup CI/CD pipeline", agent: "DevOps", status: "in-progress", priority: "medium" },
+  { id: 1, title: "设计数据库结构", agent: "架构", status: "todo", priority: "high" },
+  { id: 2, title: "实现用户认证", agent: "实现", status: "in-progress", priority: "high" },
+  { id: 3, title: "编写认证单元测试", agent: "测试", status: "todo", priority: "medium" },
+  { id: 4, title: "审查认证代码", agent: "代码审查", status: "blocked", priority: "high" },
+  { id: 5, title: "编写 API 端点文档", agent: "文档", status: "todo", priority: "low" },
+  { id: 6, title: "搭建 CI/CD 流水线", agent: "DevOps", status: "in-progress", priority: "medium" },
 ];
 
 const columns = [
-  { id: "todo", title: "To Do", icon: Clock },
-  { id: "in-progress", title: "In Progress", icon: AlertCircle },
-  { id: "blocked", title: "Blocked", icon: AlertCircle },
-  { id: "done", title: "Done", icon: CheckCircle2 },
+  { id: "todo", title: "待办", icon: Clock },
+  { id: "in-progress", title: "进行中", icon: AlertCircle },
+  { id: "blocked", title: "受阻", icon: AlertCircle },
+  { id: "done", title: "已完成", icon: CheckCircle2 },
 ];
 
 export const TaskBoard = ({ swarmMode }: TaskBoardProps) => {
@@ -28,11 +28,11 @@ export const TaskBoard = ({ swarmMode }: TaskBoardProps) => {
     <div className="space-y-4">
       <Card className="border-primary/20">
         <CardHeader>
-          <CardTitle>Task Assignment Board</CardTitle>
-          <CardDescription>Drag and drop tasks to assign agents</CardDescription>
+          <CardTitle>任务分配看板</CardTitle>
+          <CardDescription>拖拽任务以分配 Agent</CardDescription>
           <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-            <span>Mode:</span>
-            <Badge variant="outline">{swarmMode}</Badge>
+            <span>模式：</span>
+            <Badge variant="outline">{swarmMode === 'distributed' ? '分布式' : swarmMode === 'pipeline' ? '流水线' : '协作式'}</Badge>
           </div>
         </CardHeader>
         <CardContent>
@@ -68,7 +68,7 @@ export const TaskBoard = ({ swarmMode }: TaskBoardProps) => {
                                     variant={task.priority === 'high' ? 'destructive' : task.priority === 'medium' ? 'default' : 'secondary'}
                                     className="text-xs"
                                   >
-                                    {task.priority}
+                                    {task.priority === 'high' ? '高' : task.priority === 'medium' ? '中' : '低'}
                                   </Badge>
                                 </div>
                               </div>

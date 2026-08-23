@@ -110,10 +110,10 @@ export const DevelopmentStep = ({
                   status === "completed" && "bg-green-500/20 text-green-500"
                 )}
               >
-                {status === "pending" && "Queued"}
-                {status === "active" && "Building..."}
-                {status === "completed" && "Done"}
-                {status === "error" && "Failed"}
+                {status === "pending" && "排队中"}
+                {status === "active" && "构建中..."}
+                {status === "completed" && "完成"}
+                {status === "error" && "失败"}
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
@@ -215,13 +215,13 @@ export const DevelopmentStep = ({
                     >
                       {item.details.objective && (
                         <div className="animate-fade-in" style={{ animationDelay: "50ms" }}>
-                          <span className="text-primary font-semibold">Objective:</span>
+                          <span className="text-primary font-semibold">目标：</span>
                           <p className="text-foreground/90 mt-1">{item.details.objective}</p>
                         </div>
                       )}
                       {item.details.files && item.details.files.length > 0 && (
                         <div className="animate-fade-in" style={{ animationDelay: "100ms" }}>
-                          <span className="text-primary font-semibold">Files Modified:</span>
+                          <span className="text-primary font-semibold">修改的文件：</span>
                           <div className="mt-1 space-y-1">
                             {item.details.files.map((f, i) => (
                               <div key={i} className="font-mono text-[11px] text-foreground/80 bg-background/50 px-2 py-1 rounded">
@@ -233,7 +233,7 @@ export const DevelopmentStep = ({
                       )}
                       {item.details.effects && item.details.effects.length > 0 && (
                         <div className="animate-fade-in" style={{ animationDelay: "150ms" }}>
-                          <span className="text-primary font-semibold">Completed:</span>
+                          <span className="text-primary font-semibold">已完成：</span>
                           <ul className="text-foreground/80 mt-1 space-y-1">
                             {item.details.effects.map((e, i) => (
                               <li key={i} className="flex items-start gap-2">
@@ -246,7 +246,7 @@ export const DevelopmentStep = ({
                       )}
                       {item.details.agents && item.details.agents.length > 0 && (
                         <div className="animate-fade-in" style={{ animationDelay: "200ms" }}>
-                          <span className="text-primary font-semibold">Agents:</span>
+                          <span className="text-primary font-semibold">Agent：</span>
                           <div className="flex flex-wrap gap-1.5 mt-1">
                             {item.details.agents.map((a, i) => (
                               <span key={i} className="bg-primary/10 text-primary px-2 py-1 rounded-md font-medium">
@@ -258,7 +258,7 @@ export const DevelopmentStep = ({
                       )}
                       {item.details.metrics && item.details.metrics.length > 0 && (
                         <div className="animate-fade-in" style={{ animationDelay: "250ms" }}>
-                          <span className="text-primary font-semibold">Metrics:</span>
+                          <span className="text-primary font-semibold">指标：</span>
                           <div className="flex flex-wrap gap-3 mt-1">
                             {item.details.metrics.map((m, i) => (
                               <div key={i} className="flex items-center gap-1.5">

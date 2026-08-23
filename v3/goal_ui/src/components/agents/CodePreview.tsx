@@ -27,7 +27,7 @@ export const authenticate = async (req: Request, res: Response) => {
     return res.status(401).json({ error: 'Invalid token' });
   }
 };`,
-      agent: "Implementation",
+      agent: "实现",
       status: "modified",
     },
     {
@@ -52,7 +52,7 @@ describe('Authentication', () => {
     });
   });
 });`,
-      agent: "Testing",
+      agent: "测试",
       status: "new",
     },
   ];
@@ -63,9 +63,9 @@ describe('Authentication', () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Eye className="w-5 h-5 text-primary" />
-            Live Code Preview
+            实时代码预览
           </CardTitle>
-          <CardDescription>Real-time view of generated code</CardDescription>
+          <CardDescription>实时查看生成的代码</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue={files[0].name}>
@@ -78,7 +78,7 @@ describe('Authentication', () => {
                     variant={file.status === "new" ? "default" : "secondary"}
                     className="text-xs ml-2"
                   >
-                    {file.status}
+                    {file.status === "new" ? "新增" : "已修改"}
                   </Badge>
                 </TabsTrigger>
               ))}
@@ -89,7 +89,7 @@ describe('Authentication', () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Badge variant="outline">{file.language}</Badge>
-                    <Badge variant="outline">Agent: {file.agent}</Badge>
+                    <Badge variant="outline">Agent：{file.agent}</Badge>
                   </div>
 
                   <ScrollArea className="h-[500px] w-full">

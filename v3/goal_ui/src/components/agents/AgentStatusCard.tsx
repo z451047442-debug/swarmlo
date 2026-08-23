@@ -15,9 +15,9 @@ interface AgentStatusCardProps {
 }
 
 const statusConfig = {
-  idle: { color: "bg-muted text-muted-foreground", label: "Idle", pulse: false },
-  working: { color: "bg-green-500/20 text-green-500 border-green-500/50", label: "Working", pulse: true },
-  blocked: { color: "bg-red-500/20 text-red-500 border-red-500/50", label: "Blocked", pulse: false },
+  idle: { color: "bg-muted text-muted-foreground", label: "空闲", pulse: false },
+  working: { color: "bg-green-500/20 text-green-500 border-green-500/50", label: "工作中", pulse: true },
+  blocked: { color: "bg-red-500/20 text-red-500 border-red-500/50", label: "受阻", pulse: false },
 };
 
 export const AgentStatusCard = ({ agent }: AgentStatusCardProps) => {
@@ -44,7 +44,7 @@ export const AgentStatusCard = ({ agent }: AgentStatusCardProps) => {
         {agent.currentTask ? (
           <p className="text-xs text-muted-foreground">{agent.currentTask}</p>
         ) : (
-          <p className="text-xs text-muted-foreground italic">Waiting for tasks...</p>
+          <p className="text-xs text-muted-foreground italic">等待任务分配...</p>
         )}
       </CardContent>
     </Card>
