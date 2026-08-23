@@ -62,18 +62,10 @@ npm install -g supabase                       # 云端路径
 npm install -g netlify-cli                    # 云端路径（可选）
 ```
 
-> **⚠ Windows 重要坑：npm 脚本里的 `cp`。** `package.json` 的 `copy:widget` /
-> `copy:widget-to-dist` 脚本使用了 POSIX 命令 `cp`。npm 在 Windows 上默认用
-> **cmd.exe** 执行脚本，会报 `'cp' 不是内部或外部命令`，导致 `npm run build` 中途失败。
-> 解法二选一：
->
-> ```powershell
-> # 解法 A（推荐）：在 Git Bash 里执行所有 npm 命令（装好 Git for Windows 自带）
-> # 开始菜单 → Git Bash → cd 到项目目录 → npm install && npm run build
->
-> # 解法 B：让 npm 全局用 Git Bash 执行脚本（PowerShell 中运行一次）
-> npm config set script-shell "C:\\Program Files\\Git\\bin\\bash.exe"
-> ```
+> ℹ npm 脚本已跨平台：`copy:widget` / `copy:widget-to-dist` 使用 `shx cp`，
+> `BUILD_WIDGET` 通过 `cross-env` 注入。Windows 上在**任意 shell**（PowerShell /
+> cmd / Git Bash）里执行 `npm install && npm run build` 均可，无需额外配置。
+> Git for Windows 仍为克隆仓库所需（winget 安装见上方）。
 
 ### 1.3 Linux 安装（Debian/Ubuntu 为例）
 
@@ -109,7 +101,7 @@ npm install -g netlify-cli
 ### 2.1 前端准备
 
 ```bash
-# Windows：在 Git Bash 中执行；Linux：直接执行
+# Windows：任意 shell（PowerShell / cmd / Git Bash）均可；Linux：直接执行
 git clone https://github.com/z451047442-debug/swarmlo
 cd swarmlo/v3/goal_ui
 npm install
@@ -257,7 +249,7 @@ supabase functions list
 **方式 B：CLI 手动部署（Windows / Linux 命令一致）**
 
 ```bash
-# 在 v3/goal_ui 目录内（Windows 记得在 Git Bash 里执行）
+# 在 v3/goal_ui 目录内（Windows 任意 shell 均可）
 npm run build
 
 # 首次：登录并初始化站点（交互式选择 team / 站点名）
@@ -316,7 +308,7 @@ Netlify 站点 → **Site configuration → Environment variables**，添加 §4
 
 | 场景 | Windows | Linux |
 |------|---------|-------|
-| 执行 npm 命令 | **在 Git Bash 里执行**（npm 脚本含 `cp`） | 任意 shell |
+| 执行 npm 命令 | 任意 shell（npm 脚本已跨平台：`cross-env` / `shx`） | 任意 shell |
 | 复制 .env | `Copy-Item example.env .env`（PowerShell）或 `cp`（Git Bash） | `cp example.env .env` |
 | 多行环境变量 | PowerShell 用反引号 `` ` `` 续行 | bash 用 `\` 续行 |
 | Node 安装 | 官网 MSI / `winget install OpenJS.NodeJS.LTS` | `nvm install 20` |
@@ -328,9 +320,12 @@ Netlify 站点 → **Site configuration → Environment variables**，添加 §4
 
 ## 6. 故障排查
 
-### 6.1 `npm run build` 报 `'cp' 不是内部或外部命令`（仅 Windows）
+### 6.1 `npm run build` 报 `'cp' 不是内部或外部命令`（仅 Windows，旧 checkout）
 
-原因见 §1.2。在 Git Bash 里执行，或 `npm config set script-shell "C:\\Program Files\\Git\\bin\\bash.exe"`。
+npm 脚本已改为跨平台实现（`cross-env` / `shx`），当前版本不会再出现此错误。
+若在旧 checkout 上遇到，可临时执行
+`npm config set script-shell "C:\\Program Files\\Git\\bin\\bash.exe"`，或直接
+`git pull` 更新到最新后重新 `npm install`。
 
 ### 6.2 widget.js / widget.css 返回 404
 
