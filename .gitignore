@@ -72,6 +72,7 @@
 # the repo root or other paths stays ignored.
 !plugins/*/.mcp.json
 .nyc_output/
+.playwright-mcp/
 .pnpm-debug.log*
 .pnpm-store/
 .research/
