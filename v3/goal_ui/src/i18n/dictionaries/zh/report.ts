@@ -76,6 +76,10 @@ export const zhReport: Record<string, string> = {
   "report.export.executiveSummary": "## 执行摘要",
   "report.export.reportIntro": "这项研究通过 {steps} 步目标导向行动规划（GOAP）流程分析了 \"{goal}\"。",
   "report.export.citations": "## 引用文献",
+  "report.export.formatMd": "Markdown (.md)",
+  "report.export.formatDocx": "Word (.docx)",
+  "report.export.formatXlsx": "Excel (.xlsx)",
+  "report.export.formatPdf": "PDF (.pdf)",
 
   // ===== 后备行动项 1：试点/概念验证 =====
   "report.fa1.title": "基于{topic}启动试点项目",

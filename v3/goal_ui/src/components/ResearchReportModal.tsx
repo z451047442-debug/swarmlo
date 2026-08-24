@@ -40,6 +40,13 @@ import {
 import { Step } from "@/lib/goapPlanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/i18n";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import type { ChecklistDocument, ExportFormat, ReportDocument } from "@/lib/export/types";
 
 interface ResearchReportModalProps {
   open: boolean;
@@ -385,107 +392,78 @@ export const ResearchReportModal = ({
     });
   };
 
-  const exportActionItems = () => {
-    let checklist = t("report.export.checklistTitle", { goal: userGoal }) + "\n\n";
-    checklist += `${t("report.export.generated")}: ${new Date().toLocaleString()}\n`;
-    checklist += `${t("report.export.researchSteps")}: ${steps.length} | ${t("report.export.dataPoints")}: ${totalDataPoints}\n\n`;
-    checklist += `---\n\n`;
-
-    actionItems.forEach((item, idx) => {
-      checklist += `## ${idx + 1}. ${translateItem(item.title, item.titleVars)}\n\n`;
-      checklist += `**${t("report.export.timeline")}:** ${translateItem(item.timeline)}\n`;
-      checklist += `**${t("report.export.priority")}:** ${t("report.priority." + item.priority.toLowerCase())}\n\n`;
-      checklist += `**${t("report.export.description")}:** ${translateItem(item.description, item.descriptionVars)}\n\n`;
-
-      checklist += `**${t("report.export.timelineBreakdown")}:**\n${translateItem(item.timelineDetails)}\n\n`;
-
-      if (item.resources.budget) {
-        checklist += `**${t("report.export.budget")}:** ${translateItem(item.resources.budget)}\n`;
-      }
-      if (item.resources.team) {
-        checklist += `**${t("report.export.team")}:** ${translateItem(item.resources.team)}\n`;
-      }
-      if (item.resources.tools && item.resources.tools.length > 0) {
-        checklist += `**${t("report.export.requiredTools")}:**\n`;
-        item.resources.tools.forEach(tool => checklist += `  - ${translateItem(tool)}\n`);
-        checklist += `\n`;
-      }
-
-      checklist += `**${t("report.export.successMetrics")}:**\n`;
-      item.metrics.forEach(metric => checklist += `  - [ ] ${translateItem(metric)}\n`);
-      checklist += `\n`;
-
-      checklist += `**${t("report.export.risksMitigation")}:**\n`;
-      item.risks.forEach(risk => {
-        checklist += `  - **${t("report.export.risk")}:** ${translateItem(risk.risk)}\n`;
-        checklist += `    **${t("report.export.mitigation")}:** ${translateItem(risk.mitigation)}\n`;
-      });
-      checklist += `\n`;
-
-      if (item.references.length > 0) {
-        checklist += `**${t("report.export.references")}:**\n`;
-        item.references.forEach(ref => {
-          checklist += `  - [${translateItem(ref.title)}](${ref.url})\n`;
-        });
-        checklist += `\n`;
-      }
-
-      checklist += `**${t("report.export.researchContext")}:** ${translateItem(item.researchContext, item.researchContextVars)}\n\n`;
-      checklist += `---\n\n`;
-    });
-    
-    const blob = new Blob([checklist], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `action-items-checklist-${Date.now()}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleDownload = () => {
-    const report = generateReportText();
-    const blob = new Blob([report], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `research-report-${Date.now()}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const generateReportText = () => {
-    let report = t("report.export.reportTitle", { goal: userGoal }) + "\n\n";
-    report += `${t("report.export.generated")}: ${new Date().toLocaleString()}\n`;
-    report += `${t("report.export.totalSteps")}: ${steps.length}\n`;
-    report += `${t("report.export.dataPoints")}: ${totalDataPoints}\n\n`;
-    report += `---\n\n`;
-
-    report += `${t("report.export.executiveSummary")}\n\n`;
-    report += t("report.export.reportIntro", { goal: userGoal, steps: steps.length }) + "\n\n";
-
-    steps.forEach((step, idx) => {
-      report += `## ${idx + 1}. ${step.title}\n\n`;
-      report += `${step.description}\n\n`;
-      step.data.forEach(item => {
+  // 构建与格式无关的统一文档模型，交给 src/lib/export/ 各格式生成器
+  const buildReportDoc = (): ReportDocument => ({
+    goal: userGoal,
+    generatedAt: new Date().toLocaleString(),
+    totalSteps: steps.length,
+    dataPoints: totalDataPoints,
+    executiveSummary: aiSummary || t("report.export.reportIntro", { goal: userGoal, steps: steps.length }),
+    steps: steps.map((step) => ({
+      title: step.title,
+      description: step.description,
+      findings: step.data.map((item) => {
         const details = item.details as any;
-        report += `- **${item.text}**: ${details?.objective || item.text}\n`;
-      });
-      report += `\n`;
-    });
+        return {
+          title: item.text,
+          content: details?.objective || details?.content || item.text,
+          source: details?.source,
+        };
+      }),
+    })),
+    citations: allCitations.map((c) => ({ title: c.title, source: c.source })),
+  });
 
-    if (allCitations.length > 0) {
-      report += `${t("report.export.citations")}\n\n`;
-      allCitations.forEach((citation, idx) => {
-        report += `${idx + 1}. ${citation}\n`;
-      });
+  const buildChecklistDoc = (): ChecklistDocument => ({
+    goal: userGoal,
+    generatedAt: new Date().toLocaleString(),
+    totalSteps: steps.length,
+    dataPoints: totalDataPoints,
+    items: actionItems.map((item) => ({
+      title: translateItem(item.title, item.titleVars),
+      timeline: translateItem(item.timeline),
+      priority: t("report.priority." + item.priority.toLowerCase()),
+      description: translateItem(item.description, item.descriptionVars),
+      timelineDetails: translateItem(item.timelineDetails),
+      resources: {
+        budget: item.resources.budget ? translateItem(item.resources.budget) : undefined,
+        team: item.resources.team ? translateItem(item.resources.team) : undefined,
+        tools: (item.resources.tools ?? []).map((tool) => translateItem(tool)),
+      },
+      metrics: item.metrics.map((m) => translateItem(m)),
+      risks: item.risks.map((r) => ({ risk: translateItem(r.risk), mitigation: translateItem(r.mitigation) })),
+      references: item.references.map((ref) => ({ title: translateItem(ref.title), url: ref.url })),
+      researchContext: translateItem(item.researchContext, item.researchContextVars),
+    })),
+  });
+
+  // 生成库按需动态加载（code-split），只在点击导出时拉取对应 chunk
+  const handleExportReport = async (format: ExportFormat) => {
+    const doc = buildReportDoc();
+    if (format === "md") {
+      const { exportReportMarkdown } = await import("@/lib/export/markdown");
+      exportReportMarkdown(doc);
+    } else if (format === "docx") {
+      const { exportReportDocx } = await import("@/lib/export/docx");
+      await exportReportDocx(doc);
+    } else if (format === "pdf") {
+      const { exportReportPdf } = await import("@/lib/export/pdf");
+      await exportReportPdf(doc);
     }
+  };
 
-    return report;
+  const handleExportChecklist = async (format: ExportFormat) => {
+    const doc = buildChecklistDoc();
+    if (format === "md") {
+      const { exportChecklistMarkdown } = await import("@/lib/export/markdown");
+      exportChecklistMarkdown(doc);
+    } else if (format === "docx") {
+      const { exportChecklistDocx } = await import("@/lib/export/docx");
+      await exportChecklistDocx(doc);
+    } else if (format === "xlsx") {
+      const { exportChecklistXlsx } = await import("@/lib/export/xlsx");
+      await exportChecklistXlsx(doc);
+    }
   };
 
   return (
@@ -502,15 +480,25 @@ export const ResearchReportModal = ({
               </DialogDescription>
             </div>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownload}
-                className="gap-2"
-              >
-                <Download className="w-4 h-4" />
-                {t("report.modal.export")}
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Download className="w-4 h-4" />
+                    {t("report.modal.export")}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={() => handleExportReport("md")}>
+                    {t("report.export.formatMd")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => handleExportReport("docx")}>
+                    {t("report.export.formatDocx")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => handleExportReport("pdf")}>
+                    {t("report.export.formatPdf")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button
                 variant="outline"
                 size="sm"
@@ -768,15 +756,29 @@ export const ResearchReportModal = ({
                     <TrendingUp className="w-4 h-4" style={{ color: accentColor }} />
                     <h3 className="font-semibold">{t("report.insights.title")}</h3>
                   </div>
-                  <Button
-                    onClick={exportActionItems}
-                    size="sm"
-                    variant="outline"
-                    className="gap-2 text-xs"
-                  >
-                    <FileDown className="w-3 h-3" />
-                    {t("report.insights.exportChecklist")}
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-2 text-xs"
+                      >
+                        <FileDown className="w-3 h-3" />
+                        {t("report.insights.exportChecklist")}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onSelect={() => handleExportChecklist("md")}>
+                        {t("report.export.formatMd")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => handleExportChecklist("xlsx")}>
+                        {t("report.export.formatXlsx")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => handleExportChecklist("docx")}>
+                        {t("report.export.formatDocx")}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {isGeneratingActions

@@ -76,6 +76,10 @@ export const enReport: Record<string, string> = {
   "report.export.executiveSummary": "## Executive Summary",
   "report.export.reportIntro": "This research analyzed \"{goal}\" through a {steps}-step Goal-Oriented Action Planning (GOAP) workflow.",
   "report.export.citations": "## Citations",
+  "report.export.formatMd": "Markdown (.md)",
+  "report.export.formatDocx": "Word (.docx)",
+  "report.export.formatXlsx": "Excel (.xlsx)",
+  "report.export.formatPdf": "PDF (.pdf)",
 
   // ===== Fallback Action 1: Pilot / Proof of Concept =====
   "report.fa1.title": "Launch Pilot Program Based on {topic}",
