@@ -1,80 +1,47 @@
 # RuVocal（flo.ruv.io）部署指南
 
-> 本文面向自托管与生产部署，覆盖 Windows 与 Linux 两条路径。
+> 本文面向自托管与生产部署。本地部署按操作系统分两条完整路径：**§1 Windows 一条走到底，§2 Linux 一条走到底**（不再穿插）；Docker 与 Cloud Run 与操作系统无关，见 §3 / §4。
 > 托管演示：[flo.ruv.io](https://flo.ruv.io/) —— 无需账号、无需 API key 的多模型 AI 聊天 + MCP 工具调用。
-> 源码：`swarmlo/src/ruvocal/`。技术栈：SvelteKit 2 + Svelte 5 · MongoDB（无外部库时自动降级为内嵌 MongoMemoryServer）· OpenAI 兼容模型层（OpenRouter / Hugging Face / Ollama / vLLM…）· WASM-MCP 工具画廊。
+> 源码：`swarmlo/src/ruvocal/`。技术栈：SvelteKit 2 + Svelte 5 · MongoDB（无外部库时自动降级为内嵌 MongoMemoryServer）· OpenAI 兼容模型层（OpenRouter / DeepSeek / Hugging Face / Ollama / vLLM…）· WASM-MCP 工具画廊。
 
 ## 0. 部署路径一览
 
 | 路径 | 适用场景 | 数据持久化 | 小节 |
 |------|---------|-----------|------|
-| 本地 dev | 开发调试 | ✅（`./db` 本地目录） | §2 |
-| 纯本地生产（无 Docker） | 常开主机 / NAS / 纯本机使用 | ✅（`./db` 本地目录） | §3 |
-| Docker 自托管 | 单机 / VPS / NAS | ✅（数据卷） | §4 |
-| Google Cloud Run | 生产（托管演示 flo.ruv.io 即此路径） | ⚠ 默认易失，需外接 Atlas | §5 |
+| Windows 本地 | 开发调试 / 纯本机使用 | ✅（`./db` 本地目录） | §1 |
+| Linux 本地 | 开发调试 / 常开主机 / NAS | ✅（`./db` 本地目录） | §2 |
+| Docker 自托管 | 单机 / VPS / NAS | ✅（数据卷） | §3 |
+| Google Cloud Run | 生产（托管演示 flo.ruv.io 即此路径） | ⚠ 默认易失，需外接 Atlas | §4 |
 
 架构要点：应用是 Node 服务（SvelteKit adapter-node，端口 **3000**），数据存 MongoDB（`MONGODB_URL` 未设置时用 MongoMemoryServer 持久化到 `./db`）。模型调用全部走 OpenAI 兼容接口（`OPENAI_BASE_URL`），MCP 工具通过 `MCP_SERVERS` 配置的外部 MCP 端点提供。
 
 ---
 
-## 1. 前置条件
+## 1. Windows 完整路径
 
-### 1.1 通用要求
-
-| 依赖 | 版本要求 | 用途 |
-|------|---------|------|
-| Node.js | **20+（推荐 24**，Dockerfile 即基于 node:24） | 本地开发 / 构建 |
-| npm | 9+ | 依赖安装 |
-| Git | 任意近期版本 | 克隆仓库 |
-| Docker + BuildKit | 24+（**Docker 自托管 / Cloud Build 必需**） | 容器构建（Dockerfile 用了 `COPY --link` 等 BuildKit 语法） |
-| gcloud CLI | 460+（**仅 Cloud Run 部署需要**） | 构建提交、服务配置 |
-
-> 只跑本地（§2 / §3）的话，Node.js 就够，Docker 与 gcloud 都不需要；连一个 OpenAI 兼容的模型端点（哪怕本地 Ollama）即可完整体验聊天功能。
-
-### 1.2 Windows 安装
+### 1.1 安装
 
 ```powershell
-# Node.js（含 npm）
-winget install OpenJS.NodeJS.LTS    # 或官网 MSI：https://nodejs.org/
+# Node.js 20+（含 npm）
+winget install OpenJS.NodeJS.LTS
 
-# Docker Desktop（含 BuildKit；WSL2 后端，仅 §4 / §5 需要）
-winget install Docker.DockerDesktop
-# 安装后启动 Docker Desktop，等鲸鱼图标变绿；建议 Settings → Resources 给足内存（≥4GB）
-
-# gcloud CLI（仅 §5 Cloud Run 路径需要）
-winget install Google.CloudSDK      # 或下载 GoogleCloudSDKInstaller.exe
-gcloud init                        # 登录 + 选择项目
+# Git for Windows（克隆仓库需要）
+winget install Git.Git
 ```
 
-### 1.3 Linux 安装（Debian/Ubuntu 为例）
+> 只跑本地（§1）的话 Node.js 就够；Docker Desktop 与 gcloud 仅 §3 / §4 需要
+> （`winget install Docker.DockerDesktop` / `winget install Google.CloudSDK`）。
+> 连一个 OpenAI 兼容的模型端点（哪怕本地 Ollama）即可完整体验聊天功能。
 
-```bash
-# Node.js（nvm）
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-source ~/.bashrc
-nvm install 24 && nvm use 24
-
-# Docker Engine + BuildKit（buildx 随新版 Docker 自带，仅 §4 / §5 需要）
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER      # 免 sudo 运行 docker；重新登录生效
-
-# gcloud CLI（仅 §5 需要）
-# 按 https://cloud.google.com/sdk/docs/install 选择对应发行版方式
-gcloud init
-```
-
----
-
-## 2. 本地开发
+### 1.2 配置
 
 ```bash
 git clone https://github.com/z451047442-debug/swarmlo
 cd swarmlo/swarmlo/src/ruvocal
+npm install
 ```
 
-配置环境变量（**本地最小可用配置**）。⚠ **仓库内没有 `.env` 模板文件**——直接**新建 `.env.local`**（已被 .gitignore 覆盖，不会误提交）：
-
-`.env.local` 最小内容（端点二选一）：
+⚠ **仓库内没有 `.env` 模板文件**——直接**新建 `.env.local`**（已被 .gitignore 覆盖，不会误提交）：
 
 ```env
 # 方案 A：OpenRouter（与托管演示一致）
@@ -93,28 +60,22 @@ PUBLIC_APP_NAME=Swarmlo
 > ⚠ **`.env.local` 的值必须纯 ASCII**——key、URL、token 都不能含中文。含中文的
 > value 会让请求头构造失败（undici 按 ByteString 校验），页面报 500
 > `Cannot convert argument to a ByteString`。注释行可以用中文（dotenv 会跳过）。
+> 另注意：DeepSeek 端点的 `/models` 要求有效鉴权——key 未填或无效时页面会 500，填入真实 key 即恢复。
 
-启动：
+### 1.3 启动
 
 ```bash
-npm install
+# 开发形态
 npm run dev
 # → http://localhost:5173
+
+# 生产形态（adapter-node 构建，与 Docker/Cloud Run 运行的是同一产物）
+npm run build
+node build/index.js -- --host 0.0.0.0 --port 3000
+# → http://localhost:3000（聊天记录仍存 ./db，与 dev 模式共享）
 ```
 
-其他常用命令：
-
-```bash
-npm run build      # 生产构建
-npm run preview    # 本地预览生产构建
-npm run check      # TypeScript 校验（svelte-kit sync + svelte-check）
-npm run test       # Vitest 测试
-```
-
-### 2.1 可选：本地 MongoDB 容器（开发期）
-
-默认不设 `MONGODB_URL` 时用内嵌 MongoMemoryServer，数据存 `./db`，**不需要**任何数据库容器。
-若想用真实 Mongo（调试 replica-set 特性等），`docker-compose.yml` 已备好开发容器：
+默认不设 `MONGODB_URL` 时用内嵌 MongoMemoryServer，数据存 `./db`，**不需要**任何数据库容器。想用真实 Mongo（调试 replica-set 特性等），`docker-compose.yml` 已备好开发容器：
 
 ```bash
 docker compose up -d mongo
@@ -122,50 +83,104 @@ docker compose up -d mongo
 # MONGODB_URL=mongodb://localhost:27017
 ```
 
----
+### 1.4 后台常驻（可选）
 
-## 3. 纯本地生产（无 Docker，无 Cloud Run）
+```powershell
+# 方式一：保持终端窗口运行即可（最简单）
 
-不需要容器也能以生产形态常驻本机（adapter-node 构建，与 Docker/Cloud Run 运行的是同一产物）：
-
-```bash
-npm run build
-node build/index.js -- --host 0.0.0.0 --port 3000
-# → http://localhost:3000（聊天记录仍存 ./db，与 dev 模式共享）
-```
-
-- 启动参数与仓库自己的 `entrypoint.sh` 完全一致（`node /app/build/index.js -- --host 0.0.0.0 --port 3000`），只是少了容器与 `mongod` 拉起逻辑——内嵌 MongoMemoryServer 已覆盖数据层。
-- 适合常开主机 / NAS / 纯本机使用：无需 Docker、无需 gcloud、无需任何云账号（模型端点仍需要 `OPENAI_API_KEY`；本地 Ollama 则连这都不需要，见 §6 `OPENAI_BASE_URL`）。
-
-### 3.1 后台常驻
-
-```bash
-# Linux / macOS（nohup，日志写文件）
-nohup node build/index.js -- --host 0.0.0.0 --port 3000 > ruvocal.log 2>&1 &
-
-# 或 pm2（跨平台，支持开机自启）
+# 方式二：pm2（跨平台，支持开机自启）
 npm install -g pm2
 pm2 start "node build/index.js -- --host 0.0.0.0 --port 3000" --name ruvocal
 pm2 save && pm2 startup          # 按提示完成开机自启注册
 
-# Windows：保持终端运行，或用"任务计划程序"创建开机启动项指向 node 命令
+# 方式三：Windows「任务计划程序」创建开机启动项，指向 node 命令
 ```
 
-### 3.2 本地 MCP 工具（可选）
+### 1.5 验证（冒烟测试）
 
-本仓库的 `mcp-bridge` 同样可以本地跑（Express，默认端口 **3001**，SSE 端点在 `/mcp/<组名>`）：
+服务没有 `/healthcheck` 端点，用页面状态码验证：
 
-```bash
-cd mcp-bridge && npm install && npm start
+```powershell
+curl -s -o /dev/null -w "%{http_code}`n" http://localhost:3000/          # 期望 200
+curl -s -o /dev/null -w "%{http_code}`n" http://localhost:3000/settings  # 期望 200
+# dev 形态把 3000 换成 5173
 ```
 
-然后在 `.env.local` 里设 `MCP_SERVERS`（JSON 数组，`url` 形如 `http://localhost:3001/mcp/<组名>`，`transport` 为 `sse`，见 §6.3）。不需要聊天内工具调用可跳过。
+失败时看 `node build/index.js` 的终端输出——端口冲突、构建未完成、`.env.local` 缺失都会在那里报错。
+
+### 1.6 Windows 特有坑位速查
+
+| 坑 | 状态 | 说明 |
+|----|------|------|
+| 页面 500 `Cannot convert argument to a ByteString` | 常见 | `.env.local` 的某个值含中文，改成纯 ASCII（见 §1.2） |
+| 端口占用排查 | — | `netstat -ano \| findstr :5173`（dev）/ `netstat -ano \| findstr :3000`（生产） |
+| Docker 命令多行 `-e` | — | PowerShell 用反引号 `` ` `` 续行（见 §3.2 示例） |
 
 ---
 
-## 4. Docker 自托管
+## 2. Linux 完整路径
 
-### 4.1 构建（Windows / Linux 一致）
+### 2.1 安装
+
+```bash
+# Node.js 20+（nvm）
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc
+nvm install 24 && nvm use 24
+
+# Docker Engine + BuildKit（仅 §3 / §4 需要）
+# curl -fsSL https://get.docker.com | sh
+# sudo usermod -aG docker $USER      # 免 sudo 运行 docker；重新登录生效
+```
+
+### 2.2 配置
+
+环境文件内容与 §1.2 **完全相同**：直接新建 `.env.local`（OpenRouter / DeepSeek 二选一 + ASCII-only 注意事项），无需复制任何模板。
+
+```bash
+git clone https://github.com/z451047442-debug/swarmlo
+cd swarmlo/swarmlo/src/ruvocal
+npm install
+```
+
+### 2.3 启动
+
+```bash
+# 开发形态
+npm run dev
+# → http://localhost:5173
+
+# 生产形态
+npm run build
+node build/index.js -- --host 0.0.0.0 --port 3000
+# → http://localhost:3000（聊天记录仍存 ./db）
+```
+
+### 2.4 后台常驻（可选）
+
+```bash
+# 方式一：nohup（日志写文件）
+nohup node build/index.js -- --host 0.0.0.0 --port 3000 > ruvocal.log 2>&1 &
+
+# 方式二：pm2（跨平台，支持开机自启）
+npm install -g pm2
+pm2 start "node build/index.js -- --host 0.0.0.0 --port 3000" --name ruvocal
+pm2 save && pm2 startup          # 按提示完成开机自启注册
+```
+
+### 2.5 验证（冒烟测试）
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3000/          # 期望 200
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3000/settings  # 期望 200
+# dev 形态把 3000 换成 5173
+```
+
+---
+
+## 3. Docker 自托管（Windows / Linux 一致）
+
+### 3.1 构建
 
 ```bash
 # 在 swarmlo/src/ruvocal 目录内
@@ -175,16 +190,28 @@ docker build -t ruvocal --build-arg INCLUDE_DB=true .
 
 > ⚠ Dockerfile 用了 BuildKit 语法（`COPY --link`、`--mount=type=cache`）。
 > 若构建报 `Unknown flag: --link`，请显式开启：
-> ```bash
+> ```powershell
 > # Windows PowerShell
 > $env:DOCKER_BUILDKIT=1
+> ```
+> ```bash
 > # Linux bash
 > export DOCKER_BUILDKIT=1
 > ```
 
-### 4.2 运行（内嵌 Mongo，数据卷持久化）
+### 3.2 运行（内嵌 Mongo，数据卷持久化）
+
+```powershell
+# Windows PowerShell（反引号续行）
+docker run -d --name ruvocal -p 3000:3000 `
+  -e OPENAI_BASE_URL=https://openrouter.ai/api/v1 `
+  -e OPENAI_API_KEY=sk-or-v1-... `
+  -v ruvocal-data:/data `
+  ruvocal
+```
 
 ```bash
+# Linux bash（\ 续行）
 docker run -d --name ruvocal -p 3000:3000 \
   -e OPENAI_BASE_URL=https://openrouter.ai/api/v1 \
   -e OPENAI_API_KEY=sk-or-v1-... \
@@ -193,17 +220,7 @@ docker run -d --name ruvocal -p 3000:3000 \
 # → http://localhost:3000
 ```
 
-Windows PowerShell 多行写法（反引号续行）：
-
-```powershell
-docker run -d --name ruvocal -p 3000:3000 `
-  -e OPENAI_BASE_URL=https://openrouter.ai/api/v1 `
-  -e OPENAI_API_KEY=sk-or-v1-... `
-  -v ruvocal-data:/data `
-  ruvocal
-```
-
-### 4.3 数据库方案三选一
+### 3.3 数据库方案三选一
 
 | 方案 | 配置 | 适用 |
 |------|------|------|
@@ -215,11 +232,11 @@ docker run -d --name ruvocal -p 3000:3000 `
 
 ---
 
-## 5. Google Cloud Run 生产部署
+## 4. Google Cloud Run 生产部署
 
 托管演示 flo.ruv.io 即由本仓库的 `cloudbuild.yaml` 全自动部署。下面拆解整个流程，用于部署你自己的实例。
 
-### 5.1 cloudbuild.yaml 做了什么
+### 4.1 cloudbuild.yaml 做了什么
 
 | 阶段 | 步骤 | 关键点 |
 |------|------|--------|
@@ -237,7 +254,7 @@ gcloud builds submit --config cloudbuild.yaml --substitutions _VERSION=v1
 > ⚠ **`.gcloudignore` 是历史事故点**（ADR-033 标注 CRITICAL）：它决定哪些文件上传到 Cloud Build。
 > 若构建上下文缺文件（如 `.env`），先检查 `.gcloudignore` 是否误排除。
 
-### 5.2 首次环境变量配置（带外操作，必须手动）
+### 4.2 首次环境变量配置（带外操作，必须手动）
 
 `cloudbuild.yaml` 的部署步骤**故意不带** `--set-env-vars` / `--set-secrets`——
 否则每次重建会用空环境覆盖手工配置（ADR-033 记录的 bug 修复）。首次部署后需手动配置：
@@ -261,7 +278,7 @@ gcloud run services update ruvocal --region us-central1 \
 
 另一种方式是整文件注入（`entrypoint.sh` 支持）：把完整 env 内容放进 `DOTENV_LOCAL` 环境变量（或 Secret），启动时自动写入 `/app/.env.local`。
 
-### 5.3 自定义域名（托管演示为 Cloudflare 托管）
+### 4.3 自定义域名（托管演示为 Cloudflare 托管）
 
 ```bash
 gcloud run domain-mappings create --service ruvocal --domain flo.example.com --region us-central1
@@ -270,16 +287,16 @@ gcloud run domain-mappings create --service ruvocal --domain flo.example.com --r
 
 到 DNS 服务商（托管演示用 **Cloudflare，CNAME 不代理**——不点橙色云，让 Google 签发证书）添加输出中的记录，等待生效后访问即自动 HTTPS。
 
-### 5.4 ⚠ 数据持久化（Cloud Run 的必知坑）
+### 4.4 ⚠ 数据持久化（Cloud Run 的必知坑）
 
 Cloud Run 容器文件系统**每次冷启动丢弃**——内嵌 Mongo 里的聊天记录会随冷启动消失。
 托管演示接受这一点（验证用途），生产环境三选一（ADR-033 P1 清单，按推荐排序）：
 
-1. **MongoDB Atlas M0 免费层**（推荐）：`MONGODB_URL` 存进 Secret Manager，按 §5.2 注入；记得 Atlas 侧 allow-list 放行 Cloud Run 出口 IP。
+1. **MongoDB Atlas M0 免费层**（推荐）：`MONGODB_URL` 存进 Secret Manager，按 §4.2 注入；记得 Atlas 侧 allow-list 放行 Cloud Run 出口 IP。
 2. **Cloud Run 多容器修订**：`mongo:8` sidecar + 挂载 GCS 卷。
 3. **Compute Engine 自建 Mongo**：开销最大，仅已有基础设施时考虑。
 
-### 5.5 配套服务：mcp-bridge（可选）
+### 4.5 配套服务：mcp-bridge（可选）
 
 托管演示另部署了 `swarmlo/src/ruvocal/mcp-bridge/`（独立 Cloud Run 服务，自带 `cloudbuild.yaml`），对外暴露 5 组共 200+ 个 MCP 工具。要点：
 
@@ -287,13 +304,13 @@ Cloud Run 容器文件系统**每次冷启动丢弃**——内嵌 Mongo 里的�
 - MCP `initialize` RPC 超时已从 30s 调到 120s
 - 部署后在 ruvocal 侧用 `MCP_SERVERS` 环境变量指向它的 SSE 端点（形如 `https://<服务名>-<hash>.run.app/mcp/<组名>`）
 
-自托管如果不需要聊天内工具调用，可完全跳过此服务。
+自托管如果不需要聊天内工具调用，可完全跳过此服务。本地跑 mcp-bridge：`cd mcp-bridge && npm install && npm start`（默认端口 **3001**，SSE 端点在 `/mcp/<组名>`），然后在 `.env.local` 设 `MCP_SERVERS`（JSON 数组，`transport` 为 `sse`）。
 
 ---
 
-## 6. 环境变量参考
+## 5. 环境变量参考
 
-### 6.1 核心
+### 5.1 核心
 
 | 变量 | 必填 | 说明 |
 |------|:----:|------|
@@ -303,7 +320,7 @@ Cloud Run 容器文件系统**每次冷启动丢弃**——内嵌 Mongo 里的�
 | `MONGODB_DB_NAME` | 否 | 默认 `chat-ui` |
 | `DOTENV_LOCAL` | 否 | 整段 env 文本，启动时写入 `.env.local`（Cloud Run 注入方案之一） |
 
-### 6.2 模型与品牌
+### 5.2 模型与品牌
 
 | 变量 | 说明 |
 |------|------|
@@ -311,80 +328,56 @@ Cloud Run 容器文件系统**每次冷启动丢弃**——内嵌 Mongo 里的�
 | `MODELS` | 显式模型列表（JSON） |
 | `PUBLIC_APP_NAME` / `PUBLIC_APP_DESCRIPTION` / `PUBLIC_APP_ASSETS` | 品牌名 / 描述 / 静态资源目录 |
 
-### 6.3 MCP 与路由（可选）
+### 5.3 MCP 与路由（可选）
 
 | 变量 | 说明 |
 |------|------|
 | `MCP_SERVERS` | JSON 数组：`[{"name":"...","url":"https://...","transport":"sse"}]` |
 | `LLM_ROUTER_*` | Omni 智能路由系列（`LLM_ROUTER_ENABLE_TOOLS`、`LLM_ROUTER_ROUTES_PATH` 等） |
 
-> `MCP_SERVERS` 的 `url` 不限于公网端点——本地自托管时指向本机 SSE 端点即可（如 mcp-bridge 本地运行，见 §3.2）。
+> `MCP_SERVERS` 的 `url` 不限于公网端点——本地自托管时指向本机 SSE 端点即可（如 mcp-bridge 本地运行，见 §4.5）。
 
-完整变量清单见 `.env` 文件与 `src/lib/server/` 内的读取点。
-
----
-
-## 7. Windows / Linux 差异速查
-
-| 场景 | Windows | Linux |
-|------|---------|-------|
-| 容器运行时 | Docker Desktop（WSL2 后端，注意给足内存） | Docker Engine 原生 |
-| BuildKit 开启 | `$env:DOCKER_BUILDKIT=1` | `export DOCKER_BUILDKIT=1` |
-| docker run 多行 `-e` | 反引号 `` ` `` 续行 | `\` 续行 |
-| 创建 env | 直接新建 `.env.local`（仓库无 `.env` 模板，见 §2） | 直接新建 `.env.local`（仓库无 `.env` 模板，见 §2） |
-| 环境变量写入 | PowerShell 需注意引号转义 | bash 直接写 |
-| 端口占用排查 | `netstat -ano \| findstr :3000` | `ss -tulpn \| grep 3000` |
+完整变量清单见 `src/lib/server/` 内的读取点。
 
 ---
 
-## 8. 故障排查
+## 6. 故障排查
 
-### 8.1 构建报 `Unknown flag: --link` / BuildKit 相关
-
-Dockerfile 是 BuildKit 语法。按 §4.1 开启 `DOCKER_BUILDKIT=1`（cloudbuild.yaml 内已自动设置）。
-
-### 8.2 容器启动即退出，日志提示找不到 DOTENV_LOCAL
-
-`entrypoint.sh` 找不到 `.env.local` 且未设 `DOTENV_LOCAL` 时仅告警不退出；若实际退出，检查 `docker logs ruvocal` 定位具体错误（多为端口冲突或 Mongo 启动失败）。
-
-### 8.3 聊天记录重启后消失
-
-Cloud Run 易失文件系统（§5.4）或本地未挂载卷。自托管确认 `-v ruvocal-data:/data`；Cloud Run 接 Atlas。
-
-### 8.4 工具调用全部失败
-
-`MCP_SERVERS` 未配置或端点不可达。检查 JSON 格式（是数组）、`transport` 字段（`sse` / `streamable-http`）、以及桥接服务的常驻设置（§5.5）。
-
-### 8.5 模型报 400 / 无响应
-
-- key 无效或额度不足 → 用 `curl` 直测端点：`curl https://openrouter.ai/api/v1/models -H "Authorization: Bearer $OPENAI_API_KEY"`
-- `MODELS` 显式列表与端点不符 → 清空该变量让应用自动拉取
-- 切换模型供应商时注意 `OPENAI_BASE_URL` 与 key 需同时更换
-
-### 8.6 Cloud Run 部署后 404 / 环境变量丢失
-
-环境变量是带外配置（§5.2）。若重新跑了 `gcloud run deploy` 又丢配置，确认没有在 deploy 命令里带空 env 覆盖。
-
-### 8.7 Cloud Build 上传文件不全
-
-检查 `.gcloudignore`（§5.1 的历史事故点），确认 `.env`、`entrypoint.sh`、`package*.json` 未被排除。
-
-### 8.8 页面 500：`Cannot convert argument to a ByteString`
+### 6.1 页面 500：`Cannot convert argument to a ByteString`
 
 `.env.local` 的某个**值**含中文（如 key 或 URL）——undici 构造请求头时按 ByteString 校验
 非 ASCII 字符直接抛错。把值改成纯 ASCII（key/URL/token 必须英文数字符号），注释保持中文没问题。
 另注意：DeepSeek 端点的 `/models` 要求有效鉴权——key 未填或无效时页面也会 500，填入真实 key 即恢复。
 
-### 8.9 本地冒烟测试（§2 / §3 路径）
+### 6.2 构建报 `Unknown flag: --link` / BuildKit 相关
 
-服务没有 `/healthcheck` 端点，用页面状态码验证：
+Dockerfile 是 BuildKit 语法。按 §3.1 开启 `DOCKER_BUILDKIT=1`（cloudbuild.yaml 内已自动设置）。
 
-```bash
-curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3000/          # 期望 200
-curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3000/settings  # 期望 200
-```
+### 6.3 容器启动即退出，日志提示找不到 DOTENV_LOCAL
 
-失败时看 `node build/index.js` 的终端输出——端口冲突、构建未完成、`.env.local` 缺失都会在那里报错。
+`entrypoint.sh` 找不到 `.env.local` 且未设 `DOTENV_LOCAL` 时仅告警不退出；若实际退出，检查 `docker logs ruvocal` 定位具体错误（多为端口冲突或 Mongo 启动失败）。
+
+### 6.4 聊天记录重启后消失
+
+Cloud Run 易失文件系统（§4.4）或本地未挂载卷。自托管确认 `-v ruvocal-data:/data`；Cloud Run 接 Atlas。
+
+### 6.5 工具调用全部失败
+
+`MCP_SERVERS` 未配置或端点不可达。检查 JSON 格式（是数组）、`transport` 字段（`sse` / `streamable-http`）、以及桥接服务的常驻设置（§4.5）。
+
+### 6.6 模型报 400 / 无响应
+
+- key 无效或额度不足 → 用 `curl` 直测端点：`curl https://openrouter.ai/api/v1/models -H "Authorization: Bearer $OPENAI_API_KEY"`
+- `MODELS` 显式列表与端点不符 → 清空该变量让应用自动拉取
+- 切换模型供应商时注意 `OPENAI_BASE_URL` 与 key 需同时更换
+
+### 6.7 Cloud Run 部署后 404 / 环境变量丢失
+
+环境变量是带外配置（§4.2）。若重新跑了 `gcloud run deploy` 又丢配置，确认没有在 deploy 命令里带空 env 覆盖。
+
+### 6.8 Cloud Build 上传文件不全
+
+检查 `.gcloudignore`（§4.1 的历史事故点），确认 `.env`、`entrypoint.sh`、`package*.json` 未被排除。
 
 ---
 
