@@ -32,7 +32,7 @@ It started as a fork of the [HuggingFace chat-ui](https://github.com/huggingface
 ```bash
 git clone https://github.com/z451047442-debug/swarmlo
 cd swarmlo/swarmlo/src/ruvocal
-cp .env .env.local        # then edit .env.local — see below
+# 直接新建 .env.local（仓库无 .env 模板），填入下方最小配置
 npm install
 npm run dev               # → http://localhost:5173
 ```
@@ -54,6 +54,7 @@ Any OpenAI-compatible endpoint works (vLLM, Ollama, LM Studio, llama.cpp, Togeth
 | Provider | `OPENAI_BASE_URL` | Key |
 | --- | --- | --- |
 | OpenRouter | `https://openrouter.ai/api/v1` | `sk-or-v1-...` |
+| DeepSeek | `https://api.deepseek.com/v1` | `sk-...` |
 | Hugging Face router | `https://router.huggingface.co/v1` | `hf_xxx` |
 | llama.cpp server | `http://127.0.0.1:8080/v1` | any string |
 | Ollama (OAI bridge) | `http://127.0.0.1:11434/v1` | `ollama` |

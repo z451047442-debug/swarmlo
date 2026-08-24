@@ -72,26 +72,27 @@ git clone https://github.com/z451047442-debug/swarmlo
 cd swarmlo/swarmlo/src/ruvocal
 ```
 
-复制并编辑环境变量（**本地最小可用配置**——用 OpenRouter，与托管演示一致）：
+配置环境变量（**本地最小可用配置**）。⚠ **仓库内没有 `.env` 模板文件**——直接**新建 `.env.local`**（已被 .gitignore 覆盖，不会误提交）：
 
-```bash
-# Linux / Windows Git Bash
-cp .env .env.local
-
-# Windows PowerShell
-Copy-Item .env .env.local
-```
-
-`.env.local` 最小内容：
+`.env.local` 最小内容（端点二选一）：
 
 ```env
+# 方案 A：OpenRouter（与托管演示一致）
 OPENAI_BASE_URL=https://openrouter.ai/api/v1
 OPENAI_API_KEY=sk-or-v1-...        # 你的 OpenRouter key（https://openrouter.ai/keys）
+
+# 方案 B：DeepSeek（国内直连、人民币计费）
+# OPENAI_BASE_URL=https://api.deepseek.com/v1
+# OPENAI_API_KEY=sk-...            # 你的 DeepSeek key（https://platform.deepseek.com/api_keys）
 
 # 可选：指定默认模型（不设则拉取 /models 列表）
 TASK_MODEL=qwen/qwen3.6-max-preview
 PUBLIC_APP_NAME=Swarmlo
 ```
+
+> ⚠ **`.env.local` 的值必须纯 ASCII**——key、URL、token 都不能含中文。含中文的
+> value 会让请求头构造失败（undici 按 ByteString 校验），页面报 500
+> `Cannot convert argument to a ByteString`。注释行可以用中文（dotenv 会跳过）。
 
 启动：
 
@@ -296,7 +297,7 @@ Cloud Run 容器文件系统**每次冷启动丢弃**——内嵌 Mongo 里的�
 
 | 变量 | 必填 | 说明 |
 |------|:----:|------|
-| `OPENAI_BASE_URL` | ✅ | OpenAI 兼容端点（OpenRouter：`https://openrouter.ai/api/v1`；本地 Ollama：`http://127.0.0.1:11434/v1`） |
+| `OPENAI_BASE_URL` | ✅ | OpenAI 兼容端点（OpenRouter：`https://openrouter.ai/api/v1`；DeepSeek：`https://api.deepseek.com/v1`；本地 Ollama：`http://127.0.0.1:11434/v1`） |
 | `OPENAI_API_KEY` | ✅ | 对应端点的 key |
 | `MONGODB_URL` | 否 | 不设则内嵌 MongoMemoryServer 持久化到 `./db`（容器内为 `/data/db`） |
 | `MONGODB_DB_NAME` | 否 | 默认 `chat-ui` |
@@ -330,7 +331,7 @@ Cloud Run 容器文件系统**每次冷启动丢弃**——内嵌 Mongo 里的�
 | 容器运行时 | Docker Desktop（WSL2 后端，注意给足内存） | Docker Engine 原生 |
 | BuildKit 开启 | `$env:DOCKER_BUILDKIT=1` | `export DOCKER_BUILDKIT=1` |
 | docker run 多行 `-e` | 反引号 `` ` `` 续行 | `\` 续行 |
-| 复制 env | `Copy-Item .env .env.local` | `cp .env .env.local` |
+| 创建 env | 直接新建 `.env.local`（仓库无 `.env` 模板，见 §2） | 直接新建 `.env.local`（仓库无 `.env` 模板，见 §2） |
 | 环境变量写入 | PowerShell 需注意引号转义 | bash 直接写 |
 | 端口占用排查 | `netstat -ano \| findstr :3000` | `ss -tulpn \| grep 3000` |
 
@@ -368,7 +369,13 @@ Cloud Run 易失文件系统（§5.4）或本地未挂载卷。自托管确认 `
 
 检查 `.gcloudignore`（§5.1 的历史事故点），确认 `.env`、`entrypoint.sh`、`package*.json` 未被排除。
 
-### 8.8 本地冒烟测试（§2 / §3 路径）
+### 8.8 页面 500：`Cannot convert argument to a ByteString`
+
+`.env.local` 的某个**值**含中文（如 key 或 URL）——undici 构造请求头时按 ByteString 校验
+非 ASCII 字符直接抛错。把值改成纯 ASCII（key/URL/token 必须英文数字符号），注释保持中文没问题。
+另注意：DeepSeek 端点的 `/models` 要求有效鉴权——key 未填或无效时页面也会 500，填入真实 key 即恢复。
+
+### 8.9 本地冒烟测试（§2 / §3 路径）
 
 服务没有 `/healthcheck` 端点，用页面状态码验证：
 

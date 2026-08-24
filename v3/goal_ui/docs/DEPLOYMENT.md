@@ -119,6 +119,8 @@ VITE_SUPABASE_PROJECT_ID=local
 
 ```bash
 # 装 Deno（§1）；winget 安装后需新开终端才能直接用 deno 命令
+# 若 winget 显示"已安装"但 deno 命令仍找不到（PATH 未刷新），用 winget 包目录下的完整路径启动：
+#   "$LOCALAPPDATA/Microsoft/WinGet/Packages/DenoLand.Deno_Microsoft.Winget.Source_8wekyb3d8bbwe/deno.exe" run --allow-net --allow-env --env-file=.env.local scripts/local-router.ts
 
 # 放模型端点配置（.env.local 已被 .gitignore 的 *.local 规则覆盖，不会误提交）
 echo "AI_API_KEY=你的key" > .env.local
@@ -172,6 +174,11 @@ npm run widget:dev               # Widget 开发模式（产出 dist/widget.js +
 npm run build                    # widget 构建 → 主应用构建 → 产物归位到 dist/
 npm run preview                  # → http://localhost:4173（含 /demo 演示页，纯本地生产形态）
 ```
+
+> 导出：报告弹窗「导出」下拉支持 Markdown (.md) / Word (.docx) / PDF (.pdf)；
+> 「后续步骤」页签的「导出清单」支持 Markdown / Excel (.xlsx) / Word。
+> PDF 内嵌 Noto Sans SC 中文字体（`public/fonts/`，OFL 许可），Word 使用系统等线字体。
+> 生成库按需懒加载，不影响首屏。
 
 > ℹ 数据说明：goal_ui 没有数据库。设置与会话状态都持久化在浏览器 localStorage：
 > 研究会话（目标、计划、步骤结果、最终建议）存于 `swarmlo-research-session-v1`，
@@ -284,6 +291,7 @@ Netlify 站点 → **Site configuration → Environment variables**，添加 §4
 | `VITE_SUPABASE_URL` | `http://localhost:54321` | ✅ | Supabase 项目 URL（本地指向 local-router） |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | 占位 `sb_publishable_*` 即可 | ✅ | 浏览器可公开的 publishable key |
 | `VITE_SUPABASE_PROJECT_ID` | `local` | ✅ | Supabase Project Reference |
+| `VITE_AI_MODEL` | 可选（如 `deepseek-v4-pro`） | 可选 | 前端默认 AI 模型（构建时注入）；不设则前端默认 `google/gemini-2.5-flash`，与 DeepSeek 端点混用时会导致 400 |
 
 取值位置（云端）：Supabase Dashboard → **Project Settings → API Keys**。
 
