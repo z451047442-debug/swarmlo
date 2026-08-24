@@ -248,6 +248,7 @@ async function executeResearchStep(
           }
         }
       ] : undefined,
+      ...(AI_BASE_URL.includes('deepseek') ? { thinking: { type: 'disabled' } } : {}),
       tool_choice: step.stepType === 'final-report' ? { type: 'function', function: { name: 'generate_research_report' } } : undefined
     })
   });

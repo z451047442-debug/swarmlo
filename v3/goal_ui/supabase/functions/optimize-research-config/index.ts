@@ -266,6 +266,7 @@ export async function handler(req: Request): Promise<Response> {
             }
           }
         ],
+        ...(AI_BASE_URL.includes('deepseek') ? { thinking: { type: 'disabled' } } : {}),
         tool_choice: { type: "function", function: { name: "generate_optimized_config" } }
       }),
     });

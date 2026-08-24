@@ -58,6 +58,49 @@ interface ResearchDataItem {
   timestamp: string;
 }
 
+// DeepSeek 官方联网搜索：Responses API 的 web_search 由服务端注入结果，仅返回模型基于真实检索的汇总文本
+async function fetchDeepSeekSearch(query: string, apiKey: string): Promise<string> {
+  try {
+    const response = await fetch('https://api.deepseek.com/responses', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'deepseek-v4-flash',
+        input: `请联网搜索最新资料（优先 2025-2026 年信息），汇总与以下主题相关的关键事实、数据与来源（必须注明年份）：${query}`,
+        tools: [{ type: 'web_search' }],
+        stream: false,
+      }),
+    });
+    if (!response.ok) {
+      console.error('DeepSeek web search failed:', response.status);
+      return '';
+    }
+    const data = await response.json();
+    console.log('DeepSeek web search response:', data);
+    const message = (data.output ?? []).find((item: any) => item.type === 'message');
+    const text = message?.output_text
+      || (message?.content ?? [])
+        .filter((c: any) => c.type === 'output_text')
+        .map((c: any) => c.text)
+        .join('\n')
+      || data.output_text
+      || '';
+    const links = (data.output ?? [])
+      .filter((item: any) => item.type === 'web_search_call' && item.action?.type === 'open_page' && item.action?.url)
+      .map((item: any) => item.action.url.split('#')[0]);
+    const linkText = links.length
+      ? `\n\n参考链接（真实检索）：\n${links.map((url: string) => `- ${url}`).join('\n')}`
+      : '';
+    return text + linkText;
+  } catch (err) {
+    console.error('DeepSeek web search error:', err);
+    return '';
+  }
+}
+
 export async function handler(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -255,6 +298,16 @@ ${config?.filters?.dateRange ? `\n- 重点采用来自以下时间段的信息�
   "confidence": ${config?.parameters?.minConfidence ? (config.parameters.minConfidence / 100) : 0.85} // 必填——必须介于 ${config?.parameters?.minConfidence ? `${config.parameters.minConfidence / 100}` : '0.7'} 与 0.95 之间
 }`;
 
+    // DeepSeek 端点：先走官方 Responses API 联网搜索，把真实检索汇总注入提示词
+    let searchContext = '';
+    if (AI_BASE_URL.includes('deepseek')) {
+      const searchQuery = `${goal || stepTitle} - ${stepTitle}: ${stepDescription}`.slice(0, 800);
+      searchContext = await fetchDeepSeekSearch(searchQuery, AI_API_KEY);
+    }
+    const finalUserPrompt = searchContext
+      ? `${userPrompt}\n\n---\n以下是最新联网搜索汇总（真实检索、时效最新，请优先采用其中信息并用于来源引用）：\n${searchContext}`
+      : userPrompt;
+
     const response = await fetch(`${AI_BASE_URL}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -265,7 +318,7 @@ ${config?.filters?.dateRange ? `\n- 重点采用来自以下时间段的信息�
         model: aiModel || Deno.env.get('AI_MODEL') || 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
+          { role: 'user', content: finalUserPrompt }
         ],
         tools: [
           ...(Deno.env.get('AI_ENABLE_SEARCH') === '1'
@@ -322,6 +375,7 @@ ${config?.filters?.dateRange ? `\n- 重点采用来自以下时间段的信息�
             }
           }
         ],
+        ...(AI_BASE_URL.includes('deepseek') ? { thinking: { type: 'disabled' } } : {}),
         tool_choice: { type: "function", function: { name: "generate_research_data" } }
       }),
     });

@@ -130,6 +130,7 @@ AI 与机器学习领域优秀多样化研究目标示例：
             }
           }
         ],
+        ...(AI_BASE_URL.includes('deepseek') ? { thinking: { type: 'disabled' } } : {}),
         tool_choice: { type: "function", function: { name: "generate_goals" } }
       }),
     });

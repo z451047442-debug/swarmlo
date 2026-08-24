@@ -194,6 +194,7 @@ ${researchSummary}
             }
           }
         ],
+        ...(AI_BASE_URL.includes('deepseek') ? { thinking: { type: 'disabled' } } : {}),
         tool_choice: { type: "function", function: { name: "generate_action_plan" } }
       }),
     });
