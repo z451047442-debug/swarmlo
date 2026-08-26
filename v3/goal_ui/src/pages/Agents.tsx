@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,7 +57,7 @@ interface Agent {
   currentTask?: string;
 }
 
-/** 任务看板的初始任务集，agent 字段与上面 agents 的 id 一一对应 */
+/** 任务看板的基线任务集，agent 字段与上面 agents 的 id 一一对应 */
 const INITIAL_TASKS: TaskItem[] = [
   { id: 1, title: "agents.taskboard.task1", agent: "agents.agent.arch", status: "todo", priority: "high" },
   { id: 2, title: "agents.taskboard.task2", agent: "agents.agent.impl", status: "in-progress", priority: "high" },
@@ -66,6 +66,27 @@ const INITIAL_TASKS: TaskItem[] = [
   { id: 5, title: "agents.taskboard.task5", agent: "agents.agent.docs", status: "todo", priority: "low" },
   { id: 6, title: "agents.taskboard.task6", agent: "agents.agent.devops", status: "in-progress", priority: "medium" },
 ];
+
+/**
+ * 每个任务归属的开发阶段（developmentPhases 的下标）。
+ * 阶段 4（部署）没有独立任务卡片。
+ */
+const TASK_PHASE: Record<number, number> = {
+  1: 0,  // 设计数据库结构 —— 项目搭建期落地
+  6: 0,  // 搭建 CI/CD 流水线 —— 项目搭建
+  2: 1,  // 实现用户认证 —— 核心实现
+  3: 2,  // 编写认证单元测试 —— 测试与质量
+  4: 2,  // 审查认证代码 —— 测试与质量
+  5: 3,  // 编写 API 端点文档 —— 文档
+};
+
+/**
+ * 任务前置依赖。代码审查（#4）必须等实现（#2）完成才能开始，
+ * 未满足时在看板上显示为「受阻」而非「待办」。
+ */
+const TASK_DEPENDS_ON: Record<number, number> = {
+  4: 2,
+};
 
 export default function Agents() {
   const { t } = useI18n();
@@ -99,6 +120,30 @@ export default function Agents() {
     testCoverage: 85,
     securityScore: 92,
   });
+
+  /**
+   * 看板任务由开发阶段推导得出，不单独持有 state——它是 (workflowStage, devPhase)
+   * 的纯函数。注意：若将来实现拖拽分配，任务将变为用户可变，届时必须改回 useState。
+   */
+  const tasks = useMemo<TaskItem[]>(() => {
+    if (workflowStage !== "development") return INITIAL_TASKS;
+
+    return INITIAL_TASKS.map((task): TaskItem => {
+      const phase = TASK_PHASE[task.id];
+      if (phase === undefined) return task;
+
+      // 依赖检查置于最前，保证不变式：前置未完成的任务永远不会显示为
+      // 进行中或已完成。这样阶段表即使填得不满足依赖偏序也不会出错。
+      const dependency = TASK_DEPENDS_ON[task.id];
+      const dependencyDone =
+        dependency === undefined || devPhase > TASK_PHASE[dependency];
+      if (!dependencyDone) return { ...task, status: "blocked" };
+
+      if (devPhase > phase) return { ...task, status: "done" };
+      if (devPhase === phase) return { ...task, status: "in-progress" };
+      return { ...task, status: "todo" };
+    });
+  }, [workflowStage, devPhase]);
 
   const handleGeneratePlan = () => {
     if (!goal.trim()) return;
@@ -1145,7 +1190,7 @@ export default function Agents() {
 
           <TabsContent value="tasks">
             <div className="space-y-6">
-              <TaskBoard swarmMode={swarmMode} tasks={INITIAL_TASKS} />
+              <TaskBoard swarmMode={swarmMode} tasks={tasks} />
 
               {/* Task Dependencies */}
               <Card>
