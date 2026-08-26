@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import { useI18n } from "@/i18n";
 import { AgentStatusCard } from "@/components/agents/AgentStatusCard";
-import { TaskBoard } from "@/components/agents/TaskBoard";
+import { TaskBoard, type TaskItem } from "@/components/agents/TaskBoard";
 import { DependencyGraph } from "@/components/agents/DependencyGraph";
 import { ExecutionMonitor } from "@/components/agents/ExecutionMonitor";
 import { QualityGates } from "@/components/agents/QualityGates";
@@ -56,6 +56,16 @@ interface Agent {
   status: AgentStatus;
   currentTask?: string;
 }
+
+/** 任务看板的初始任务集，agent 字段与上面 agents 的 id 一一对应 */
+const INITIAL_TASKS: TaskItem[] = [
+  { id: 1, title: "agents.taskboard.task1", agent: "agents.agent.arch", status: "todo", priority: "high" },
+  { id: 2, title: "agents.taskboard.task2", agent: "agents.agent.impl", status: "in-progress", priority: "high" },
+  { id: 3, title: "agents.taskboard.task3", agent: "agents.agent.test", status: "todo", priority: "medium" },
+  { id: 4, title: "agents.taskboard.task4", agent: "agents.agent.review", status: "blocked", priority: "high" },
+  { id: 5, title: "agents.taskboard.task5", agent: "agents.agent.docs", status: "todo", priority: "low" },
+  { id: 6, title: "agents.taskboard.task6", agent: "agents.agent.devops", status: "in-progress", priority: "medium" },
+];
 
 export default function Agents() {
   const { t } = useI18n();
@@ -1135,7 +1145,7 @@ export default function Agents() {
 
           <TabsContent value="tasks">
             <div className="space-y-6">
-              <TaskBoard swarmMode={swarmMode} />
+              <TaskBoard swarmMode={swarmMode} tasks={INITIAL_TASKS} />
 
               {/* Task Dependencies */}
               <Card>

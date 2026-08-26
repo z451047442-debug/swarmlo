@@ -4,18 +4,20 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { GripVertical, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { useI18n } from "@/i18n";
 
-interface TaskBoardProps {
-  swarmMode: string;
+export interface TaskItem {
+  id: number;
+  /** i18n key，例如 "agents.taskboard.task1" */
+  title: string;
+  /** 分配给的 agent 的 i18n key，例如 "agents.agent.arch" */
+  agent: string;
+  status: "todo" | "in-progress" | "blocked" | "done";
+  priority: "high" | "medium" | "low";
 }
 
-const tasks = [
-  { id: 1, title: "agents.taskboard.task1", agent: "agents.agent.arch", status: "todo", priority: "high" },
-  { id: 2, title: "agents.taskboard.task2", agent: "agents.agent.impl", status: "in-progress", priority: "high" },
-  { id: 3, title: "agents.taskboard.task3", agent: "agents.agent.test", status: "todo", priority: "medium" },
-  { id: 4, title: "agents.taskboard.task4", agent: "agents.agent.review", status: "blocked", priority: "high" },
-  { id: 5, title: "agents.taskboard.task5", agent: "agents.agent.docs", status: "todo", priority: "low" },
-  { id: 6, title: "agents.taskboard.task6", agent: "agents.agent.devops", status: "in-progress", priority: "medium" },
-];
+interface TaskBoardProps {
+  swarmMode: string;
+  tasks: TaskItem[];
+}
 
 const columns = [
   { id: "todo", title: "agents.taskboard.col.todo", icon: Clock },
@@ -24,7 +26,7 @@ const columns = [
   { id: "done", title: "agents.taskboard.col.done", icon: CheckCircle2 },
 ];
 
-export const TaskBoard = ({ swarmMode }: TaskBoardProps) => {
+export const TaskBoard = ({ swarmMode, tasks }: TaskBoardProps) => {
   const { t } = useI18n();
 
   const priorityLabel = (priority: string): string => {
