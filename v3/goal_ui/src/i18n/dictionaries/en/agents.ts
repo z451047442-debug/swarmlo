@@ -43,6 +43,7 @@ export const enAgents: Record<string, string> = {
   "agents.dev.viewResearch": "View Research Results",
   "agents.dev.progress": "Development Swarm Progress",
   "agents.dev.building": "Building...",
+  "agents.dev.swarmStatus": "Swarm Status",
   "agents.exec.plan": "Execution Plan",
   "agents.exec.currentStep": "Current Step",
   "agents.exec.activity": "Agent Activity",

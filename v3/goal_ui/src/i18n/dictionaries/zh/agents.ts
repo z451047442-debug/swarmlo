@@ -43,6 +43,7 @@ export const zhAgents: Record<string, string> = {
   "agents.dev.viewResearch": "查看研究结果",
   "agents.dev.progress": "开发集群进度",
   "agents.dev.building": "构建中...",
+  "agents.dev.swarmStatus": "集群状态",
   "agents.exec.plan": "执行计划",
   "agents.exec.currentStep": "当前步骤",
   "agents.exec.activity": "Agent 活动",

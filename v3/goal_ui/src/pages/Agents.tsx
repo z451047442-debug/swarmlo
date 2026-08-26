@@ -88,6 +88,28 @@ const TASK_DEPENDS_ON: Record<number, number> = {
   4: 2,
 };
 
+/**
+ * 每个开发阶段活跃的 agent（阶段分布与 TASK_PHASE 保持一致）。
+ * 阶段 4（部署）在看板上没有任务卡，这里补上 devops——部署阶段总得有人干活。
+ * task 字段存 i18n key，渲染时再翻译。
+ */
+const AGENT_PHASE_ACTIVITY: Record<number, Array<{ id: string; task: string }>> = {
+  0: [
+    { id: "arch", task: "agents.taskboard.task1" },
+    { id: "devops", task: "agents.taskboard.task6" },
+  ],
+  1: [{ id: "impl", task: "agents.taskboard.task2" }],
+  2: [
+    { id: "test", task: "agents.taskboard.task3" },
+    { id: "review", task: "agents.taskboard.task4" },
+  ],
+  3: [{ id: "docs", task: "agents.taskboard.task5" }],
+  4: [{ id: "devops", task: "agents.actions.deploy" }],
+};
+
+/** review 的审查任务（#4）依赖实现任务（#2）：实现阶段完成前 review 一律 blocked */
+const REVIEW_UNBLOCKED_AT_PHASE = 2;
+
 export default function Agents() {
   const { t } = useI18n();
   const [goal, setGoal] = useState("");
@@ -145,6 +167,31 @@ export default function Agents() {
     });
   }, [workflowStage, devPhase]);
 
+  /**
+   * 按开发阶段推进 6 个 agent 的状态快照：活跃者 working（携带当前任务 key），
+   * review 在实现完成前 blocked，其余 idle。阶段分布与看板共用 AGENT_PHASE_ACTIVITY。
+   * currentTask 存 i18n key，由渲染点翻译——运行中切换语言不会留下旧语言文本。
+   */
+  const applyDevPhaseToAgents = (phase: number) => {
+    setAgents((prev) =>
+      prev.map((agent): Agent => {
+        const active = AGENT_PHASE_ACTIVITY[phase]?.find((a) => a.id === agent.id);
+        if (active) return { ...agent, status: "working", currentTask: active.task };
+        if (agent.id === "review" && phase < REVIEW_UNBLOCKED_AT_PHASE) {
+          return { ...agent, status: "blocked", currentTask: "agents.taskboard.task4" };
+        }
+        return { ...agent, status: "idle", currentTask: undefined };
+      })
+    );
+  };
+
+  /** 研究/审查阶段没有开发 agent 活跃，全部复位为 idle */
+  const resetAgents = () => {
+    setAgents((prev) =>
+      prev.map((agent): Agent => ({ ...agent, status: "idle", currentTask: undefined }))
+    );
+  };
+
   const handleGeneratePlan = () => {
     if (!goal.trim()) return;
 
@@ -152,6 +199,7 @@ export default function Agents() {
     setCurrentPhase(0);
     setIsRunning(true);
     setWorkflowStage("research");
+    resetAgents();
 
     // Sequential phase progression with delays
     setTimeout(() => setCurrentPhase(1), 1000);
@@ -171,27 +219,33 @@ export default function Agents() {
     setWorkflowStage("development");
     setDevPhase(0);
     setIsRunning(true);
+    applyDevPhaseToAgents(0);
 
     // Start development swarm execution
     setTimeout(() => {
       console.log("Dev phase 1");
       setDevPhase(1);
+      applyDevPhaseToAgents(1);
     }, 1000);
     setTimeout(() => {
       console.log("Dev phase 2");
       setDevPhase(2);
+      applyDevPhaseToAgents(2);
     }, 8000);
     setTimeout(() => {
       console.log("Dev phase 3");
       setDevPhase(3);
+      applyDevPhaseToAgents(3);
     }, 16000);
     setTimeout(() => {
       console.log("Dev phase 4");
       setDevPhase(4);
+      applyDevPhaseToAgents(4);
     }, 24000);
     setTimeout(() => {
       console.log("Dev phase 5");
       setDevPhase(5);
+      applyDevPhaseToAgents(5);
     }, 32000);
     setTimeout(() => {
       console.log("Development complete");
@@ -1185,6 +1239,26 @@ export default function Agents() {
                   ) : null;
                 })}
               </div>
+
+              {/* Agent 集群状态——由 devPhase 时间线经 setAgents 驱动 */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <Network className="w-4 h-4 text-primary" />
+                  {t('agents.dev.swarmStatus')}
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {agents.map((agent) => (
+                    <AgentStatusCard
+                      key={agent.id}
+                      agent={{
+                        ...agent,
+                        name: t(agent.name),
+                        currentTask: agent.currentTask ? t(agent.currentTask) : undefined,
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </TabsContent>
 
@@ -1372,7 +1446,12 @@ export default function Agents() {
               {/* Agent Activity */}
               <TabsContent value="activity">
                 <AgentActivityPanel
-                  agents={agents.map(a => ({ ...a, name: t(a.name), type: t('agents.type.specialist') }))}
+                  agents={agents.map(a => ({
+                    ...a,
+                    name: t(a.name),
+                    type: t('agents.type.specialist'),
+                    currentTask: a.currentTask ? t(a.currentTask) : undefined,
+                  }))}
                   metrics={new Map(agents.map(a => [
                     a.id,
                     {
