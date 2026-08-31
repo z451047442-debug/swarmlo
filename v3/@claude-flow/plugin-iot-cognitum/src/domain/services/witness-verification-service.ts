@@ -22,6 +22,8 @@ export interface WitnessVerificationResult {
   headEpoch: number;
   headHash: string;
   integrityScore: number;
+  /** Human-readable notes explaining why a chain is (not) verified. */
+  notes?: string[];
 }
 
 export interface WitnessVerificationDeps {
@@ -30,6 +32,17 @@ export interface WitnessVerificationDeps {
     head?: string;
     entries?: Array<{ epoch: number; action?: string; signature?: string; timestamp?: string; hash?: string; previous_hash?: string }>;
   }>;
+  /**
+   * Optional per-entry signature verifier. The seed SDK exposes no witness
+   * signature verification API, so callers must wire one (e.g. via the
+   * device's published Ed25519 public key) before signed chains can be
+   * attested. When entries carry signatures and no verifier is wired, the
+   * chain is reported UNVERIFIED rather than falsely verified.
+   */
+  verifyEntrySignature?: (
+    deviceId: string,
+    entry: WitnessEntry,
+  ) => Promise<boolean>;
 }
 
 export class WitnessVerificationService {
@@ -41,15 +54,46 @@ export class WitnessVerificationService {
     const chainLength = chain.length ?? entries.length ?? 0;
 
     if (entries.length === 0) {
+      // An empty chain attests nothing — the previous behavior returned
+      // verified: true here, silently blessing a device with no provenance
+      // record as fully trusted.
+      const notes = chainLength > 0
+        ? [`Device reports ${chainLength} witness entries but the chain endpoint returned none — data inconsistency`]
+        : ['Witness chain is empty; nothing to attest'];
       return {
         deviceId,
         chainLength,
-        verified: true,
+        verified: false,
         gaps: [],
         headEpoch: 0,
         headHash: chain.head ?? '',
-        integrityScore: chainLength > 0 ? 0.5 : 1.0,
+        integrityScore: 0,
+        notes,
       };
+    }
+
+    // If any entry carries a signature, the chain can only be attested when
+    // every signed entry verifies. Without a verifier (the seed SDK exposes
+    // none) we must not claim verification.
+    const signedEntries = entries.filter(e => e.signature);
+    let signaturesVerified = true;
+    let notes: string[] | undefined;
+    if (signedEntries.length > 0) {
+      if (!this.deps.verifyEntrySignature) {
+        signaturesVerified = false;
+        notes = [
+          `${signedEntries.length} witness entries carry signatures but no ` +
+            'signature verifier is wired; chain not attested',
+        ];
+      } else {
+        const results = await Promise.all(
+          signedEntries.map(e => this.deps.verifyEntrySignature!(deviceId, e)),
+        );
+        signaturesVerified = results.every(Boolean);
+        if (!signaturesVerified) {
+          notes = ['One or more witness entry signatures failed verification'];
+        }
+      }
     }
 
     const sorted = [...entries].sort((a, b) => a.epoch - b.epoch);
@@ -61,15 +105,21 @@ export class WitnessVerificationService {
       : 0;
 
     const integrityScore = Math.max(0, 1 - gapRatio) * (hashValid ? 1 : 0.5);
+    const verified = gaps.length === 0 && hashValid && signaturesVerified;
+
+    if (verified && notes) {
+      notes = undefined;
+    }
 
     return {
       deviceId,
       chainLength,
-      verified: gaps.length === 0 && hashValid,
+      verified,
       gaps,
       headEpoch: sorted[sorted.length - 1].epoch,
       headHash: chain.head ?? sorted[sorted.length - 1].hash ?? '',
       integrityScore,
+      ...(notes ? { notes } : {}),
     };
   }
 

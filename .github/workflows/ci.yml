@@ -39,10 +39,6 @@ jobs:
       - name: Lint code
         run: npm run lint
 
-      - name: Type check
-        run: npm run typecheck || echo "⚠️ Type checking skipped (TypeScript compiler crash)"
-        continue-on-error: true
-
       - name: Check for outdated dependencies
         run: npm outdated || true
         continue-on-error: true
@@ -126,9 +122,11 @@ jobs:
         shell: bash
 
       - name: Build project
+        # Inline the real build — the root `build:ts` script appends `|| true`
+        # and can never fail (see review finding ci.yml:131-132).
         run: |
           echo "Building project for ${{ matrix.platform }}..."
-          npm run build:ts
+          cd v3/@claude-flow/cli && npm run build
 
       - name: Test CLI binary (Unix)
         if: runner.os != 'Windows'

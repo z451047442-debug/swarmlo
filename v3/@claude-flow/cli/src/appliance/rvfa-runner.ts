@@ -34,27 +34,67 @@ export interface RunResult {
 
 // ── Internal helpers ────────────────────────────────────────
 
-/** Spawn a child process and capture stdout/stderr. */
+/** Cap on captured stdout/stderr — an appliance that floods output must not
+ *  accumulate it unboundedly in memory. */
+const MAX_CAPTURE_BYTES = 16 * 1024 * 1024; // 16 MiB per stream
+/** Default wall-clock cap for an appliance run. */
+const DEFAULT_RUN_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+
+/** Spawn a child process and capture stdout/stderr (bounded). */
 function spawnAsync(
   cmd: string, args: string[],
-  opts: { cwd?: string; env?: NodeJS.ProcessEnv; verbose?: boolean },
+  opts: { cwd?: string; env?: NodeJS.ProcessEnv; verbose?: boolean; timeoutMs?: number },
 ): Promise<RunResult> {
   return new Promise((resolve) => {
     const start = performance.now();
+    const timeoutMs = opts.timeoutMs ?? DEFAULT_RUN_TIMEOUT_MS;
     const out: Buffer[] = [];
     const err: Buffer[] = [];
+    let outBytes = 0;
+    let errBytes = 0;
+    let timedOut = false;
+
     const child = spawn(cmd, args, {
       cwd: opts.cwd, env: { ...process.env, ...opts.env }, stdio: ['pipe', 'pipe', 'pipe'],
     });
-    child.stdout.on('data', (c: Buffer) => { out.push(c); if (opts.verbose) process.stdout.write(c); });
-    child.stderr.on('data', (c: Buffer) => { err.push(c); if (opts.verbose) process.stderr.write(c); });
-    child.on('close', (code) => resolve({
-      exitCode: code ?? 1, stdout: Buffer.concat(out).toString(), stderr: Buffer.concat(err).toString(),
-      duration: performance.now() - start,
-    }));
-    child.on('error', (e) => resolve({
-      exitCode: 1, stdout: '', stderr: e.message, duration: performance.now() - start,
-    }));
+
+    const finish = (exitCode: number, extra?: string): void => {
+      const stdout = Buffer.concat(out).toString();
+      const stderr = Buffer.concat(err).toString() + (extra ? `\n${extra}` : '');
+      resolve({
+        exitCode, stdout, stderr, duration: performance.now() - start,
+      });
+    };
+
+    const timer = setTimeout(() => {
+      timedOut = true;
+      try { child.kill('SIGKILL'); } catch { /* already gone */ }
+    }, timeoutMs);
+
+    child.stdout.on('data', (c: Buffer) => {
+      if (opts.verbose) process.stdout.write(c);
+      if (outBytes < MAX_CAPTURE_BYTES) {
+        const keep = Math.min(c.length, MAX_CAPTURE_BYTES - outBytes);
+        out.push(c.subarray(0, keep));
+        outBytes += keep;
+      }
+    });
+    child.stderr.on('data', (c: Buffer) => {
+      if (opts.verbose) process.stderr.write(c);
+      if (errBytes < MAX_CAPTURE_BYTES) {
+        const keep = Math.min(c.length, MAX_CAPTURE_BYTES - errBytes);
+        err.push(c.subarray(0, keep));
+        errBytes += keep;
+      }
+    });
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      finish(timedOut ? 1 : (code ?? 1), timedOut ? `Process timed out after ${timeoutMs}ms` : undefined);
+    });
+    child.on('error', (e) => {
+      clearTimeout(timer);
+      finish(1, e.message);
+    });
   });
 }
 

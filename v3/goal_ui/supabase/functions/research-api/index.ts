@@ -1,3 +1,6 @@
+// DEPRECATED：前端从未调用本函数，功能与 research-step 重叠。
+// 保留仅为向后兼容；新代码请使用 research-step。
+// 注意：本函数同样匿名可调用（见仓库 README 的安全提示），公开部署前须加鉴权/限流。
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 

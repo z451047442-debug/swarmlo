@@ -167,7 +167,10 @@ export async function installProxy(opts: InstallOptions): Promise<InstallResult>
 
     const finalPath = proxyBinaryPath();
     fs.mkdirSync(path.dirname(finalPath), { recursive: true, mode: 0o700 });
-    const tmp = `${finalPath}.tmp`;
+    // audit_2026-08-31: fixed `${finalPath}.tmp` raced concurrent installs
+    // (two processes copying into the same tmp, one rename clobbering the
+    // other). Unique per-process tmp name keeps them isolated.
+    const tmp = `${finalPath}.tmp-${process.pid}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
     fs.copyFileSync(extractedBinaryPath, tmp);
     fs.chmodSync(tmp, 0o755);
     fs.renameSync(tmp, finalPath);

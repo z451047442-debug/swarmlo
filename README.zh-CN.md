@@ -22,7 +22,7 @@
 
 </div>
 
-> **智能体 = 模型 + 脚手架。** 模型负责写代码；脚手架为它提供工具、记忆、循环、沙箱和控制，让它能真正干活。**Swarmlo 就是这个脚手架** —— 围绕 Claude Code 和 Codex 的执行层，新增 100+ 专业智能体、协同蜂群、自学习记忆、跨机器联邦通信，以及企业级安全护栏。智能体不只是运行，而是协作。
+> **智能体 = 模型 + 脚手架。** 模型负责写代码；脚手架为它提供工具、记忆、循环、沙箱和控制，让它能真正干活。**Swarmlo 就是这个脚手架** —— 围绕 Claude Code 和 Codex 的执行层，新增 60+ 专业智能体、协同蜂群、自学习记忆、跨机器联邦通信，以及企业级安全护栏。智能体不只是运行，而是协作。
 
 一条 `npx swarmlo init` 命令就能给 Claude Code 装上神经系统：智能体自组织成蜂群、从每个任务中学习、跨会话记住上下文，并且——通过联邦——能够安全地与其他机器上的智能体通信而不泄露数据。你继续写代码，协调工作交给 Swarmlo。
 
@@ -52,7 +52,7 @@
 
 | | **Claude Code 插件** | **CLI 安装（`npx swarmlo init`）** |
 |---|---|---|
-| 提供什么 | 每个插件提供斜杠命令 + 少量技能 + 智能体定义 | 完整的 Swarmlo 循环 —— 98 个智能体、60+ 命令、30 个技能、MCP 服务器、hooks、守护进程 |
+| 提供什么 | 每个插件提供斜杠命令 + 少量技能 + 智能体定义 | 完整的 Swarmlo 循环 —— 60+ 智能体、60+ 命令、30 个技能、MCP 服务器、hooks、守护进程 |
 | 工作区中的文件 | **零个** | `.claude/`、`.claude-flow/`、`CLAUDE.md`、helpers、settings |
 | 注册 MCP 服务器 | 仅当安装了 `swarmlo-core` 时（它自带 `.mcp.json`）—— 其他大多数插件不会 | 会 |
 | 安装 hooks | 不会 | 会 |
@@ -74,7 +74,7 @@
 这会添加斜杠命令和智能体定义。上面安装的 `swarmlo-core` 在安装时确实会注册自己的 MCP 服务器 —— 其工具以 `mcp__plugin_swarmlo-core_swarmlo__*` 形式调用（例如 `mcp__plugin_swarmlo-core_swarmlo__memory_store`），而不是 CLI 路线脚手架所使用的裸 `memory_store`/`swarm_init`/`agent_spawn` 名称。其他插件通常不附带自己的 MCP 服务器。如需使用 CLI 路线工具名的完整循环，请改用下方的路径 B。
 
 <details>
-<summary><strong>🔌 全部 35 个插件</strong></summary>
+<summary><strong>🔌 全部 39 个插件</strong></summary>
 
 #### 核心与编排
 
@@ -195,7 +195,7 @@ claude mcp add claude-flow -- npx swarmlo@latest mcp start
 
 | 能力 | 描述 |
 |------------|-------------|
-| 🤖 **100+ 智能体** | 面向编码、测试、安全、文档、架构的专业智能体 |
+| 🤖 **60+ 智能体** | 面向编码、测试、安全、文档、架构的专业智能体 |
 | 📡 **通信层** | 零信任联邦 —— 跨机器/组织的智能体相互发现、认证并安全交换工作 |
 | 🐝 **蜂群协调** | 层级、网状与自适应拓扑，带共识机制 |
 | 🧠 **自学习** | SONA 神经模式、ReasoningBank、轨迹学习 |
@@ -353,7 +353,7 @@ npx claude-flow@latest plugins install @claude-flow/plugin-agent-federation
     （蜂后、拓扑、共识）
           |
           v
-    100+ 专业智能体
+    60+ 专业智能体
     （coder、tester、reviewer、architect、security...）
           |
           v

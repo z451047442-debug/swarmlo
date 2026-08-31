@@ -176,16 +176,11 @@ export class MemoryMigrator extends EventEmitter {
   }
 
   private async loadFromSQLite(): Promise<LegacyEntry[]> {
-    const entries: LegacyEntry[] = [];
     const dbPath = this.config.sourcePath;
 
     try {
-      // Dynamic import for better-sqlite3 or similar
-      // In production, would use actual SQLite library
+      // JSON-export files: parse directly (pre-existing behavior).
       const fileContent = await fs.readFile(dbPath);
-
-      // Parse SQLite format (simplified - actual implementation would use SQLite library)
-      // For now, we'll try to read it as a JSON export format
       if (dbPath.endsWith('.json')) {
         const data = JSON.parse(fileContent.toString());
         if (Array.isArray(data)) {
@@ -195,14 +190,136 @@ export class MemoryMigrator extends EventEmitter {
         }
       }
 
-      // SQLite parsing would go here using better-sqlite3 or sql.js
-      this.emit('migration:warning', {
-        message: 'Direct SQLite parsing requires additional setup. Using export format.',
-      });
+      // Real SQLite files: open with sql.js (bundled dependency) or
+      // better-sqlite3 and read the memory_entries table.
+      const realRows = await this.readSqliteRows(dbPath);
+      if (realRows.length > 0) {
+        return realRows.map((row) => this.rowToLegacyEntry(row));
+      }
 
-      return entries;
+      // Empty table or incompatible schema — nothing to migrate.
+      this.emit('migration:warning', {
+        message: `SQLite file contained no readable memory_entries rows: ${dbPath}`,
+      });
+      return [];
     } catch (error) {
       throw new Error(`Failed to load SQLite: ${(error as Error).message}`);
+    }
+  }
+
+  /**
+   * Open a real SQLite database and return rows from `memory_entries`
+   * (plus `memory_embeddings` for the embedding blob when present).
+   * Returns [] when the DB opens but the table doesn't exist.
+   */
+  private async readSqliteRows(dbPath: string): Promise<Array<Record<string, unknown>>> {
+    const bytes = await fs.readFile(dbPath);
+    const buffer = Buffer.from(bytes);
+
+    // Try better-sqlite3 first (native, when available)
+    try {
+      const BetterSqlite3 = (await import('better-sqlite3')).default;
+      const db = new BetterSqlite3(buffer as any, { readonly: true });
+      try {
+        const rows = db
+          .prepare('SELECT * FROM memory_entries')
+          .all() as Array<Record<string, unknown>>;
+        const embeddingRows = db
+          .prepare('SELECT entry_id, embedding FROM memory_embeddings')
+          .all() as Array<{ entry_id: string; embedding: Buffer }>;
+        const embeddingMap = new Map(embeddingRows.map((r) => [r.entry_id, r.embedding]));
+        for (const row of rows) {
+          (row as any).__embedding = embeddingMap.get(row.id as string);
+        }
+        return rows;
+      } finally {
+        db.close();
+      }
+    } catch {
+      // better-sqlite3 unavailable — try sql.js
+    }
+
+    try {
+      const initSqlJs = (await import('sql.js')).default;
+      const SQL = await initSqlJs();
+      const db = new SQL.Database(new Uint8Array(buffer));
+      try {
+        const result = db.exec('SELECT * FROM memory_entries');
+        if (result.length === 0) return [];
+        const { columns, values } = result[0];
+        const rows = values.map((v: unknown[]) => {
+          const row: Record<string, unknown> = {};
+          columns.forEach((col: string, i: number) => {
+            row[col] = v[i];
+          });
+          return row;
+        });
+        // Attach embeddings when the table exists
+        const embResult = db.exec('SELECT entry_id, embedding FROM memory_embeddings');
+        if (embResult.length > 0) {
+          const embMap = new Map<string, Uint8Array>();
+          for (const v of embResult[0].values) {
+            embMap.set(String(v[0]), new Uint8Array(v[1] as Uint8Array));
+          }
+          for (const row of rows) {
+            (row as any).__embedding = embMap.get(row.id as string);
+          }
+        }
+        return rows;
+      } finally {
+        db.close();
+      }
+    } catch {
+      // No SQLite library available — report honestly
+      throw new Error(
+        'No SQLite reader available (better-sqlite3 and sql.js both failed to load). ' +
+        'Install one of them to migrate real .db files.'
+      );
+    }
+  }
+
+  /** Map a memory_entries row to the LegacyEntry shape used by the migrator */
+  private rowToLegacyEntry(row: Record<string, unknown>): LegacyEntry {
+    const tags = this.parseTags(row.tags);
+    const metadata = this.parseMetadata(row.metadata);
+    let value: unknown = row.content;
+    if ((row as any).__embedding) {
+      value = {
+        content: row.content,
+        embedding: new Float32Array(new Uint8Array((row as any).__embedding.buffer)),
+      };
+    }
+    return {
+      id: row.id as string,
+      key: row.key as string,
+      value,
+      namespace: row.namespace as string | undefined,
+      tags,
+      metadata,
+      createdAt: (row.created_at as number) ?? undefined,
+      updatedAt: (row.updated_at as number) ?? undefined,
+    };
+  }
+
+  private parseTags(raw: unknown): string[] | undefined {
+    if (typeof raw !== 'string') return undefined;
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private parseMetadata(raw: unknown): Record<string, unknown> | undefined {
+    if (typeof raw !== 'string') return undefined;
+    try {
+      const parsed = JSON.parse(raw);
+      return typeof parsed === 'object' && parsed !== null
+        ? (parsed as Record<string, unknown>)
+        : undefined;
+    } catch {
+      return undefined;
     }
   }
 

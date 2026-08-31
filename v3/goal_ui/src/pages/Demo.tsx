@@ -226,7 +226,7 @@ const Demo = () => {
                   <li>• <code>accentColor</code> - {t("misc.demoConfigAccentColor")}</li>
                   <li>• <code>backgroundColor</code> - {t("misc.demoConfigBackgroundColor")}</li>
                   <li>• <code>defaultGoal</code> - {t("misc.demoConfigDefaultGoal")}</li>
-                  <li>• <a href="/WIDGET-INTEGRATION.md" target="_blank" className="text-primary hover:underline">{t("misc.demoViewFullDocs")}</a></li>
+                  <li>• <span className="text-primary">{t("misc.demoViewFullDocs")}</span></li>
                 </ul>
               </div>
             </div>

@@ -9,7 +9,17 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+
+# --- Locate the swarmlo package root (the directory holding rvf.manifest.json) ---
+ROOT_DIR="$SCRIPT_DIR"
+while [ ! -f "$ROOT_DIR/rvf.manifest.json" ] && [ "$ROOT_DIR" != "/" ] && [ "$ROOT_DIR" != "." ]; do
+  ROOT_DIR="$(dirname "$ROOT_DIR")"
+done
+
+if [ ! -f "$ROOT_DIR/rvf.manifest.json" ]; then
+  echo "ERROR: rvf.manifest.json not found above $SCRIPT_DIR — run from the swarmlo package checkout." >&2
+  exit 1
+fi
 cd "$ROOT_DIR"
 
 VERSION="${1:-2.0.0}"
@@ -47,6 +57,40 @@ echo "No embedded secrets found."
 # --- Create dist directory ---
 mkdir -p dist
 
+# --- Verify all files to be packaged exist (friendly error instead of bare set -e failure) ---
+PACK_FILES=(
+  rvf.manifest.json
+  README.md
+  .env.example
+  docker-compose.yml
+  src/config/config.example.json
+  src/mcp-bridge/index.js
+  src/mcp-bridge/package.json
+  src/mcp-bridge/Dockerfile
+  src/mcp-bridge/mcp-stdio-kernel.js
+  src/mcp-bridge/test-harness.js
+  src/chat-ui/Dockerfile
+  src/chat-ui/patch-mcp-url-safety.sh
+  src/chat-ui/static/
+  src/scripts/deploy.sh
+  src/scripts/generate-config.js
+  src/scripts/generate-welcome.js
+  src/scripts/package-rvf.sh
+  docs/
+)
+
+MISSING=()
+for f in "${PACK_FILES[@]}"; do
+  if [ ! -e "$f" ]; then
+    MISSING+=("$f")
+  fi
+done
+if [ ${#MISSING[@]} -gt 0 ]; then
+  echo "ERROR: Cannot package — missing required files:" >&2
+  printf '  - %s\n' "${MISSING[@]}" >&2
+  exit 1
+fi
+
 # --- Generate RVF manifest with actual UUID and timestamp ---
 MANIFEST=$(cat rvf.manifest.json | \
   sed "s/\${RVF_UUID}/$RVF_UUID/g" | \
@@ -68,27 +112,10 @@ tar czf "$OUTPUT" \
   --exclude='mcp-bridge/package-lock.json' \
   --exclude='dist' \
   --exclude='.git' \
+  --transform="s|^src/||" \
   --transform="s|^|chat-ui-mcp/|" \
   -C "$ROOT_DIR" \
-  rvf.manifest.json \
-  README.md \
-  .env.example \
-  .gitignore \
-  docker-compose.yml \
-  config/config.example.json \
-  mcp-bridge/index.js \
-  mcp-bridge/package.json \
-  mcp-bridge/Dockerfile \
-  chat-ui/Dockerfile \
-  chat-ui/patch-mcp-url-safety.sh \
-  chat-ui/static/ \
-  mcp-bridge/mcp-stdio-kernel.js \
-  mcp-bridge/test-harness.js \
-  scripts/deploy.sh \
-  scripts/generate-config.js \
-  scripts/generate-welcome.js \
-  scripts/package-rvf.sh \
-  docs/
+  "${PACK_FILES[@]}"
 
 # --- Append manifest as RVF header ---
 # RVF files are tar.gz with a JSON manifest prepended for introspection

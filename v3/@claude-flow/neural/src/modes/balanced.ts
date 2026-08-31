@@ -277,7 +277,13 @@ export class BalancedMode extends BaseModeImplementation {
   }
 
   /**
-   * Compute EWC penalty for continual learning
+   * Compute EWC penalty for continual learning.
+   *
+   * Honest note (2026-08-31): this loop is currently inert. SONAManager
+   * initializes ewcState with EMPTY fisher/means maps and nothing populates
+   * them (consolidateEWC() only decays existing values). Until real Fisher
+   * information is computed per task, the penalty is always 0 and
+   * "catastrophic forgetting prevention" is not actually active.
    */
   private computeEWCPenalty(ewcState: EWCState, lambda: number): number {
     let penalty = 0;

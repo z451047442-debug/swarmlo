@@ -17,10 +17,106 @@ import {
   startMCPServer,
   stopMCPServer,
   getMCPServerStatus,
+  filterAdvertisedMcpTools,
+  parseMcpToolSelection,
   type MCPServerOptions,
   type MCPServerStatus,
 } from '../mcp-server.js';
 import { listMCPTools, callMCPTool, hasTool, getToolMetadata } from '../mcp-client.js';
+import { configManager } from '../services/config-file-manager.js';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+import { fork } from 'child_process';
+import { fileURLToPath } from 'url';
+
+/**
+ * Persisted MCP tool selection (`mcp.tools` in .claude-flow/config.json or
+ * claude-flow.config.json, via the shared config manager). This is the real
+ * store behind `mcp toggle` — the server filters advertised tools through
+ * filterAdvertisedMcpTools() and `mcp start` now defaults its --tools value
+ * from here, so toggles genuinely take effect on the next start.
+ */
+const MCP_TOOLS_KEY = 'mcp.tools';
+
+/** Read the persisted tool selectors (empty array = no config = advertise all). */
+function getPersistedMcpToolSelection(cwd: string): string[] {
+  const stored = configManager.get(cwd, MCP_TOOLS_KEY);
+  if (Array.isArray(stored) && stored.every((s) => typeof s === 'string')) {
+    return stored as string[];
+  }
+  return [];
+}
+
+/** Resolve the effective --tools value for `mcp start`: flag > persisted config > env > 'all'. */
+function resolveMcpToolsFlag(ctx: CommandContext): string {
+  const flagValue = ctx.flags.tools as string | undefined;
+  if (flagValue) return flagValue;
+  const persisted = getPersistedMcpToolSelection(ctx.cwd);
+  if (persisted.length > 0) return persisted.join(',');
+  return 'all';
+}
+
+/**
+ * #P2 — real backgrounding for `mcp start --daemon`. Forks a detached child
+ * that runs the normal (foreground, blocking) `mcp start` — which keeps the
+ * server alive — and returns immediately. Same fork/detach/unref/disconnect
+ * pattern as the daemon command's startBackgroundDaemon (daemon.ts).
+ */
+async function forkMcpDaemon(
+  ctx: CommandContext,
+  forwarded: { port: number; host: string; transport: string; tools: string; force: boolean },
+): Promise<CommandResult> {
+  // dist/src/commands/mcp.js -> dist/src/commands -> dist/src -> dist -> bin/cli.js
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const cliPath = path.resolve(__dirname, '..', '..', '..', 'bin', 'cli.js');
+  if (!fs.existsSync(cliPath)) {
+    output.printError(`CLI not found at: ${cliPath}`);
+    return { success: false, exitCode: 1 };
+  }
+
+  const forkArgs = ['mcp', 'start'];
+  forkArgs.push('--port', String(forwarded.port));
+  forkArgs.push('--host', forwarded.host);
+  forkArgs.push('--transport', forwarded.transport);
+  if (forwarded.tools && forwarded.tools !== 'all') {
+    forkArgs.push('--tools', forwarded.tools);
+  }
+  if (forwarded.force) {
+    forkArgs.push('--force');
+  }
+
+  const child = fork(cliPath, forkArgs, {
+    cwd: ctx.cwd,
+    detached: true,
+    stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
+    env: { ...process.env },
+  });
+
+  const pid = child.pid;
+  if (!pid || pid <= 0) {
+    output.printError('Failed to get MCP server PID');
+    return { success: false, exitCode: 1 };
+  }
+
+  child.unref();
+  try { child.disconnect(); } catch { /* IPC channel already closed */ }
+
+  // The server writes its own PID file (os.tmpdir()/claude-flow-mcp.pid);
+  // give it a moment, then report.
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  const pidFile = path.join(os.tmpdir(), 'claude-flow-mcp.pid');
+  output.writeln();
+  output.printSuccess(`MCP server started in background (PID: ${pid})`);
+  output.printInfo(`PID file: ${pidFile}`);
+  output.printInfo('Status:  claude-flow mcp status');
+  output.printInfo('Stop:    claude-flow mcp stop');
+  if (!fs.existsSync(pidFile)) {
+    output.printWarning('No server PID file found yet — the child may still be starting, or failed. Check with: claude-flow mcp status');
+  }
+  return { success: true, data: { daemonPid: pid, pidFile } };
+}
 
 // MCP tools categories
 const TOOL_CATEGORIES = [
@@ -106,7 +202,9 @@ const startCommand: Command = {
     const port = (ctx.flags.port as number) ?? 3000;
     const host = (ctx.flags.host as string) ?? 'localhost';
     const transport = (ctx.flags.transport as 'stdio' | 'http' | 'websocket') ?? 'stdio';
-    const tools = (ctx.flags.tools as string) || 'all';
+    // #P2 — default the tool selection from the persisted config (mcp.tools,
+    // written by `mcp toggle`), falling back to env/flag/'all'.
+    const tools = resolveMcpToolsFlag(ctx);
     const daemon = (ctx.flags.daemon as boolean) ?? false;
     const force = (ctx.flags.force as boolean) ?? false;
 
@@ -118,6 +216,13 @@ const startCommand: Command = {
     // reports the current process as "running" when transport=stdio and no
     // PID file exists, which would cause us to SIGKILL ourselves)
     const existingStatus = await getMCPServerStatus();
+
+    // #P2 — real backgrounding: fork a detached child running the blocking
+    // foreground server, then return immediately. Runs after the already-
+    // running check so a live server is reported without spawning a child.
+    if (daemon) {
+      return forkMcpDaemon(ctx, { port, host, transport, tools, force });
+    }
     const isSelfDetected = existingStatus.pid === process.pid;
     if (existingStatus.running && !isSelfDetected) {
       // For stdio transport, always force restart since we can't health check it
@@ -160,7 +265,6 @@ const startCommand: Command = {
       host,
       port,
       tools: !tools || tools === 'all' ? 'all' : tools.split(','),
-      daemonize: daemon,
     };
 
     try {
@@ -208,7 +312,15 @@ const startCommand: Command = {
           { property: 'Transport', value: transport },
           { property: 'Host', value: host },
           { property: 'Port', value: port },
-          { property: 'Tools', value: !tools || tools === 'all' ? '27 enabled' : `${tools.split(',').length} enabled` },
+          // #P2 — real count from the tool registry, filtered by the same
+          // selection contract the server advertises (was hardcoded "27").
+          {
+            property: 'Tools',
+            value: `${filterAdvertisedMcpTools(
+              listMCPTools(),
+              !tools || tools === 'all' ? 'all' : tools.split(',')
+            ).length} enabled`
+          },
           { property: 'Status', value: output.success('Running') }
         ]
       });
@@ -221,10 +333,6 @@ const startCommand: Command = {
         output.writeln(output.dim(`  RPC: http://${host}:${port}/rpc`));
       } else if (transport === 'websocket') {
         output.writeln(output.dim(`  WebSocket: ws://${host}:${port}/ws`));
-      }
-
-      if (daemon) {
-        output.writeln(output.dim('  Running in background mode'));
       }
 
       // #2984: this command is only reached via the "normal CLI mode" branch
@@ -450,6 +558,10 @@ const toolsCommand: Command = {
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     const category = ctx.flags.category as string;
 
+    // #P2 — enabled state comes from the persisted tool selection
+    // (mcp.tools in config, written by `mcp toggle`), not hardcoded true.
+    const selectors = getPersistedMcpToolSelection(ctx.cwd);
+
     // Use local tool registry
     let tools: Array<{ name: string; category: string; description: string; enabled: boolean }>;
 
@@ -461,7 +573,7 @@ const toolsCommand: Command = {
         name: tool.name,
         category: tool.category || 'uncategorized',
         description: tool.description,
-        enabled: true
+        enabled: selectors.length === 0 || filterAdvertisedMcpTools([tool], selectors).length > 0
       }));
     } else {
       // Fallback to static tool list
@@ -503,6 +615,12 @@ const toolsCommand: Command = {
         { name: 'system_health', category: 'system', description: 'Health status', enabled: true },
         { name: 'system_metrics', category: 'system', description: 'Server metrics', enabled: true },
       ].filter(t => !category || t.category === category);
+
+      // Apply the persisted selection to the fallback list too, so the two
+      // branches report consistent enabled states.
+      if (selectors.length > 0) {
+        tools = tools.map(t => ({ ...t, enabled: filterAdvertisedMcpTools([t], selectors).length > 0 }));
+      }
     }
 
     if (ctx.flags.format === 'json') {
@@ -565,24 +683,76 @@ const toggleCommand: Command = {
     const toEnable = ctx.flags.enable as string;
     const toDisable = ctx.flags.disable as string;
 
-    if (toEnable) {
-      const tools = toEnable.split(',');
-      output.printInfo(`Enabling tools: ${tools.join(', ')}`);
-      output.printSuccess(`Enabled ${tools.length} tools`);
-    }
-
-    if (toDisable) {
-      const tools = toDisable.split(',');
-      output.printInfo(`Disabling tools: ${tools.join(', ')}`);
-      output.printSuccess(`Disabled ${tools.length} tools`);
-    }
-
     if (!toEnable && !toDisable) {
       output.printError('Use --enable or --disable with comma-separated tool names');
       return { success: false, exitCode: 1 };
     }
 
-    return { success: true };
+    // #P2 — real persistence: mutate the mcp.tools selection in the shared
+    // config file (claude-flow.config.json / .claude-flow/config.json).
+    // `mcp start` defaults its --tools from here, so toggles take effect on
+    // the next server start.
+    const registry = listMCPTools();
+    let selectors = getPersistedMcpToolSelection(ctx.cwd);
+
+    // The persisted selection is an ADVERTISING whitelist (the same contract
+    // filterAdvertisedMcpTools applies to `mcp start --tools`): an empty
+    // selection advertises ALL tools. Disabling a tool therefore materializes
+    // the whitelist as the full registry and removes the tool; enabling in
+    // whitelist mode adds it back; enabling in all-tools mode is a no-op.
+    const applyToggle = (raw: string, enabling: boolean): void => {
+      const tools = raw.split(',').map((t) => t.trim()).filter(Boolean);
+      if (tools.length === 0) {
+        output.printError(`No tool names given for --${enabling ? 'enable' : 'disable'}`);
+        return;
+      }
+      const missing = tools.filter((t) => !registry.some((r) => r.name === t));
+      if (missing.length > 0) {
+        output.printWarning(`Unknown tool(s): ${missing.join(', ')} (not in the tool registry)`);
+      }
+      if (enabling) {
+        if (selectors.length === 0) {
+          // All-tools mode: everything is already advertised — no-op.
+          output.printSuccess(`Enabled ${tools.length} tool(s) (already enabled — currently advertising all tools)`);
+          return;
+        }
+        selectors = Array.from(new Set([...selectors, ...tools]));
+        output.printSuccess(`Enabled ${tools.length} tool(s)`);
+      } else {
+        if (selectors.length === 0) {
+          // All-tools mode → materialize the whitelist, then remove.
+          selectors = registry.map((r) => r.name);
+        }
+        const before = selectors.length;
+        selectors = selectors.filter((s) => !tools.includes(s));
+        const removed = before - selectors.length;
+        if (removed === 0) {
+          output.printWarning(`Tool(s) ${tools.join(', ')} were not in the advertised selection — nothing to disable.`);
+        } else {
+          output.printSuccess(`Disabled ${removed} tool(s)`);
+        }
+        if (selectors.length === 0) {
+          output.printWarning('The selection is now empty, which advertises ALL tools (the --tools selector contract). Disabling every tool is not expressible in this model.');
+        }
+      }
+    };
+
+    if (toEnable) {
+      output.printInfo(`Enabling tools: ${toEnable.split(',').map((t) => t.trim()).filter(Boolean).join(', ')}`);
+      applyToggle(toEnable, true);
+    }
+
+    if (toDisable) {
+      output.printInfo(`Disabling tools: ${toDisable.split(',').map((t) => t.trim()).filter(Boolean).join(', ')}`);
+      applyToggle(toDisable, false);
+    }
+
+    configManager.set(ctx.cwd, MCP_TOOLS_KEY, selectors);
+    const configPath = configManager.findConfig(ctx.cwd) ?? configManager.getConfigPath()
+      ?? path.join(ctx.cwd, 'claude-flow.config.json');
+    output.writeln(output.dim(`  Persisted to ${configPath} (mcp.tools). Takes effect on the next "claude-flow mcp start".`));
+
+    return { success: true, data: { selectors } };
   }
 };
 
@@ -740,21 +910,62 @@ const logsCommand: Command = {
     }
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
-    const lines = ctx.flags.lines as number;
+    const lines = (ctx.flags.lines as number) ?? 20;
+    const level = (ctx.flags.level as string) || 'info';
+    const follow = (ctx.flags.follow as boolean) ?? false;
 
-    // Default logs (loaded from actual log file when available)
-    const logs = [
-      { time: new Date().toISOString(), level: 'info', message: 'MCP Server started on stdio' },
-      { time: new Date().toISOString(), level: 'info', message: 'Registered 27 tools' },
-      { time: new Date().toISOString(), level: 'debug', message: 'Received request: tools/list' },
-      { time: new Date().toISOString(), level: 'info', message: 'Session initialized' },
-    ].slice(-lines);
+    // #P2 — read real log files instead of fabricated entries. The MCP
+    // server itself does not write a log file; the daemon and its workers
+    // write .claude-flow/logs/daemon.log (+ crash.log). Read those.
+    const logDir = path.join(ctx.cwd, '.claude-flow', 'logs');
+
+    const LEVELS = ['debug', 'info', 'warn', 'error'];
+    const minLevelIdx = LEVELS.indexOf(level) >= 0 ? LEVELS.indexOf(level) : 1;
+
+    const readEntries = (): Array<{ time: string; level: string; message: string }> => {
+      if (!fs.existsSync(logDir)) return [];
+      const entries: Array<{ time: string; level: string; message: string }> = [];
+      try {
+        const files = fs.readdirSync(logDir).filter((f) => f.endsWith('.log'));
+        for (const file of files) {
+          try {
+            const content = fs.readFileSync(path.join(logDir, file), 'utf-8');
+            for (const rawLine of content.split('\n')) {
+              const line = rawLine.trim();
+              if (!line) continue;
+              // [<ISO timestamp>] [LEVEL] message
+              const m = line.match(/^\[([^\]]+)\]\s*\[([A-Z]+)\]\s*(.*)$/);
+              if (!m) continue;
+              const time = m[1];
+              const lvl = m[2].toLowerCase();
+              if (LEVELS.indexOf(lvl) < minLevelIdx) continue;
+              entries.push({ time, level: lvl, message: m[3] });
+            }
+          } catch { /* skip unreadable files */ }
+        }
+      } catch { /* skip if dir unreadable */ }
+      // Newest last; the log lines are already chronological per file.
+      return entries;
+    };
+
+    if (!fs.existsSync(logDir) || readEntries().length === 0) {
+      output.printError('No MCP log source found: no .log files under .claude-flow/logs/ (the MCP server does not write its own log file).');
+      output.writeln(output.dim('  Start the daemon to produce logs: claude-flow daemon start'));
+      return { success: false, exitCode: 1 };
+    }
 
     output.writeln();
-    output.writeln(output.bold('MCP Server Logs'));
+    output.writeln(output.bold('MCP/daemon logs'));
+    output.writeln(output.dim(`  Source: ${logDir} | Level: ${level}+ | Lines: ${lines}`));
     output.writeln();
 
-    for (const log of logs) {
+    if (follow) {
+      output.printWarning('--follow is not implemented (no streaming MCP log source); showing the current snapshot instead.');
+    }
+
+    const entries = readEntries();
+    const shown = entries.slice(-lines);
+    for (const log of shown) {
       let levelStr: string;
       switch (log.level) {
         case 'error':
@@ -769,11 +980,14 @@ const logsCommand: Command = {
         default:
           levelStr = output.info(log.level.toUpperCase().padEnd(5));
       }
-
       output.writeln(`${output.dim(log.time)} ${levelStr} ${log.message}`);
     }
 
-    return { success: true, data: logs };
+    if (shown.length === 0) {
+      output.printInfo('No log entries match the current filters.');
+    }
+
+    return { success: true, data: { logDir, entries: shown } };
   }
 };
 

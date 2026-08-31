@@ -527,7 +527,10 @@ export abstract class BaseProvider extends EventEmitter implements ILLMProvider 
     this.totalTokens += totalTokens;
     this.totalCost += totalCost;
 
-    this.requestMetrics.set(`stream-${Date.now()}`, {
+    // `stream-<ts>-<seq>`: two streams finishing in the same millisecond
+    // used to collide on `stream-<ts>` and silently overwrite each other's
+    // metrics. requestCount is monotonically increasing per instance.
+    this.requestMetrics.set(`stream-${Date.now()}-${this.requestCount}`, {
       timestamp: new Date(),
       model: request.model || this.config.model,
       tokens: totalTokens,

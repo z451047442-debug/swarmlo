@@ -112,10 +112,42 @@ function detectPlatform(): PlatformInfo {
 }
 
 /**
- * Test if RVF backend is available (always true — pure-TS fallback)
+ * Test if RVF backend is actually usable: construct an in-memory instance,
+ * run a store/get round-trip, and tear it down.
  */
 async function testRvf(): Promise<boolean> {
-  return true;
+  try {
+    const { RvfBackend } = await import('./rvf-backend.js');
+    const backend = new RvfBackend({
+      databasePath: ':memory:',
+      defaultNamespace: '__probe__',
+      autoPersistInterval: 0,
+    });
+    await backend.initialize();
+    const probeId = `probe-${Date.now()}`;
+    await backend.store({
+      id: probeId,
+      namespace: '__probe__',
+      key: 'probe',
+      content: 'probe',
+      embedding: new Float32Array(8),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      version: 1,
+      tags: [],
+      metadata: {},
+      type: 'semantic',
+      accessLevel: 'private',
+      references: [],
+      accessCount: 0,
+      lastAccessedAt: Date.now(),
+    });
+    const ok = (await backend.get(probeId)) !== null;
+    await backend.shutdown().catch(() => undefined);
+    return ok;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -168,37 +200,35 @@ async function selectProvider(
     console.log(`[DatabaseProvider] Recommended provider: ${platformInfo.recommendedProvider}`);
   }
 
-  // Try RVF first (always available via pure-TS fallback, native when @ruvector/rvf installed)
-  if (await testRvf()) {
-    if (verbose) {
-      console.log('[DatabaseProvider] RVF backend available');
-    }
-    return 'rvf';
-  }
+  // Try the platform-recommended native provider first (better-sqlite3 on
+  // Unix, sql.js on Windows), then RVF (probed), then the other SQLite,
+  // then JSON. RVF is no longer an unconditional first pick.
+  const candidates: DatabaseProvider[] = [
+    platformInfo.recommendedProvider,
+    'rvf',
+    platformInfo.recommendedProvider === 'better-sqlite3' ? 'sql.js' : 'better-sqlite3',
+  ];
 
-  // Try recommended provider
-  if (platformInfo.recommendedProvider === 'better-sqlite3') {
-    if (await testBetterSqlite3()) {
+  for (const candidate of candidates) {
+    let available = false;
+    if (candidate === 'better-sqlite3') available = await testBetterSqlite3();
+    else if (candidate === 'sql.js') available = await testSqlJs();
+    else if (candidate === 'rvf') available = await testRvf();
+
+    if (available) {
       if (verbose) {
-        console.log('[DatabaseProvider] better-sqlite3 available and working');
+        console.log(`[DatabaseProvider] Provider available: ${candidate}`);
       }
-      return 'better-sqlite3';
+      return candidate;
     } else if (verbose) {
-      console.log('[DatabaseProvider] better-sqlite3 not available, trying sql.js');
+      console.log(`[DatabaseProvider] Provider unavailable: ${candidate}`);
     }
-  }
-
-  // Try sql.js as fallback
-  if (await testSqlJs()) {
-    if (verbose) {
-      console.log('[DatabaseProvider] sql.js available and working');
-    }
-    return 'sql.js';
-  } else if (verbose) {
-    console.log('[DatabaseProvider] sql.js not available, using JSON fallback');
   }
 
   // Final fallback to JSON
+  if (verbose) {
+    console.log('[DatabaseProvider] No native provider available, using JSON fallback');
+  }
   return 'json';
 }
 
@@ -370,7 +400,7 @@ export async function getAvailableProviders(): Promise<{
   json: boolean;
 }> {
   return {
-    rvf: true,
+    rvf: await testRvf(),
     betterSqlite3: await testBetterSqlite3(),
     sqlJs: await testSqlJs(),
     json: true,

@@ -106,7 +106,7 @@ async function cheapInferenceCall(apiKey) {
 }
 
 function runHarness(args, opts = {}) {
-  const r = spawnSync('npx', ['-y', '-p', 'metaharness@latest', 'harness', ...args], {
+  const r = spawnSync('npx', ['-y', '-p', 'metaharness@0.3.0', 'harness', ...args], {
     stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf-8',
     timeout: opts.timeoutMs ?? 60_000,
     env: { ...process.env, ...opts.env },
@@ -115,7 +115,7 @@ function runHarness(args, opts = {}) {
 }
 
 function runMetaharness(args, opts = {}) {
-  const r = spawnSync('npx', ['-y', 'metaharness@latest', ...args], {
+  const r = spawnSync('npx', ['-y', 'metaharness@0.3.0', ...args], {
     stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf-8',
     timeout: opts.timeoutMs ?? 120_000,
     cwd: opts.cwd,  // metaharness new writes to cwd/<name>; --target is ignored

@@ -419,7 +419,7 @@ export const enAgents: Record<string, string> = {
   "agents.step.finalizing": "Finalizing...",
   "agents.step.complete": "Complete!",
   "agents.taskboard.title": "Task Assignment Board",
-  "agents.taskboard.description": "Drag and drop tasks to assign agents",
+  "agents.taskboard.description": "Tasks are auto-assigned to agents by development phase",
   "agents.taskboard.mode": "Mode:",
   "agents.taskboard.mode.distributed": "Distributed",
   "agents.taskboard.mode.pipeline": "Pipeline",

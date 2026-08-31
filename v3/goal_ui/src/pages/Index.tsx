@@ -155,17 +155,21 @@ const STEP_ICONS: Record<string, LucideIcon> = {
   "7": CheckCircle2,
 };
 
-let cachedRestoredSession: PersistedResearchSession | null | undefined;
+// 缓存按语言区分：会话内容在生成时已翻译为当时的语言，切换语言后必须
+// 丢弃缓存（持久化层也记录 lang 并按其失效），否则会恢复出旧语言的文案。
+let cachedRestoredSession: { lang: string; session: PersistedResearchSession | null } | undefined;
 
-function getRestoredSession(): PersistedResearchSession | null {
-  if (cachedRestoredSession !== undefined) return cachedRestoredSession;
+function getRestoredSession(lang: string): PersistedResearchSession | null {
+  if (cachedRestoredSession && cachedRestoredSession.lang === lang) {
+    return cachedRestoredSession.session;
+  }
   try {
     const raw = localStorage.getItem(RESEARCH_SESSION_KEY);
     if (!raw) {
-      cachedRestoredSession = null;
+      cachedRestoredSession = { lang, session: null };
       return null;
     }
-    const parsed = JSON.parse(raw) as Partial<PersistedResearchSession> & { v?: number; steps?: Step[] };
+    const parsed = JSON.parse(raw) as Partial<PersistedResearchSession> & { v?: number; steps?: Step[]; lang?: string };
     if (parsed.v !== 3 || !Array.isArray(parsed.steps) || parsed.steps.length === 0) {
       // v1 sessions predate the Chinese UI translation and would restore English
       // template copy — discard them (v1 was never released, so nothing real is lost).
@@ -176,10 +180,21 @@ function getRestoredSession(): PersistedResearchSession | null {
       } catch (cleanupErr) {
         console.warn("Failed to clear stale session:", cleanupErr);
       }
-      cachedRestoredSession = null;
+      cachedRestoredSession = { lang, session: null };
       return null;
     }
-    cachedRestoredSession = {
+    if (parsed.lang && parsed.lang !== lang) {
+      // 会话文案固化在生成时的语言里，无法重译——按 v1/v2 先例丢弃。
+      console.warn(`Research session was persisted in "${parsed.lang}" but UI is "${lang}"; discarding stale session.`);
+      try {
+        localStorage.removeItem(RESEARCH_SESSION_KEY);
+      } catch (cleanupErr) {
+        console.warn("Failed to clear stale session:", cleanupErr);
+      }
+      cachedRestoredSession = { lang, session: null };
+      return null;
+    }
+    const restored: PersistedResearchSession = {
       userGoal: parsed.userGoal ?? "",
       steps: parsed.steps.map((step) => ({
         ...step,
@@ -200,7 +215,8 @@ function getRestoredSession(): PersistedResearchSession | null {
       planGenerated: parsed.planGenerated ?? true,
       showFinalAnalysis: parsed.showFinalAnalysis ?? false,
     };
-    return cachedRestoredSession;
+    cachedRestoredSession = { lang, session: restored };
+    return restored;
   } catch (err) {
     console.warn("Failed to restore research session, starting fresh:", err);
     try {
@@ -208,12 +224,12 @@ function getRestoredSession(): PersistedResearchSession | null {
     } catch (cleanupErr) {
       console.warn("Failed to clear corrupted session:", cleanupErr);
     }
-    cachedRestoredSession = null;
+    cachedRestoredSession = { lang, session: null };
     return null;
   }
 }
 
-const Index = () => {
+const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
   const { toast } = useToast();
   const { t, lang } = useI18n();
   // defaultResearchConfig.stateGaps / replanningTriggers are stored as raw
@@ -255,7 +271,7 @@ const Index = () => {
     aiModel: import.meta.env.VITE_AI_MODEL || "google/gemini-2.5-flash",
   });
   const [showCustomizer, setShowCustomizer] = useState(false);
-  const restored = getRestoredSession();
+  const restored = getRestoredSession(lang);
   const [userGoal, setUserGoal] = useState<string>(restored?.userGoal ?? "");
   const [isPlanning, setIsPlanning] = useState(false);
   const [planGenerated, setPlanGenerated] = useState(restored?.planGenerated ?? false);
@@ -1025,6 +1041,7 @@ const Index = () => {
     try {
       localStorage.setItem(RESEARCH_SESSION_KEY, JSON.stringify({
         v: 3,
+        lang, // 恢复时校验语言，语言不符的旧会话直接丢弃（文案无法重译）
         userGoal,
         steps,
         finalRecommendations,
@@ -1037,7 +1054,7 @@ const Index = () => {
     } catch (err) {
       console.warn("Failed to persist research session:", err);
     }
-  }, [userGoal, steps, finalRecommendations, researchConfig, currentGOAPState, visibleSteps, planGenerated, showFinalAnalysis]);
+  }, [lang, userGoal, steps, finalRecommendations, researchConfig, currentGOAPState, visibleSteps, planGenerated, showFinalAnalysis]);
 
   return (
     <div 
@@ -1135,13 +1152,9 @@ const Index = () => {
 
         {/* Goal Input */}
         {!planGenerated && (
-          <div 
-            style={{ 
-              '--card-bg': widgetConfig.backgroundColor,
-              '--border-color': `${widgetConfig.primaryColor}40`
-            } as React.CSSProperties}
-          >
+          <div>
           <GoalInput
+            initialGoal={defaultGoal}
             onSubmit={handleGoalSubmit}
             isPlanning={isPlanning}
             onAdvancedSettings={() => setShowAdvancedSettings(true)}
@@ -1251,8 +1264,9 @@ const Index = () => {
               <div className="text-xs sm:text-sm flex-1 min-w-0 text-center px-4" style={{ color: "#a3a3a3" }}>
                 <span className="font-medium" style={{ color: "#f5f5f5" }}>{t("main.objectiveLabel")}</span> <span className="break-words">{userGoal}</span>
               </div>
-              {/* Issue #1694: explicit "Start Research" gate so the plan is reviewable before execution. */}
-              {!isRunning && visibleSteps <= 1 ? (
+              {/* Issue #1694: explicit "Start Research" gate so the plan is reviewable before execution.
+                  会话恢复后（visibleSteps > 1 且未在运行）同样给出继续入口，否则没有按钮可再执行。 */}
+              {!isRunning && steps.length > 0 ? (
                 <Button
                   onClick={() => executeResearch(steps, userGoal)}
                   size="sm"
@@ -1260,7 +1274,7 @@ const Index = () => {
                   style={{ backgroundColor: widgetConfig.primaryColor, color: "#fff" }}
                 >
                   <Play className="w-4 h-4" />
-                  {t("main.startResearch")}
+                  {visibleSteps > 1 ? t("main.continueResearch") : t("main.startResearch")}
                 </Button>
               ) : (
                 <div className="w-[120px]" />
@@ -1404,7 +1418,13 @@ const Index = () => {
                         </div>
                         <div className="rounded p-3" style={{ backgroundColor: `${widgetConfig.backgroundColor}80` }}>
                           <div className="text-xs mb-1" style={{ color: "#a3a3a3" }}>{t("main.reportConfidence")}</div>
-                          <div className="text-xl font-semibold" style={{ color: widgetConfig.accentColor }}>94%</div>
+                          <div className="text-xl font-semibold" style={{ color: widgetConfig.accentColor }}>
+                            {/* 用步骤数据里 AI 返回的真实置信度均值；无数据时显示 — 而不是编造数字 */}
+                            {(() => {
+                              const confidences = steps.flatMap((s) => s.data ?? []).map((d) => (d.details as { confidence?: number } | undefined)?.confidence).filter((c): c is number => typeof c === "number" && c > 0);
+                              return confidences.length > 0 ? `${Math.round(confidences.reduce((a, b) => a + b, 0) / confidences.length)}%` : "—";
+                            })()}
+                          </div>
                         </div>
                         <div className="rounded p-3" style={{ backgroundColor: `${widgetConfig.backgroundColor}80` }}>
                           <div className="text-xs mb-1 flex items-center gap-1" style={{ color: "#a3a3a3" }}>

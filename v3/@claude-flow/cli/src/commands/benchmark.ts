@@ -18,11 +18,11 @@ const pretrainCommand: Command = {
   name: 'pretrain',
   description: 'Benchmark self-learning pre-training system (SONA, EWC++, MoE)',
   options: [
-    { name: 'iterations', short: 'i', type: 'number', description: 'Benchmark iterations', default: '100' },
-    { name: 'warmup', short: 'w', type: 'number', description: 'Warmup iterations', default: '10' },
+    { name: 'iterations', short: 'i', type: 'number', description: 'Benchmark iterations', default: 100 },
+    { name: 'warmup', short: 'w', type: 'number', description: 'Warmup iterations', default: 10 },
     { name: 'output', short: 'o', type: 'string', description: 'Output format: text, json', default: 'text' },
     { name: 'save', short: 's', type: 'string', description: 'Save results to file' },
-    { name: 'verbose', short: 'v', type: 'boolean', description: 'Verbose output', default: 'false' },
+    { name: 'verbose', short: 'v', type: 'boolean', description: 'Verbose output', default: false },
   ],
   examples: [
     { command: 'claude-flow benchmark pretrain', description: 'Run pre-training benchmarks' },
@@ -88,9 +88,9 @@ const neuralCommand: Command = {
   name: 'neural',
   description: 'Benchmark neural operations (embeddings, WASM, Flash Attention)',
   options: [
-    { name: 'iterations', short: 'i', type: 'number', description: 'Benchmark iterations', default: '100' },
-    { name: 'dimension', short: 'd', type: 'number', description: 'Embedding dimension', default: '384' },
-    { name: 'vectors', short: 'n', type: 'number', description: 'Number of test vectors', default: '1000' },
+    { name: 'iterations', short: 'i', type: 'number', description: 'Benchmark iterations', default: 100 },
+    { name: 'dimension', short: 'd', type: 'number', description: 'Embedding dimension', default: 384 },
+    { name: 'vectors', short: 'n', type: 'number', description: 'Number of test vectors', default: 1000 },
     { name: 'output', short: 'o', type: 'string', description: 'Output format: text, json', default: 'text' },
   ],
   examples: [
@@ -274,7 +274,7 @@ const memoryCommand: Command = {
   name: 'memory',
   description: 'Benchmark memory operations (HNSW search, store, retrieve)',
   options: [
-    { name: 'iterations', short: 'i', type: 'number', description: 'Benchmark iterations', default: '100' },
+    { name: 'iterations', short: 'i', type: 'number', description: 'Benchmark iterations', default: 100 },
     { name: 'output', short: 'o', type: 'string', description: 'Output format: text, json', default: 'text' },
   ],
   examples: [
@@ -403,7 +403,7 @@ const allCommand: Command = {
   name: 'all',
   description: 'Run all benchmark suites',
   options: [
-    { name: 'iterations', short: 'i', type: 'number', description: 'Benchmark iterations', default: '50' },
+    { name: 'iterations', short: 'i', type: 'number', description: 'Benchmark iterations', default: 50 },
     { name: 'output', short: 'o', type: 'string', description: 'Output format: text, json', default: 'text' },
     { name: 'save', short: 's', type: 'string', description: 'Save results to file' },
   ],

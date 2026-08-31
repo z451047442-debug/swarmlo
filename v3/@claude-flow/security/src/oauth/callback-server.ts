@@ -67,8 +67,12 @@ export class CallbackServer {
    * browser success page, closes the server, and returns the parsed query
    * parameters. Times out after `waitForMs` so a login attempt the user
    * abandons in the browser doesn't hang the CLI forever.
+   *
+   * When `expectedState` is provided (recommended), a callback whose `state`
+   * does not match is rejected — the OAuth state parameter is the CSRF
+   * defense, so an unverified callback must never be treated as authentic.
    */
-  async awaitCallback(waitForMs = DEFAULT_TIMEOUT_MS): Promise<CallbackResult> {
+  async awaitCallback(waitForMs = DEFAULT_TIMEOUT_MS, expectedState?: string): Promise<CallbackResult> {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.server.close();
@@ -83,6 +87,17 @@ export class CallbackServer {
           state: url.searchParams.get('state'),
           error: url.searchParams.get('error'),
         };
+        if (expectedState !== undefined && result.state !== expectedState) {
+          res.writeHead(400, {
+            'content-type': 'text/plain; charset=utf-8',
+            connection: 'close',
+          });
+          res.end('state mismatch', () => {
+            this.server.close();
+            reject(new Error('OAuth callback state mismatch (possible CSRF)'));
+          });
+          return;
+        }
         res.writeHead(200, {
           'content-type': 'text/html; charset=utf-8',
           connection: 'close',

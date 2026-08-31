@@ -157,9 +157,9 @@ describe('TokenOptimizer', () => {
       expect(stats.cacheHitRate).toMatch(/^\d+(\.\d+)?%$/);
     });
 
-    it('should estimate monthly savings', () => {
+    it('should estimate monthly savings (labeled as heuristic)', () => {
       const stats = optimizer.getStats();
-      expect(stats.estimatedMonthlySavings).toMatch(/^\$\d+(\.\d+)?$/);
+      expect(stats.estimatedMonthlySavings).toMatch(/^\$\d+(\.\d+)? \(heuristic\)$/);
     });
   });
 
@@ -168,7 +168,7 @@ describe('TokenOptimizer', () => {
       const report = optimizer.generateReport();
 
       expect(report).toContain('Token Optimization Report');
-      expect(report).toContain('Tokens Saved');
+      expect(report).toContain('Tokens Saved (heuristic est.)');
       expect(report).toContain('Edits Optimized');
       expect(report).toContain('Cache Hit Rate');
     });

@@ -22,6 +22,7 @@ export const zhMain: Record<string, string> = {
   "main.planningWorkflowDesc": "正在分析目标、识别前置条件、计算最优动作序列...",
   "main.objectiveLabel": "目标：",
   "main.startResearch": "开始研究",
+  "main.continueResearch": "继续研究",
   // ---- Index: 统计 ----
   "main.statCompleted": "已完成",
   "main.statActive": "进行中",

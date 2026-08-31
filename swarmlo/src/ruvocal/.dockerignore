@@ -7,7 +7,6 @@ README.md
 node_modules/
 .svelte-kit/
 .env*
-!.env
 .env.local
 db
 # NOTE: previously had `models/**` here to ignore a top-level placeholder

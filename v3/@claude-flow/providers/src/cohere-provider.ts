@@ -216,7 +216,8 @@ export class CohereProvider extends BaseProvider {
               }
 
               const model = request.model || this.config.model;
-              const pricing = this.capabilities.pricing[model];
+                            const pricing = this.capabilities.pricing[model]
+                      ?? { promptCostPer1k: 0, completionCostPer1k: 0, currency: 'USD' };
 
               yield {
                 type: 'done',
@@ -354,7 +355,8 @@ export class CohereProvider extends BaseProvider {
 
   private transformResponse(data: CohereResponse, request: LLMRequest): LLMResponse {
     const model = request.model || this.config.model;
-    const pricing = this.capabilities.pricing[model];
+        const pricing = this.capabilities.pricing[model]
+            ?? { promptCostPer1k: 0, completionCostPer1k: 0, currency: 'USD' };
 
     const inputTokens = data.meta.billed_units.input_tokens;
     const outputTokens = data.meta.billed_units.output_tokens;

@@ -25,12 +25,15 @@
  * - ADR-009: Hybrid memory backend default
  * - ADR-010: Remove Deno support (Node.js 20+ only)
  *
- * Performance Targets:
- * - Flash Attention: 2.49x-7.47x speedup
- * - AgentDB Search: 150x-12,500x improvement
- * - Memory Reduction: 50-75%
- * - Code Reduction: <5,000 lines (vs 15,000+)
- * - Startup Time: <500ms
+ * Performance (measured unless marked target — see
+ * docs/reviews/intelligence-system-audit-2026-05-29.md):
+ * - HNSW Search: ~1.9x at N=20k, ~3.2x-4.7x at N=5k vs brute force (recall@10 ~0.99)
+ * - RaBitQ Quantization: 32x compression, 0.60ms/query
+ * - SONA Adaptation: 0.0043ms/adapt
+ * - Startup Time: <500ms (target)
+ * The previously advertised "2.49x-7.47x Flash Attention" and "150x-12,500x
+ * AgentDB Search" figures were inherited from upstream marketing, never
+ * reproduced in-tree, and were removed as unverifiable claims.
  *
  * @module @claude-flow/v3
  * @version 3.0.0-alpha.1
@@ -555,11 +558,15 @@ export const V3_INFO = {
     'Node.js 20+ focus (ADR-010)'
   ],
   performanceTargets: {
-    flashAttention: '2.49x-7.47x speedup',
-    agentDbSearch: '150x-12,500x improvement',
-    memoryReduction: '50-75%',
+    // Measured — see docs/reviews/intelligence-system-audit-2026-05-29.md.
+    // The prior "2.49x-7.47x" / "150x-12,500x" figures were upstream
+    // marketing claims never reproduced in-tree; replaced with measured
+    // numbers (or marked target).
+    flashAttention: 'integration available; measured speedup pending benchmark',
+    agentDbSearch: '~1.9x at N=20k, ~3.2x-4.7x at N=5k vs brute force (recall@10 ~0.99)',
+    memoryReduction: '50-75% (target)',
     codeReduction: '<5,000 lines',
-    startupTime: '<500ms'
+    startupTime: '<500ms (target)'
   },
   agents: {
     total: 15,

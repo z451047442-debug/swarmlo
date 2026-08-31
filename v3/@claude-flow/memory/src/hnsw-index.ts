@@ -1,8 +1,10 @@
 /**
  * V3 HNSW Vector Index
  *
- * High-performance Hierarchical Navigable Small World (HNSW) index for
- * 150x-12,500x faster vector similarity search compared to brute force.
+ * Hierarchical Navigable Small World (HNSW) index for approximate vector
+ * similarity search. The "150x-12,500x" figure from upstream was never
+ * reproduced in-tree (see docs/reviews/intelligence-system-audit-2026-05-29.md);
+ * measured speedups are ~1.9x at N=20k vs brute force.
  *
  * OPTIMIZATIONS:
  * - BinaryMinHeap/BinaryMaxHeap for O(log n) operations (vs O(n log n) Array.sort)
@@ -193,8 +195,8 @@ interface HNSWNode {
   /** Node ID (memory entry ID) */
   id: string;
 
-  /** Vector embedding (original) */
-  vector: Float32Array;
+  /** Vector embedding (original). Uint32Array when binary-quantized (packed bits). */
+  vector: Float32Array | Uint32Array;
 
   /** Pre-normalized vector for O(1) cosine similarity */
   normalizedVector: Float32Array | null;
@@ -270,10 +272,13 @@ export class HNSWIndex extends EventEmitter {
       ? this.quantizer.encode(vector)
       : vector;
 
-    // Pre-normalize vector for O(1) cosine similarity
-    const normalizedVector = this.config.metric === 'cosine'
-      ? this.normalizeVector(storedVector)
-      : null;
+    // Pre-normalize vector for O(1) cosine similarity.
+    // Binary-quantized vectors are packed bits — normalizing them as floats
+    // is meaningless, so skip and use Hamming distance instead.
+    const normalizedVector =
+      this.config.metric === 'cosine' && !this.isBinaryQuantized()
+        ? this.normalizeVector(storedVector)
+        : null;
 
     // Generate random level for new node
     const level = this.getRandomLevel();
@@ -335,10 +340,11 @@ export class HNSWIndex extends EventEmitter {
       ? this.quantizer.encode(query)
       : query;
 
-    // Pre-normalize query for O(1) cosine similarity
-    const normalizedQuery = this.config.metric === 'cosine'
-      ? this.normalizeVector(queryVector)
-      : null;
+    // Pre-normalize query for O(1) cosine similarity (skip for binary).
+    const normalizedQuery =
+      this.config.metric === 'cosine' && !this.isBinaryQuantized()
+        ? this.normalizeVector(queryVector)
+        : null;
 
     // Start from entry point and search down the layers
     let currentNode = this.entryPoint;
@@ -541,26 +547,33 @@ export class HNSWIndex extends EventEmitter {
 
   /**
    * Magic header for serialized HNSW snapshots.
-   * Format: "HNSW" + version byte (0x01).
+   * Format: "HNSW" + version byte (0x02 — v2 adds the quantization block).
    */
-  static readonly SERIALIZATION_MAGIC = Buffer.from([0x48, 0x4e, 0x53, 0x57, 0x01]);
+  static readonly SERIALIZATION_MAGIC = Buffer.from([0x48, 0x4e, 0x53, 0x57, 0x02]);
 
   /**
    * Serialize the index to a binary buffer.
    *
    * Layout (all integers big-endian):
-   * - 5 bytes:  magic header "HNSW" + version (0x01)
+   * - 5 bytes:  magic header "HNSW" + version (0x02)
    * - 4 bytes:  dimensions (uint32)
    * - 4 bytes:  M (uint32)
    * - 4 bytes:  efConstruction (uint32)
-   * - 4 bytes:  metric length (uint32) + metric utf-8 bytes
    * - 4 bytes:  maxLevel (uint32)
+   * - 4 bytes:  metric length (uint32) + metric utf-8 bytes
+   * - 1 byte:   hasQuantization (0/1)
+   * - if hasQuantization:
+   *   - 1 byte: quantization type (0=binary, 1=scalar, 2=product)
+   *   - 1 byte: bits (scalar)
+   *   - 4 bytes: subquantizers (uint32, product)
+   *   - 4 bytes: codebookSize (uint32, product)
    * - 4 bytes:  entryPoint length (uint32) + entryPoint utf-8 bytes (0 = null)
    * - 4 bytes:  node count (uint32)
    * - per node:
    *   - 4 bytes id length + id utf-8 bytes
    *   - 4 bytes level
-   *   - 4 bytes vector length (in floats) + vector bytes (Float32, little-endian native)
+   *   - 4 bytes vector length (in elements) + vector bytes
+   *     (Float32 native when unquantized; Uint32 packed bits when binary-quantized)
    *   - 1 byte  hasNormalized (0/1)
    *   - if hasNormalized: 4 bytes normalized length + normalized bytes
    *   - 4 bytes connection-level count
@@ -582,6 +595,7 @@ export class HNSWIndex extends EventEmitter {
     chunks.push(header);
 
     chunks.push(this.encodeLengthPrefixedString(this.config.metric));
+    chunks.push(this.encodeQuantizationBlock());
     chunks.push(this.encodeLengthPrefixedString(this.entryPoint ?? ''));
 
     const nodeCountBuf = Buffer.alloc(4);
@@ -595,11 +609,11 @@ export class HNSWIndex extends EventEmitter {
       meta.writeUInt32BE(node.level, 0);
       chunks.push(meta);
 
-      chunks.push(this.encodeFloat32Array(node.vector));
+      chunks.push(this.encodeVectorArray(node.vector));
 
       if (node.normalizedVector) {
         chunks.push(Buffer.from([1]));
-        chunks.push(this.encodeFloat32Array(node.normalizedVector));
+        chunks.push(this.encodeVectorArray(node.normalizedVector));
       } else {
         chunks.push(Buffer.from([0]));
       }
@@ -651,6 +665,10 @@ export class HNSWIndex extends EventEmitter {
     offset = metricRead.offset;
     const metric = metricRead.value as DistanceMetric;
 
+    const quantizationRead = readQuantizationBlock(buf, offset);
+    offset = quantizationRead.offset;
+    const quantization = quantizationRead.value ?? undefined;
+
     const entryRead = readLengthPrefixedString(buf, offset);
     offset = entryRead.offset;
     const entryPoint = entryRead.value === '' ? null : entryRead.value;
@@ -662,6 +680,7 @@ export class HNSWIndex extends EventEmitter {
       M,
       efConstruction,
       metric,
+      quantization,
     });
     index.maxLevel = maxLevel;
     index.entryPoint = entryPoint;
@@ -673,16 +692,17 @@ export class HNSWIndex extends EventEmitter {
 
       const level = buf.readUInt32BE(offset); offset += 4;
 
-      const vecRead = readFloat32Array(buf, offset);
+      const asUint32 = quantization?.type === 'binary';
+      const vecRead = readVectorArray(buf, offset, asUint32);
       offset = vecRead.offset;
       const vector = vecRead.value;
 
       const hasNormalized = buf[offset]; offset += 1;
       let normalizedVector: Float32Array | null = null;
       if (hasNormalized) {
-        const normRead = readFloat32Array(buf, offset);
+        const normRead = readVectorArray(buf, offset, false);
         offset = normRead.offset;
-        normalizedVector = normRead.value;
+        normalizedVector = normRead.value as Float32Array;
       }
 
       const lvlCount = buf.readUInt32BE(offset); offset += 4;
@@ -719,11 +739,30 @@ export class HNSWIndex extends EventEmitter {
     return out;
   }
 
-  private encodeFloat32Array(arr: Float32Array): Buffer {
+  private encodeVectorArray(arr: Float32Array | Uint32Array): Buffer {
     const lenBuf = Buffer.alloc(4);
     lenBuf.writeUInt32BE(arr.length, 0);
     const dataBuf = Buffer.from(arr.buffer, arr.byteOffset, arr.byteLength);
     return Buffer.concat([lenBuf, dataBuf]);
+  }
+
+  /**
+   * Serialize the quantization config (if any) as a single block:
+   * 1 byte hasQuantization + type/bits/subquantizers/codebookSize.
+   */
+  private encodeQuantizationBlock(): Buffer {
+    const q = this.config.quantization;
+    if (!q) {
+      return Buffer.from([0]);
+    }
+    const typeCode = q.type === 'binary' ? 0 : q.type === 'scalar' ? 1 : 2;
+    const block = Buffer.alloc(1 + 1 + 1 + 4 + 4);
+    block.writeUInt8(1, 0);
+    block.writeUInt8(typeCode, 1);
+    block.writeUInt8(q.bits ?? 0, 2);
+    block.writeUInt32BE(q.subquantizers ?? 0, 3);
+    block.writeUInt32BE(q.codebookSize ?? 0, 7);
+    return block;
   }
 
   /**
@@ -824,7 +863,7 @@ export class HNSWIndex extends EventEmitter {
   }
 
   private async searchLayer(
-    query: Float32Array,
+    query: Float32Array | Uint32Array,
     entryPoint: string,
     ef: number,
     level: number
@@ -888,7 +927,7 @@ export class HNSWIndex extends EventEmitter {
    * Expected speedup: 3-5x for large result sets
    */
   private searchLayerOptimized(
-    query: Float32Array,
+    query: Float32Array | Uint32Array,
     normalizedQuery: Float32Array | null,
     entryPoint: string,
     ef: number,
@@ -953,7 +992,7 @@ export class HNSWIndex extends EventEmitter {
 
   private selectNeighbors(
     nodeId: string,
-    query: Float32Array,
+    query: Float32Array | Uint32Array,
     candidates: Array<{ id: string; distance: number }>,
     M: number
   ): Array<{ id: string; distance: number }> {
@@ -993,18 +1032,33 @@ export class HNSWIndex extends EventEmitter {
     }
   }
 
-  private distance(a: Float32Array, b: Float32Array): number {
+  /** True when vectors are stored as binary-quantized packed bits */
+  private isBinaryQuantized(): boolean {
+    return this.config.quantization?.type === 'binary' && this.quantizer !== null;
+  }
+
+  private distance(a: Float32Array | Uint32Array, b: Float32Array | Uint32Array): number {
+    // Binary-quantized vectors are packed bitfields — numeric distance
+    // functions on them are meaningless; use Hamming distance instead.
+    if (this.isBinaryQuantized()) {
+      return this.binaryHammingDistance(a, b);
+    }
+
+    // After the binary branch, vectors are Float32 (numeric distance paths)
+    const fa = a as Float32Array;
+    const fb = b as Float32Array;
+
     switch (this.config.metric) {
       case 'cosine':
-        return this.cosineDistance(a, b);
+        return this.cosineDistance(fa, fb);
       case 'euclidean':
-        return this.euclideanDistance(a, b);
+        return this.euclideanDistance(fa, fb);
       case 'dot':
-        return this.dotProductDistance(a, b);
+        return this.dotProductDistance(fa, fb);
       case 'manhattan':
-        return this.manhattanDistance(a, b);
+        return this.manhattanDistance(fa, fb);
       default:
-        return this.cosineDistance(a, b);
+        return this.cosineDistance(fa, fb);
     }
   }
 
@@ -1041,7 +1095,7 @@ export class HNSWIndex extends EventEmitter {
   /**
    * Normalize a vector to unit length for O(1) cosine similarity
    */
-  private normalizeVector(vector: Float32Array): Float32Array {
+  private normalizeVector(vector: Float32Array | Uint32Array): Float32Array {
     let norm = 0;
     for (let i = 0; i < vector.length; i++) {
       norm += vector[i] * vector[i];
@@ -1049,7 +1103,9 @@ export class HNSWIndex extends EventEmitter {
     norm = Math.sqrt(norm);
 
     if (norm === 0) {
-      return vector; // Return as-is if zero vector
+      // Return as-is if zero vector (callers only pass Float32Array here —
+      // binary-quantized vectors bypass normalization entirely).
+      return vector as Float32Array;
     }
 
     const normalized = new Float32Array(vector.length);
@@ -1063,7 +1119,7 @@ export class HNSWIndex extends EventEmitter {
    * OPTIMIZED distance calculation that uses pre-normalized vectors when available
    */
   private distanceOptimized(
-    query: Float32Array,
+    query: Float32Array | Uint32Array,
     normalizedQuery: Float32Array | null,
     node: HNSWNode
   ): number {
@@ -1105,6 +1161,24 @@ export class HNSWIndex extends EventEmitter {
     }
     return sum;
   }
+
+  /**
+   * Hamming distance over packed binary-quantized words.
+   * Each element is a 32-bit bitfield; distance = number of differing bits.
+   */
+  private binaryHammingDistance(a: Float32Array | Uint32Array, b: Float32Array | Uint32Array): number {
+    const len = Math.min(a.length, b.length);
+    let dist = 0;
+    for (let i = 0; i < len; i++) {
+      let diff = ((a[i] as number) | 0) ^ ((b[i] as number) | 0);
+      // Kernighan-style popcount: clear lowest set bit per iteration
+      while (diff !== 0) {
+        diff &= diff - 1;
+        dist++;
+      }
+    }
+    return dist;
+  }
 }
 
 /**
@@ -1134,7 +1208,7 @@ class Quantizer {
   /**
    * Encode a vector using quantization
    */
-  encode(vector: Float32Array): Float32Array {
+  encode(vector: Float32Array): Float32Array | Uint32Array {
     switch (this.config.type) {
       case 'binary':
         return this.binaryQuantize(vector);
@@ -1163,17 +1237,19 @@ class Quantizer {
     }
   }
 
-  private binaryQuantize(vector: Float32Array): Float32Array {
+  private binaryQuantize(vector: Float32Array): Uint32Array {
     // Simple binary quantization: > 0 becomes 1, <= 0 becomes 0
-    // Stored in packed format in a smaller Float32Array
+    // Stored packed in a Uint32Array bitfield. A Float32Array cannot hold
+    // this data: values above 2^24 lose precision silently, which corrupts
+    // every bit position above the 24th.
     const packedLength = Math.ceil(vector.length / 32);
-    const packed = new Float32Array(packedLength);
+    const packed = new Uint32Array(packedLength);
 
     for (let i = 0; i < vector.length; i++) {
       const packedIndex = Math.floor(i / 32);
       const bitPosition = i % 32;
       if (vector[i] > 0) {
-        packed[packedIndex] = (packed[packedIndex] || 0) | (1 << bitPosition);
+        packed[packedIndex] |= (1 << bitPosition);
       }
     }
 
@@ -1435,27 +1511,59 @@ function readLengthPrefixedString(
   return { value, offset: end };
 }
 
-function readFloat32Array(
+function readVectorArray(
   buf: Buffer,
-  offset: number
-): { value: Float32Array; offset: number } {
+  offset: number,
+  asUint32: boolean
+): { value: Float32Array | Uint32Array; offset: number } {
   if (offset + 4 > buf.length) {
     throw new Error(`HNSWIndex.deserialize: truncated array length at offset ${offset}`);
   }
-  const floatCount = buf.readUInt32BE(offset);
+  const elementCount = buf.readUInt32BE(offset);
   const start = offset + 4;
-  const byteLen = floatCount * 4;
+  const byteLen = elementCount * 4;
   const end = start + byteLen;
   if (end > buf.length) {
     throw new Error(
       `HNSWIndex.deserialize: truncated array payload at offset ${offset} (needed ${byteLen} bytes, have ${buf.length - start})`
     );
   }
-  // Copy into a fresh ArrayBuffer so Float32Array isn't a view onto the original
-  // (de-aligned) Node Buffer pool.
+  // Copy into a fresh ArrayBuffer so the typed array isn't a view onto the
+  // original (de-aligned) Node Buffer pool.
   const copy = new ArrayBuffer(byteLen);
   new Uint8Array(copy).set(new Uint8Array(buf.buffer, buf.byteOffset + start, byteLen));
-  return { value: new Float32Array(copy), offset: end };
+  return { value: asUint32 ? new Uint32Array(copy) : new Float32Array(copy), offset: end };
+}
+
+/**
+ * Read the serialized quantization block (1 byte flag + optional payload).
+ * Returns null when the snapshot was written without quantization.
+ */
+function readQuantizationBlock(
+  buf: Buffer,
+  offset: number
+): { value: QuantizationConfig | null; offset: number } {
+  if (offset + 1 > buf.length) {
+    throw new Error(`HNSWIndex.deserialize: truncated quantization flag at offset ${offset}`);
+  }
+  const hasQuantization = buf[offset];
+  offset += 1;
+  if (!hasQuantization) {
+    return { value: null, offset };
+  }
+  if (offset + 10 > buf.length) {
+    throw new Error(`HNSWIndex.deserialize: truncated quantization block at offset ${offset}`);
+  }
+  const typeCode = buf[offset];
+  const bits = buf[offset + 1];
+  const subquantizers = buf.readUInt32BE(offset + 2);
+  const codebookSize = buf.readUInt32BE(offset + 6);
+  const type = typeCode === 0 ? 'binary' : typeCode === 1 ? 'scalar' : 'product';
+  const value: QuantizationConfig = { type };
+  if (bits !== 0) value.bits = bits as 4 | 8 | 16;
+  if (subquantizers !== 0) value.subquantizers = subquantizers;
+  if (codebookSize !== 0) value.codebookSize = codebookSize;
+  return { value, offset: offset + 10 };
 }
 
 export default HNSWIndex;

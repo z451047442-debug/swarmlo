@@ -71,6 +71,8 @@ React 18 · TypeScript 5 · Vite 5 · Tailwind 3 · shadcn/ui · Radix UI · Rea
 
 Hosted on Netlify (`netlify.toml`) at [goal.ruv.io](https://goal.ruv.io/). See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for self-hosting instructions and edge-function deploy steps.
 
+> ⚠️ **安全提示**：edge function 当前匿名可调用（`supabase/config.toml` 中 `verify_jwt = false`）且无速率限制，任何人可直接调用并消耗 `AI_API_KEY` 配额；公开部署前必须自行加鉴权/限流。
+
 ## Environment
 
 Copy `example.env` → `.env` and set the Supabase publishable variables (all `VITE_*` prefixed and safe to ship to the browser):

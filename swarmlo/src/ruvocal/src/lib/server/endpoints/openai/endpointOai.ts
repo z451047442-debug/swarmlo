@@ -11,6 +11,7 @@ import type {
 } from "openai/resources/chat/completions";
 import { buildPrompt } from "$lib/buildPrompt";
 import { config } from "$lib/server/config";
+import { isHuggingFaceHost } from "$lib/server/apiToken";
 import type { Endpoint } from "../endpoints";
 import type OpenAI from "openai";
 import { createImageProcessorOptionsValidator, makeImageProcessor } from "../images";
@@ -114,6 +115,12 @@ export async function endpointOai(
 
 	const imageProcessor = makeImageProcessor(multimodal.image);
 
+	// The user's OIDC access token may only be forwarded to endpoints hosted by
+	// the OIDC provider itself (Hugging Face); any other baseURL gets the
+	// server-side key instead, so the user token is never leaked to third parties.
+	const userTokenHeader = (locals: { token?: string } | undefined) =>
+		locals?.token && isHuggingFaceHost(baseURL) ? { Authorization: `Bearer ${locals.token}` } : {};
+
 	if (completion === "completions") {
 		return async ({
 			messages,
@@ -152,7 +159,7 @@ export async function endpointOai(
 				headers: {
 					"ChatUI-Conversation-ID": conversationId?.toString() ?? "",
 					"X-use-cache": "false",
-					...(locals?.token ? { Authorization: `Bearer ${locals.token}` } : {}),
+					...userTokenHeader(locals),
 					// Bill to organization if configured
 					...(locals?.billingOrganization ? { "X-HF-Bill-To": locals.billingOrganization } : {}),
 				},
@@ -230,7 +237,7 @@ export async function endpointOai(
 						headers: {
 							"ChatUI-Conversation-ID": conversationId?.toString() ?? "",
 							"X-use-cache": "false",
-							...(locals?.token ? { Authorization: `Bearer ${locals.token}` } : {}),
+							...userTokenHeader(locals),
 							// Bill to organization if configured
 							...(locals?.billingOrganization
 								? { "X-HF-Bill-To": locals.billingOrganization }
@@ -248,7 +255,7 @@ export async function endpointOai(
 						headers: {
 							"ChatUI-Conversation-ID": conversationId?.toString() ?? "",
 							"X-use-cache": "false",
-							...(locals?.token ? { Authorization: `Bearer ${locals.token}` } : {}),
+							...userTokenHeader(locals),
 							// Bill to organization if configured
 							...(locals?.billingOrganization
 								? { "X-HF-Bill-To": locals.billingOrganization }

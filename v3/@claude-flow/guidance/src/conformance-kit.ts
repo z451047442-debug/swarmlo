@@ -991,10 +991,15 @@ export function createMemoryClerkCell(cellId?: string): MemoryClerkCell {
 
 /**
  * Create a ConformanceRunner with optional authority override.
+ *
+ * The signing key is required: proof chains produced without an explicit,
+ * caller-supplied key would be forgeable. Pass a real key (e.g. from
+ * configuration or a secrets manager) — the constructor throws if none is
+ * given.
  */
 export function createConformanceRunner(
   authority?: MemoryAuthority,
   signingKey?: string,
 ): ConformanceRunner {
-  return new ConformanceRunner(authority, signingKey ?? 'conformance-test-key');
+  return new ConformanceRunner(authority, signingKey);
 }

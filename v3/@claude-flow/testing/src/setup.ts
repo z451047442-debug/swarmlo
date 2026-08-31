@@ -113,11 +113,13 @@ export const TEST_CONFIG = {
   // Security test thresholds
   SECURITY_COVERAGE_TARGET: 0.95,
 
-  // Performance test thresholds
-  FLASH_ATTENTION_SPEEDUP_MIN: 2.49,
-  FLASH_ATTENTION_SPEEDUP_MAX: 7.47,
-  AGENTDB_SEARCH_IMPROVEMENT_MIN: 150,
-  AGENTDB_SEARCH_IMPROVEMENT_MAX: 12500,
+  // Performance test thresholds — MEASURED values only (source of truth:
+  // docs/reviews/intelligence-system-audit-2026-05-29.md). HNSW measured
+  // ~1.9x at N=20k / ~3.2x-4.7x at N=5k; the previous 150x-12,500x and
+  // 2.49x-7.47x figures were inherited marketing claims that were never
+  // reproduced and must not be asserted.
+  AGENTDB_SEARCH_IMPROVEMENT_MIN: 1.0,
+  AGENTDB_SEARCH_IMPROVEMENT_MAX: 20,
   MEMORY_REDUCTION_TARGET: 0.50,
 
   // Timeouts

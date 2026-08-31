@@ -23,7 +23,11 @@ export async function POST({ request, locals }) {
 		throw error(503, "Transcription is not configured");
 	}
 
-	const token = getApiToken(locals);
+	const baseUrl =
+		config.get("TRANSCRIPTION_BASE_URL") || "https://router.huggingface.co/hf-inference/models";
+
+	// User's OIDC token is only handed out when the target is Hugging Face itself
+	const token = getApiToken(locals, baseUrl);
 
 	if (!token) {
 		throw error(401, "Authentication required");
@@ -52,8 +56,6 @@ export async function POST({ request, locals }) {
 			throw error(413, "Audio file too large (max 25MB)");
 		}
 
-		const baseUrl =
-			config.get("TRANSCRIPTION_BASE_URL") || "https://router.huggingface.co/hf-inference/models";
 		const apiUrl = `${baseUrl}/${transcriptionModel}`;
 
 		const controller = new AbortController();

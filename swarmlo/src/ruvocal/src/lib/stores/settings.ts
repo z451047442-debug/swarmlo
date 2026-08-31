@@ -21,6 +21,7 @@ type SettingsStore = {
 	directPaste: boolean;
 	hapticsEnabled: boolean;
 	autopilotEnabled: boolean;
+	autopilotMaxSteps?: number;
 	billingOrganization?: string;
 };
 

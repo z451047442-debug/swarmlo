@@ -221,6 +221,18 @@ def cmd_embed(args):
     model_name = args.model or os.environ.get(
         'SWARMLO_BGE_VL_MODEL', 'BAAI/bge-vl-large'
     )
+    # review fix 2026-08-31 — trust_remote_code=True executes arbitrary code
+    # shipped in the model repo. Only the official BAAI/bge-vl-* family is
+    # whitelisted (the models this plugin is built around); any other repo is
+    # refused unless the operator explicitly lifts the restriction.
+    if not model_name.startswith('BAAI/bge-vl-') and \
+            os.environ.get('SWARMLO_BGE_VL_ALLOW_REMOTE_CODE') != '1':
+        fail(
+            f'refusing trust_remote_code for {model_name} — only the '
+            f'BAAI/bge-vl-* family is whitelisted '
+            f'(override with SWARMLO_BGE_VL_ALLOW_REMOTE_CODE=1)',
+            2,
+        )
     try:
         model = AutoModel.from_pretrained(model_name, trust_remote_code=True)
         model.set_processor(model_name)

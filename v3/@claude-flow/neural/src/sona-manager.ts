@@ -195,7 +195,11 @@ export class SONAManager {
     // Initialize mode implementation
     await this.modeImpl.initialize();
 
-    // Initialize EWC state for continual learning
+    // Initialize EWC state for continual learning.
+    // NOTE (2026-08-31): means/fisher start EMPTY and nothing populates them
+    // yet — Fisher estimation per task is not implemented, so EWC penalties
+    // in the learning modes are currently inert (always 0). Wiring real
+    // Fisher computation is tracked separately.
     this.ewcState = {
       means: new Map(),
       fisher: new Map(),

@@ -7,7 +7,7 @@
  * Format matches the working .claude/statusline.sh output:
  * ▊ Claude Flow V3 ● ruvnet  │  ⎇ v3  │  Opus 4.5
  * ─────────────────────────────────────────────────────
- * 🏗️  DDD Domains    [●●●●●]  5/5    ⚡ 1.0x → 2.49x-7.47x
+ * 🏗️  DDD Domains    [●●●●●]  5/5    ⚡ speedup: not measured in-tree
  * 🤖 Swarm  ◉ [58/15]  👥 0    🟢 CVE 3/3    💾 22282MB    📂  47%    🧠  10%
  * 🔧 Architecture    DDD ● 98%  │  Security ●CLEAN  │  Memory ●AgentDB  │  Integration ●
  */
@@ -17,7 +17,7 @@ import type {
   StatuslineConfig,
 } from '../types.js';
 import { execSync } from 'child_process';
-import { existsSync, readFileSync, statSync, readdirSync } from 'fs';
+import { existsSync, readFileSync, statSync } from 'fs';
 import { join } from 'path';
 
 /**
@@ -531,9 +531,11 @@ export class StatuslineGenerator {
     }
 
     return {
-      flashAttentionTarget: '2.49x-7.47x',
-      searchImprovement: '150x-12,500x',
-      memoryReduction: '50-75%',
+      // Honest numbers only: the 150x-12,500x / 2.49x-7.47x figures were
+      // never reproduced in-tree (see docs/reviews/intelligence-system-audit-2026-05-29.md).
+      flashAttentionTarget: 'not measured',
+      searchImprovement: '~1.9x @N=20k',
+      memoryReduction: 'int8 3.84x',
     };
   }
 
@@ -548,35 +550,22 @@ export class StatuslineGenerator {
     let memoryMB = 0;
     let subAgents = 0;
 
+    // 'ps aux' is POSIX-only — it always fails on Windows. Use the process's
+    // own memory usage instead (real, cross-platform).
     try {
-      // Get Node.js memory usage
-      const ps = execSync('ps aux 2>/dev/null | grep -E "(node|agentic|claude)" | grep -v grep | awk \'{sum += $6} END {print int(sum/1024)}\'', { encoding: 'utf-8' });
-      memoryMB = parseInt(ps.trim()) || 0;
+      if (process.platform !== 'win32') {
+        const ps = execSync('ps aux 2>/dev/null | grep -E "(node|agentic|claude)" | grep -v grep | awk \'{sum += $6} END {print int(sum/1024)}\'', { encoding: 'utf-8' });
+        memoryMB = parseInt(ps.trim()) || 0;
 
-      // Count sub-agents
-      const agents = execSync('ps aux 2>/dev/null | grep -E "Task|subagent|agent_spawn" | grep -v grep | wc -l', { encoding: 'utf-8' });
-      subAgents = parseInt(agents.trim()) || 0;
+        const agents = execSync('ps aux 2>/dev/null | grep -E "Task|subagent|agent_spawn" | grep -v grep | wc -l', { encoding: 'utf-8' });
+        subAgents = parseInt(agents.trim()) || 0;
+      } else {
+        memoryMB = Math.round(process.memoryUsage().rss / (1024 * 1024));
+      }
     } catch {
-      // Use fallback: count v3 lines as proxy for progress
+      // Fall back to this process's own RSS (cross-platform, real data)
       try {
-        const v3Dir = join(this.projectRoot, 'v3');
-        if (existsSync(v3Dir)) {
-          const countLines = (dir: string): number => {
-            let total = 0;
-            const items = readdirSync(dir, { withFileTypes: true });
-            for (const item of items) {
-              if (item.name === 'node_modules' || item.name === 'dist') continue;
-              const fullPath = join(dir, item.name);
-              if (item.isDirectory()) {
-                total += countLines(fullPath);
-              } else if (item.name.endsWith('.ts')) {
-                total += readFileSync(fullPath, 'utf-8').split('\n').length;
-              }
-            }
-            return total;
-          };
-          memoryMB = countLines(v3Dir);
-        }
+        memoryMB = Math.round(process.memoryUsage().rss / (1024 * 1024));
       } catch {
         // Fall through
       }
@@ -695,7 +684,7 @@ export function parseStatuslineData(json: string): StatuslineData | null {
       security: data.security ?? { status: 'PENDING', cvesFixed: 0, totalCves: 0 },
       swarm: data.swarm ?? { activeAgents: 0, maxAgents: 15, coordinationActive: false },
       hooks: data.hooks ?? { status: 'INACTIVE', patternsLearned: 0, routingAccuracy: 0, totalOperations: 0 },
-      performance: data.performance ?? { flashAttentionTarget: '2.49x-7.47x', searchImprovement: '150x', memoryReduction: '50%' },
+      performance: data.performance ?? { flashAttentionTarget: 'not measured', searchImprovement: '~1.9x @N=20k', memoryReduction: 'int8 3.84x' },
       lastUpdated: data.lastUpdated ? new Date(data.lastUpdated) : new Date(),
     };
   } catch {

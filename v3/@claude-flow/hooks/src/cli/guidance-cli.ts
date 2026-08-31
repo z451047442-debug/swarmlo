@@ -511,7 +511,7 @@ Examples:
   npx @claude-flow/hooks store "Use dependency injection for testability" architecture
 
   # Broadcast pattern to swarm
-  npx @claude-flow/hooks swarm-pattern-broadcast "Use HNSW for 150x faster search" memory
+  npx @claude-flow/hooks swarm-pattern-broadcast "Use HNSW for fast approximate search" memory
 
   # Initiate consensus
   npx @claude-flow/hooks swarm-consensus "Which auth method?" "JWT,OAuth2,Session"

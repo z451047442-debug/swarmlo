@@ -7,6 +7,7 @@ import { AgentBrowserAdapter } from '../infrastructure/agent-browser-adapter.js'
 import { createMemoryManager, type BrowserMemoryManager } from '../infrastructure/memory-integration.js';
 import { getSecurityScanner, type BrowserSecurityScanner, type ThreatScanResult } from '../infrastructure/security-integration.js';
 import { sealTrajectory, type SealedTrajectory } from './signed-trajectory-service.js';
+import { redactStepInput } from './redaction.js';
 import type { WitnessKey } from '../infrastructure/witness-signer.js';
 import type {
   Snapshot,
@@ -106,7 +107,12 @@ export class BrowserService {
   }
 
   /**
-   * Record a step in the current trajectory
+   * Record a step in the current trajectory.
+   *
+   * Sensitive values (passwords, tokens, cookies, API keys, and — when a
+   * security scanner is active — fill/type values) are redacted to
+   * `[REDACTED]` so credentials never leak into trajectories, compiled
+   * workflows, or learning patterns.
    */
   private recordStep(action: string, input: Record<string, unknown> | object, result: ActionResult): void {
     if (!this.currentTrajectory) return;
@@ -116,7 +122,9 @@ export class BrowserService {
 
     trajectory.steps.push({
       action,
-      input: input as Record<string, unknown>,
+      input: redactStepInput(input as Record<string, unknown>, {
+        redactTextValues: this.securityScanner != null && (action === 'fill' || action === 'type'),
+      }),
       result,
       snapshot: trajectory.lastSnapshot,
       timestamp: new Date().toISOString(),
@@ -275,7 +283,8 @@ export class BrowserService {
       value,
       ...options,
     });
-    this.recordStep('fill', { target, value: this.securityScanner ? '[REDACTED]' : value, ...options }, result);
+    // recordStep redacts fill values to [REDACTED] (see recordStep docs)
+    this.recordStep('fill', { target, value, ...options }, result);
     return result;
   }
 

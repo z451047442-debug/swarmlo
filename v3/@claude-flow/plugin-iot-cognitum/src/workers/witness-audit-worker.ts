@@ -24,7 +24,11 @@ export class WitnessAuditWorker {
 
   start(): void {
     if (this.timer) return;
-    this.timer = setInterval(() => void this.audit(), this.config.intervalMs);
+    this.timer = setInterval(() => {
+      this.audit().catch(err => {
+        console.warn('[witness-audit-worker] tick failed:', err instanceof Error ? err.message : err);
+      });
+    }, this.config.intervalMs);
   }
 
   stop(): void {

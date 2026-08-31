@@ -8,12 +8,14 @@ COPY package.json ./
 RUN npm install --production
 
 # Pre-install MCP backends for faster startup (avoids npx download on first call)
-# Each installed separately so one failure doesn't block others
-RUN npm install -g ruvector || true
-RUN npm install -g swarmlo || true
-RUN npm install -g agentic-flow@alpha || true
-RUN npm install -g gemini-mcp-server || true
-RUN npm install -g @openai/codex || true
+# Each installed separately so one failure doesn't block others.
+# Versions pinned to exact releases — unpinned `npm install -g <pkg>` makes
+# image builds non-reproducible and can silently drift to breaking releases.
+RUN npm install -g ruvector@0.3.0 || true
+RUN npm install -g swarmlo@3.39.1 || true
+RUN npm install -g agentic-flow@2.1.2 || true
+RUN npm install -g gemini-mcp-server@1.2.2 || true
+RUN npm install -g @openai/codex@0.151.0 || true
 
 COPY index.js ./
 COPY mcp-stdio-kernel.js ./

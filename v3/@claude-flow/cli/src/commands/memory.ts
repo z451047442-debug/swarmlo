@@ -12,11 +12,22 @@ import { backupCommand } from './memory-backup.js';
 
 // Memory backends
 const BACKENDS = [
-  { value: 'agentdb', label: 'AgentDB', hint: 'Vector database with HNSW indexing (150x-12,500x faster)' },
+  { value: 'agentdb', label: 'AgentDB', hint: 'Vector database with HNSW indexing (measured ~1.9x-4.7x vs brute force above crossover)' },
   { value: 'sqlite', label: 'SQLite', hint: 'Lightweight local storage' },
   { value: 'hybrid', label: 'Hybrid', hint: 'SQLite + AgentDB (recommended)' },
   { value: 'memory', label: 'In-Memory', hint: 'Fast but non-persistent' }
 ];
+// cleanup/compress/export/import have no local implementation — they call
+// MCP tools only. Say so explicitly on failure so a standalone CLI user
+// isn't left guessing why the call failed.
+function printMcpOnlyHint(subcommand: string): void {
+  output.writeln(output.dim(
+    `memory ${subcommand} is MCP-server-only (no local fallback implemented). ` +
+    `Start the server with \`claude-flow mcp start\` in another terminal (or ` +
+    `\`claude mcp add claude-flow -- npx -y swarmlo@latest mcp start\`), then retry.`,
+  ));
+}
+
 // #2105: shared --path option for memory subcommands.
 // Precedence: --path > CLAUDE_FLOW_DB_PATH env var > default root
 const DB_PATH_OPTION = {
@@ -394,7 +405,7 @@ const searchCommand: Command = {
     },
     {
       name: 'build-hnsw',
-      description: 'Build/rebuild HNSW index before searching (enables 150x-12,500x speedup)',
+      description: 'Build/rebuild HNSW index before searching',
       type: 'boolean',
       default: false
     },
@@ -504,7 +515,10 @@ const searchCommand: Command = {
           const status = getHNSWStatus();
           output.printSuccess(`HNSW index built (${status.entryCount} vectors, ${buildTime}ms)`);
           output.writeln(output.dim(`  Dimensions: ${status.dimensions}, Metric: cosine`));
-          output.writeln(output.dim(`  Search speedup: ${status.entryCount > 10000 ? '12,500x' : status.entryCount > 1000 ? '150x' : '10x'}`));
+          // Speedup was fabricated from entry count (12,500x/150x/10x
+          // thresholds) — real measured values are ~1.9x-4.7x above the
+          // brute-force crossover; no number is shown unless the index
+          // reports one itself.
         } else {
           output.printWarning('HNSW index not available (install @ruvector/core for acceleration)');
         }
@@ -1015,33 +1029,82 @@ const statsCommand: Command = {
   description: 'Show memory statistics',
   options: [DB_PATH_OPTION],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
-    // Call MCP memory/stats tool for real statistics
+    // Prefer the MCP memory_stats tool, but fall back to a real local read
+    // of the sql.js DB when the MCP server isn't available (standalone CLI).
+    // store/search/purge already run locally — stats must not be the odd one
+    // out that hard-fails without `mcp start`.
+    type MemoryStatsToolResult = {
+      totalEntries: number;
+      entriesWithEmbeddings?: number;
+      totalSize: string;
+      version: string;
+      backend: string;
+      location: string;
+      oldestEntry: string | null;
+      newestEntry: string | null;
+    };
+    let statsResult: MemoryStatsToolResult | null = null;
+    let fallbackNote = '';
     try {
-      const statsResult = await callMCPTool('memory_stats', {}) as {
-        totalEntries: number;
-        entriesWithEmbeddings?: number;
-        totalSize: string;
-        version: string;
-        backend: string;
-        location: string;
-        oldestEntry: string | null;
-        newestEntry: string | null;
-      };
+      statsResult = await callMCPTool<MemoryStatsToolResult>('memory_stats', {});
+    } catch (error) {
+      fallbackNote = `(local fallback — MCP server unavailable: ${error instanceof Error ? error.message : String(error)})`;
+    }
+
+    try {
+      let backend = 'sqlite (local)';
+      let version = 'n/a';
+      let totalEntries = 0;
+      let entriesWithEmbeddings: number | null = null;
+      let totalSize = '0 B';
+      let location = 'unknown';
+      let oldestEntry: string | null = null;
+      let newestEntry: string | null = null;
+
+      if (statsResult) {
+        backend = statsResult.backend;
+        version = statsResult.version;
+        totalEntries = statsResult.totalEntries;
+        entriesWithEmbeddings = statsResult.entriesWithEmbeddings ?? null;
+        totalSize = statsResult.totalSize;
+        location = statsResult.location;
+        oldestEntry = statsResult.oldestEntry;
+        newestEntry = statsResult.newestEntry;
+      } else {
+        // Real local read: count + timeline from the sql.js DB, size from
+        // the file. No fabricated numbers.
+        try {
+          const { listEntries, resolveDbPath } = await import('../memory/memory-initializer.js');
+          const dbPath = resolveDbPath(ctx.flags.path as string | undefined);
+          location = dbPath;
+          const res = await listEntries({ dbPath });
+          if (res.success) {
+            totalEntries = res.total;
+            const sorted = [...res.entries].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+            oldestEntry = sorted[0]?.createdAt ?? null;
+            newestEntry = sorted[sorted.length - 1]?.createdAt ?? null;
+            entriesWithEmbeddings = res.entries.filter((e) => e.hasEmbedding).length;
+          }
+          const { statSync } = await import('node:fs');
+          const dbStat = statSync(dbPath);
+          totalSize = dbStat.size >= 1024 ? `${(dbStat.size / 1024).toFixed(1)} KB` : `${dbStat.size} B`;
+        } catch { /* local read failed — keep defaults */ }
+      }
 
       const stats = {
-        backend: statsResult.backend,
+        backend,
         entries: {
-          total: statsResult.totalEntries,
-          vectors: 0, // Would need vector backend support
-          text: statsResult.totalEntries
+          total: totalEntries,
+          vectors: entriesWithEmbeddings ?? 0,
+          text: totalEntries
         },
         storage: {
-          total: statsResult.totalSize,
-          location: statsResult.location
+          total: totalSize,
+          location
         },
-        version: statsResult.version,
-        oldestEntry: statsResult.oldestEntry,
-        newestEntry: statsResult.newestEntry
+        version,
+        oldestEntry,
+        newestEntry
       };
 
       if (ctx.flags.format === 'json') {
@@ -1051,6 +1114,9 @@ const statsCommand: Command = {
 
       output.writeln();
       output.writeln(output.bold('Memory Statistics'));
+      if (fallbackNote) {
+        output.writeln(output.dim(fallbackNote));
+      }
       output.writeln();
 
       output.writeln(output.bold('Overview'));
@@ -1136,8 +1202,8 @@ const statsCommand: Command = {
               // MCP tool (`entriesWithEmbeddings`, which is the actual
               // count of rows that have a vector) as the source of truth.
               value: (() => {
-                const persisted = typeof statsResult.entriesWithEmbeddings === 'number'
-                  ? statsResult.entriesWithEmbeddings
+                const persisted = typeof entriesWithEmbeddings === 'number'
+                  ? entriesWithEmbeddings
                   : null;
                 const live = hnsw.entryCount || 0;
                 const total = persisted !== null ? Math.max(persisted, live) : live;
@@ -1157,7 +1223,7 @@ const statsCommand: Command = {
       }
 
       output.writeln();
-      output.printInfo('V3 Performance: 150x-12,500x faster search with HNSW indexing');
+      output.printInfo('HNSW search measured ~1.9x-4.7x vs brute force above the crossover (recall@10 ~0.99)');
 
       return { success: true, data: stats };
     } catch (error) {
@@ -1383,6 +1449,7 @@ const cleanupCommand: Command = {
     } catch (error) {
       if (error instanceof MCPClientError) {
         output.printError(`Cleanup error: ${error.message}`);
+        printMcpOnlyHint('cleanup');
       } else {
         output.printError(`Unexpected error: ${String(error)}`);
       }
@@ -1541,6 +1608,7 @@ const compressCommand: Command = {
       spinner.fail('Compression failed');
       if (error instanceof MCPClientError) {
         output.printError(`Compression error: ${error.message}`);
+        printMcpOnlyHint('compress');
       } else {
         output.printError(`Unexpected error: ${String(error)}`);
       }
@@ -1626,6 +1694,7 @@ const exportCommand: Command = {
     } catch (error) {
       if (error instanceof MCPClientError) {
         output.printError(`Export error: ${error.message}`);
+        printMcpOnlyHint('export');
       } else {
         output.printError(`Unexpected error: ${String(error)}`);
       }
@@ -1703,6 +1772,7 @@ const importCommand: Command = {
     } catch (error) {
       if (error instanceof MCPClientError) {
         output.printError(`Import error: ${error.message}`);
+        printMcpOnlyHint('import');
       } else {
         output.printError(`Unexpected error: ${String(error)}`);
       }

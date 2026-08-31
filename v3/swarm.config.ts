@@ -254,7 +254,7 @@ export const agentRoleMapping = {
     domain: 'core' as AgentDomain,
     responsibilities: [
       'Memory system unification',
-      'AgentDB integration (150x-12500x)',
+      'AgentDB integration',
       'Hybrid backend implementation'
     ]
   },
@@ -324,7 +324,7 @@ export const agentRoleMapping = {
     domain: 'performance' as AgentDomain,
     responsibilities: [
       'Benchmark suite',
-      '2.49x-7.47x Flash Attention',
+      'Performance measurement',
       'Memory optimization (50-75%)'
     ]
   },

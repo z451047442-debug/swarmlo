@@ -3,7 +3,7 @@
  * Validates package before release (lint, test, build, dependencies)
  */
 
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import type { ValidationOptions, ValidationResult, PackageInfo } from './types.js';
@@ -257,45 +257,94 @@ export class Validator {
   }
 
   /**
-   * Allowed commands for security validation
+   * Split a command string into argv tokens, respecting single/double quotes
+   * and backslash escapes. No shell is ever invoked — the resulting tokens are
+   * passed straight to execFileSync, so metacharacters like `;`, `|`, `$`,
+   * `\n` and `"` are inert data, not syntax.
    */
-  private static readonly ALLOWED_COMMAND_PREFIXES = [
-    'npm run ',
-    'npm ',
-    'npx ',
-    'git ',
-  ];
+  private static splitCommand(cmd: string): string[] {
+    const tokens: string[] = [];
+    let current = '';
+    let quote: '"' | "'" | null = null;
+    let i = 0;
 
-  /**
-   * Execute command safely with validation
-   */
-  private execCommand(cmd: string, returnOutput = false): string {
-    // Validate: check for shell metacharacters
-    if (/[;&|`$()<>]/.test(cmd)) {
-      throw new Error(`Invalid command: contains shell metacharacters`);
+    while (i < cmd.length) {
+      const ch = cmd[i];
+      if (quote) {
+        if (ch === quote) {
+          quote = null;
+        } else if (ch === '\\' && quote === '"') {
+          current += cmd[i + 1] ?? '\\';
+          i++;
+        } else {
+          current += ch;
+        }
+      } else if (ch === '"' || ch === "'") {
+        quote = ch;
+      } else if (ch === '\\') {
+        current += cmd[i + 1] ?? '\\';
+        i++;
+      } else if (/\s/.test(ch)) {
+        if (current) {
+          tokens.push(current);
+          current = '';
+        }
+      } else {
+        current += ch;
+      }
+      i++;
     }
 
-    // Validate: must start with allowed prefix
-    const isAllowed = Validator.ALLOWED_COMMAND_PREFIXES.some(
-      prefix => cmd.startsWith(prefix)
-    );
-    if (!isAllowed) {
-      throw new Error(`Command not allowed: ${cmd.split(' ')[0]}`);
+    if (quote) {
+      throw new Error(`Unterminated quote in command: ${cmd}`);
+    }
+    if (current) {
+      tokens.push(current);
+    }
+    return tokens;
+  }
+
+  /** Executables the validator is allowed to spawn. */
+  private static readonly ALLOWED_EXECUTABLES = new Set(['npm', 'npx', 'git']);
+
+  /**
+   * Execute command safely.
+   *
+   * The command string is tokenized (respecting quotes) and spawned via
+   * `execFileSync` with an argument array — no shell, so no command injection.
+   * The executable is restricted to npm/npx/git and arguments are only checked
+   * for NUL bytes (everything else is inert without a shell).
+   */
+  private execCommand(cmd: string, returnOutput = false): string {
+    if (cmd.includes('\0')) {
+      throw new Error('Invalid command: contains NUL byte');
+    }
+
+    const tokens = Validator.splitCommand(cmd);
+    if (tokens.length === 0) {
+      throw new Error('Empty command');
+    }
+
+    const exe = tokens[0];
+    if (!Validator.ALLOWED_EXECUTABLES.has(exe)) {
+      throw new Error(`Command not allowed: ${exe}`);
+    }
+    // Never let the first argument be parsed as a flag of the wrapper
+    if (tokens[1]?.startsWith('-')) {
+      throw new Error(`Command not allowed: ${exe} ${tokens[1]}`);
     }
 
     try {
-      const output = execSync(cmd, {
+      const output = execFileSync(exe, tokens.slice(1), {
         cwd: this.cwd,
         encoding: 'utf-8',
+        shell: false,
         stdio: returnOutput ? 'pipe' : 'inherit',
         timeout: 60000, // 60 second timeout for builds
         maxBuffer: 50 * 1024 * 1024, // 50MB buffer for build output
       });
       return returnOutput ? output : '';
     } catch (error) {
-      if (returnOutput && error instanceof Error) {
-        throw error;
-      }
       throw error;
     }
   }

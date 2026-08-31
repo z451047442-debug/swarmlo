@@ -314,10 +314,12 @@ export class ThreatDetector {
             evidence,
             severity: pattern.severity,
             timestamp: Date.now(),
+            // Whitelist: only the pattern name and tool name are retained.
+            // The caller's full context is not spread into the signal so
+            // sensitive/transient context never lingers in threat history.
             metadata: {
               patternName: pattern.name,
               toolName: context.toolName,
-              ...context,
             },
           };
 

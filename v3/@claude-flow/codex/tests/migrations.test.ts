@@ -4,7 +4,10 @@
  * Tests for Claude Code to Codex migration functions
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { mkdtempSync, writeFileSync, rmSync, existsSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   analyzeClaudeMd,
   migrateFromClaudeCode,
@@ -249,96 +252,113 @@ npm install
 // =============================================================================
 
 describe('migrateFromClaudeCode', () => {
+  // Real end-to-end migration: a temp CLAUDE.md is written and the
+  // generated AGENTS.md / config.toml land on disk. The previous tests
+  // asserted the stub's hard-coded output against non-existent paths.
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = mkdtempSync(join(tmpdir(), 'codex-migrate-test-'));
+  });
+
+  afterEach(() => {
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+
   describe('successful migration', () => {
-    it('should return success result', async () => {
+    it('should return success result and write output files', async () => {
+      const sourcePath = join(tmpDir, 'CLAUDE.md');
+      writeFileSync(
+        sourcePath,
+        [
+          '# Project',
+          '',
+          '## Commands',
+          '',
+          'npm run build',
+          '',
+          '## Skills',
+          '',
+          '- /swarm-init: start a swarm',
+          '',
+        ].join('\n'),
+        'utf-8',
+      );
+
       const result = await migrateFromClaudeCode({
-        sourcePath: '/project/CLAUDE.md',
-        targetPath: '/project',
+        sourcePath,
+        targetPath: tmpDir,
       });
 
       expect(result.success).toBe(true);
+      expect(result.agentsMdPath).toBe(join(tmpDir, 'AGENTS.md'));
+      expect(result.configTomlPath).toBe(join(tmpDir, '.agents', 'config.toml'));
+      expect(existsSync(result.agentsMdPath!)).toBe(true);
+      expect(existsSync(result.configTomlPath!)).toBe(true);
+      // The generated AGENTS.md contains the migrated content
+      expect(readFileSync(result.agentsMdPath!, 'utf-8')).toContain('# Project');
     });
 
-    it('should generate AGENTS.md path', async () => {
+    it('should create skills detected from the CLAUDE.md when generateSkills is true', async () => {
+      const sourcePath = join(tmpDir, 'CLAUDE.md');
+      writeFileSync(
+        sourcePath,
+        ['# Project', '', 'Use /swarm-init and /memory-persist for coordination.', ''].join('\n'),
+        'utf-8',
+      );
+
       const result = await migrateFromClaudeCode({
-        sourcePath: '/project/CLAUDE.md',
-        targetPath: '/project',
-      });
-
-      expect(result.agentsMdPath).toBe('/project/AGENTS.md');
-    });
-
-    it('should generate config.toml path', async () => {
-      const result = await migrateFromClaudeCode({
-        sourcePath: '/project/CLAUDE.md',
-        targetPath: '/project',
-      });
-
-      expect(result.configTomlPath).toBe('/project/.agents/config.toml');
-    });
-
-    it('should create default skills when generateSkills is true', async () => {
-      const result = await migrateFromClaudeCode({
-        sourcePath: '/project/CLAUDE.md',
-        targetPath: '/project',
+        sourcePath,
+        targetPath: tmpDir,
         generateSkills: true,
       });
 
-      expect(result.skillsCreated).toContain('swarm-orchestration');
-      expect(result.skillsCreated).toContain('memory-management');
-      expect(result.skillsCreated).toContain('security-audit');
+      expect(result.success).toBe(true);
+      expect(result.skillsCreated).toContain('swarm-init');
+      expect(result.skillsCreated).toContain('memory-persist');
     });
 
-    it('should not create skills when generateSkills is false', async () => {
+    it('should not report skills when generateSkills is false', async () => {
+      const sourcePath = join(tmpDir, 'CLAUDE.md');
+      writeFileSync(
+        sourcePath,
+        ['# Project', '', 'Use /swarm-init for coordination.', ''].join('\n'),
+        'utf-8',
+      );
+
       const result = await migrateFromClaudeCode({
-        sourcePath: '/project/CLAUDE.md',
-        targetPath: '/project',
+        sourcePath,
+        targetPath: tmpDir,
         generateSkills: false,
       });
 
+      expect(result.success).toBe(true);
       expect(result.skillsCreated).toHaveLength(0);
     });
 
     it('should include feature mappings', async () => {
+      const sourcePath = join(tmpDir, 'CLAUDE.md');
+      writeFileSync(sourcePath, '# Project\n', 'utf-8');
+
       const result = await migrateFromClaudeCode({
-        sourcePath: '/project/CLAUDE.md',
-        targetPath: '/project',
+        sourcePath,
+        targetPath: tmpDir,
       });
 
       expect(result.mappings).toBeDefined();
       expect(result.mappings!.length).toBeGreaterThan(0);
     });
-
-    it('should include migration warnings', async () => {
-      const result = await migrateFromClaudeCode({
-        sourcePath: '/project/CLAUDE.md',
-        targetPath: '/project',
-      });
-
-      expect(result.warnings).toBeDefined();
-      expect(result.warnings!.some(w => w.includes('skill invocation syntax'))).toBe(true);
-    });
   });
 
-  describe('migration options', () => {
-    it('should respect preserveComments option', async () => {
+  describe('migration failures', () => {
+    it('should fail cleanly when the source file does not exist', async () => {
       const result = await migrateFromClaudeCode({
-        sourcePath: '/project/CLAUDE.md',
-        targetPath: '/project',
-        preserveComments: true,
+        sourcePath: join(tmpDir, 'missing', 'CLAUDE.md'),
+        targetPath: tmpDir,
       });
 
-      expect(result.success).toBe(true);
-    });
-
-    it('should use custom target path', async () => {
-      const result = await migrateFromClaudeCode({
-        sourcePath: '/old/CLAUDE.md',
-        targetPath: '/new/project',
-      });
-
-      expect(result.agentsMdPath).toBe('/new/project/AGENTS.md');
-      expect(result.configTomlPath).toBe('/new/project/.agents/config.toml');
+      expect(result.success).toBe(false);
+      expect(result.warnings?.some(w => w.includes('Could not read source file'))).toBe(true);
     });
   });
 });
@@ -767,15 +787,25 @@ Use pre-task hooks.
 `;
 
     const analysis = await analyzeClaudeMd(content);
-    const migration = await migrateFromClaudeCode({
-      sourcePath: '/test/CLAUDE.md',
-      targetPath: '/test',
-    });
 
-    expect(analysis.skills).toContain('skill-a');
-    expect(analysis.skills).toContain('skill-b');
-    expect(analysis.hooks).toContain('pre-task');
-    expect(migration.success).toBe(true);
+    // The real migrateFromClaudeCode reads the source from disk — write the
+    // analyzed content so analysis and migration stay consistent.
+    const tmpDir = mkdtempSync(join(tmpdir(), 'codex-migrate-integration-'));
+    try {
+      const sourcePath = join(tmpDir, 'CLAUDE.md');
+      writeFileSync(sourcePath, content, 'utf-8');
+      const migration = await migrateFromClaudeCode({
+        sourcePath,
+        targetPath: tmpDir,
+      });
+
+      expect(analysis.skills).toContain('skill-a');
+      expect(analysis.skills).toContain('skill-b');
+      expect(analysis.hooks).toContain('pre-task');
+      expect(migration.success).toBe(true);
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
   });
 
   it('should convert analyzed content correctly', async () => {

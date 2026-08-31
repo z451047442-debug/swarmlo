@@ -23,7 +23,11 @@ export class FirmwareWatchWorker {
 
   start(): void {
     if (this.timer) return;
-    this.timer = setInterval(() => void this.watch(), this.config.intervalMs);
+    this.timer = setInterval(() => {
+      this.watch().catch(err => {
+        console.warn('[firmware-watch-worker] tick failed:', err instanceof Error ? err.message : err);
+      });
+    }, this.config.intervalMs);
   }
 
   stop(): void {

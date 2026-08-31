@@ -29,6 +29,35 @@ console.log = (...args) => {
 
 import { listMCPTools, callMCPTool, hasTool } from '../dist/src/mcp-client.js';
 
+// #2726 — Same --tools selector as bin/cli.js (category / exact-name /
+// `name_` prefix), so `tools/list` here cannot drift from the auto-detect
+// MCP path in cli.js. Kept as a standalone copy: this entry point cannot
+// import from cli.js, which immediately enters MCP mode itself.
+function _filterAdvertisedMcpTools(tools) {
+  const argv = process.argv.slice(2);
+  const toolsIndex = argv.findIndex((arg) => arg === '--tools');
+  const inlineTools = argv.find((arg) => arg.startsWith('--tools='));
+  // Defensive parsing: `--tools` must only consume the NEXT argument when it
+  // actually looks like a value (mirrors bin/cli.js).
+  const nextArg = toolsIndex >= 0 ? argv[toolsIndex + 1] : undefined;
+  const nextIsValue = nextArg !== undefined && nextArg !== '' && !nextArg.startsWith('-');
+  const configured = process.env.CLAUDE_FLOW_MCP_TOOLS
+    || (nextIsValue ? nextArg : undefined)
+    || (inlineTools ? inlineTools.slice('--tools='.length) : undefined);
+  if (!configured || configured.trim().toLowerCase() === 'all') return tools;
+  const selectors = new Set(
+    configured.split(',').map((item) => item.trim().toLowerCase()).filter(Boolean),
+  );
+  if (selectors.size === 0) return tools;
+  return tools.filter((tool) => {
+    const name = tool.name.toLowerCase();
+    const category = typeof tool.category === 'string' ? tool.category.toLowerCase() : '';
+    return selectors.has(name)
+      || selectors.has(category)
+      || Array.from(selectors).some((selector) => name.startsWith(`${selector}_`));
+  });
+}
+
 const VERSION = '3.0.0';
 const sessionId = `mcp-${Date.now()}-${randomUUID().slice(0, 8)}`;
 
@@ -147,7 +176,7 @@ async function handleMessage(message) {
         };
 
       case 'tools/list': {
-        const tools = listMCPTools();
+        const tools = _filterAdvertisedMcpTools(listMCPTools());
         return {
           jsonrpc: '2.0',
           id: message.id,

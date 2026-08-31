@@ -25,6 +25,7 @@ type MessageUpdateRequestOptions = {
 	selectedMcpServers?: Array<{ name: string; url: string; headers?: KeyValuePair[] }>;
 	streamingMode?: StreamingMode;
 	autopilot?: boolean;
+	autopilotMaxSteps?: number;
 };
 
 type ChunkDetector = (buffer: string) => string | null;

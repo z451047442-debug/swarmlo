@@ -1,53 +1,75 @@
 /**
  * V3 CLI Process Management Command
  * Background process management, daemon mode, and monitoring
+ *
+ * Honesty contract (#P2, D3): daemon/workers/signals subcommands are wired to
+ * the real daemon infrastructure (services/worker-daemon.ts + commands/
+ * daemon.ts) instead of writing transient PID files and fabricated state.
+ * Subcommands without a real backend return a non-zero exit code with a
+ * clear "not implemented" message — never fake success.
  */
 
-import { readdirSync, writeFileSync, readFileSync, unlinkSync, existsSync, mkdirSync } from 'fs';
+import { readdirSync, writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
 import { cpus, loadavg, totalmem, freemem } from 'node:os';
-import { dirname, resolve } from 'path';
+import { resolve } from 'path';
 import type { Command, CommandContext, CommandResult } from '../types.js';
+import { output } from '../output.js';
+import { daemonCommand } from './daemon.js';
 
-// Helper functions for PID file management
-function writePidFile(pidFile: string, pid: number, port: number): void {
-  const dir = dirname(resolve(pidFile));
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
+// Real daemon state files (single source of truth, written by WorkerDaemon)
+const DAEMON_PID_FILE = '.claude-flow/daemon.pid';
+const DAEMON_STATE_FILE = '.claude-flow/daemon-state.json';
+const DAEMON_QUEUE_DIR = '.claude-flow/daemon-queue';
+
+// Real worker types accepted by the worker daemon (services/worker-daemon.ts)
+const REAL_WORKER_TYPES = [
+  'ultralearn', 'optimize', 'consolidate', 'predict', 'audit', 'map',
+  'preload', 'deepdive', 'document', 'refactor', 'benchmark', 'testgaps',
+  'backup', 'harness',
+];
+
+function isProcessRunning(pid: number): boolean {
+  try {
+    process.kill(pid, 0); // Signal 0 = existence check
+    return true;
+  } catch {
+    return false;
   }
-  const data = JSON.stringify({ pid, port, startedAt: new Date().toISOString() });
-  writeFileSync(resolve(pidFile), data, 'utf-8');
 }
 
-function readPidFile(pidFile: string): { pid: number; port: number; startedAt: string } | null {
+function readDaemonPid(cwd: string): number | null {
   try {
-    const path = resolve(pidFile);
-    if (!existsSync(path)) return null;
-    const data = readFileSync(path, 'utf-8');
-    return JSON.parse(data);
+    const pidFile = resolve(cwd, DAEMON_PID_FILE);
+    if (!existsSync(pidFile)) return null;
+    const pid = parseInt(readFileSync(pidFile, 'utf-8').trim(), 10);
+    return Number.isNaN(pid) ? null : pid;
   } catch {
     return null;
   }
 }
 
-function removePidFile(pidFile: string): boolean {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function readDaemonState(cwd: string): Record<string, any> | null {
   try {
-    const path = resolve(pidFile);
-    if (existsSync(path)) {
-      unlinkSync(path);
-      return true;
-    }
-    return false;
+    const stateFile = resolve(cwd, DAEMON_STATE_FILE);
+    if (!existsSync(stateFile)) return null;
+    return JSON.parse(readFileSync(stateFile, 'utf-8'));
   } catch {
-    return false;
+    return null;
   }
 }
 
 /**
- * Daemon subcommand - start/stop background daemon
+ * Daemon subcommand - delegates to the REAL daemon infrastructure
+ * (commands/daemon.ts + services/worker-daemon.ts). `process daemon
+ * --action <start|stop|restart|status>` runs the exact same code path as
+ * `claude-flow daemon <start|stop|status>` — real fork+detached
+ * backgrounding, real PID file at .claude-flow/daemon.pid, real worker
+ * state. No fabricated services, no transient PID writes.
  */
-const daemonCommand: Command = {
+const daemonProcessCommand: Command = {
   name: 'daemon',
-  description: 'Manage background daemon process',
+  description: 'Manage the background worker daemon (delegates to "claude-flow daemon")',
   options: [
     {
       name: 'action',
@@ -59,146 +81,73 @@ const daemonCommand: Command = {
     {
       name: 'port',
       type: 'number',
-      description: 'Port for daemon HTTP API',
+      description: '[legacy, ignored] The real daemon has no HTTP API; state lives in .claude-flow/',
       default: 3847,
     },
     {
       name: 'pid-file',
       type: 'string',
-      description: 'PID file location',
+      description: '[legacy, ignored] The real daemon always uses .claude-flow/daemon.pid',
       default: '.claude-flow/daemon.pid',
     },
     {
       name: 'log-file',
       type: 'string',
-      description: 'Log file location',
+      description: '[legacy, ignored] The real daemon always logs to .claude-flow/logs/daemon.log',
       default: '.claude-flow/daemon.log',
     },
     {
       name: 'detach',
       type: 'boolean',
-      description: 'Run in detached mode',
+      description: '[legacy, ignored] The real daemon backgrounding is handled by daemon.ts',
       default: true,
     },
   ],
   examples: [
-    { command: 'claude-flow process daemon --action start', description: 'Start the daemon' },
-    { command: 'claude-flow process daemon --action stop', description: 'Stop the daemon' },
-    { command: 'claude-flow process daemon --action restart --port 3850', description: 'Restart on different port' },
-    { command: 'claude-flow process daemon --action status', description: 'Check daemon status' },
+    { command: 'claude-flow process daemon --action start', description: 'Start the worker daemon (real, background)' },
+    { command: 'claude-flow process daemon --action stop', description: 'Stop the worker daemon' },
+    { command: 'claude-flow process daemon --action status', description: 'Check real daemon status' },
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     const action = (ctx.flags?.action as string) || 'status';
-    const port = (ctx.flags?.port as number) || 3847;
-    const pidFile = (ctx.flags?.['pid-file'] as string) || '.claude-flow/daemon.pid';
-    const logFile = (ctx.flags?.['log-file'] as string) || '.claude-flow/daemon.log';
-    const detach = ctx.flags?.detach !== false;
 
-    // Check existing daemon state from PID file
-    const existingDaemon = readPidFile(pidFile);
-    const daemonState = {
-      status: existingDaemon ? 'running' as const : 'stopped' as const,
-      pid: existingDaemon?.pid || null as number | null,
-      uptime: existingDaemon ? Math.floor((Date.now() - new Date(existingDaemon.startedAt).getTime()) / 1000) : 0,
-      port: existingDaemon?.port || port,
-      startedAt: existingDaemon?.startedAt || null as string | null,
+    // Forward flags verbatim: daemon.ts reads workers/headless/quiet/foreground
+    // etc. from ctx.flags, so `process daemon --action start --workers map`
+    // behaves exactly like `daemon start --workers map`.
+    const subCtx: CommandContext = {
+      args: [],
+      flags: { ...ctx.flags },
+      config: ctx.config,
+      cwd: ctx.cwd,
+      interactive: ctx.interactive,
     };
+
+    const subcommand = daemonCommand.subcommands?.find((c) => c.name === action && action !== 'restart');
 
     switch (action) {
       case 'start':
-        if (existingDaemon) {
-          console.log('\n⚠️  Daemon already running\n');
-          console.log(`  📍 PID: ${existingDaemon.pid}`);
-          console.log(`  🌐 Port: ${existingDaemon.port}`);
-          console.log(`  ⏱️  Started: ${existingDaemon.startedAt}`);
-          break;
-        }
-
-        console.log('\n🚀 Starting claude-flow daemon...\n');
-        const newPid = process.pid; // Use actual process PID
-        daemonState.status = 'running';
-        daemonState.pid = newPid;
-        daemonState.startedAt = new Date().toISOString();
-        daemonState.uptime = 0;
-
-        // Persist PID to file
-        writePidFile(pidFile, newPid, port);
-
-        console.log('  ✅ Daemon started successfully');
-        console.log(`  📍 PID: ${daemonState.pid}`);
-        console.log(`  🌐 HTTP API: http://localhost:${port}`);
-        console.log(`  📄 PID file: ${resolve(pidFile)}`);
-        console.log(`  📝 Log file: ${logFile}`);
-        console.log(`  🔄 Mode: ${detach ? 'detached' : 'foreground'}`);
-        console.log('\n  Services:');
-        console.log('    ├─ MCP Server: listening');
-        console.log('    ├─ Agent Pool: initialized (0 agents)');
-        console.log('    ├─ Memory Service: connected');
-        console.log('    ├─ Task Queue: ready');
-        console.log('    └─ Swarm Coordinator: standby');
-        break;
-
       case 'stop':
-        if (!existingDaemon) {
-          console.log('\n⚠️  No daemon running\n');
-          break;
+      case 'status': {
+        if (!subcommand?.action) {
+          output.printError(`Real daemon subcommand '${action}' has no action`);
+          return { success: false, exitCode: 1 };
         }
-        console.log('\n🛑 Stopping claude-flow daemon...\n');
-        console.log(`  📍 Stopping PID ${existingDaemon.pid}...`);
-
-        // Remove PID file
-        removePidFile(pidFile);
-        daemonState.status = 'stopped';
-        daemonState.pid = null;
-
-        console.log('  ✅ Daemon stopped successfully');
-        console.log('  📍 PID file removed');
-        console.log('  🧹 Resources cleaned up');
-        break;
-
-      case 'restart':
-        console.log('\n🔄 Restarting claude-flow daemon...\n');
-        if (existingDaemon) {
-          console.log(`  🛑 Stopping PID ${existingDaemon.pid}...`);
-          removePidFile(pidFile);
-          console.log('  ✅ Stopped');
+        return (await subcommand.action(subCtx)) ?? { success: true };
+      }
+      case 'restart': {
+        const stopSub = daemonCommand.subcommands?.find((c) => c.name === 'stop');
+        const startSub = daemonCommand.subcommands?.find((c) => c.name === 'start');
+        if (!stopSub?.action || !startSub?.action) {
+          output.printError('Real daemon subcommands are unavailable');
+          return { success: false, exitCode: 1 };
         }
-        console.log('  🚀 Starting new instance...');
-        const restartPid = process.pid;
-        writePidFile(pidFile, restartPid, port);
-        daemonState.pid = restartPid;
-        daemonState.status = 'running';
-        console.log(`  ✅ Daemon restarted (PID: ${restartPid})`);
-        console.log(`  🌐 HTTP API: http://localhost:${port}`);
-        console.log(`  📄 PID file: ${resolve(pidFile)}`);
-        break;
-
-      case 'status':
-        console.log('\n📊 Daemon Status\n');
-        console.log('  ┌─────────────────────────────────────────┐');
-        console.log('  │ claude-flow daemon                      │');
-        console.log('  ├─────────────────────────────────────────┤');
-        if (existingDaemon) {
-          const uptime = Math.floor((Date.now() - new Date(existingDaemon.startedAt).getTime()) / 1000);
-          const uptimeStr = uptime < 60 ? `${uptime}s` : `${Math.floor(uptime / 60)}m ${uptime % 60}s`;
-          console.log('  │ Status:      🟢 running                │');
-          console.log(`  │ PID:         ${existingDaemon.pid.toString().padEnd(28)}│`);
-          console.log(`  │ Port:        ${existingDaemon.port.toString().padEnd(28)}│`);
-          console.log(`  │ Uptime:      ${uptimeStr.padEnd(28)}│`);
-        } else {
-          console.log('  │ Status:      ⚪ not running             │');
-          console.log(`  │ Port:        ${port.toString().padEnd(28)}│`);
-          console.log(`  │ PID file:    ${pidFile.substring(0, 26).padEnd(28)}│`);
-          console.log('  │ Uptime:      --                         │');
-        }
-        console.log('  └─────────────────────────────────────────┘');
-        if (!existingDaemon) {
-          console.log('\n  To start: claude-flow process daemon --action start');
-        }
-        break;
+        await stopSub.action(subCtx);
+        return (await startSub.action(subCtx)) ?? { success: true };
+      }
+      default:
+        output.printError(`Unknown action: ${action}. Use start, stop, restart, or status.`);
+        return { success: false, exitCode: 1 };
     }
-
-    return { success: true, data: daemonState };
   },
 };
 
@@ -401,11 +350,21 @@ const monitorCommand: Command = {
 };
 
 /**
- * Workers subcommand - manage background workers
+ * Workers subcommand - real worker lifecycle.
+ *
+ * - list: reads the daemon's persisted state (.claude-flow/daemon-state.json,
+ *   written by WorkerDaemon.saveState) plus the PID file — never fabricated.
+ * - spawn: dispatches a real worker run via the daemon's on-disk dispatch
+ *   queue (.claude-flow/daemon-queue/, polled by WorkerDaemon every 5s) —
+ *   the same mechanism mcp__hooks_worker-dispatch uses. Requires a running
+ *   daemon; otherwise fails loudly.
+ * - kill / scale: the daemon schedules workers on fixed intervals and keeps
+ *   no per-instance worker registry, so there is no real backend — return a
+ *   non-zero exit code with a "not implemented" message.
  */
 const workersCommand: Command = {
   name: 'workers',
-  description: 'Manage background worker processes',
+  description: 'Manage background workers (reads real daemon state / dispatch queue)',
   options: [
     {
       name: 'action',
@@ -417,106 +376,161 @@ const workersCommand: Command = {
     {
       name: 'type',
       type: 'string',
-      description: 'Worker type',
-      choices: ['task', 'memory', 'coordinator', 'neural'],
+      description: 'Worker type (real daemon worker: map, audit, optimize, consolidate, testgaps, predict, document, ultralearn, refactor, benchmark, deepdive, preload, backup, harness)',
     },
     {
       name: 'count',
       type: 'number',
-      description: 'Number of workers',
+      description: 'Number of worker runs to dispatch (spawn only)',
       default: 1,
     },
     {
       name: 'id',
       type: 'string',
-      description: 'Worker ID (for kill action)',
+      description: 'Worker ID (kill action — not implemented, see help)',
     },
   ],
   examples: [
-    { command: 'claude-flow process workers --action list', description: 'List all workers' },
-    { command: 'claude-flow process workers --action spawn --type task --count 3', description: 'Spawn task workers' },
-    { command: 'claude-flow process workers --action kill --id worker-123', description: 'Kill specific worker' },
-    { command: 'claude-flow process workers --action scale --type memory --count 5', description: 'Scale memory workers' },
+    { command: 'claude-flow process workers --action list', description: 'List workers from real daemon state' },
+    { command: 'claude-flow process workers --action spawn --type audit', description: 'Dispatch an audit worker run via the daemon queue' },
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     const action = (ctx.flags?.action as string) || 'list';
     const type = ctx.flags?.type as string;
     const count = (ctx.flags?.count as number) || 1;
     const id = ctx.flags?.id as string;
-
-    // Default worker data (updated by real worker stats when available)
-    const workers = [
-      { id: 'worker-task-001', type: 'task', status: 'running', started: '2024-01-15T10:30:00Z', tasks: 42 },
-      { id: 'worker-task-002', type: 'task', status: 'running', started: '2024-01-15T10:30:05Z', tasks: 38 },
-      { id: 'worker-memory-001', type: 'memory', status: 'running', started: '2024-01-15T10:30:00Z', tasks: 156 },
-      { id: 'worker-coord-001', type: 'coordinator', status: 'idle', started: '2024-01-15T10:30:00Z', tasks: 12 },
-    ];
+    const cwd = ctx.cwd;
 
     switch (action) {
-      case 'list':
-        console.log('\n👷 Background Workers\n');
-        console.log('┌────────────────────┬─────────────┬──────────┬─────────┐');
-        console.log('│ ID                 │ Type        │ Status   │ Tasks   │');
-        console.log('├────────────────────┼─────────────┼──────────┼─────────┤');
-        for (const worker of workers) {
-          const statusIcon = worker.status === 'running' ? '🟢' : '🟡';
-          console.log(`│ ${worker.id.padEnd(18)} │ ${worker.type.padEnd(11)} │ ${statusIcon} ${worker.status.padEnd(6)} │ ${worker.tasks.toString().padEnd(7)} │`);
-        }
-        console.log('└────────────────────┴─────────────┴──────────┴─────────┘');
-        console.log(`\nTotal: ${workers.length} workers`);
-        break;
+      case 'list': {
+        const daemonPid = readDaemonPid(cwd);
+        const daemonRunning = daemonPid !== null && isProcessRunning(daemonPid);
+        const state = readDaemonState(cwd);
 
-      case 'spawn':
+        if (!state) {
+          output.writeln();
+          output.printInfo('No daemon state found — the worker daemon is not running.');
+          output.writeln(output.dim('  Start it with: claude-flow daemon start'));
+          return { success: true, data: { daemonRunning: false, workers: [] } };
+        }
+
+        const configWorkers: Array<Record<string, unknown>> = Array.isArray(state.config?.workers)
+          ? state.config.workers
+          : [];
+        const stateWorkers: Record<string, Record<string, unknown>> = state.workers ?? {};
+
+        output.writeln();
+        output.writeln(output.bold('Background Workers (real daemon state)'));
+        output.writeln(output.dim(`  Daemon: ${daemonRunning ? `running (PID ${daemonPid})` : 'PID file present but process not running'}`));
+        output.writeln(output.dim(`  State:  ${resolve(cwd, DAEMON_STATE_FILE)}`));
+        output.writeln();
+
+        const rows = configWorkers.map((w) => {
+          const typeName = String(w.type ?? '?');
+          const st = stateWorkers[typeName] ?? {};
+          const enabled = w.enabled !== false;
+          const lastRun = typeof st.lastRun === 'string' ? st.lastRun : null;
+          return {
+            type: typeName,
+            enabled: enabled ? '✓' : '○',
+            status: st.isRunning ? 'running' : enabled ? 'idle' : 'disabled',
+            runs: String(st.runCount ?? 0),
+            success: String(st.successCount ?? 0),
+            failures: String(st.failureCount ?? 0),
+            lastRun: lastRun ? new Date(lastRun).toISOString() : 'never',
+          };
+        });
+
+        output.printTable({
+          columns: [
+            { key: 'type', header: 'Worker', width: 14 },
+            { key: 'enabled', header: 'On', width: 4 },
+            { key: 'status', header: 'Status', width: 10 },
+            { key: 'runs', header: 'Runs', width: 6 },
+            { key: 'success', header: 'OK', width: 6 },
+            { key: 'failures', header: 'Fail', width: 7 },
+            { key: 'lastRun', header: 'Last Run', width: 30 },
+          ],
+          data: rows,
+        });
+
+        return { success: true, data: { daemonRunning, workers: rows } };
+      }
+
+      case 'spawn': {
         if (!type) {
-          console.log('\n❌ Worker type required. Use --type <task|memory|coordinator|neural>');
-          return { success: false, message: 'Worker type required' };
+          output.printError('Worker type required. Use --type <map|audit|optimize|consolidate|testgaps|predict|document|ultralearn|refactor|benchmark|deepdive|preload|backup|harness>');
+          return { success: false, exitCode: 1 };
         }
-        console.log(`\n🚀 Spawning ${count} ${type} worker(s)...\n`);
-        for (let i = 0; i < count; i++) {
-          const newId = `worker-${type}-${String(workers.length + i + 1).padStart(3, '0')}`;
-          console.log(`  ✅ Spawned: ${newId}`);
+        if (!REAL_WORKER_TYPES.includes(type)) {
+          output.printError(`Unknown worker type '${type}'. Real daemon worker types: ${REAL_WORKER_TYPES.join(', ')}`);
+          return { success: false, exitCode: 1 };
         }
-        console.log(`\n  Total ${type} workers: ${workers.filter(w => w.type === type).length + count}`);
-        break;
 
-      case 'kill':
+        // The daemon must be running to consume the dispatch queue.
+        const daemonPid = readDaemonPid(cwd);
+        if (daemonPid === null || !isProcessRunning(daemonPid)) {
+          output.printError('The worker daemon is not running — cannot dispatch a worker. Start it with: claude-flow daemon start');
+          return { success: false, exitCode: 1 };
+        }
+
+        // Enqueue real dispatch entries; WorkerDaemon.processDispatchQueue
+        // polls this directory every 5s and runs the worker.
+        const queueDir = resolve(cwd, DAEMON_QUEUE_DIR);
+        if (!existsSync(queueDir)) mkdirSync(queueDir, { recursive: true });
+
+        const dispatched: string[] = [];
+        for (let i = 0; i < Math.max(1, count); i++) {
+          const workerId = `process-spawn-${Date.now()}-${i}`;
+          const entry = {
+            workerId,
+            trigger: type,
+            context: { source: 'process workers spawn' },
+            enqueuedAt: new Date().toISOString(),
+          };
+          writeFileSync(resolve(queueDir, `${workerId}.json`), JSON.stringify(entry, null, 2), 'utf-8');
+          dispatched.push(workerId);
+        }
+
+        output.printSuccess(`Dispatched ${dispatched.length} ${type} worker run(s) to the daemon queue (${queueDir})`);
+        output.writeln(output.dim(`  The daemon (PID ${daemonPid}) picks these up on its next queue poll (~5s).`));
+        return { success: true, data: { dispatched, queueDir } };
+      }
+
+      case 'kill': {
         if (!id) {
-          console.log('\n❌ Worker ID required. Use --id <worker-id>');
-          return { success: false, message: 'Worker ID required' };
+          output.printError('Worker ID required. Use --id <worker-id>');
+          return { success: false, exitCode: 1 };
         }
-        console.log(`\n🛑 Killing worker: ${id}...\n`);
-        console.log('  ✅ Worker terminated');
-        console.log('  🧹 Resources released');
-        break;
+        output.printError(`kill is not implemented: the worker daemon keeps no per-instance worker registry to kill by ID. Use "claude-flow daemon stop" to stop the daemon, or "claude-flow daemon enable -w <type> --disable" to stop scheduling a worker type.`);
+        return { success: false, exitCode: 1 };
+      }
 
-      case 'scale':
+      case 'scale': {
         if (!type) {
-          console.log('\n❌ Worker type required. Use --type <task|memory|coordinator|neural>');
-          return { success: false, message: 'Worker type required' };
+          output.printError('Worker type required. Use --type <worker-type>');
+          return { success: false, exitCode: 1 };
         }
-        const current = workers.filter(w => w.type === type).length;
-        console.log(`\n📊 Scaling ${type} workers: ${current} → ${count}\n`);
-        if (count > current) {
-          console.log(`  🚀 Spawning ${count - current} new worker(s)...`);
-        } else if (count < current) {
-          console.log(`  🛑 Terminating ${current - count} worker(s)...`);
-        } else {
-          console.log('  ℹ️  No scaling needed');
-        }
-        console.log(`  ✅ Scaling complete`);
-        break;
-    }
+        output.printError(`scale is not implemented: the daemon schedules workers on fixed intervals and keeps no instance pool to scale. Use "claude-flow daemon enable -w <type>" / "--disable" to control worker scheduling.`);
+        return { success: false, exitCode: 1 };
+      }
 
-    return { success: true, data: workers };
+      default:
+        output.printError(`Unknown action: ${action}. Use list, spawn, kill, or scale.`);
+        return { success: false, exitCode: 1 };
+    }
   },
 };
 
 /**
- * Signals subcommand - send signals to processes
+ * Signals subcommand - honest: the daemon exposes no arbitrary-signal
+ * control channel. The only real operation is graceful-shutdown of the
+ * daemon itself (SIGTERM via the real daemon stop path); everything else
+ * returns a non-zero exit code with a "not implemented" message.
  */
 const signalsCommand: Command = {
   name: 'signals',
-  description: 'Send signals to managed processes',
+  description: 'Send signals to managed processes (only daemon graceful-shutdown is real)',
   options: [
     {
       name: 'target',
@@ -534,42 +548,48 @@ const signalsCommand: Command = {
     {
       name: 'timeout',
       type: 'number',
-      description: 'Timeout in seconds',
+      description: 'Timeout in seconds (not implemented)',
       default: 30,
     },
   ],
   examples: [
-    { command: 'claude-flow process signals --target daemon --signal graceful-shutdown', description: 'Graceful shutdown' },
-    { command: 'claude-flow process signals --target workers --signal pause', description: 'Pause workers' },
-    { command: 'claude-flow process signals --target all --signal reload-config', description: 'Reload all configs' },
+    { command: 'claude-flow process signals --target daemon --signal graceful-shutdown', description: 'Gracefully stop the daemon (real)' },
+    { command: 'claude-flow process signals --target daemon --signal force-kill', description: 'Not implemented' },
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     const target = ctx.flags?.target as string;
     const signal = (ctx.flags?.signal as string) || 'graceful-shutdown';
-    const timeout = (ctx.flags?.timeout as number) || 30;
 
     if (!target) {
-      console.log('\n❌ Target required. Use --target <daemon|workers|all|process-id>');
-      return { success: false, message: 'Target required' };
+      output.printError('Target required. Use --target <daemon|workers|all|process-id>');
+      return { success: false, exitCode: 1 };
     }
 
-    console.log(`\n📡 Sending signal: ${signal}\n`);
-    console.log(`  Target: ${target}`);
-    console.log(`  Timeout: ${timeout}s`);
-    console.log('');
+    // The one real operation: graceful shutdown of the daemon, via the same
+    // path as `claude-flow daemon stop` (reads .claude-flow/daemon.pid,
+    // SIGTERMs the process, reaps stale daemons, removes the PID file).
+    if (target === 'daemon' && signal === 'graceful-shutdown') {
+      const stopSub = daemonCommand.subcommands?.find((c) => c.name === 'stop');
+      if (!stopSub?.action) {
+        output.printError('Real daemon stop subcommand is unavailable');
+        return { success: false, exitCode: 1 };
+      }
+      output.printInfo('Signaling the daemon for graceful shutdown...');
+      const subCtx: CommandContext = {
+        args: [],
+        flags: { quiet: true, _: [] },
+        config: ctx.config,
+        cwd: ctx.cwd,
+        interactive: false,
+      };
+      return (await stopSub.action(subCtx)) ?? { success: true };
+    }
 
-    const signalMessages: Record<string, string> = {
-      'graceful-shutdown': '🛑 Initiating graceful shutdown...',
-      'force-kill': '💀 Force killing process...',
-      'pause': '⏸️  Pausing process...',
-      'resume': '▶️  Resuming process...',
-      'reload-config': '🔄 Reloading configuration...',
-    };
-
-    console.log(`  ${signalMessages[signal] || 'Sending signal...'}`);
-    console.log('  ✅ Signal acknowledged');
-
-    return { success: true, data: { target, signal, timeout } };
+    output.printError(
+      `signal '${signal}' on target '${target}' is not implemented: the worker daemon exposes no arbitrary-signal control channel. ` +
+      `Supported: graceful-shutdown on target 'daemon' (equivalent to "claude-flow daemon stop").`
+    );
+    return { success: false, exitCode: 1 };
   },
 };
 
@@ -702,7 +722,7 @@ export const processCommand: Command = {
   name: 'process',
   description: 'Background process management, daemon, and monitoring',
   aliases: ['proc', 'ps'],
-  subcommands: [daemonCommand, monitorCommand, workersCommand, signalsCommand, logsCommand],
+  subcommands: [daemonProcessCommand, monitorCommand, workersCommand, signalsCommand, logsCommand],
   options: [
     {
       name: 'help',
@@ -712,9 +732,9 @@ export const processCommand: Command = {
     },
   ],
   examples: [
-    { command: 'claude-flow process daemon --action start', description: 'Start daemon' },
+    { command: 'claude-flow process daemon --action start', description: 'Start the real worker daemon' },
     { command: 'claude-flow process monitor --watch', description: 'Watch processes' },
-    { command: 'claude-flow process workers --action list', description: 'List workers' },
+    { command: 'claude-flow process workers --action list', description: 'List workers from real daemon state' },
     { command: 'claude-flow process logs --follow', description: 'Follow logs' },
   ],
   action: async (_ctx: CommandContext): Promise<CommandResult> => {
@@ -722,15 +742,15 @@ export const processCommand: Command = {
     console.log('\n🔧 Process Management\n');
     console.log('Manage background processes, daemons, and workers.\n');
     console.log('Subcommands:');
-    console.log('  daemon     - Manage background daemon process');
+    console.log('  daemon     - Manage the background worker daemon (real, delegates to "daemon")');
     console.log('  monitor    - Real-time process monitoring');
-    console.log('  workers    - Manage background workers');
-    console.log('  signals    - Send signals to processes');
+    console.log('  workers    - Manage background workers (real daemon state / dispatch queue)');
+    console.log('  signals    - Send signals (only daemon graceful-shutdown is real)');
     console.log('  logs       - View and manage process logs');
     console.log('\nExamples:');
     console.log('  claude-flow process daemon --action start');
     console.log('  claude-flow process monitor --watch');
-    console.log('  claude-flow process workers --action spawn --type task --count 3');
+    console.log('  claude-flow process workers --action list');
     console.log('  claude-flow process logs --follow --level error');
 
     return { success: true, data: { help: true } };

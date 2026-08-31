@@ -109,6 +109,8 @@ export class MemoryConsolidator {
       namespaceIndex.get(entry.namespace)?.delete(entry.id);
       keyIndex.delete(`${entry.namespace}:${entry.key}`);
       for (const tag of entry.tags) tagIndex.get(tag)?.delete(entry.id);
+      // Invalidate the cache entry so a stale copy can't be served after removal
+      adapter.cache?.delete?.(entry.id);
       if (entry.embedding) {
         const removed = await index.removePoint(entry.id);
         if (removed) hnswRemoved += 1;
@@ -187,6 +189,8 @@ export class MemoryConsolidator {
             tagIndex.get(t)!.add(keeper.id);
           }
         }
+        // Keeper's tags changed — drop the cached copy
+        adapter.cache?.delete?.(keeper.id);
       }
 
       // Drop everyone except the keeper
@@ -199,6 +203,7 @@ export class MemoryConsolidator {
           keyIndex.delete(compositeKey);
         }
         for (const tag of e.tags) tagIndex.get(tag)?.delete(e.id);
+        adapter.cache?.delete?.(e.id);
         if (e.embedding) {
           await index.removePoint(e.id);
         }
@@ -246,6 +251,9 @@ export class MemoryConsolidator {
     if (typeof adapter.emit === 'function') {
       fresh.on('point:added', (data: any) => adapter.emit('index:added', data));
     }
+
+    // Full index rebuild — drop the cache defensively so no stale vectors survive
+    adapter.cache?.clear?.();
 
     const durationMs = Date.now() - t0;
     return { before, after: fresh.size, durationMs };

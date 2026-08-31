@@ -75,11 +75,11 @@ class ConfigManager {
 		this.lastConfigUpdate = new Date();
 	}
 
-	get(key: ConfigKey): string {
+	get(key: ConfigKey | ExtraConfigKeys): string {
 		if (!this.ConfigManagerEnabled) {
-			return keysFromEnv[key] || "";
+			return keysFromEnv[key as ConfigKey] || "";
 		}
-		return this.keysFromDB[key] || keysFromEnv[key] || "";
+		return this.keysFromDB[key as ConfigKey] || keysFromEnv[key as ConfigKey] || "";
 	}
 
 	async updateSemaphore() {
@@ -160,7 +160,59 @@ type ExtraConfigKeys =
 	| "MCP_SERVERS"
 	| "MCP_FORWARD_HF_USER_TOKEN"
 	| "MCP_TOOL_TIMEOUT_MS"
-	| "EXA_API_KEY";
+	| "EXA_API_KEY"
+	// Keys used across the codebase that are not declared in any committed env
+	// template (SvelteKit derives ConfigKey from the local .env files, which
+	// vary by machine — this list keeps the type stable).
+	| "ADMIN_API_SECRET"
+	| "ADMIN_CLI_LOGIN"
+	| "ADMIN_TOKEN"
+	| "ALLOWED_USER_DOMAINS"
+	| "ALLOWED_USER_EMAILS"
+	| "ALLOW_IFRAME"
+	| "ALLOW_INSECURE_COOKIES"
+	| "ALTERNATIVE_REDIRECT_URLS"
+	| "AUTOMATIC_LOGIN"
+	| "COOKIE_NAME"
+	| "COOKIE_SAMESITE"
+	| "COOKIE_SECURE"
+	| "COUPLE_SESSION_WITH_COOKIE_NAME"
+	| "ENABLE_DATA_EXPORT"
+	| "EXPOSE_API"
+	| "HF_ORG_ADMIN"
+	| "HF_ORG_EARLY_ACCESS"
+	| "LLM_ROUTER_ARCH_BASE_URL"
+	| "LLM_ROUTER_ARCH_MODEL"
+	| "LLM_ROUTER_ARCH_TIMEOUT_MS"
+	| "LLM_ROUTER_ENABLE_MULTIMODAL"
+	| "LLM_ROUTER_ENABLE_TOOLS"
+	| "LLM_ROUTER_FALLBACK_MODEL"
+	| "LLM_ROUTER_MAX_ASSISTANT_LENGTH"
+	| "LLM_ROUTER_MAX_PREV_USER_LENGTH"
+	| "LLM_ROUTER_MULTIMODAL_MODEL"
+	| "LLM_ROUTER_OTHER_ROUTE"
+	| "LLM_ROUTER_ROUTES_PATH"
+	| "LLM_SUMMARIZATION"
+	| "LOG_LEVEL"
+	| "OPENID_CLIENT_ID"
+	| "OPENID_CLIENT_SECRET"
+	| "OPENID_CONFIG"
+	| "OPENID_NAME_CLAIM"
+	| "OPENID_PROVIDER_URL"
+	| "OPENID_RESOURCE"
+	| "OPENID_SCOPES"
+	| "OPENID_TOLERANCE"
+	| "PARQUET_EXPORT_DATASET"
+	| "PARQUET_EXPORT_HF_TOKEN"
+	| "PARQUET_EXPORT_SECRET"
+	| "RATE_LIMIT"
+	| "TASK_MODEL"
+	| "TRANSCRIPTION_BASE_URL"
+	| "TRANSCRIPTION_MODEL"
+	| "TRUSTED_EMAIL_HEADER"
+	| "USAGE_LIMITS"
+	| "USE_USER_TOKEN"
+	| "WEBHOOK_URL_REPORT_ASSISTANT";
 
 type ConfigProxy = ConfigManager & { [K in ConfigKey | ExtraConfigKeys]: string };
 

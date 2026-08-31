@@ -25,7 +25,52 @@
  */
 
 import { createHmac, randomUUID } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { homedir } from 'node:os';
 import { timingSafeEqual } from './crypto-utils.js';
+
+/**
+ * Path where a generated signing key is persisted so signatures stay
+ * verifiable across process restarts. Never commit this file.
+ */
+const SIGNING_KEY_FILE = join(homedir(), '.claude-flow', 'authority-signing.key');
+const SIGNING_KEY_ENV = 'CLAUDE_FLOW_AUTHORITY_SIGNING_KEY';
+
+/**
+ * Resolve the HMAC signing secret, in order of preference:
+ * 1. Explicit config injection
+ * 2. CLAUDE_FLOW_AUTHORITY_SIGNING_KEY environment variable
+ * 3. A key persisted under the user home directory (generated on first use)
+ * 4. Per-process random key (last resort, with a warning)
+ */
+function resolveSignatureSecret(explicit?: string): string {
+  if (explicit) return explicit;
+
+  const envKey = process.env[SIGNING_KEY_ENV];
+  if (envKey) return envKey;
+
+  try {
+    if (existsSync(SIGNING_KEY_FILE)) {
+      const persisted = readFileSync(SIGNING_KEY_FILE, 'utf-8').trim();
+      if (persisted) return persisted;
+    }
+    const generated = randomUUID() + randomUUID();
+    mkdirSync(join(homedir(), '.claude-flow'), { recursive: true });
+    writeFileSync(SIGNING_KEY_FILE, generated, { encoding: 'utf-8', mode: 0o600 });
+    return generated;
+  } catch {
+    // Persistence unavailable — fall back to a per-process key.
+  }
+
+  console.warn(
+    '[guidance] AuthorityGate has no stable signature secret: none was injected, ' +
+    `${SIGNING_KEY_ENV} is unset, and the persisted key file is unavailable. ` +
+    'Intervention signatures will not verify after a restart. Inject an explicit ' +
+    'signatureSecret for production use.'
+  );
+  return randomUUID() + randomUUID();
+}
 
 // ============================================================================
 // Types
@@ -132,7 +177,14 @@ export interface IrreversibilityResult {
 export interface AuthorityGateConfig {
   /** Authority scopes to register (defaults provided if not specified) */
   scopes?: AuthorityScope[];
-  /** Secret key for HMAC signing (generated if not provided) */
+  /**
+   * Secret key for HMAC signing. **Always inject explicitly** (config,
+   * environment, secrets manager): a random per-instance key makes
+   * intervention signatures unverifiable after a restart. When omitted the
+   * gate falls back to `CLAUDE_FLOW_AUTHORITY_SIGNING_KEY` or a persisted
+   * key under the user home directory, and only as a last resort to a
+   * per-process random key (with a warning).
+   */
   signatureSecret?: string;
 }
 
@@ -305,9 +357,12 @@ export class AuthorityGate {
       this.scopes.set(scope.level, scope);
     }
 
-    // Initialize signature secret
-    this.signatureSecret =
-      config.signatureSecret ?? randomUUID() + randomUUID();
+    // Initialize signature secret.
+    // Prefer an explicit injection, then an env var, then a persisted key so
+    // signatures remain verifiable across restarts. A fresh per-process
+    // random key is the last resort (signatures from previous runs would not
+    // verify) — emit a warning so the misconfiguration is visible.
+    this.signatureSecret = resolveSignatureSecret(config.signatureSecret);
   }
 
   /**

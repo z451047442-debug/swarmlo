@@ -9,11 +9,11 @@ else
     cat <<< "$DOTENV_LOCAL" > ${ENV_LOCAL_PATH}
 fi;
 
-if [ "$INCLUDE_DB" = "true" ] ; then
-    echo "Starting local MongoDB instance"
-    nohup mongod &
+# Ensure the file exists for dotenv-cli even when env vars are provided directly
+if ! test -f "${ENV_LOCAL_PATH}" ; then
+    touch ${ENV_LOCAL_PATH}
 fi;
 
 export PUBLIC_VERSION=$(node -p "require('./package.json').version")
 
-dotenv -e /app/.env -c -- node --dns-result-order=ipv4first /app/build/index.js -- --host 0.0.0.0 --port 3000
+dotenv -e /app/.env.local -c -- node --dns-result-order=ipv4first /app/build/index.js -- --host 0.0.0.0 --port 3000

@@ -621,17 +621,16 @@ class LocalReasoningBank {
       score: this.cosineSim(queryEmbedding, pattern.embedding)
     }));
 
-    // Filter by threshold and sort
+    // Filter by threshold and sort.
+    // audit_2026-08-31: this is a READ path — the old code mutated
+    // usageCount/lastUsedAt on the stored pattern objects as a side effect of
+    // searching (a read that rewrites persistence, breaking the no-side-effect
+    // read contract and making every search dirty the store). Removed.
     return scored
       .filter(s => s.score >= threshold)
       .sort((a, b) => b.score - a.score)
       .slice(0, k)
-      .map(s => {
-        // Update usage
-        s.pattern.usageCount++;
-        s.pattern.lastUsedAt = Date.now();
-        return { ...s.pattern, confidence: s.score };
-      });
+      .map(s => ({ ...s.pattern, confidence: s.score }));
   }
 
   /**
@@ -1059,14 +1058,18 @@ export async function recordStep(step: TrajectoryStep): Promise<boolean> {
     const stepWithEmbedding = { ...step, embedding };
     sonaCoordinator!.addTrajectoryStep(stepWithEmbedding);
 
-    // Store in ReasoningBank for retrieval
-    if (reasoningBank) {
+    // Store in ReasoningBank for retrieval.
+    // audit_2026-08-31: every trajectory step used to be persisted at
+    // confidence 1.0 — intermediate bookkeeping steps outranked distilled
+    // patterns and polluted retrieval. Persist steps at low confidence and
+    // skip empty bookkeeping steps entirely.
+    if (reasoningBank && step.content && step.content.trim().length > 0) {
       reasoningBank.store({
         id: `step_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         type: step.type,
         embedding,
         content: step.content,
-        confidence: 1.0,
+        confidence: 0.3,
         metadata: step.metadata
       });
     }

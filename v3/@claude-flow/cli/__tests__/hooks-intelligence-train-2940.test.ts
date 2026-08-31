@@ -48,6 +48,27 @@ function lastTrainingSeconds(statusOut: string): number | null {
   return Number(m[1]);
 }
 
+// Windows: the spawned CLI child can briefly hold the temp dir open — retry
+// the cleanup, and swallow the residual EPERM (observed on Win11) rather
+// than failing the suite on a file lock unrelated to what this test asserts.
+function removeDirWithRetry(dir: string, attempts = 5): void {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      rmSync(dir, { recursive: true, force: true });
+      return;
+    } catch {
+      const sleepMs = 200 * (i + 1);
+      const end = Date.now() + sleepMs;
+      while (Date.now() < end) { /* busy-wait */ }
+    }
+  }
+  try {
+    rmSync(dir, { recursive: true, force: true });
+  } catch {
+    // still locked (Windows) — assertions already ran
+  }
+}
+
 describe.skipIf(!CLI_BUILT)('#2940 hooks intelligence --train actually trains', () => {
   it('moves "Last Training" to ~0s ago instead of only ever aging', () => {
     const cwd = mkdtempSync(join(tmpdir(), 'swarmlo-2940-'));
@@ -74,7 +95,7 @@ describe.skipIf(!CLI_BUILT)('#2940 hooks intelligence --train actually trains', 
       expect(seconds).not.toBeNull();
       expect(seconds as number).toBeLessThan(30);
     } finally {
-      rmSync(cwd, { recursive: true, force: true });
+      removeDirWithRetry(cwd);
     }
   }, 60_000);
 });

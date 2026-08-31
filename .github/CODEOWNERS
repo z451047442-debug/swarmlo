@@ -6,33 +6,36 @@
 #
 # Format: <path-glob> <reviewer> ...
 # See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# NOTE: this is a fork of the upstream ruvnet/swarmlo repo; ownership below
+# points at the fork owner (z451047442-debug), not the upstream account.
 
 # CI workflow files — a malicious workflow change can compromise everything
 # that runs in CI. Always require explicit review.
-/.github/workflows/                @ruvnet
-/.github/CODEOWNERS                @ruvnet
-/.github/supply-chain/             @ruvnet
-/.github/dependabot.yml            @ruvnet
+/.github/workflows/                @z451047442-debug
+/.github/CODEOWNERS                @z451047442-debug
+/.github/supply-chain/             @z451047442-debug
+/.github/dependabot.yml            @z451047442-debug
 
 # Lockfiles — silent dep substitution via lockfile editing is a known supply-
 # chain attack vector. Maintainer review required.
-/package-lock.json                 @ruvnet
-/v3/pnpm-lock.yaml                 @ruvnet
-**/package-lock.json               @ruvnet
-**/pnpm-lock.yaml                  @ruvnet
+/package-lock.json                 @z451047442-debug
+/v3/pnpm-lock.yaml                 @z451047442-debug
+**/package-lock.json               @z451047442-debug
+**/pnpm-lock.yaml                  @z451047442-debug
 
 # Plugin manifests — listing in the marketplace, publishing identity.
-**/.claude-plugin/plugin.json      @ruvnet
+**/.claude-plugin/plugin.json      @z451047442-debug
 
 # Witness manifests + provenance — the ADR-103 root of trust.
-/verification/                     @ruvnet
-/v3/docs/adr/ADR-103-witness-temporal-history.md @ruvnet
+/verification/                     @z451047442-debug
+/v3/docs/adr/ADR-103-witness-temporal-history.md @z451047442-debug
 
 # Supply chain scripts themselves — the auditor's audit.
-/scripts/audit-supply-chain.mjs    @ruvnet
-/scripts/audit-package-dep-overlap.mjs @ruvnet
-/scripts/audit-plugin-packages.mjs @ruvnet
-/scripts/audit-hook-commands.mjs   @ruvnet
+/scripts/audit-supply-chain.mjs    @z451047442-debug
+/scripts/audit-package-dep-overlap.mjs @z451047442-debug
+/scripts/audit-plugin-packages.mjs @z451047442-debug
+/scripts/audit-hook-commands.mjs   @z451047442-debug
 
 # Default fallback — every other PR gets standard review.
-*                                  @ruvnet
+*                                  @z451047442-debug

@@ -17,7 +17,16 @@ import { z } from 'zod';
 /**
  * Custom error map for security-focused messages
  */
-const securityErrorMap: z.ZodErrorMap = (issue, ctx) => {
+/**
+ * Custom zod error messages for this module's schemas.
+ *
+ * NOT applied via `z.setErrorMap()`: that call mutates zod's process-global
+ * default and would silently rewrite error messages for every other zod user
+ * in the process. Consumers that want these messages can opt in per schema
+ * with `schema.errorMap(securityErrorMap)` (zod v3) or by passing the map to
+ * `z.setErrorMap()` in their own boundary.
+ */
+export const securityErrorMap: z.ZodErrorMap = (issue, ctx) => {
   switch (issue.code) {
     case z.ZodIssueCode.too_big:
       return { message: `Input exceeds maximum allowed size` };
@@ -38,9 +47,6 @@ const securityErrorMap: z.ZodErrorMap = (issue, ctx) => {
       return { message: ctx.defaultError };
   }
 };
-
-// Apply custom error map globally for this module
-z.setErrorMap(securityErrorMap);
 
 /**
  * Common validation patterns as reusable regex

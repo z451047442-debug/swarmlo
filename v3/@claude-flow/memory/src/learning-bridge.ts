@@ -148,11 +148,13 @@ export class LearningBridge extends EventEmitter {
         this.stats.totalTrajectories++;
 
         const embedding = this.createHashEmbedding(insight.summary);
-        this.neural.recordStep(trajectoryId, {
-          action: `record:${insight.category}`,
-          reward: insight.confidence,
-          stateEmbedding: embedding,
-        });
+        // recordStep is positional: (trajectoryId, action, reward, stateEmbedding)
+        this.neural.recordStep(
+          trajectoryId,
+          `record:${insight.category}`,
+          insight.confidence,
+          embedding,
+        );
       } catch {
         // Neural system failure is non-fatal
       }
@@ -188,10 +190,11 @@ export class LearningBridge extends EventEmitter {
     if (this.neural && this.activeTrajectories.has(entryId)) {
       try {
         const trajectoryId = this.activeTrajectories.get(entryId)!;
-        this.neural.recordStep(trajectoryId, {
-          action: 'access',
-          reward: this.config.accessBoostAmount,
-        });
+        this.neural.recordStep(
+          trajectoryId,
+          'access',
+          this.config.accessBoostAmount,
+        );
       } catch {
         // Non-fatal
       }
@@ -400,10 +403,12 @@ export class LearningBridge extends EventEmitter {
       const NeuralLearningSystem = mod.NeuralLearningSystem ?? mod.default;
       if (!NeuralLearningSystem) return;
 
-      const instance = new NeuralLearningSystem({
-        mode: this.config.sonaMode,
-        ewcLambda: this.config.ewcLambda,
-      });
+      // Constructor takes a SONAMode string (not a config object).
+      // Construct first, then apply the configured mode via setMode.
+      const instance = new NeuralLearningSystem();
+      if (typeof instance.setMode === 'function') {
+        await instance.setMode(this.config.sonaMode);
+      }
 
       if (typeof instance.initialize === 'function') {
         await instance.initialize();

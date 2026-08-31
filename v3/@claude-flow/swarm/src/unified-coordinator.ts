@@ -683,17 +683,7 @@ export class UnifiedSwarmCoordinator extends EventEmitter implements IUnifiedSwa
 
   private setupEventForwarding(): void {
     // Forward topology events
-    this.topologyManager.on('node.added', (data) => {
-      this.emitEvent('topology.updated', { action: 'node_added', ...data });
-    });
-
-    this.topologyManager.on('node.removed', (data) => {
-      this.emitEvent('topology.updated', { action: 'node_removed', ...data });
-    });
-
-    this.topologyManager.on('topology.rebalanced', (data) => {
-      this.emitEvent('topology.rebalanced', data);
-    });
+    this.wireTopologyEvents(this.topologyManager);
 
     // Forward consensus events
     this.consensusEngine.on('consensus.achieved', (data) => {
@@ -704,6 +694,25 @@ export class UnifiedSwarmCoordinator extends EventEmitter implements IUnifiedSwa
     // Forward message bus events
     this.messageBus.on('message.delivered', (data) => {
       this.emitEvent('message.received', data);
+    });
+  }
+
+  /**
+   * Wire topology manager events onto the coordinator's event bus.
+   * Used both at construction and when setTopology() swaps in a rebuilt
+   * topology manager.
+   */
+  private wireTopologyEvents(topologyManager: TopologyManager): void {
+    topologyManager.on('node.added', (data) => {
+      this.emitEvent('topology.updated', { action: 'node_added', ...data });
+    });
+
+    topologyManager.on('node.removed', (data) => {
+      this.emitEvent('topology.updated', { action: 'node_removed', ...data });
+    });
+
+    topologyManager.on('topology.rebalanced', (data) => {
+      this.emitEvent('topology.rebalanced', data);
     });
   }
 
@@ -895,6 +904,16 @@ export class UnifiedSwarmCoordinator extends EventEmitter implements IUnifiedSwa
         agentId,
         result: data.result,
       });
+
+      // Release the agent back to its domain pool so it can pick up new work
+      // (domain agents were acquired via pool.acquire() and were never
+      // released — without this the 15-agent hierarchy exhausts quickly)
+      this.releaseAgentToDomain(agentId).catch((error) => {
+        this.emitEvent('agent.domain_release_failed', {
+          agentId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
     }
   }
 
@@ -911,6 +930,14 @@ export class UnifiedSwarmCoordinator extends EventEmitter implements IUnifiedSwa
         agent.currentTask = undefined;
         agent.status = 'idle';
 
+        // Release the agent back to its domain pool before re-assigning
+        this.releaseAgentToDomain(agentId).catch((error) => {
+          this.emitEvent('agent.domain_release_failed', {
+            agentId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        });
+
         // Re-assign
         this.assignTask(task);
       } else {
@@ -925,6 +952,14 @@ export class UnifiedSwarmCoordinator extends EventEmitter implements IUnifiedSwa
           taskId: data.taskId,
           agentId,
           error: data.error,
+        });
+
+        // Release the agent back to its domain pool
+        this.releaseAgentToDomain(agentId).catch((error) => {
+          this.emitEvent('agent.domain_release_failed', {
+            agentId,
+            error: error instanceof Error ? error.message : String(error),
+          });
         });
       }
     }
@@ -1070,8 +1105,47 @@ export class UnifiedSwarmCoordinator extends EventEmitter implements IUnifiedSwa
     return this.config.topology.type;
   }
 
-  setTopology(type: TopologyType): void {
+  /**
+   * Change the swarm topology.
+   *
+   * The effective config is updated synchronously (so getTopology() reflects
+   * the request immediately) and the topology manager is REBUILT with the new
+   * topology type: every registered agent is re-registered so the connection
+   * graph actually matches the requested topology. On failure the change is
+   * reported via 'topology.change_failed' and the error is rethrown.
+   */
+  async setTopology(type: TopologyType): Promise<void> {
+    if (type === this.config.topology.type) {
+      return;
+    }
+
     this.config.topology.type = type;
+
+    try {
+      const topologyConfig = { ...this.config.topology, type };
+      const rebuilt = createTopologyManager(topologyConfig);
+      await rebuilt.initialize(topologyConfig);
+
+      // Re-register all existing agents under the new topology
+      for (const [agentId, agent] of this.state.agents) {
+        const role = this.determineTopologyRole(agent.type);
+        await rebuilt.addNode(agentId, role);
+      }
+
+      // Wire event forwarding and swap in the rebuilt manager
+      this.wireTopologyEvents(rebuilt);
+      this.topologyManager.removeAllListeners();
+      this.topologyManager = rebuilt;
+      this.state.topology = rebuilt.getState();
+
+      this.emitEvent('topology.changed', { type });
+    } catch (error) {
+      this.emitEvent('topology.change_failed', {
+        type,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }
 
   getConsensusAlgorithm(): string {

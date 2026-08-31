@@ -174,9 +174,12 @@ const scanCommand: Command = {
                   else lowCount++;
 
                   findings.push({
-                    severity: sev === 'critical' ? output.error('CRITICAL') :
-                              sev === 'high' ? output.warning('HIGH') :
-                              sev === 'moderate' || sev === 'medium' ? output.warning('MEDIUM') : output.info('LOW'),
+                    // Plain severity strings — the persisted report must not
+                    // contain ANSI escape codes (downstream parsers split on
+                    // the JSON `severity` field). Color is applied at render.
+                    severity: sev === 'critical' ? 'CRITICAL' :
+                              sev === 'high' ? 'HIGH' :
+                              (sev === 'moderate' || sev === 'medium') ? 'MEDIUM' : 'LOW',
                     type: 'Dependency CVE',
                     location: `package.json:${pkg}`,
                     description: title.substring(0, 35),
@@ -200,8 +203,12 @@ const scanCommand: Command = {
           // sits next to "Bearer", not the key. Lookaround boundaries
           // match the prefix wherever it appears as a standalone token.
           { pattern: /(?<![a-zA-Z0-9_])(?:sk-|sk_live_|sk_test_)[a-zA-Z0-9]{10,}(?![a-zA-Z0-9_])/g, type: 'API Key (Stripe/OpenAI)' },
-          { pattern: /['"]AKIA[A-Z0-9]{16}['"]/g, type: 'AWS Access Key' },
-          { pattern: /['"]ghp_[a-zA-Z0-9]{36}['"]/g, type: 'GitHub Token' },
+          // #2931 follow-up: quote-adjacency anchors missed the common
+          // `Authorization: Bearer AKIA...` / `Bearer ghp_...` shapes where
+          // the quote sits next to "Bearer", not the key. Lookaround
+          // boundaries match the token wherever it appears standalone.
+          { pattern: /(?<![a-zA-Z0-9_])AKIA[A-Z0-9]{16}(?![a-zA-Z0-9_])/g, type: 'AWS Access Key' },
+          { pattern: /(?<![a-zA-Z0-9_])ghp_[a-zA-Z0-9]{36}(?![a-zA-Z0-9_])/g, type: 'GitHub Token' },
           { pattern: /['"]xox[baprs]-[a-zA-Z0-9-]+['"]/g, type: 'Slack Token' },
           { pattern: /password\s*[:=]\s*['"][^'"]{8,}['"]/gi, type: 'Hardcoded Password' },
         ];
@@ -226,7 +233,7 @@ const scanCommand: Command = {
                       if (pattern.test(lines[i])) {
                         highCount++;
                         findings.push({
-                          severity: output.warning('HIGH'),
+                          severity: 'HIGH',
                           type: 'Hardcoded Secret',
                           location: `${path.relative(target, fullPath)}:${i + 1}`,
                           description: type,
@@ -277,7 +284,7 @@ const scanCommand: Command = {
                         if (severity === 'high') highCount++;
                         else mediumCount++;
                         findings.push({
-                          severity: severity === 'high' ? output.warning('HIGH') : output.warning('MEDIUM'),
+                          severity: severity === 'high' ? 'HIGH' : 'MEDIUM',
                           type,
                           location: `${path.relative(target, fullPath)}:${i + 1}`,
                           description: desc,
@@ -298,12 +305,17 @@ const scanCommand: Command = {
 
       spinner.succeed('Scan complete');
 
-      // Display results
+      // Display results — severity color is applied here, at render time only,
+      // so the persisted findings (written below) stay ANSI-free.
+      const colorSeverity = (sev: string) =>
+        sev === 'CRITICAL' ? output.error('CRITICAL') :
+        sev === 'HIGH' ? output.warning('HIGH') :
+        sev === 'MEDIUM' ? output.warning('MEDIUM') : output.info('LOW');
       output.writeln();
       if (findings.length > 0) {
         output.printTable({
           columns: [
-            { key: 'severity', header: 'Severity', width: 12 },
+            { key: 'severity', header: 'Severity', width: 12, format: (v) => colorSeverity(String(v)) },
             { key: 'type', header: 'Type', width: 18 },
             { key: 'location', header: 'Location', width: 25 },
             { key: 'description', header: 'Description', width: 35 },
@@ -477,8 +489,10 @@ const cveCommand: Command = {
     output.writeln();
     output.writeln(output.dim(`Source: \`npm audit --json\` (GitHub Advisory DB). Run \`claude-flow security scan\` for code + dep scan.`));
 
-    // Exit code reflects whether any vulns were found, useful for CI gating
-    return { success: true, exitCode: finalRows.length > 0 ? 0 : 0 };
+    // Exit code reflects whether any vulns were found, useful for CI gating.
+    // Was `rows > 0 ? 0 : 0` — a constant 0 that silently disabled every
+    // `security cve && deploy` style gate.
+    return { success: finalRows.length === 0, exitCode: finalRows.length > 0 ? 1 : 0 };
   },
 };
 
@@ -496,12 +510,20 @@ const threatsCommand: Command = {
     { command: 'claude-flow security threats -e md', description: 'Export as markdown' },
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
-    const model = ctx.flags.model as string || 'stride';
+    const model = (ctx.flags.model as string || 'stride').toLowerCase();
     const scope = ctx.flags.scope as string || '.';
     const exportFormat = ctx.flags.export as string | undefined;
 
+    // DREAD/PASTA are advertised in --model's help but no analysis phase
+    // implements them. Running them silently under the STRIDE category table
+    // with a DREAD/PASTA header mislabels every finding — say so up front.
+    const strideOnly = model !== 'stride';
+    if (strideOnly) {
+      output.printWarning(`Threat model '${model}' is not implemented yet — running STRIDE analysis (same scan, STRIDE categories).`);
+    }
+
     output.writeln();
-    output.writeln(output.bold(`Threat Model: ${model.toUpperCase()}`));
+    output.writeln(output.bold(`Threat Model: ${strideOnly ? 'STRIDE' : model.toUpperCase()}${strideOnly ? ` (${model} requested, not implemented)` : ''}`));
     output.writeln(output.dim('─'.repeat(50)));
 
     const spinner = output.createSpinner({ text: `Scanning ${scope} for threat indicators...`, spinner: 'dots' });
@@ -695,7 +717,7 @@ const threatsCommand: Command = {
 
     // Always show STRIDE reference
     output.writeln();
-    output.writeln(output.bold(`${model.toUpperCase()} Reference Framework${findings.length === 0 ? ' (reference only — no issues detected)' : ''}:`));
+    output.writeln(output.bold(`STRIDE Reference Framework${findings.length === 0 ? ' (reference only — no issues detected)' : ''}:`));
     output.writeln();
     output.printTable({
       columns: [
@@ -709,7 +731,7 @@ const threatsCommand: Command = {
     // Export if requested
     if (exportFormat && findings.length > 0) {
       const exportData = {
-        model: model.toUpperCase(),
+        model: 'STRIDE',
         timestamp: new Date().toISOString(),
         scope,
         filesScanned,
@@ -735,71 +757,96 @@ const auditCommand: Command = {
   name: 'audit',
   description: 'Security audit logging and compliance',
   options: [
-    { name: 'action', short: 'a', type: 'string', description: 'Action: log, list, export, clear', default: 'list' },
-    { name: 'limit', short: 'l', type: 'number', description: 'Number of entries to show', default: '20' },
-    { name: 'filter', short: 'f', type: 'string', description: 'Filter by event type' },
+    { name: 'action', short: 'a', type: 'string', description: 'Action: list, export, clear', default: 'list' },
+    { name: 'limit', short: 'l', type: 'number', description: 'Number of entries to show', default: 20 },
+    { name: 'filter', short: 'f', type: 'string', description: 'Filter by event type (granted, checked, denied, revoked)' },
   ],
   examples: [
     { command: 'claude-flow security audit --action list', description: 'List audit logs' },
     { command: 'claude-flow security audit -a export', description: 'Export audit trail' },
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
-    const action = ctx.flags.action as string || 'list';
+    const action = (ctx.flags.action as string || 'list').toLowerCase();
+    const limit = Number(ctx.flags.limit ?? 20);
+    const filter = ctx.flags.filter as string | undefined;
 
     output.writeln();
     output.writeln(output.bold('Security Audit Log'));
     output.writeln(output.dim('─'.repeat(60)));
 
-    // Generate real audit entries from .swarm/ state and session history
-    const { existsSync, readFileSync, readdirSync, statSync } = await import('fs');
-    const { join } = await import('path');
+    // Real audit source only: `.swarm/permission-audit.jsonl`, the
+    // append-only permission audit ledger written by
+    // permission/permission-audit.ts (dream-cycle #2768). The previous
+    // implementation fabricated entries from .swarm file mtimes and even
+    // appended a synthetic AUDIT_RUN row — all removed. If the ledger does
+    // not exist, we say so honestly.
+    const { auditLogPath, readAuditLog } = await import('../permission/permission-audit.js');
+    const logFile = auditLogPath();
+    const allEntries = readAuditLog();
+    const filteredEntries = filter
+      ? allEntries.filter((e) => e.event === filter)
+      : allEntries;
 
-    const auditEntries: { timestamp: string; event: string; user: string; status: string }[] = [];
-    const swarmDir = join(process.cwd(), '.swarm');
-
-    // Check session files for real audit events
-    if (existsSync(swarmDir)) {
+    if (action === 'clear') {
+      if (allEntries.length === 0) {
+        output.writeln(output.dim('No audit records to clear.'));
+        return { success: true, message: 'Nothing to clear' };
+      }
       try {
-        const files = readdirSync(swarmDir).filter(f => f.endsWith('.json'));
-        for (const file of files.slice(-10)) {
-          try {
-            const stat = statSync(join(swarmDir, file));
-            const ts = stat.mtime.toISOString().replace('T', ' ').substring(0, 19);
-            auditEntries.push({
-              timestamp: ts,
-              event: file.includes('session') ? 'SESSION_UPDATE' :
-                     file.includes('swarm') ? 'SWARM_ACTIVITY' :
-                     file.includes('memory') ? 'MEMORY_WRITE' : 'CONFIG_CHANGE',
-              user: 'system',
-              status: output.success('Success')
-            });
-          } catch { /* skip */ }
-        }
-      } catch { /* ignore */ }
+        const { rmSync } = await import('node:fs');
+        rmSync(logFile, { force: true });
+        output.writeln(output.success(`Cleared ${allEntries.length} audit record(s) from ${logFile}`));
+        return { success: true, message: `Cleared ${allEntries.length} records` };
+      } catch (err) {
+        output.printError(`Failed to clear audit log: ${err instanceof Error ? err.message : String(err)}`);
+        return { success: false, exitCode: 1 };
+      }
     }
 
-    // Add current session entry
-    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
-    auditEntries.push({ timestamp: now, event: 'AUDIT_RUN', user: 'cli', status: output.success('Success') });
-
-    // Sort by timestamp desc
-    auditEntries.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
-
-    if (auditEntries.length === 0) {
-      output.writeln(output.dim('No audit events found. Initialize a project first: claude-flow init'));
-    } else {
-      output.printTable({
-        columns: [
-          { key: 'timestamp', header: 'Timestamp', width: 22 },
-          { key: 'event', header: 'Event', width: 20 },
-          { key: 'user', header: 'User', width: 15 },
-          { key: 'status', header: 'Status', width: 12 },
-        ],
-        data: auditEntries.slice(0, parseInt(ctx.flags.limit as string || '20', 10)),
-      });
+    if (action === 'export') {
+      if (allEntries.length === 0) {
+        output.writeln(output.dim('No audit records to export.'));
+        return { success: true, message: 'No records' };
+      }
+      output.writeln(JSON.stringify({
+        source: logFile,
+        exportedAt: new Date().toISOString(),
+        records: filteredEntries,
+      }, null, 2));
+      return { success: true, data: { source: logFile, records: filteredEntries } };
     }
 
-    return { success: true };
+    if (action !== 'list') {
+      output.printError(`Unknown --action '${action}'. Expected one of: list, export, clear.`);
+      return { success: false, exitCode: 1 };
+    }
+
+    if (allEntries.length === 0) {
+      output.writeln(output.dim('No audit records found. Permission events (grants/checks/denies/revokes) are appended to .swarm/permission-audit.jsonl by the permission audit ledger.'));
+      return { success: true, message: 'No audit records' };
+    }
+
+    const shown = filteredEntries.slice(-Math.max(1, Math.min(limit, 500))).reverse();
+    output.printTable({
+      columns: [
+        { key: 'timestamp', header: 'Timestamp', width: 26 },
+        { key: 'event', header: 'Event', width: 10 },
+        { key: 'agentId', header: 'Agent', width: 20 },
+        { key: 'role', header: 'Role', width: 14 },
+        { key: 'capability', header: 'Capability', width: 44 },
+      ],
+      data: shown.map((e) => ({
+        timestamp: e.timestamp,
+        event: e.event,
+        agentId: e.agentId,
+        role: e.role,
+        capability: e.capability,
+      })),
+    });
+    output.writeln();
+    output.writeln(output.dim(`Source: ${logFile} (${filteredEntries.length} record(s), showing ${shown.length})`));
+
+    return { success: true, data: { source: logFile, count: filteredEntries.length } };
   },
 };
 
@@ -979,7 +1026,7 @@ const defendCommand: Command = {
     { name: 'input', short: 'i', type: 'string', description: 'Input text to scan for threats' },
     { name: 'file', short: 'f', type: 'string', description: 'File to scan for threats' },
     { name: 'quick', short: 'Q', type: 'boolean', description: 'Quick scan (faster, less detailed)' },
-    { name: 'learn', short: 'l', type: 'boolean', description: 'Enable learning mode', default: 'true' },
+    { name: 'learn', short: 'l', type: 'boolean', description: 'Enable learning mode', default: true },
     { name: 'stats', short: 's', type: 'boolean', description: 'Show detection statistics' },
     { name: 'output', short: 'o', type: 'string', description: 'Output format: text, json', default: 'text' },
   ],

@@ -60,7 +60,9 @@ export class SeedClientFactory {
       endpoints: endpoint,
       auth: pairingToken ? { pairingToken } : undefined,
       tls: {
-        insecure: this.config.defaultTls?.insecure ?? true,
+        // TLS verification is ON unless explicitly disabled — the previous
+        // `?? true` default silently allowed MITM on the device channel.
+        insecure: this.config.defaultTls?.insecure ?? false,
         ca: this.config.defaultTls?.ca,
       },
       timeouts: this.config.defaultTimeouts ?? {

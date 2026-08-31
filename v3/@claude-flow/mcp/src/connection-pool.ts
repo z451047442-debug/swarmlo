@@ -63,6 +63,8 @@ interface WaitingClient {
   resolve: (connection: PooledConnection) => void;
   reject: (error: Error) => void;
   timestamp: number;
+  /** Acquire-timeout timer; cleared when the client settles to avoid dangling timers. */
+  timer?: ReturnType<typeof setTimeout>;
 }
 
 export class ConnectionPool extends EventEmitter implements IConnectionPool {
@@ -168,7 +170,7 @@ export class ConnectionPool extends EventEmitter implements IConnectionPool {
 
       this.waitingClients.push(client);
 
-      setTimeout(() => {
+      client.timer = setTimeout(() => {
         const index = this.waitingClients.indexOf(client);
         if (index !== -1) {
           this.waitingClients.splice(index, 1);
@@ -187,6 +189,7 @@ export class ConnectionPool extends EventEmitter implements IConnectionPool {
 
     const waitingClient = this.waitingClients.shift();
     if (waitingClient) {
+      if (waitingClient.timer) clearTimeout(waitingClient.timer);
       managed.acquire();
       this.stats.totalAcquired++;
       this.emit('pool:connection:acquired', { connectionId: connection.id });
@@ -251,6 +254,7 @@ export class ConnectionPool extends EventEmitter implements IConnectionPool {
 
     while (this.waitingClients.length > 0) {
       const client = this.waitingClients.shift();
+      if (client?.timer) clearTimeout(client.timer);
       client?.reject(new Error('Connection pool is draining'));
     }
 

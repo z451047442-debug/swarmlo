@@ -238,6 +238,88 @@ export function runHarnessAsync(args, opts) {
   return execBinAsync('harness', args, opts);
 }
 
+// ---------------------------------------------------------------------------
+// swarmlo-cli resolution — PINNED, never @latest (review fix 2026-08-31).
+//
+// Consumers (oia-audit / audit-list / audit-trend / similarity) previously
+// spawned `npx swarmlo-cli@latest`, which (a) executed unpinned code on
+// every call and (b) forced an npm registry metadata check per invocation.
+// Same resolution order as the metaharness bins above: an already-installed
+// local swarmlo-cli satisfying the pin (free), then a one-time versioned
+// cache install, after which every call is a plain `node <abs-bin>` spawn —
+// zero network. Bump the pin in lock-step with the swarmlo publish train.
+// ---------------------------------------------------------------------------
+const SWARMLO_CLI_PKG = 'swarmlo-cli';
+const SWARMLO_CLI_PIN_VERSION = '~3.39.1';
+
+let SWARMLO_CLI_RESOLVED = null;
+function resolveSwarmloCli() {
+  if (SWARMLO_CLI_RESOLVED) return SWARMLO_CLI_RESOLVED;
+  const localDir = findLocalPackageDir(SWARMLO_CLI_PKG, SWARMLO_CLI_PIN_VERSION);
+  if (localDir) {
+    const binPath = readSwarmloCliBin(localDir);
+    if (binPath) return (SWARMLO_CLI_RESOLVED = { ok: true, binPath, source: 'local' });
+  }
+  const cached = ensureCachedInstall({ pkg: SWARMLO_CLI_PKG, pinVersion: SWARMLO_CLI_PIN_VERSION });
+  if (!cached.ok) {
+    return (SWARMLO_CLI_RESOLVED = {
+      ok: false,
+      reason: cached.stderr ?? cached.error ?? 'install-failed',
+    });
+  }
+  const binPath = readSwarmloCliBin(cached.pkgDir);
+  if (!binPath) {
+    return (SWARMLO_CLI_RESOLVED = {
+      ok: false,
+      reason: `swarmlo-cli at ${cached.pkgDir} has no usable bin entry`,
+    });
+  }
+  return (SWARMLO_CLI_RESOLVED = { ok: true, binPath, source: 'cache' });
+}
+
+/** Read the swarmlo-cli bin entry (prefer the `swarmlo-cli` name) from package.json. */
+function readSwarmloCliBin(pkgDir) {
+  try {
+    const pj = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf-8'));
+    const bin = pj.bin || {};
+    const entry = bin['swarmlo-cli'] || bin.cli || bin['claude-flow'];
+    if (!entry) return null;
+    const abs = join(pkgDir, entry);
+    return existsSync(abs) ? abs : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Invoke the swarmlo CLI (pinned) for memory operations etc. Returns
+ * `{ stdout, stderr, status }`. `CLI_CORE=1` keeps the dev escape hatch
+ * (workspace core package via npx, now with -y) for local development.
+ */
+export function runSwarmloCli(args, opts = {}) {
+  if (process.env.CLI_CORE === '1') {
+    const r = spawnSync('npx', ['-y', '@claude-flow/cli-core@alpha', ...args], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      encoding: 'utf-8',
+      shell: process.platform === 'win32',
+    });
+    return { stdout: r.stdout || '', stderr: r.stderr || '', status: r.status ?? -1 };
+  }
+  const resolved = resolveSwarmloCli();
+  if (!resolved.ok) {
+    return { stdout: '', stderr: resolved.reason, status: 127 };
+  }
+  const r = spawnSync('node', [resolved.binPath, ...args], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    encoding: 'utf-8',
+    cwd: opts.cwd,
+    shell: false,
+  });
+  return { stdout: r.stdout || '', stderr: r.stderr || '', status: r.status ?? -1 };
+}
+
+export const SWARMLO_CLI_PIN = `${SWARMLO_CLI_PKG}@${SWARMLO_CLI_PIN_VERSION}`;
+
 /**
  * iter 63 — single source of truth for severity ranks across the
  * metaharness plugin family. Pre-iter-63, three scripts (oia-audit,

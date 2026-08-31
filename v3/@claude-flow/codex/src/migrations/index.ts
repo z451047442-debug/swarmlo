@@ -6,6 +6,8 @@
  * and proper AGENTS.md/config.toml generation.
  */
 
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import type {
   MigrationOptions,
   MigrationResult,
@@ -921,31 +923,47 @@ export function generateConfigTomlFromParsed(parsed: ParsedClaudeMd): string {
 }
 
 /**
- * Migrate from Claude Code (CLAUDE.md) to Codex (AGENTS.md)
+ * Migrate from Claude Code (CLAUDE.md) to Codex (AGENTS.md).
+ *
+ * Real migration path: reads the source CLAUDE.md, runs the full parse +
+ * transform pipeline (`performFullMigration`) and writes AGENTS.md +
+ * `.agents/config.toml` into the target directory. The previous version
+ * returned a hard-coded fake success without touching the filesystem.
  */
 export async function migrateFromClaudeCode(options: MigrationOptions): Promise<MigrationResult> {
-  const { sourcePath, targetPath, preserveComments = true, generateSkills = true } = options;
+  const { sourcePath, targetPath, generateSkills = true } = options;
 
   try {
-    // In actual implementation, this would read the file
-    // For now, we provide the structure for the migration
+    let claudeMdContent: string;
+    try {
+      claudeMdContent = readFileSync(sourcePath, 'utf-8');
+    } catch (err) {
+      return {
+        success: false,
+        warnings: [
+          `Could not read source file ${sourcePath}: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        ],
+      };
+    }
 
-    const result: MigrationResult = {
+    const migrated = await performFullMigration(claudeMdContent);
+
+    const agentsMdPath = join(targetPath, 'AGENTS.md');
+    const configTomlPath = join(targetPath, '.agents', 'config.toml');
+    mkdirSync(dirname(configTomlPath), { recursive: true });
+    writeFileSync(agentsMdPath, migrated.agentsMd);
+    writeFileSync(configTomlPath, migrated.configToml);
+
+    return {
       success: true,
-      agentsMdPath: `${targetPath}/AGENTS.md`,
-      skillsCreated: generateSkills
-        ? ['swarm-orchestration', 'memory-management', 'security-audit']
-        : [],
-      configTomlPath: `${targetPath}/.agents/config.toml`,
+      agentsMdPath,
+      skillsCreated: generateSkills ? migrated.skillsToCreate : [],
+      configTomlPath,
       mappings: FEATURE_MAPPINGS,
-      warnings: [
-        'Review skill invocation syntax (changed from / to $)',
-        'Check hook configurations for Automation compatibility',
-        'Verify MCP server configurations in config.toml',
-      ],
+      warnings: migrated.warnings,
     };
-
-    return result;
   } catch (error) {
     return {
       success: false,

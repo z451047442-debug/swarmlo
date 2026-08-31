@@ -1,20 +1,21 @@
 import type { Migration } from ".";
 import { collections } from "$lib/server/database";
-import { Collection, FindCursor, ObjectId } from "mongodb";
+import { ObjectId } from "mongodb";
 import { logger } from "$lib/server/logger";
 import type { Conversation } from "$lib/types/Conversation";
 
 const BATCH_SIZE = 1000;
 const DELETE_THRESHOLD_MS = 60 * 60 * 1000;
 
-async function deleteBatch(conversations: Collection<Conversation>, ids: ObjectId[]) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function deleteBatch(conversations: any, ids: ObjectId[]) {
 	if (ids.length === 0) return 0;
 	const deleteResult = await conversations.deleteMany({ _id: { $in: ids } });
 	return deleteResult.deletedCount;
 }
 
 async function processCursor<T>(
-	cursor: FindCursor<T>,
+	cursor: { hasNext: () => Promise<boolean>; next: () => Promise<T | null> },
 	processBatchFn: (batch: T[]) => Promise<void>
 ) {
 	let batch = [];

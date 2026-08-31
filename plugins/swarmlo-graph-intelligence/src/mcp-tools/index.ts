@@ -68,17 +68,26 @@ export const graphIntelligenceTools: MCPTool[] = [
       required: ['graphId', 'nodeId'],
     },
     handler: async (input) => {
-      const query = PageRankQuerySchema.parse(input);
-      const adapter = getRegistry().get(query.graphId);
-      if (!adapter) {
-        return { success: false, error: { kind: 'graph-not-found', message: `no adapter for graphId=${query.graphId}` } };
-      }
-      const matrix = await adapter.exportAsSparseMatrix();
+      // review fix 2026-08-31 — whole handler wrapped: schema parse and
+      // adapter export can throw too (previously only runPageRank was
+      // guarded, so a ZodError or export failure rejected the tool call).
       try {
+        const query = PageRankQuerySchema.parse(input);
+        const adapter = getRegistry().get(query.graphId);
+        if (!adapter) {
+          return { success: false, error: { kind: 'graph-not-found', message: `no adapter for graphId=${query.graphId}` } };
+        }
+        const matrix = await adapter.exportAsSparseMatrix();
         const result = runPageRank(matrix, query);
         return { success: true, result };
       } catch (err) {
-        return { success: false, error: err };
+        return {
+          success: false,
+          error: {
+            kind: 'handler-error',
+            message: err instanceof Error ? err.message : String(err),
+          },
+        };
       }
     },
   },
@@ -100,17 +109,24 @@ export const graphIntelligenceTools: MCPTool[] = [
       required: ['graphId', 'rhs'],
     },
     handler: async (input) => {
-      const query = SolveQuerySchema.parse(input);
-      const adapter = getRegistry().get(query.graphId);
-      if (!adapter) {
-        return { success: false, error: { kind: 'graph-not-found', message: `no adapter for graphId=${query.graphId}` } };
-      }
-      const matrix = await adapter.exportAsSparseMatrix();
+      // review fix 2026-08-31 — whole handler wrapped (see page-rank-entry).
       try {
+        const query = SolveQuerySchema.parse(input);
+        const adapter = getRegistry().get(query.graphId);
+        if (!adapter) {
+          return { success: false, error: { kind: 'graph-not-found', message: `no adapter for graphId=${query.graphId}` } };
+        }
+        const matrix = await adapter.exportAsSparseMatrix();
         const result = runSolve(matrix, query);
         return { success: true, result };
       } catch (err) {
-        return { success: false, error: err };
+        return {
+          success: false,
+          error: {
+            kind: 'handler-error',
+            message: err instanceof Error ? err.message : String(err),
+          },
+        };
       }
     },
   },
@@ -138,17 +154,24 @@ export const graphIntelligenceTools: MCPTool[] = [
       required: ['graphId', 'prevSolution', 'delta'],
     },
     handler: async (input) => {
-      const query = SolveOnChangeQuerySchema.parse(input);
-      const adapter = getRegistry().get(query.graphId);
-      if (!adapter) {
-        return { success: false, error: { kind: 'graph-not-found', message: `no adapter for graphId=${query.graphId}` } };
-      }
-      const matrix = await adapter.exportAsSparseMatrix();
+      // review fix 2026-08-31 — whole handler wrapped (see page-rank-entry).
       try {
+        const query = SolveOnChangeQuerySchema.parse(input);
+        const adapter = getRegistry().get(query.graphId);
+        if (!adapter) {
+          return { success: false, error: { kind: 'graph-not-found', message: `no adapter for graphId=${query.graphId}` } };
+        }
+        const matrix = await adapter.exportAsSparseMatrix();
         const result = runSolveOnChange(matrix, query);
         return { success: true, result };
       } catch (err) {
-        return { success: false, error: err };
+        return {
+          success: false,
+          error: {
+            kind: 'handler-error',
+            message: err instanceof Error ? err.message : String(err),
+          },
+        };
       }
     },
   },
@@ -164,28 +187,39 @@ export const graphIntelligenceTools: MCPTool[] = [
       required: ['graphId'],
     },
     handler: async (input) => {
-      const graphId = input.graphId as string;
-      const adapter = getRegistry().get(graphId);
-      if (!adapter) {
-        return { success: false, error: { kind: 'graph-not-found', message: `no adapter for graphId=${graphId}` } };
+      // review fix 2026-08-31 — whole handler wrapped.
+      try {
+        const graphId = input.graphId as string;
+        const adapter = getRegistry().get(graphId);
+        if (!adapter) {
+          return { success: false, error: { kind: 'graph-not-found', message: `no adapter for graphId=${graphId}` } };
+        }
+        const matrix = await adapter.exportAsSparseMatrix();
+        const coherence = checkCoherence(matrix, 0);
+        const nonzeros = matrix.entries.length;
+        const density = nonzeros / (matrix.size * matrix.size);
+        const recommendedAlgorithm = density < 0.01 ? 'forward-push' : coherence.score > 0 ? 'cg' : 'neumann';
+        return {
+          success: true,
+          result: {
+            graphId,
+            size: matrix.size,
+            nonzeros,
+            density,
+            coherenceScore: coherence.score,
+            isDiagonallyDominant: coherence.score > 0,
+            recommendedAlgorithm,
+          },
+        };
+      } catch (err) {
+        return {
+          success: false,
+          error: {
+            kind: 'handler-error',
+            message: err instanceof Error ? err.message : String(err),
+          },
+        };
       }
-      const matrix = await adapter.exportAsSparseMatrix();
-      const coherence = checkCoherence(matrix, 0);
-      const nonzeros = matrix.entries.length;
-      const density = nonzeros / (matrix.size * matrix.size);
-      const recommendedAlgorithm = density < 0.01 ? 'forward-push' : coherence.score > 0 ? 'cg' : 'neumann';
-      return {
-        success: true,
-        result: {
-          graphId,
-          size: matrix.size,
-          nonzeros,
-          density,
-          coherenceScore: coherence.score,
-          isDiagonallyDominant: coherence.score > 0,
-          recommendedAlgorithm,
-        },
-      };
     },
   },
 
@@ -204,67 +238,88 @@ export const graphIntelligenceTools: MCPTool[] = [
       required: ['constraints'],
     },
     handler: async (input) => {
-      // Phase 6: relaxed packing/covering LP. Each constraint is a row Aᵢ
-      // with shape { coeffs: Record<varId, number>, bound: number, kind: 'leq'|'geq'|'eq' }.
-      // The relaxed check: does there exist x ≥ 0 satisfying all constraints within `tolerance`?
-      // For Phase 6 we ship a tight bounded-variable LP via a simple Lagrangian
-      // shrink-on-violation pass. Real Kyng–Sachdeva solver wires in Phase 7+.
-      const constraints = (input.constraints as Array<{
-        coeffs: Record<string, number>;
-        bound: number;
-        kind?: 'leq' | 'geq' | 'eq';
-      }>) ?? [];
-      const tolerance = (input.tolerance as number) ?? 0.05;
-      if (constraints.length === 0) {
-        return { success: true, result: { feasible: true, witness: {}, method: 'no-constraints' } };
-      }
-      // Collect variables; initialise x = 0 (the trivial point).
-      const varSet = new Set<string>();
-      for (const c of constraints) for (const k of Object.keys(c.coeffs)) varSet.add(k);
-      const vars = [...varSet];
-      const x: Record<string, number> = {};
-      for (const v of vars) x[v] = 0;
-      // 200-iter Lagrangian shrink: for each violated row, push x toward
-      // satisfaction by a small step proportional to violation magnitude.
-      const stepSize = 0.05;
-      for (let it = 0; it < 200; it++) {
-        let maxViolation = 0;
-        for (const c of constraints) {
-          let lhs = 0;
-          for (const [k, w] of Object.entries(c.coeffs)) lhs += (x[k] ?? 0) * w;
-          const kind = c.kind ?? 'leq';
-          let violation = 0;
-          if (kind === 'leq' && lhs > c.bound) violation = lhs - c.bound;
-          else if (kind === 'geq' && lhs < c.bound) violation = c.bound - lhs;
-          else if (kind === 'eq') violation = Math.abs(lhs - c.bound);
-          if (violation > maxViolation) maxViolation = violation;
-          if (violation === 0) continue;
-          for (const [k, w] of Object.entries(c.coeffs)) {
-            if (w === 0) continue;
-            const direction = kind === 'leq' ? -Math.sign(w) : Math.sign(w);
-            x[k] = Math.max(0, (x[k] ?? 0) + direction * stepSize * (violation / Math.abs(w)));
+      // review fix 2026-08-31 — whole handler wrapped.
+      try {
+        // Phase 6: relaxed packing/covering LP. Each constraint is a row Aᵢ
+        // with shape { coeffs: Record<varId, number>, bound: number, kind: 'leq'|'geq'|'eq' }.
+        // The relaxed check: does there exist x ≥ 0 satisfying all constraints within `tolerance`?
+        // For Phase 6 we ship a tight bounded-variable LP via a simple Lagrangian
+        // shrink-on-violation pass. Real Kyng–Sachdeva solver wires in Phase 7+.
+        const constraints = (input.constraints as Array<{
+          coeffs: Record<string, number>;
+          bound: number;
+          kind?: 'leq' | 'geq' | 'eq';
+        }>) ?? [];
+        const tolerance = (input.tolerance as number) ?? 0.05;
+        if (constraints.length === 0) {
+          return { success: true, result: { feasible: true, witness: {}, method: 'no-constraints' } };
+        }
+        // Collect variables; initialise x = 0 (the trivial point).
+        const varSet = new Set<string>();
+        for (const c of constraints) for (const k of Object.keys(c.coeffs)) varSet.add(k);
+        const vars = [...varSet];
+        const x: Record<string, number> = {};
+        for (const v of vars) x[v] = 0;
+        // 200-iter Lagrangian shrink: for each violated row, push x toward
+        // satisfaction by a small step proportional to violation magnitude.
+        const stepSize = 0.05;
+        for (let it = 0; it < 200; it++) {
+          let maxViolation = 0;
+          for (const c of constraints) {
+            let lhs = 0;
+            for (const [k, w] of Object.entries(c.coeffs)) lhs += (x[k] ?? 0) * w;
+            const kind = c.kind ?? 'leq';
+            let violation = 0;
+            if (kind === 'leq' && lhs > c.bound) violation = lhs - c.bound;
+            else if (kind === 'geq' && lhs < c.bound) violation = c.bound - lhs;
+            else if (kind === 'eq') violation = Math.abs(lhs - c.bound);
+            if (violation > maxViolation) maxViolation = violation;
+            if (violation === 0) continue;
+            for (const [k, w] of Object.entries(c.coeffs)) {
+              if (w === 0) continue;
+              // review fix 2026-08-31 — eq direction was wrong: it fell into
+              // the geq branch, so an eq row with lhs > bound pushed x the
+              // WRONG way every iteration → oscillation → permanent
+              // infeasibility false-positives. Direction must depend on
+              // which side of the bound we're on.
+              let direction;
+              if (kind === 'eq') {
+                direction = lhs < c.bound ? Math.sign(w) : -Math.sign(w);
+              } else {
+                direction = kind === 'leq' ? -Math.sign(w) : Math.sign(w);
+              }
+              x[k] = Math.max(0, (x[k] ?? 0) + direction * stepSize * (violation / Math.abs(w)));
+            }
+          }
+          if (maxViolation <= tolerance) {
+            return { success: true, result: { feasible: true, witness: x, iterations: it + 1, method: 'lagrangian-shrink' } };
           }
         }
-        if (maxViolation <= tolerance) {
-          return { success: true, result: { feasible: true, witness: x, iterations: it + 1, method: 'lagrangian-shrink' } };
-        }
+        // Couldn't satisfy within iteration cap — infeasibility certificate
+        // is the residual violation vector.
+        const residuals = constraints.map((c) => {
+          let lhs = 0;
+          for (const [k, w] of Object.entries(c.coeffs)) lhs += (x[k] ?? 0) * w;
+          return { lhs, bound: c.bound, kind: c.kind ?? 'leq' };
+        });
+        return {
+          success: true,
+          result: {
+            feasible: false,
+            witness: x,
+            certificateOfInfeasibility: residuals,
+            method: 'lagrangian-shrink (capped)',
+          },
+        };
+      } catch (err) {
+        return {
+          success: false,
+          error: {
+            kind: 'handler-error',
+            message: err instanceof Error ? err.message : String(err),
+          },
+        };
       }
-      // Couldn't satisfy within iteration cap — infeasibility certificate
-      // is the residual violation vector.
-      const residuals = constraints.map((c) => {
-        let lhs = 0;
-        for (const [k, w] of Object.entries(c.coeffs)) lhs += (x[k] ?? 0) * w;
-        return { lhs, bound: c.bound, kind: c.kind ?? 'leq' };
-      });
-      return {
-        success: true,
-        result: {
-          feasible: false,
-          witness: x,
-          certificateOfInfeasibility: residuals,
-          method: 'lagrangian-shrink (capped)',
-        },
-      };
     },
   },
 

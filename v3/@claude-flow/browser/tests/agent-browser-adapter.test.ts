@@ -4,15 +4,37 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { AgentBrowserAdapter } from '../src/infrastructure/agent-browser-adapter.js';
-import { execFileSync } from 'child_process';
+import { execFile } from 'child_process';
 
 vi.mock('child_process', () => ({
-  execSync: vi.fn(),
-  execFileSync: vi.fn(),
-  spawn: vi.fn(),
+  execFile: vi.fn(),
 }));
 
-const mockExecSync = vi.mocked(execFileSync);
+const mockExecFile = vi.mocked(execFile);
+
+/** Simulate a successful agent-browser run writing `stdout` to the pipe. */
+function mockCommand(stdout: string): void {
+  mockExecFile.mockImplementation(((
+    _file: unknown,
+    _args: unknown,
+    _options: unknown,
+    callback: (err: Error | null, result: { stdout: string; stderr: string }) => void,
+  ) => {
+    callback(null, { stdout, stderr: '' });
+  }) as never);
+}
+
+/** Simulate a failed agent-browser invocation. */
+function mockCommandError(message: string): void {
+  mockExecFile.mockImplementation(((
+    _file: unknown,
+    _args: unknown,
+    _options: unknown,
+    callback: (err: Error | null, result: { stdout: string; stderr: string }) => void,
+  ) => {
+    callback(new Error(message), { stdout: '', stderr: '' });
+  }) as never);
+}
 
 describe('AgentBrowserAdapter', () => {
   let adapter: AgentBrowserAdapter;
@@ -48,7 +70,7 @@ describe('AgentBrowserAdapter', () => {
 
   describe('navigation', () => {
     it('should open a URL', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({
+      mockCommand(JSON.stringify({
         success: true,
         data: { url: 'https://example.com' },
       }));
@@ -56,23 +78,23 @@ describe('AgentBrowserAdapter', () => {
       const result = await adapter.open({ url: 'https://example.com' });
 
       expect(result.success).toBe(true);
-      expect(mockExecSync).toHaveBeenCalled();
-      const callArgs = (mockExecSync.mock.calls[0][1] as string[]).join(' ');
+      expect(mockExecFile).toHaveBeenCalled();
+      const callArgs = (mockExecFile.mock.calls[0][1] as string[]).join(' ');
       expect(callArgs).toContain('open');
       expect(callArgs).toContain('https://example.com');
     });
 
     it('should go back', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({ success: true }));
+      mockCommand(JSON.stringify({ success: true }));
 
       const result = await adapter.back();
 
       expect(result.success).toBe(true);
-      expect(mockExecSync).toHaveBeenCalled();
+      expect(mockExecFile).toHaveBeenCalled();
     });
 
     it('should go forward', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({ success: true }));
+      mockCommand(JSON.stringify({ success: true }));
 
       const result = await adapter.forward();
 
@@ -80,7 +102,7 @@ describe('AgentBrowserAdapter', () => {
     });
 
     it('should reload', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({ success: true }));
+      mockCommand(JSON.stringify({ success: true }));
 
       const result = await adapter.reload();
 
@@ -88,7 +110,7 @@ describe('AgentBrowserAdapter', () => {
     });
 
     it('should close', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({ success: true }));
+      mockCommand(JSON.stringify({ success: true }));
 
       const result = await adapter.close();
 
@@ -98,7 +120,7 @@ describe('AgentBrowserAdapter', () => {
 
   describe('interaction', () => {
     it('should click an element', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({
+      mockCommand(JSON.stringify({
         success: true,
         data: { clicked: true },
       }));
@@ -106,13 +128,13 @@ describe('AgentBrowserAdapter', () => {
       const result = await adapter.click({ target: '@e1' });
 
       expect(result.success).toBe(true);
-      const callArgs = (mockExecSync.mock.calls[0][1] as string[]).join(' ');
+      const callArgs = (mockExecFile.mock.calls[0][1] as string[]).join(' ');
       expect(callArgs).toContain('click');
       expect(callArgs).toContain('@e1');
     });
 
     it('should fill an input', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({
+      mockCommand(JSON.stringify({
         success: true,
         data: { filled: true },
       }));
@@ -120,33 +142,33 @@ describe('AgentBrowserAdapter', () => {
       const result = await adapter.fill({ target: '@e1', value: 'test' });
 
       expect(result.success).toBe(true);
-      const callArgs = (mockExecSync.mock.calls[0][1] as string[]).join(' ');
+      const callArgs = (mockExecFile.mock.calls[0][1] as string[]).join(' ');
       expect(callArgs).toContain('fill');
     });
 
     it('should type text', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({ success: true }));
+      mockCommand(JSON.stringify({ success: true }));
 
       const result = await adapter.type({ target: '@e1', text: 'hello' });
 
       expect(result.success).toBe(true);
-      const callArgs = (mockExecSync.mock.calls[0][1] as string[]).join(' ');
+      const callArgs = (mockExecFile.mock.calls[0][1] as string[]).join(' ');
       expect(callArgs).toContain('type');
     });
 
     it('should press a key', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({ success: true }));
+      mockCommand(JSON.stringify({ success: true }));
 
       const result = await adapter.press('Enter');
 
       expect(result.success).toBe(true);
-      const callArgs = (mockExecSync.mock.calls[0][1] as string[]).join(' ');
+      const callArgs = (mockExecFile.mock.calls[0][1] as string[]).join(' ');
       expect(callArgs).toContain('press');
       expect(callArgs).toContain('Enter');
     });
 
     it('should hover an element', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({ success: true }));
+      mockCommand(JSON.stringify({ success: true }));
 
       const result = await adapter.hover('@e1');
 
@@ -154,7 +176,7 @@ describe('AgentBrowserAdapter', () => {
     });
 
     it('should scroll', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({ success: true }));
+      mockCommand(JSON.stringify({ success: true }));
 
       const result = await adapter.scroll('down', 500);
 
@@ -164,7 +186,7 @@ describe('AgentBrowserAdapter', () => {
 
   describe('information retrieval', () => {
     it('should get text', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({
+      mockCommand(JSON.stringify({
         success: true,
         data: 'Element text',
       }));
@@ -176,7 +198,7 @@ describe('AgentBrowserAdapter', () => {
     });
 
     it('should get title', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({
+      mockCommand(JSON.stringify({
         success: true,
         data: 'Page Title',
       }));
@@ -187,7 +209,7 @@ describe('AgentBrowserAdapter', () => {
     });
 
     it('should get URL', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({
+      mockCommand(JSON.stringify({
         success: true,
         data: 'https://example.com',
       }));
@@ -200,7 +222,7 @@ describe('AgentBrowserAdapter', () => {
 
   describe('state checks', () => {
     it('should check visibility', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({
+      mockCommand(JSON.stringify({
         success: true,
         data: true,
       }));
@@ -212,7 +234,7 @@ describe('AgentBrowserAdapter', () => {
     });
 
     it('should check if enabled', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({
+      mockCommand(JSON.stringify({
         success: true,
         data: true,
       }));
@@ -225,7 +247,7 @@ describe('AgentBrowserAdapter', () => {
 
   describe('snapshot', () => {
     it('should take a snapshot', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({
+      mockCommand(JSON.stringify({
         success: true,
         data: {
           tree: { role: 'document', children: [] },
@@ -242,7 +264,7 @@ describe('AgentBrowserAdapter', () => {
     });
 
     it('should take interactive snapshot', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({
+      mockCommand(JSON.stringify({
         success: true,
         data: { tree: { role: 'document' } },
       }));
@@ -250,23 +272,23 @@ describe('AgentBrowserAdapter', () => {
       const result = await adapter.snapshot({ interactive: true });
 
       expect(result.success).toBe(true);
-      const callArgs = (mockExecSync.mock.calls[0][1] as string[]).join(' ');
+      const callArgs = (mockExecFile.mock.calls[0][1] as string[]).join(' ');
       expect(callArgs).toContain('-i');
     });
 
     it('should take compact snapshot', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({ success: true }));
+      mockCommand(JSON.stringify({ success: true }));
 
       const result = await adapter.snapshot({ compact: true });
 
-      const callArgs = (mockExecSync.mock.calls[0][1] as string[]).join(' ');
+      const callArgs = (mockExecFile.mock.calls[0][1] as string[]).join(' ');
       expect(callArgs).toContain('-c');
     });
   });
 
   describe('screenshot', () => {
     it('should take a screenshot', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({
+      mockCommand(JSON.stringify({
         success: true,
         data: 'base64encodedimage',
       }));
@@ -277,18 +299,18 @@ describe('AgentBrowserAdapter', () => {
     });
 
     it('should take full page screenshot', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({ success: true }));
+      mockCommand(JSON.stringify({ success: true }));
 
       const result = await adapter.screenshot({ fullPage: true });
 
-      const callArgs = (mockExecSync.mock.calls[0][1] as string[]).join(' ');
+      const callArgs = (mockExecFile.mock.calls[0][1] as string[]).join(' ');
       expect(callArgs).toContain('--full');
     });
   });
 
   describe('wait', () => {
     it('should wait for selector', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({ success: true }));
+      mockCommand(JSON.stringify({ success: true }));
 
       const result = await adapter.wait({ selector: '#element' });
 
@@ -296,7 +318,7 @@ describe('AgentBrowserAdapter', () => {
     });
 
     it('should wait for timeout', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify({ success: true }));
+      mockCommand(JSON.stringify({ success: true }));
 
       const result = await adapter.wait({ timeout: 1000 });
 
@@ -306,9 +328,7 @@ describe('AgentBrowserAdapter', () => {
 
   describe('error handling', () => {
     it('should handle command failure', async () => {
-      mockExecSync.mockImplementation(() => {
-        throw new Error('Command failed');
-      });
+      mockCommandError('Command failed');
 
       const result = await adapter.open({ url: 'https://example.com' });
 
@@ -317,7 +337,7 @@ describe('AgentBrowserAdapter', () => {
     });
 
     it('should handle invalid JSON response', async () => {
-      mockExecSync.mockReturnValue('invalid json');
+      mockCommand('invalid json');
 
       const result = await adapter.open({ url: 'https://example.com' });
 

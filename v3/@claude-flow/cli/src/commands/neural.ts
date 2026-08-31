@@ -14,20 +14,20 @@ const trainCommand: Command = {
   description: 'Train neural patterns with WASM SIMD acceleration (MicroLoRA + Flash Attention)',
   options: [
     { name: 'pattern', short: 'p', type: 'string', description: 'Pattern type: coordination, optimization, prediction, security, testing', default: 'coordination' },
-    { name: 'epochs', short: 'e', type: 'number', description: 'Number of training epochs', default: '50' },
+    { name: 'epochs', short: 'e', type: 'number', description: 'Number of training epochs', default: 50 },
     { name: 'data', short: 'd', type: 'string', description: 'Training data file or inline JSON' },
     { name: 'model', short: 'm', type: 'string', description: 'Model ID to train' },
-    { name: 'learning-rate', short: 'l', type: 'number', description: 'Learning rate', default: '0.01' },
-    { name: 'batch-size', short: 'b', type: 'number', description: 'Batch size', default: '32' },
-    { name: 'dim', type: 'number', description: 'Embedding dimension (max 256)', default: '256' },
-    { name: 'wasm', short: 'w', type: 'boolean', description: 'Use RuVector WASM acceleration', default: 'true' },
-    { name: 'flash', type: 'boolean', description: 'Enable Flash Attention (2.49x-7.47x speedup)', default: 'true' },
-    { name: 'moe', type: 'boolean', description: 'Enable Mixture of Experts routing', default: 'false' },
-    { name: 'hyperbolic', type: 'boolean', description: 'Enable hyperbolic attention for hierarchical patterns', default: 'false' },
-    { name: 'contrastive', type: 'boolean', description: 'Use contrastive learning (InfoNCE)', default: 'true' },
-    { name: 'curriculum', type: 'boolean', description: 'Enable curriculum learning', default: 'false' },
+    { name: 'learning-rate', short: 'l', type: 'number', description: 'Learning rate', default: 0.01 },
+    { name: 'batch-size', short: 'b', type: 'number', description: 'Batch size', default: 32 },
+    { name: 'dim', type: 'number', description: 'Embedding dimension (max 256)', default: 256 },
+    { name: 'wasm', short: 'w', type: 'boolean', description: 'Use RuVector WASM acceleration', default: true },
+    { name: 'flash', type: 'boolean', description: 'Enable Flash Attention (integration; speedup not yet benchmarked in-tree)', default: true },
+    { name: 'moe', type: 'boolean', description: 'Enable Mixture of Experts routing', default: false },
+    { name: 'hyperbolic', type: 'boolean', description: 'Enable hyperbolic attention for hierarchical patterns', default: false },
+    { name: 'contrastive', type: 'boolean', description: 'Use contrastive learning (InfoNCE)', default: true },
+    { name: 'curriculum', type: 'boolean', description: 'Enable curriculum learning', default: false },
     { name: 'backend', type: 'string', description: 'Training backend: auto (native when available), native (@ruvector/ruvllm TrainingPipeline, disk checkpoints), wasm (RuVector MicroLoRA/InfoNCE)', default: 'auto' },
-    { name: 'val-split', type: 'number', description: 'Validation holdout fraction 0..1 (native backend). >0 reports Best Val Loss + early stopping; 0 disables', default: '0.1' },
+    { name: 'val-split', type: 'number', description: 'Validation holdout fraction 0..1 (native backend). >0 reports Best Val Loss + early stopping; 0 disables', default: 0.1 },
     { name: 'resume', type: 'string', description: 'Resume native training from a checkpoint path (weights on 2.5.7; epoch position on >=2.6.0). Native backend only', default: '' },
   ],
   examples: [
@@ -744,7 +744,7 @@ const patternsCommand: Command = {
   options: [
     { name: 'action', short: 'a', type: 'string', description: 'Action: analyze, learn, predict, list', default: 'list' },
     { name: 'query', short: 'q', type: 'string', description: 'Pattern query for search' },
-    { name: 'limit', short: 'l', type: 'number', description: 'Max patterns to return', default: '10' },
+    { name: 'limit', short: 'l', type: 'number', description: 'Max patterns to return', default: 10 },
   ],
   examples: [
     { command: 'claude-flow neural patterns --action list', description: 'List all patterns' },
@@ -851,7 +851,7 @@ const predictCommand: Command = {
   description: 'Make AI predictions using trained models',
   options: [
     { name: 'input', short: 'i', type: 'string', description: 'Input text to predict routing for', required: true },
-    { name: 'k', short: 'k', type: 'number', description: 'Number of top predictions', default: '5' },
+    { name: 'k', short: 'k', type: 'number', description: 'Number of top predictions', default: 5 },
     { name: 'format', short: 'f', type: 'string', description: 'Output format: json, table', default: 'table' },
   ],
   examples: [
@@ -1147,8 +1147,8 @@ const exportCommand: Command = {
     { name: 'model', short: 'm', type: 'string', description: 'Model ID or category to export' },
     { name: 'output', short: 'o', type: 'string', description: 'Output file path (optional)' },
     { name: 'ipfs', short: 'i', type: 'boolean', description: 'Pin to IPFS (requires Pinata credentials)' },
-    { name: 'sign', short: 's', type: 'boolean', description: 'Sign with Ed25519 key', default: 'true' },
-    { name: 'strip-pii', type: 'boolean', description: 'Strip potential PII from export', default: 'true' },
+    { name: 'sign', short: 's', type: 'boolean', description: 'Sign with Ed25519 key', default: true },
+    { name: 'strip-pii', type: 'boolean', description: 'Strip potential PII from export', default: true },
     { name: 'name', short: 'n', type: 'string', description: 'Custom name for exported model' },
   ],
   examples: [
@@ -1517,8 +1517,8 @@ const importCommand: Command = {
   options: [
     { name: 'cid', short: 'c', type: 'string', description: 'IPFS CID to import from' },
     { name: 'file', short: 'f', type: 'string', description: 'Local file to import' },
-    { name: 'verify', short: 'v', type: 'boolean', description: 'Verify Ed25519 signature', default: 'true' },
-    { name: 'merge', type: 'boolean', description: 'Merge with existing patterns (vs replace)', default: 'true' },
+    { name: 'verify', short: 'v', type: 'boolean', description: 'Verify Ed25519 signature', default: true },
+    { name: 'merge', type: 'boolean', description: 'Merge with existing patterns (vs replace)', default: true },
     { name: 'category', type: 'string', description: 'Only import patterns from specific category' },
   ],
   examples: [
@@ -1740,9 +1740,9 @@ const benchmarkCommand: Command = {
   name: 'benchmark',
   description: 'Benchmark RuVector WASM training performance',
   options: [
-    { name: 'dim', short: 'd', type: 'number', description: 'Embedding dimension (max 256)', default: '256' },
-    { name: 'iterations', short: 'i', type: 'number', description: 'Number of iterations', default: '1000' },
-    { name: 'keys', short: 'k', type: 'number', description: 'Number of keys for attention', default: '100' },
+    { name: 'dim', short: 'd', type: 'number', description: 'Embedding dimension (max 256)', default: 256 },
+    { name: 'iterations', short: 'i', type: 'number', description: 'Number of iterations', default: 1000 },
+    { name: 'keys', short: 'k', type: 'number', description: 'Number of keys for attention', default: 100 },
   ],
   examples: [
     { command: 'claude-flow neural benchmark', description: 'Run default benchmark' },
@@ -1970,7 +1970,7 @@ const routerTrainCommand: Command = {
   options: [
     { name: 'corpus', short: 'c', type: 'string', description: 'Path to DRACO rows JSON ({embedding, scores}). Defaults to the bundled seed corpus.' },
     { name: 'out', short: 'o', type: 'string', description: 'Output path for the trained KRR JSON.' },
-    { name: 'quality-bar', short: 'q', type: 'number', description: 'qualityBar for cost-optimal selection (default 0.8)', default: '0.8' },
+    { name: 'quality-bar', short: 'q', type: 'number', description: 'qualityBar for cost-optimal selection (default 0.8)', default: 0.8 },
   ],
   examples: [
     { command: 'claude-flow neural router train', description: 'Train from the bundled seed and write to ./router.krr.json' },
@@ -2039,7 +2039,7 @@ const routerTrainFromTrajectoriesCommand: Command = {
     { name: 'write', short: 'w', type: 'string', description: 'Write paired rows to this path (seed-rows.json-compatible JSON array)' },
     { name: 'union', short: 'u', type: 'string', description: 'Union paired rows with an existing seed-rows.json — production rows win on task-text collision' },
     { name: 'filter-source', type: 'string', description: 'Only keep outcomes whose source matches (e.g. llm-judge, agent-execute)' },
-    { name: 'min-quality', type: 'number', description: 'Drop pairs whose MAX outcome score is below this threshold (default 0 — keep failures, they are training signal)', default: '0' },
+    { name: 'min-quality', type: 'number', description: 'Drop pairs whose MAX outcome score is below this threshold (default 0 — keep failures, they are training signal)', default: 0 },
     { name: 'format', short: 'f', type: 'string', description: 'Output format: table, json', default: 'table' },
   ],
   examples: [
@@ -2321,7 +2321,7 @@ const routerDecisionsCommand: Command = {
     { name: 'model', short: 'm', type: 'string', description: 'Filter by chosen model id (substring match, e.g. haiku, gpt-4)' },
     { name: 'bucket', type: 'string', description: 'Filter by complexity bucket: cheap (< 0.34) | mid (< 0.67) | strong (≥ 0.67) — iter 58' },
     { name: 'task-hash', type: 'string', description: 'Filter by exact task_hash (FNV-1a-32). Use for incident investigation — iter 59' },
-    { name: 'limit', short: 'l', type: 'number', description: 'Max recent decisions to list (default 20)', default: '20' },
+    { name: 'limit', short: 'l', type: 'number', description: 'Max recent decisions to list (default 20)', default: 20 },
     { name: 'format', short: 'f', type: 'string', description: 'Output format: table, json', default: 'table' },
   ],
   examples: [
@@ -2791,7 +2791,7 @@ const routerCostSavingsCommand: Command = {
     { name: 'in', short: 'i', type: 'string', description: 'Trajectory JSONL path (default: $CLAUDE_FLOW_ROUTER_TRAJECTORY_PATH or .swarm/...)' },
     { name: 'since', short: 's', type: 'string', description: 'Time window suffix: 1h, 24h, 7d, 30d' },
     { name: 'format', short: 'f', type: 'string', description: 'Output format: table, json', default: 'table' },
-    { name: 'top-n', type: 'number', description: 'Show top-N largest individual savings (default 5)', default: '5' },
+    { name: 'top-n', type: 'number', description: 'Show top-N largest individual savings (default 5)', default: 5 },
     { name: 'baseline', short: 'b', type: 'string', description: 'Counterfactual baseline: heuristic | always-haiku | always-sonnet | always-opus | always-gpt-4.1 | all (default: all)', default: 'all' },
     { name: 'window', short: 'w', type: 'string', description: 'Bin decisions into successive windows of this duration (e.g. 1h, 24h, 7d). Output adds a trend table — iter 34 drift detection.' },
     { name: 'task-hash', type: 'string', description: 'Filter to specific task_hash (FNV-1a-32 hex). For per-task cost investigation — iter 61.' },
@@ -3469,7 +3469,7 @@ const routerCompareModesCommand: Command = {
   description: 'Compare selector modes side-by-side for a hypothetical task (cost-optimal vs cost-ceiling) — ADR-149 iter 55',
   options: [
     { name: 'task', short: 't', type: 'string', description: 'Task text (or positional arg)' },
-    { name: 'ceiling', type: 'number', description: 'Cost-ceiling $/Mtok for iter 29 mode (default 20)', default: '20' },
+    { name: 'ceiling', type: 'number', description: 'Cost-ceiling $/Mtok for iter 29 mode (default 20)', default: 20 },
     { name: 'format', short: 'f', type: 'string', description: 'Output format: table, json', default: 'table' },
   ],
   examples: [
@@ -3807,7 +3807,7 @@ const routerBanditStateCommand: Command = {
   options: [
     { name: 'path', type: 'string', description: 'Path to model-router-state.json (default: .swarm/model-router-state.json)' },
     { name: 'format', short: 'f', type: 'string', description: 'Output format: table, json', default: 'table' },
-    { name: 'cold-threshold', type: 'number', description: 'Highlight cells with sample count below this (default 4 — matches iter 14 density guard)', default: '4' },
+    { name: 'cold-threshold', type: 'number', description: 'Highlight cells with sample count below this (default 4 — matches iter 14 density guard)', default: 4 },
   ],
   examples: [
     { command: 'claude-flow neural router bandit-state', description: 'Show all Beta priors per bucket × tier + per bucket × modelId' },
@@ -4407,8 +4407,8 @@ const distillExportCommand: Command = {
     { name: 'out-dir', short: 'o', type: 'string', description: 'Output dir for sft.jsonl / dpo.jsonl / export-report.json', default: '.claude-flow/neural/weft-export' },
     { name: 'eval-holdout', type: 'string', description: 'Comma-separated instance_ids reserved for eval (contamination guard). Excluded + asserted-disjoint.' },
     { name: 'max-tokens', type: 'number', description: 'Per-trajectory token budget (default weight-eft 28000)' },
-    { name: 'truncate', type: 'boolean', description: 'Truncate over-length trajectories instead of dropping', default: 'false' },
-    { name: 'keep-reward-hacked', type: 'boolean', description: 'Disable the reward-hacking filter (debug only; NOT recommended)', default: 'false' },
+    { name: 'truncate', type: 'boolean', description: 'Truncate over-length trajectories instead of dropping', default: false },
+    { name: 'keep-reward-hacked', type: 'boolean', description: 'Disable the reward-hacking filter (debug only; NOT recommended)', default: false },
     { name: 'format', short: 'f', type: 'string', description: 'Output format: table, json', default: 'table' },
   ],
   examples: [
@@ -4598,11 +4598,11 @@ const distillTrainCommand: Command = {
     { name: 'dpo', type: 'string', description: 'Local dpo.jsonl (default: .claude-flow/neural/weft-export/dpo.jsonl)' },
     { name: 'adapter-dir', type: 'string', description: 'Local dir to fetch the trained adapter into', default: '.claude-flow/neural' },
     { name: 'ssh-user', type: 'string', description: 'SSH user (default: current user)' },
-    { name: 'ssh-port', type: 'number', description: 'SSH port', default: '22' },
+    { name: 'ssh-port', type: 'number', description: 'SSH port', default: 22 },
     { name: 'remote-workdir', type: 'string', description: 'Remote working dir (default: ~/.swarmlo-weft/<runId>)' },
-    { name: 'execute', type: 'boolean', description: 'Opt in to REAL GPU compute on the remote host (still needs --yes)', default: 'false' },
-    { name: 'yes', type: 'boolean', description: 'Second confirmation gate; required with --execute to actually spend', default: 'false' },
-    { name: 'preflight', type: 'boolean', description: 'Opt in to read-only reachability/GPU probes against the host (bare dry-run is fully offline and contacts nothing)', default: 'false' },
+    { name: 'execute', type: 'boolean', description: 'Opt in to REAL GPU compute on the remote host (still needs --yes)', default: false },
+    { name: 'yes', type: 'boolean', description: 'Second confirmation gate; required with --execute to actually spend', default: false },
+    { name: 'preflight', type: 'boolean', description: 'Opt in to read-only reachability/GPU probes against the host (bare dry-run is fully offline and contacts nothing)', default: false },
     { name: 'format', short: 'f', type: 'string', description: 'Output format: table, json', default: 'table' },
   ],
   examples: [

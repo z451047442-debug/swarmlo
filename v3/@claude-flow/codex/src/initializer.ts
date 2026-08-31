@@ -376,6 +376,21 @@ export class CodexInitializer {
   }
 
   /**
+   * Platform-aware Codex CLI presence check. `which` does not exist on
+   * Windows — `where` is the equivalent there.
+   */
+  private async codexCliExists(): Promise<boolean> {
+    try {
+      const { execSync } = await import('child_process');
+      const cmd = process.platform === 'win32' ? 'where' : 'which';
+      execSync(`${cmd} codex`, { stdio: 'pipe' });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Register claude-flow as MCP server with Codex
    */
   private async registerMCPServer(): Promise<{ registered: boolean; warning?: string }> {
@@ -383,9 +398,7 @@ export class CodexInitializer {
       const { execSync } = await import('child_process');
 
       // Check if codex CLI is available
-      try {
-        execSync('which codex', { stdio: 'pipe' });
-      } catch {
+      if (!(await this.codexCliExists())) {
         return {
           registered: false,
           warning: `Codex CLI not found. Run: ${getSwarmloMcpAddCommand()}`,
@@ -467,6 +480,11 @@ export class CodexInitializer {
       'review the swarmlo-core@swarmlo hook definitions, and trust them. Use "trust all" only',
       'when every pending definition is from Swarmlo; otherwise trust the Swarmlo definitions',
       'individually. Hooks are installed but remain INACTIVE until you complete this review.',
+      '',
+      'SUPPLY-CHAIN NOTE: the swarmlo marketplace is pinned to the mutable `main` ref',
+      '(z451047442-debug/swarmlo --ref main). The installed hook code can change with',
+      'every pull. For a reproducible setup, pin the marketplace to a specific commit SHA:',
+      '  codex plugin marketplace add z451047442-debug/swarmlo --ref <commit-sha>',
     ].join('\n');
     const MANUAL = 'Install manually: codex plugin marketplace add z451047442-debug/swarmlo --ref main && codex plugin add swarmlo-core@swarmlo';
 
@@ -474,9 +492,7 @@ export class CodexInitializer {
       const { execSync } = await import('child_process');
 
       // Codex CLI present?
-      try {
-        execSync('which codex', { stdio: 'pipe' });
-      } catch {
+      if (!(await this.codexCliExists())) {
         return { installed: false, warning: `Codex CLI not found. ${MANUAL}` };
       }
 
@@ -507,6 +523,9 @@ export class CodexInitializer {
 
       // Add the marketplace (idempotent — codex no-ops if already added; any
       // error here is non-fatal, the plugin-add below reports the real failure).
+      // NOTE: `--ref main` is a mutable ref (supply-chain risk — the installed
+      // hook code changes with every push). The user is advised in ACTIVATION
+      // above to pin to a commit SHA for reproducible setups.
       try {
         execSync('codex plugin marketplace add z451047442-debug/swarmlo --ref main', { stdio: 'pipe', timeout: 20000 });
       } catch {

@@ -313,19 +313,27 @@ export class CredentialGenerator {
   /**
    * Creates a setup script output for secure credential deployment.
    *
+   * Values are emitted as single-quoted POSIX literals: inside single quotes
+   * `$`, backticks, double quotes and backslashes are all literal, so a
+   * password containing `$(...)` or `` `...` `` can never trigger command
+   * substitution when the script is sourced. A literal single quote inside a
+   * value is escaped with the `'\''` close-quote pattern.
+   *
    * @param credentials - Generated credentials
    * @returns Environment variable export script
    */
   createEnvScript(credentials: GeneratedCredentials): string {
+    const quote = (value: string): string => `'${value.replace(/'/g, `'\\''`)}'`;
+
     return `# Claude Flow V3 - Generated Credentials
 # Generated: ${credentials.generatedAt.toISOString()}
 # IMPORTANT: Store these securely and delete this file after use
 
-export CLAUDE_FLOW_ADMIN_PASSWORD="${credentials.adminPassword}"
-export CLAUDE_FLOW_SERVICE_PASSWORD="${credentials.servicePassword}"
-export CLAUDE_FLOW_JWT_SECRET="${credentials.jwtSecret}"
-export CLAUDE_FLOW_SESSION_SECRET="${credentials.sessionSecret}"
-export CLAUDE_FLOW_ENCRYPTION_KEY="${credentials.encryptionKey}"
+export CLAUDE_FLOW_ADMIN_PASSWORD=${quote(credentials.adminPassword)}
+export CLAUDE_FLOW_SERVICE_PASSWORD=${quote(credentials.servicePassword)}
+export CLAUDE_FLOW_JWT_SECRET=${quote(credentials.jwtSecret)}
+export CLAUDE_FLOW_SESSION_SECRET=${quote(credentials.sessionSecret)}
+export CLAUDE_FLOW_ENCRYPTION_KEY=${quote(credentials.encryptionKey)}
 `;
   }
 

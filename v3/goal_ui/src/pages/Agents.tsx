@@ -31,10 +31,8 @@ import { useI18n } from "@/i18n";
 import { AgentStatusCard } from "@/components/agents/AgentStatusCard";
 import { TaskBoard, type TaskItem } from "@/components/agents/TaskBoard";
 import { DependencyGraph } from "@/components/agents/DependencyGraph";
-import { ExecutionMonitor } from "@/components/agents/ExecutionMonitor";
 import { QualityGates } from "@/components/agents/QualityGates";
 import { CommunicationLog } from "@/components/agents/CommunicationLog";
-import { CodePreview } from "@/components/agents/CodePreview";
 import { AgentStep, StepStatus } from "@/components/AgentStep";
 import { DevelopmentStep } from "@/components/DevelopmentStep";
 import { StateAssessmentCard } from "@/components/StateAssessmentCard";
@@ -43,7 +41,6 @@ import { PlanVisualization } from "@/components/agents/PlanVisualization";
 import { StepExecutionPanel } from "@/components/agents/StepExecutionPanel";
 import { AgentActivityPanel } from "@/components/agents/AgentActivityPanel";
 import { RealTimeEventLog } from "@/components/agents/RealTimeEventLog";
-import { ExecutionDashboard } from "@/components/agents/ExecutionDashboard";
 import { ResearchReviewCard } from "@/components/ResearchReviewCard";
 
 type AgentStatus = "idle" | "working" | "blocked";
@@ -110,6 +107,46 @@ const AGENT_PHASE_ACTIVITY: Record<number, Array<{ id: string; task: string }>> 
 /** review 的审查任务（#4）依赖实现任务（#2）：实现阶段完成前 review 一律 blocked */
 const REVIEW_UNBLOCKED_AT_PHASE = 2;
 
+/**
+ * 开发执行计划的固定动作（与 developmentPhases 一一对应）。
+ * cost 为确定性演示值——不再依赖任何随机源。
+ */
+const DEV_EXECUTION_PLAN = [
+  { id: "1", nameKey: "agents.actions.setupArchitecture", descKey: "agents.actions.setupArchitectureDesc", cost: 3 },
+  { id: "2", nameKey: "agents.actions.designApi", descKey: "agents.actions.designApiDesc", cost: 2 },
+  { id: "3", nameKey: "agents.actions.implementBackend", descKey: "agents.actions.implementBackendDesc", cost: 5 },
+  { id: "4", nameKey: "agents.actions.writeTests", descKey: "agents.actions.writeTestsDesc", cost: 4 },
+  { id: "5", nameKey: "agents.actions.deploy", descKey: "agents.actions.deployDesc", cost: 1 },
+];
+
+/**
+ * 每个 agent 在开发阶段完成任务的确定性派生值（下标 = min(devPhase, 5)）。
+ * 替代原来的 Math.random()——同一 (agent, devPhase) 组合永远得到同一数值。
+ */
+const DETERMINISTIC_TASK_COUNTS: Record<string, number[]> = {
+  arch: [0, 1, 2, 3, 4, 5],
+  impl: [0, 2, 4, 5, 6, 7],
+  test: [0, 0, 1, 3, 4, 5],
+  review: [0, 0, 1, 2, 3, 4],
+  docs: [0, 0, 0, 1, 2, 3],
+  devops: [0, 1, 1, 2, 3, 4],
+};
+
+/** 高级设置（AdvancedSettingsModal 写入 localStorage 的部分字段） */
+interface SavedAdvancedSettings {
+  execution?: { enableQualityGates?: boolean };
+}
+
+/** 读取 AdvancedSettingsModal 保存的设置；损坏数据回退为空对象 */
+const loadAdvancedSettings = (): SavedAdvancedSettings => {
+  try {
+    const raw = localStorage.getItem("agenticflow-settings");
+    return raw ? (JSON.parse(raw) as SavedAdvancedSettings) : {};
+  } catch {
+    return {};
+  }
+};
+
 export default function Agents() {
   const { t } = useI18n();
   const [goal, setGoal] = useState("");
@@ -119,6 +156,8 @@ export default function Agents() {
   const [isPlanGenerated, setIsPlanGenerated] = useState(false);
   const [workflowStage, setWorkflowStage] = useState<"research" | "review" | "development">("research");
   const [devPhase, setDevPhase] = useState(0);
+  /** 高级设置（AdvancedSettingsModal 保存到 localStorage，此处读取并生效） */
+  const [advancedSettings] = useState<SavedAdvancedSettings>(loadAdvancedSettings);
 
   const [agents, setAgents] = useState<Agent[]>([
     { id: "arch", name: "agents.agent.arch", icon: GitBranch, status: "idle" },
@@ -261,31 +300,28 @@ export default function Agents() {
     handleGeneratePlan();
   };
 
-  const handleStartSwarm = () => {
-    if (!isPlanGenerated) {
-      handleGeneratePlan();
-      return;
+  /** 开发阶段操作：Resume/Skip/Retry 直接推进/回退 devPhase 时间线 */
+  const handleResumeDev = () => {
+    if (devPhase >= developmentPhases.length) {
+      // 已全部完成时重新从搭建阶段开始
+      setDevPhase(0);
+      applyDevPhaseToAgents(0);
     }
+    setIsRunning(true);
+  };
 
-    const newRunning = !isRunning;
-    setIsRunning(newRunning);
+  const handleSkipDev = () => {
+    const next = Math.min(devPhase + 1, developmentPhases.length);
+    setDevPhase(next);
+    applyDevPhaseToAgents(next);
+    setIsRunning(true);
+  };
 
-    if (newRunning) {
-      setCurrentPhase(0);
-
-      // Sequential phase progression with delays
-      setTimeout(() => setCurrentPhase(1), 1000);
-      setTimeout(() => setCurrentPhase(2), 8000);
-      setTimeout(() => setCurrentPhase(3), 16000);
-      setTimeout(() => setCurrentPhase(4), 24000);
-      setTimeout(() => setCurrentPhase(5), 32000);
-      setTimeout(() => {
-        setIsRunning(false);
-        setCurrentPhase(5);
-      }, 40000);
-    } else {
-      setCurrentPhase(0);
-    }
+  const handleRetryDev = () => {
+    const prev = Math.max(0, devPhase - 1);
+    setDevPhase(prev);
+    applyDevPhaseToAgents(prev);
+    setIsRunning(true);
   };
 
   const getPhaseStatus = (phaseIndex: number): StepStatus => {
@@ -1069,11 +1105,7 @@ export default function Agents() {
 
               <TabsContent value="quality">
                 <div className="space-y-6">
-                  <QualityGates metrics={{
-                    compileCheck: true,
-                    testCoverage: 100,
-                    securityScore: 95
-                  }} />
+                  <QualityGates metrics={qualityMetrics} />
 
                   <Card>
                     <CardHeader>
@@ -1312,15 +1344,14 @@ export default function Agents() {
                   </CardHeader>
                   <CardContent>
                     <PlanVisualization
-                      actions={[
-                        { id: '1', name: t('agents.actions.setupArchitecture'), cost: 3, description: t('agents.actions.setupArchitectureDesc') },
-                        { id: '2', name: t('agents.actions.designApi'), cost: 2, description: t('agents.actions.designApiDesc') },
-                        { id: '3', name: t('agents.actions.implementBackend'), cost: 5, description: t('agents.actions.implementBackendDesc') },
-                        { id: '4', name: t('agents.actions.writeTests'), cost: 4, description: t('agents.actions.writeTestsDesc') },
-                        { id: '5', name: t('agents.actions.deploy'), cost: 1, description: t('agents.actions.deployDesc') }
-                      ]}
-                      currentActionId={currentPhase > 0 ? String(Math.min(currentPhase, 5)) : undefined}
-                      completedActionIds={Array.from({ length: Math.max(0, currentPhase - 1) }, (_, i) => String(i + 1))}
+                      actions={DEV_EXECUTION_PLAN.map((action) => ({
+                        id: action.id,
+                        name: t(action.nameKey),
+                        cost: action.cost,
+                        description: t(action.descKey)
+                      }))}
+                      currentActionId={devPhase > 0 && devPhase <= DEV_EXECUTION_PLAN.length ? String(devPhase) : undefined}
+                      completedActionIds={Array.from({ length: Math.max(0, Math.min(devPhase, DEV_EXECUTION_PLAN.length) - 1) }, (_, i) => String(i + 1))}
                     />
                   </CardContent>
                 </Card>
@@ -1336,22 +1367,19 @@ export default function Agents() {
                           <div>
                             <CardTitle>{t('agents.exec.currentStep')}</CardTitle>
                             <CardDescription>
-                              {t(researchPhases[Math.min(currentPhase - 1, researchPhases.length - 1)]?.title ?? 'agents.exec.planning')}
+                              {t(developmentPhases[Math.min(devPhase, developmentPhases.length - 1)]?.title ?? 'agents.exec.planning')}
                             </CardDescription>
                           </div>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={handleStartSwarm} disabled={isRunning}>
+                            <Button size="sm" variant="outline" onClick={handleResumeDev} disabled={isRunning}>
                               <Play className="w-4 h-4 mr-1" />
                               {t('agents.exec.resume')}
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => setCurrentPhase(Math.min(currentPhase + 1, researchPhases.length))}>
+                            <Button size="sm" variant="outline" onClick={handleSkipDev}>
                               <SkipForward className="w-4 h-4 mr-1" />
                               {t('agents.exec.skip')}
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => {
-                              setCurrentPhase(Math.max(0, currentPhase - 1));
-                              setIsRunning(true);
-                            }}>
+                            <Button size="sm" variant="outline" onClick={handleRetryDev}>
                               <RotateCw className="w-4 h-4 mr-1" />
                               {t('agents.exec.retry')}
                             </Button>
@@ -1362,13 +1390,13 @@ export default function Agents() {
                         <div className="space-y-4">
                           <div>
                             <h3 className="font-semibold mb-2">
-                              {t(researchPhases[Math.min(currentPhase - 1, researchPhases.length - 1)]?.title ?? 'agents.exec.planning')}
+                              {t(developmentPhases[Math.min(devPhase, developmentPhases.length - 1)]?.title ?? 'agents.exec.planning')}
                             </h3>
                             <p className="text-sm text-muted-foreground mb-2">
-                              {t('agents.exec.cost', { value: t(researchPhases[Math.min(currentPhase - 1, researchPhases.length - 1)]?.data?.[0]?.details?.objective ?? '') })}
+                              {t('agents.exec.cost', { value: String(DEV_EXECUTION_PLAN[Math.min(devPhase, DEV_EXECUTION_PLAN.length - 1)]?.cost ?? 1) })}
                             </p>
                             <p className="text-sm">
-                              {t(researchPhases[Math.min(currentPhase - 1, researchPhases.length - 1)]?.description ?? '')}
+                              {t(developmentPhases[Math.min(devPhase, developmentPhases.length - 1)]?.description ?? '')}
                             </p>
                           </div>
 
@@ -1419,18 +1447,18 @@ export default function Agents() {
 
                   <StepExecutionPanel
                     currentAction={{
-                      name: t(researchPhases[Math.min(currentPhase - 1, researchPhases.length - 1)]?.title ?? 'agents.exec.planning'),
-                      description: t(researchPhases[Math.min(currentPhase - 1, researchPhases.length - 1)]?.description ?? ''),
-                      cost: 3,
+                      name: t(developmentPhases[Math.min(devPhase, developmentPhases.length - 1)]?.title ?? 'agents.exec.planning'),
+                      description: t(developmentPhases[Math.min(devPhase, developmentPhases.length - 1)]?.description ?? ''),
+                      cost: DEV_EXECUTION_PLAN[Math.min(devPhase, DEV_EXECUTION_PLAN.length - 1)]?.cost ?? 1,
                       preconditions: { initialized: true, requirements_clear: true },
                       effects: { architecture_defined: true, api_designed: true }
                     }}
                     assignedAgent={{
-                      name: t(agents[Math.min(currentPhase - 1, agents.length - 1)]?.name ?? 'agents.agent.archAgent'),
+                      name: t(agents[Math.min(devPhase, agents.length - 1)]?.name ?? 'agents.agent.archAgent'),
                       type: t('agents.type.specialist'),
                       status: isRunning ? 'working' : 'idle'
                     }}
-                    progress={isRunning ? 65 : 0}
+                    progress={isRunning ? Math.round((devPhase / developmentPhases.length) * 100) : 0}
                     logs={[
                       t('agents.exec.log1'),
                       t('agents.exec.log2'),
@@ -1455,7 +1483,7 @@ export default function Agents() {
                   metrics={new Map(agents.map(a => [
                     a.id,
                     {
-                      tasksCompleted: Math.floor(Math.random() * 10),
+                      tasksCompleted: (DETERMINISTIC_TASK_COUNTS[a.id] ?? [0, 0, 0, 0, 0, 0])[Math.min(devPhase, 5)],
                       tasksActive: a.status === 'working' ? 1 : 0,
                       tasksFailed: 0,
                       avgCompletionTime: 2500,
@@ -1480,7 +1508,20 @@ export default function Agents() {
           </TabsContent>
 
             <TabsContent value="quality">
-              <QualityGates metrics={qualityMetrics} />
+              {advancedSettings.execution?.enableQualityGates !== false ? (
+                <QualityGates metrics={qualityMetrics} />
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t('agents.settings.exec.qualityGates')}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      {t('agents.settings.exec.qualityGatesDesc')}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="logs">

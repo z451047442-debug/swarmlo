@@ -34,7 +34,10 @@
 
 import { spawnSync, spawn } from 'node:child_process';
 // iter 78 — share the iter-63 SEVERITY_RANK for the new finding-alert gate
+// review fix 2026-08-31 — parseTrailingJson imported for the drift JSON
+// extraction (was a bare JSON.parse that could throw on trailing noise).
 import { rankSeverity } from './_harness.mjs';
+import { parseTrailingJson } from './_invoke.mjs';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -42,9 +45,6 @@ import { fileURLToPath } from 'node:url';
 
 const SCRIPTS_DIR = dirname(fileURLToPath(import.meta.url));
 const NS = process.env.METAHARNESS_AUDIT_NAMESPACE || 'metaharness-audit';
-const CLI_PKG = process.env.CLI_CORE === '1'
-  ? '@claude-flow/cli-core@alpha'
-  : 'swarmlo-cli@latest';
 
 const ARGS = (() => {
   const a = {
@@ -114,8 +114,9 @@ function runScriptJson(script, args) {
   const r = spawnSync('node', [join(SCRIPTS_DIR, script), ...args, '--format', 'json'], {
     encoding: 'utf-8',
   });
-  const m = /\{[\s\S]*\}/.exec(r.stdout || '');
-  const json = m ? JSON.parse(m[0]) : null;
+  // review fix 2026-08-31 — parseTrailingJson (complete trailing-object
+  // extraction, never throws) replaces the bare JSON.parse of a regex slice.
+  const json = parseTrailingJson(r.stdout || '');
   // audit-list emits {records:[...]} — check that shape too
   const arrM = /\[[\s\S]*\]/.exec(r.stdout || '');
   return { json, exitCode: r.status ?? -1, stdout: r.stdout || '', stderr: r.stderr || '', arrMatch: arrM };
@@ -136,9 +137,8 @@ function runScriptJsonAsync(script, args) {
     p.stdout?.on('data', (d) => { stdout += d.toString(); });
     p.stderr?.on('data', (d) => { stderr += d.toString(); });
     p.on('close', (code) => {
-      const m = /\{[\s\S]*\}/.exec(stdout);
-      let json = null;
-      if (m) { try { json = JSON.parse(m[0]); } catch { /* leave null */ } }
+      // review fix 2026-08-31 — same trailing-JSON extraction as the sync path.
+      const json = parseTrailingJson(stdout);
       resolve({ json, exitCode: code ?? -1, stdout, stderr });
     });
     p.on('error', () => resolve({ json: null, exitCode: 127, stdout, stderr: 'spawn-failed' }));

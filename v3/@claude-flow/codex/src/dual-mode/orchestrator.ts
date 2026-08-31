@@ -490,9 +490,20 @@ Remember: Other agents depend on your results in shared memory. Be concise and s
   }
 
   /**
-   * Run a command and return output
+   * Run a command and return output.
+   *
+   * Every spawned command is bounded by a timeout (default 2 minutes) and an
+   * output buffer cap — without them a hung subprocess (e.g. `npx` waiting on
+   * a registry prompt) blocks the orchestrator forever and stdout/stderr grow
+   * unboundedly.
    */
-  private runCommand(command: string, args: string[], cwd: string): Promise<string> {
+  private runCommand(
+    command: string,
+    args: string[],
+    cwd: string,
+    timeoutMs = 120_000,
+    maxBuffer = 10 * 1024 * 1024,
+  ): Promise<string> {
     return new Promise((resolve, reject) => {
       const proc = spawn(command, args, {
         cwd,
@@ -501,11 +512,30 @@ Remember: Other agents depend on your results in shared memory. Be concise and s
       });
       let output = '';
       let error = '';
+      let settled = false;
 
-      proc.stdout?.on('data', (data) => { output += data.toString(); });
+      const fail = (err: Error) => {
+        if (settled) return;
+        settled = true;
+        proc.kill('SIGTERM');
+        reject(err);
+      };
+
+      const timer = setTimeout(() => {
+        fail(new Error(`Command timed out after ${timeoutMs}ms: ${command} ${args.join(' ')}`));
+      }, timeoutMs);
+
+      proc.stdout?.on('data', (data) => {
+        output += data.toString();
+        if (output.length > maxBuffer) {
+          fail(new Error(`Command output exceeded ${maxBuffer} bytes: ${command} ${args.join(' ')}`));
+        }
+      });
       proc.stderr?.on('data', (data) => { error += data.toString(); });
 
       proc.on('close', (code) => {
+        clearTimeout(timer);
+        if (settled) return;
         if (code === 0) {
           resolve(output);
         } else {
@@ -513,7 +543,10 @@ Remember: Other agents depend on your results in shared memory. Be concise and s
         }
       });
 
-      proc.on('error', reject);
+      proc.on('error', (err) => {
+        clearTimeout(timer);
+        fail(err);
+      });
     });
   }
 

@@ -136,8 +136,11 @@ export class TokenOptimizer extends EventEmitter {
       compactPrompt = '';
     }
 
-    // Estimate tokens saved based on actual content length difference
-    // Rough heuristic: ~4 chars per token, compare full query context vs compact
+    // HEURISTIC ESTIMATE — NOT MEASURED SAVINGS (2026-08-31). The query text
+    // is not replaced by the compact prompt, so subtracting their length
+    // estimates does not measure real token savings; it is only a rough
+    // heuristic for reporting. Kept for API compatibility but labeled
+    // honestly in the report output.
     const queryTokenEstimate = Math.ceil(query.length / 4);
     const compactTokenEstimate = Math.ceil(compactPrompt.length / 4);
     const saved = Math.max(0, queryTokenEstimate - compactTokenEstimate);
@@ -271,14 +274,15 @@ export class TokenOptimizer extends EventEmitter {
     const total = this.stats.cacheHits + this.stats.cacheMisses;
     const hitRate = total > 0 ? (this.stats.cacheHits / total * 100).toFixed(1) : '0';
 
-    // Estimate $0.01 per 1000 tokens
+    // Heuristic: $0.01 per 1000 "estimated" tokens — NOT a measured cost
+    // reduction (see getCompactContext's honest note).
     const savings = (this.stats.totalTokensSaved / 1000 * 0.01).toFixed(2);
 
     return {
       ...this.stats,
       agenticFlowAvailable: this.agenticFlowAvailable,
       cacheHitRate: `${hitRate}%`,
-      estimatedMonthlySavings: `$${savings}`,
+      estimatedMonthlySavings: `$${savings} (heuristic)`,
     };
   }
 
@@ -292,7 +296,7 @@ export class TokenOptimizer extends EventEmitter {
 
 | Metric | Value |
 |--------|-------|
-| Tokens Saved | ${stats.totalTokensSaved.toLocaleString()} |
+| Tokens Saved (heuristic est.) | ${stats.totalTokensSaved.toLocaleString()} |
 | Edits Optimized | ${stats.editsOptimized} |
 | Cache Hit Rate | ${stats.cacheHitRate} |
 | Memories Retrieved | ${stats.memoriesRetrieved} |

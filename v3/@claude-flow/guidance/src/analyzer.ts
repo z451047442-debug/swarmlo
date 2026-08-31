@@ -617,40 +617,46 @@ class DefaultHeadlessExecutor implements IContentAwareExecutor {
     const { promisify } = await import('node:util');
     const fs = await import('node:fs/promises');
     const { join } = await import('node:path');
+    const { tmpdir } = await import('node:os');
     const execFileAsync = promisify(execFile);
 
-    const claudeMdPath = join(workDir, 'CLAUDE.md');
-    const backupPath = join(workDir, '.CLAUDE.md.ab-backup');
-    let swapped = false;
+    // SECURITY: run the subprocess in a throwaway temp directory with the
+    // context CLAUDE.md injected there. The caller's workDir is never
+    // modified, so a failed run cannot delete or corrupt user files
+    // (previously the in-place swap+restore could unlink the user's
+    // CLAUDE.md when the restore step failed).
+    let tempDir: string | null = null;
+    let cwd = workDir;
 
     if (this.contextContent !== null) {
-      try { await fs.copyFile(claudeMdPath, backupPath); } catch { /* no file to back up */ }
-
+      tempDir = await fs.mkdtemp(join(tmpdir(), 'guidance-analyzer-'));
+      cwd = tempDir;
       if (this.contextContent.length > 0) {
-        await fs.writeFile(claudeMdPath, this.contextContent, 'utf-8');
-      } else {
-        await fs.unlink(claudeMdPath).catch(() => {});
+        await fs.writeFile(join(tempDir, 'CLAUDE.md'), this.contextContent, 'utf-8');
       }
-      swapped = true;
     }
 
     try {
       const { stdout, stderr } = await execFileAsync(
         'claude',
         ['-p', prompt, '--output-format', 'json'],
-        { timeout: 60000, maxBuffer: 10 * 1024 * 1024, encoding: 'utf-8', cwd: workDir }
+        { timeout: 60000, maxBuffer: 10 * 1024 * 1024, encoding: 'utf-8', cwd }
       );
       return { stdout, stderr, exitCode: 0 };
     } catch (error: any) {
+      // Guard: surface a clear error when the `claude` CLI is missing instead
+      // of silently failing every validation task.
+      if (error && error.code === 'ENOENT') {
+        throw new Error(
+          'The `claude` CLI was not found on PATH. Install it or pass a custom ' +
+          'IHeadlessExecutor to headlessBenchmark()/validateEffect().'
+        );
+      }
       return { stdout: error.stdout ?? '', stderr: error.stderr ?? '', exitCode: error.code ?? 1 };
     } finally {
-      if (swapped) {
-        try {
-          await fs.copyFile(backupPath, claudeMdPath);
-          await fs.unlink(backupPath);
-        } catch {
-          await fs.unlink(claudeMdPath).catch(() => {});
-        }
+      if (tempDir) {
+        // Best-effort cleanup; failure only leaks a temp dir, never user data.
+        await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
       }
     }
   }

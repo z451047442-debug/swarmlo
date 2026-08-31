@@ -352,7 +352,14 @@ export class ThreatDetectionService {
    */
   detectPII(input: string): boolean {
     for (const pii of PII_PATTERNS) {
-      if (pii.pattern.test(input)) {
+      // The PII patterns are declared with the `g`/`i` flags; `.test()` on a
+      // global regex advances `lastIndex`, so calling it repeatedly on the
+      // same regex alternates true/false — a false-negative on every second
+      // check. Rebuild the regex without the stateful `g`/`y` flags per call.
+      const stateless = pii.pattern.global || pii.pattern.sticky
+        ? new RegExp(pii.pattern.source, pii.pattern.flags.replace(/[gy]/g, ''))
+        : pii.pattern;
+      if (stateless.test(input)) {
         return true;
       }
     }

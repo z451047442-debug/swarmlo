@@ -69,7 +69,7 @@ function compareVersionsLocal(a: string, b: string): number {
  * Output format:
  * ▊ Swarmlo V3.6 ● user  │  ⎇ branch  │  Opus 4.7
  * ─────────────────────────────────────────────────────
- * 🏗️  DDD Domains    [●●○○○]  2/5    ⚡ HNSW 150x
+ * 🏗️  DDD Domains    [●●○○○]  2/5    ⚡ HNSW ANN
  * 🤖 Swarm  ◉ [ 5/15]  👥 2    🪝 10/17    🟢 CVE 3/3    💾 4MB    🧠  63%
  * 🔧 Architecture    ADRs ●71%  │  DDD ● 13%  │  Security ●CLEAN
  * 📊 AgentDB    Vectors ●3104⚡  │  Size 216KB  │  Tests ●6 (~24 cases)  │  MCP ●1/1

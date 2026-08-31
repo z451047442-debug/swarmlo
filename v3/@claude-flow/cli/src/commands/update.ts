@@ -327,7 +327,8 @@ const updateCommand: Command = {
     output.writeln();
     output.writeln('Environment Variables:');
     output.printList([
-      `${output.dim('CLAUDE_FLOW_AUTO_UPDATE=false')}  - Disable auto-update`,
+      `${output.dim('CLAUDE_FLOW_AUTO_UPDATE=true')}  - Opt in to auto-update on startup (default: check + notify only)`,
+      `${output.dim('SWARMLO_NO_AUTO_UPDATE=1')}      - Hard kill-switch for any auto-update`,
       `${output.dim('CLAUDE_FLOW_FORCE_UPDATE=true')} - Force update check`,
     ]);
     output.writeln();

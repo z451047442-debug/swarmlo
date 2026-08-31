@@ -130,7 +130,9 @@ function main() {
     // path quickly and verify the {degraded: true} emit on registry-unreachable.
     { name: 'evolve',       args: ['--repo', '.', '--confirm', '--sandbox', 'mock', '--generations', '1', '--children', '1', '--concurrency', '1', '--timeout-ms', '60000'] },
     { name: 'security-bench', args: ['--population', '1', '--cycles', '1', '--timeout-ms', '60000'] },
-    { name: 'bench',          args: ['--op', 'verify', '--suite', '/dev/null'] },
+    // review fix 2026-08-31 — `/dev/null` doesn't exist on Windows; use a
+    // temp-file suite path instead (os.tmpdir is cross-platform).
+    { name: 'bench',          args: ['--op', 'verify', '--suite', join(tmpdir(), `bench-degraded-suite-${process.pid}.json`)] },
   ];
 
   for (const s of skills) {

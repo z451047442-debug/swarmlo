@@ -1,8 +1,9 @@
 /**
  * V3 AgentDB Adapter
  *
- * Unified memory backend implementation using AgentDB with HNSW indexing
- * for 150x-12,500x faster vector search. Implements IMemoryBackend interface.
+ * Unified memory backend implementation using AgentDB with HNSW indexing.
+ * (In-tree benchmark: ~1.9x vs brute force at N=20k; the "150x-12,500x"
+ * figure was inherited from upstream and never reproduced.)
  *
  * @module v3/memory/agentdb-adapter
  */
@@ -88,7 +89,7 @@ const DEFAULT_CONFIG: AgentDBAdapterConfig = {
  * AgentDB Memory Backend Adapter
  *
  * Provides unified memory storage with:
- * - HNSW-based vector search (150x-12,500x faster than brute force)
+ * - HNSW-based vector search (measured ~1.9x vs brute force at N=20k in-tree)
  * - LRU caching with TTL support
  * - Namespace-based organization
  * - Full-text and metadata filtering
@@ -182,6 +183,13 @@ export class AgentDBAdapter extends EventEmitter implements IMemoryBackend {
       entry.embedding = await this.config.embeddingGenerator(entry.content);
     }
 
+    // Index embedding FIRST, before committing to storage. A dimension
+    // mismatch in the HNSW index throws — if we wrote the entry first, we
+    // would be left with a half-written entry (stored but not indexed).
+    if (entry.embedding) {
+      await this.index.addPoint(entry.id, entry.embedding);
+    }
+
     // Store in main storage
     this.entries.set(entry.id, entry);
 
@@ -202,11 +210,6 @@ export class AgentDBAdapter extends EventEmitter implements IMemoryBackend {
         this.tagIndex.set(tag, new Set());
       }
       this.tagIndex.get(tag)!.add(entry.id);
-    }
-
-    // Index embedding if available
-    if (entry.embedding) {
-      await this.index.addPoint(entry.id, entry.embedding);
     }
 
     // Update cache

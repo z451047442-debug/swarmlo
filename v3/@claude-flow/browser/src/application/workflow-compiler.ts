@@ -22,6 +22,7 @@ import {
   CompiledWorkflowSchema,
 } from '../domain/workflow.js';
 import { RiskClassifier } from './session-capsule-service.js';
+import { redactStepInput } from './redaction.js';
 import type { McTsBranch } from '../domain/mcts-branch.js';
 import type { SignedTrajectoryEnvelope } from '../domain/signed-trajectory.js';
 import type { Snapshot } from '../domain/types.js';
@@ -61,10 +62,14 @@ export class WorkflowCompiler {
     let highestRisk: ReturnType<RiskClassifier['classify']> = classifier.classify({ action: 'noop' });
 
     for (const raw of rawSteps) {
-      const target = (raw.input as { url?: string; target?: string }).url
-        ?? (raw.input as { target?: string }).target;
-      const value = (raw.input as { value?: string; text?: string }).value
-        ?? (raw.input as { text?: string }).text;
+      // Redact sensitive values (passwords, tokens, cookies, ...) before the
+      // step enters the compiled workflow — the envelope may have been sealed
+      // by an untrusted producer and the workflow is a persisted artifact
+      const stepInput = redactStepInput((raw.input as Record<string, unknown> | undefined) ?? {});
+      const target = (stepInput as { url?: string; target?: string }).url
+        ?? (stepInput as { target?: string }).target;
+      const value = (stepInput as { value?: string; text?: string }).value
+        ?? (stepInput as { text?: string }).text;
 
       // Collect origin from `open` steps for the requirements manifest.
       if (raw.action === 'open' && typeof target === 'string') {

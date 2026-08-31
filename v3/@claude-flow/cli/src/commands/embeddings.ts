@@ -114,8 +114,8 @@ const searchCommand: Command = {
   options: [
     { name: 'query', short: 'q', type: 'string', description: 'Search query', required: true },
     { name: 'collection', short: 'c', type: 'string', description: 'Namespace to search', default: 'default' },
-    { name: 'limit', short: 'l', type: 'number', description: 'Max results', default: '10' },
-    { name: 'threshold', short: 't', type: 'number', description: 'Similarity threshold (0-1)', default: '0.5' },
+    { name: 'limit', short: 'l', type: 'number', description: 'Max results', default: 10 },
+    { name: 'threshold', short: 't', type: 'number', description: 'Similarity threshold (0-1)', default: 0.5 },
     { name: 'db-path', type: 'string', description: 'Database path', default: '.swarm/memory.db' },
   ],
   examples: [
@@ -559,8 +559,8 @@ const indexCommand: Command = {
   options: [
     { name: 'action', short: 'a', type: 'string', description: 'Action: build, rebuild, status, optimize', default: 'status' },
     { name: 'collection', short: 'c', type: 'string', description: 'Collection/namespace label (informational; HNSW is a single global index across all namespaces). Omit to build for all namespaces (#1947 RC2).' },
-    { name: 'ef-construction', type: 'number', description: 'HNSW ef_construction parameter', default: '200' },
-    { name: 'm', type: 'number', description: 'HNSW M parameter', default: '16' },
+    { name: 'ef-construction', type: 'number', description: 'HNSW ef_construction parameter', default: 200 },
+    { name: 'm', type: 'number', description: 'HNSW M parameter', default: 16 },
   ],
   examples: [
     { command: 'claude-flow embeddings index', description: 'Show index status' },
@@ -717,11 +717,11 @@ const initCommand: Command = {
   description: 'Initialize embedding subsystem with ONNX model and hyperbolic config',
   options: [
     { name: 'model', short: 'm', type: 'string', description: 'ONNX model ID', default: 'all-MiniLM-L6-v2' },
-    { name: 'hyperbolic', type: 'boolean', description: 'Enable hyperbolic (Poincaré ball) embeddings', default: 'true' },
+    { name: 'hyperbolic', type: 'boolean', description: 'Enable hyperbolic (Poincaré ball) embeddings', default: true },
     { name: 'curvature', short: 'c', type: 'string', description: 'Poincaré ball curvature (use --curvature=-1 for negative)', default: '-1' },
-    { name: 'download', short: 'd', type: 'boolean', description: 'Download model during init', default: 'true' },
+    { name: 'download', short: 'd', type: 'boolean', description: 'Download model during init', default: true },
     { name: 'cache-size', type: 'string', description: 'LRU cache entries', default: '256' },
-    { name: 'force', short: 'f', type: 'boolean', description: 'Overwrite existing configuration', default: 'false' },
+    { name: 'force', short: 'f', type: 'boolean', description: 'Overwrite existing configuration', default: false },
   ],
   examples: [
     { command: 'claude-flow embeddings init', description: 'Initialize with defaults' },
@@ -906,8 +906,8 @@ const chunkCommand: Command = {
   description: 'Chunk text for embedding with overlap',
   options: [
     { name: 'text', short: 't', type: 'string', description: 'Text to chunk', required: true },
-    { name: 'max-size', short: 's', type: 'number', description: 'Max chunk size in chars', default: '512' },
-    { name: 'overlap', short: 'o', type: 'number', description: 'Overlap between chunks', default: '50' },
+    { name: 'max-size', short: 's', type: 'number', description: 'Max chunk size in chars', default: 512 },
+    { name: 'overlap', short: 'o', type: 'number', description: 'Overlap between chunks', default: 50 },
     { name: 'strategy', type: 'string', description: 'Strategy: character, sentence, paragraph, token', default: 'sentence' },
     { name: 'file', short: 'f', type: 'string', description: 'File to chunk (instead of text)' },
   ],
@@ -1013,7 +1013,7 @@ const hyperbolicCommand: Command = {
   description: 'Hyperbolic embedding operations (Poincaré ball)',
   options: [
     { name: 'action', short: 'a', type: 'string', description: 'Action: convert, distance, centroid', default: 'convert' },
-    { name: 'curvature', short: 'c', type: 'number', description: 'Hyperbolic curvature', default: '-1' },
+    { name: 'curvature', short: 'c', type: 'number', description: 'Hyperbolic curvature', default: -1 },
     { name: 'input', short: 'i', type: 'string', description: 'Input embedding(s) JSON' },
   ],
   examples: [
@@ -1258,7 +1258,7 @@ const neuralCommand: Command = {
         },
         {
           component: 'Flash Attention',
-          description: '2.49x-7.47x attention speedup',
+          description: 'Attention speedup integration (speedup not yet benchmarked in-tree)',
           status: ruvector.flashAttention ? output.success('Enabled') : output.dim('Disabled')
         },
         {
@@ -1293,7 +1293,7 @@ const modelsCommand: Command = {
   description: 'List and download embedding models',
   options: [
     { name: 'download', short: 'd', type: 'string', description: 'Model ID to download' },
-    { name: 'list', short: 'l', type: 'boolean', description: 'List available models', default: 'true' },
+    { name: 'list', short: 'l', type: 'boolean', description: 'List available models', default: true },
   ],
   examples: [
     { command: 'claude-flow embeddings models', description: 'List models' },
@@ -1499,8 +1499,8 @@ const warmupCommand: Command = {
   name: 'warmup',
   description: 'Preload embedding model for faster subsequent operations',
   options: [
-    { name: 'background', short: 'b', type: 'boolean', description: 'Run warmup in background daemon', default: 'false' },
-    { name: 'test', short: 't', type: 'boolean', description: 'Run test embedding after warmup', default: 'true' },
+    { name: 'background', short: 'b', type: 'boolean', description: 'Run warmup in background daemon', default: false },
+    { name: 'test', short: 't', type: 'boolean', description: 'Run test embedding after warmup', default: true },
   ],
   examples: [
     { command: 'claude-flow embeddings warmup', description: 'Preload model with test' },
@@ -1586,9 +1586,9 @@ const benchmarkCommand: Command = {
   name: 'benchmark',
   description: 'Run embedding performance benchmarks',
   options: [
-    { name: 'iterations', short: 'n', type: 'number', description: 'Number of iterations', default: '10' },
-    { name: 'batch-size', short: 'b', type: 'number', description: 'Batch size for batch test', default: '5' },
-    { name: 'full', short: 'f', type: 'boolean', description: 'Run full benchmark suite', default: 'false' },
+    { name: 'iterations', short: 'n', type: 'number', description: 'Number of iterations', default: 10 },
+    { name: 'batch-size', short: 'b', type: 'number', description: 'Batch size for batch test', default: 5 },
+    { name: 'full', short: 'f', type: 'boolean', description: 'Run full benchmark suite', default: false },
   ],
   examples: [
     { command: 'claude-flow embeddings benchmark', description: 'Quick benchmark' },
@@ -1795,7 +1795,7 @@ export const embeddingsCommand: Command = {
     output.writeln();
     output.writeln('Performance:');
     output.printList([
-      'HNSW indexing: 150x-12,500x faster search',
+      'HNSW indexing: measured ~1.9x-4.7x vs brute force above crossover',
       'Agentic Flow: 75x faster than Transformers.js (~3ms)',
       'Persistent cache: SQLite-backed, survives restarts',
       'Hyperbolic: Better hierarchical representation',

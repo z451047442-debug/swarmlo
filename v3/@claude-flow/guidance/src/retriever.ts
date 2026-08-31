@@ -87,6 +87,20 @@ export interface IEmbeddingProvider {
 }
 
 /**
+ * FNV-1a 32-bit hash over the entire string. Used as the full-content cache
+ * key for {@link HashEmbeddingProvider} — deterministic, fast, and free of
+ * the 200-char truncation collision class.
+ */
+function hashString(text: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+/**
  * Deterministic hash-based embedding provider — **test-only**.
  *
  * Produces fixed-dimension vectors from a simple character-hash → sin()
@@ -96,7 +110,9 @@ export interface IEmbeddingProvider {
  * an ONNX model.
  *
  * **Do NOT use in production** — replace with a real model-backed
- * provider (e.g. the agentic-flow ONNX integration).
+ * provider (e.g. the agentic-flow ONNX integration). `ShardRetriever`
+ * logs a warning when it falls back to this provider, and production
+ * callers must pass an explicit real provider.
  */
 export class HashEmbeddingProvider implements IEmbeddingProvider {
   private dimensions: number;
@@ -107,7 +123,9 @@ export class HashEmbeddingProvider implements IEmbeddingProvider {
   }
 
   async embed(text: string): Promise<Float32Array> {
-    const key = text.slice(0, 200);
+    // Full-text hash key (FNV-1a over the whole string) so two different
+    // inputs sharing the same 200-char prefix never collide in the cache.
+    const key = hashString(text);
     if (this.cache.has(key)) return this.cache.get(key)!;
 
     const embedding = this.hashEmbed(text);
@@ -195,6 +213,15 @@ export class ShardRetriever {
   private wordsPerSig = 0;  // = ceil(dim/32)
 
   constructor(embeddingProvider?: IEmbeddingProvider) {
+    if (!embeddingProvider) {
+      // Test-only fallback — warn loudly instead of silently using a
+      // provider with no semantic meaning in production.
+      console.warn(
+        '[guidance] ShardRetriever created without an embedding provider; ' +
+        'falling back to the test-only HashEmbeddingProvider. Pass a real ' +
+        'model-backed IEmbeddingProvider for production use.'
+      );
+    }
     this.embeddingProvider = embeddingProvider ?? new HashEmbeddingProvider();
   }
 

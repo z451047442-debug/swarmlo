@@ -194,25 +194,74 @@ export class WorkerInstance extends EventEmitter implements IWorkerInstance {
     tokensUsed?: number;
     metadata?: Record<string, unknown>;
   }> {
-    // Task execution handler - delegates to agentic-flow task runners
-    // Timeout enforcement ensures bounded execution
+    // Real task execution: the task must carry a callable handler (either
+    // directly as `input`, via `input.handler`, or via `metadata.handler`).
+    // Without one there is nothing to run — we fail loudly instead of
+    // fabricating a success result. Timeout enforcement keeps execution
+    // bounded.
     const timeout = task.timeout ?? this.definition.timeout ?? 30000;
+    const handler = this.resolveTaskHandler(task);
+
+    if (typeof handler !== 'function') {
+      this.emit('worker:task-no-handler', {
+        workerId: this.id,
+        taskId: task.id,
+        error: 'task carries no callable handler',
+      });
+      throw new Error(
+        `Task ${task.id} has no executable handler: pass a callable handler ` +
+        `(task.input, task.input.handler, or task.metadata.handler)`
+      );
+    }
 
     return new Promise((resolve, reject) => {
+      let settled = false;
       const timer = setTimeout(() => {
-        reject(new Error(`Task ${task.id} timed out after ${timeout}ms`));
+        if (!settled) {
+          settled = true;
+          reject(new Error(`Task ${task.id} timed out after ${timeout}ms`));
+        }
       }, timeout);
 
-      // Complete task processing
-      setImmediate(() => {
+      const settle = (callback: () => void): void => {
+        if (settled) return;
+        settled = true;
         clearTimeout(timer);
-        resolve({
-          output: { status: 'completed', taskId: task.id },
-          tokensUsed: 0,
-          metadata: { executedBy: this.id },
-        });
-      });
+        callback();
+      };
+
+      try {
+        const raw = handler(task.input, task);
+        Promise.resolve(raw).then(
+          (output) => settle(() => resolve({
+            output,
+            metadata: { executedBy: this.id, taskId: task.id },
+          })),
+          (error) => settle(() => reject(error instanceof Error ? error : new Error(String(error))))
+        );
+      } catch (error) {
+        settle(() => reject(error instanceof Error ? error : new Error(String(error))));
+      }
     });
+  }
+
+  /**
+   * Resolve a callable handler from the task payload.
+   */
+  private resolveTaskHandler(task: WorkerTask): unknown {
+    if (typeof task.metadata?.handler === 'function') {
+      return task.metadata.handler;
+    }
+    if (typeof task.input === 'function') {
+      return task.input;
+    }
+    if (task.input && typeof task.input === 'object') {
+      const inputHandler = (task.input as Record<string, unknown>).handler;
+      if (typeof inputHandler === 'function') {
+        return inputHandler;
+      }
+    }
+    return undefined;
   }
 
   private updateMetrics(success: boolean, duration: number, tokensUsed?: number): void {
@@ -383,13 +432,18 @@ export class WorkerPool extends EventEmitter implements IWorkerPool {
       throw new Error(`Worker ${workerId} not found`);
     }
 
+    // Record the pre-terminate status: worker.terminate() flips status to
+    // 'terminated', so the pool idle/busy counters must be adjusted from the
+    // ORIGINAL state or they drift (idle/busy never decrement)
+    const originalStatus = worker.status;
+
     await worker.terminate();
     this._workers.delete(workerId);
     this.poolMetrics.totalWorkers--;
 
-    if (worker.status === 'idle') {
+    if (originalStatus === 'idle') {
       this.poolMetrics.idleWorkers--;
-    } else if (worker.status === 'busy') {
+    } else if (originalStatus === 'busy') {
       this.poolMetrics.activeWorkers--;
     }
   }

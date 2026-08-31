@@ -302,7 +302,7 @@ const rollbackCommand: Command = {
   options: [
     { name: 'env', short: 'e', type: 'string', description: 'Environment to rollback', required: true },
     { name: 'version', short: 'v', type: 'string', description: 'Specific version to rollback to' },
-    { name: 'steps', short: 's', type: 'number', description: 'Number of versions to rollback', default: '1' },
+    { name: 'steps', short: 's', type: 'number', description: 'Number of versions to rollback', default: 1 },
   ],
   examples: [
     { command: 'claude-flow deployment rollback -e prod', description: 'Rollback production' },
@@ -400,7 +400,7 @@ const historyCommand: Command = {
   description: 'View deployment history',
   options: [
     { name: 'env', short: 'e', type: 'string', description: 'Filter by environment' },
-    { name: 'limit', short: 'l', type: 'number', description: 'Number of entries', default: '10' },
+    { name: 'limit', short: 'l', type: 'number', description: 'Number of entries', default: 10 },
   ],
   examples: [
     { command: 'claude-flow deployment history', description: 'Show all history' },
@@ -576,7 +576,7 @@ const logsCommand: Command = {
   options: [
     { name: 'deployment', short: 'd', type: 'string', description: 'Deployment ID' },
     { name: 'env', short: 'e', type: 'string', description: 'Environment' },
-    { name: 'lines', short: 'n', type: 'number', description: 'Number of lines', default: '50' },
+    { name: 'lines', short: 'n', type: 'number', description: 'Number of lines', default: 50 },
   ],
   examples: [
     { command: 'claude-flow deployment logs -e prod', description: 'View production logs' },

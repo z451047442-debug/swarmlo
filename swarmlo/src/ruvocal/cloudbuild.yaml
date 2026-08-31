@@ -1,17 +1,27 @@
+# ============================================================================
+# ruvocal deployment (Cloud Build -> Cloud Run)
+#
+# IMPORTANT (data layer): ruvocal persists to a SINGLE RVF JSON file on the
+# container's filesystem (db/ruvocal.rvf.json) — it does NOT use MongoDB, and
+# the image contains no embedded database. The RVF file is written atomically
+# (tmp+rename) with a rolling .bak backup, but:
+#   * Cloud Run's container filesystem is EPHEMERAL — every cold start loses
+#     all data unless a persistent volume (gcloud run services update --volume
+#     or multi-container revision with a mounted disk) is attached to /app/db.
+#   * The RVF store is single-writer — the app MUST run as a SINGLE instance
+#     (--max-instances 1) unless the volume backend guarantees mutual
+#     exclusion; concurrent writers split/overwrite the file.
+# If you need multi-instance scaling, migrate to a real shared database first.
+# ============================================================================
+
 steps:
-  # Build the WASM-integrated ruvocal image with embedded MongoDB.
-  # INCLUDE_DB=true triggers the multi-stage Dockerfile path that copies
-  # mongod from mongo:7 and sets MONGODB_URL=mongodb://localhost:27017.
-  #
-  # The Dockerfile uses BuildKit syntax (COPY --link, --mount=type=cache),
-  # so DOCKER_BUILDKIT=1 must be set in the env. Without it, the parser
-  # rejects --link with "Unknown flag" before any build steps run.
+  # Build the ruvocal image. Configuration is injected at runtime via
+  # DOTENV_LOCAL (see entrypoint.sh); secrets are never baked into the image.
   - name: 'gcr.io/cloud-builders/docker'
     env:
       - 'DOCKER_BUILDKIT=1'
     args: [
       'build',
-      '--build-arg', 'INCLUDE_DB=true',
       '-t', 'gcr.io/${PROJECT_ID}/ruvocal:${_VERSION}',
       '-f', 'Dockerfile',
       '.'
@@ -29,17 +39,16 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/${PROJECT_ID}/ruvocal:latest']
 
-  # Deploy to Cloud Run with embedded MongoDB.
+  # Deploy to Cloud Run.
   #
-  # NOTE: MongoDB data is ephemeral — Cloud Run's container filesystem is
-  # discarded on each cold start. This is acceptable for validation but
-  # NOT for production. For persistence, follow up with either Atlas or
-  # a Cloud Run multi-container revision (see ADR-033).
+  # NOTE: data is persisted to the single RVF JSON file on the container
+  # filesystem. This deploy must be updated out-of-band to attach a persistent
+  # volume to /app/db AND run with --max-instances 1 (see the header comment).
+  # --allow-unauthenticated is kept only for the public chat product; the RVF
+  # store is not a security boundary.
   #
   # Provider keys come from existing ruv-dev Secret Manager secrets per
-  # ADR-029. Only one CPU is allocated; mongo is lightweight when used
-  # only for chat session storage.
-  # Deploy with image only — preserves manually configured env vars
+  # ADR-029. Deploy with image only — preserves manually configured env vars
   # (DOTENV_LOCAL with PUBLIC_ORIGIN/OPENAI_BASE_URL/MODELS, OPENAI_API_KEY
   # secret mapping, etc.). Initial env config must be set out-of-band via
   # `gcloud run services update` (see ADR-033 deployment notes).
@@ -54,7 +63,7 @@ steps:
       '--memory', '2Gi',
       '--cpu', '2',
       '--min-instances', '0',
-      '--max-instances', '3',
+      '--max-instances', '1',
       '--timeout', '300',
       '--allow-unauthenticated'
     ]

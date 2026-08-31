@@ -177,8 +177,10 @@ export type ModelsRefreshSummary = {
 export type ProcessedModel = InternalProcessedModel;
 
 export let models: ProcessedModel[] = [];
-export let defaultModel!: ProcessedModel;
-export let taskModel!: ProcessedModel;
+// Undefined until the first successful refresh — startup degrades gracefully
+// instead of crashing the whole app when the model provider is unreachable.
+export let defaultModel: ProcessedModel | undefined = undefined;
+export let taskModel: ProcessedModel | undefined = undefined;
 export let validModelIdSchema: z.ZodType<string> = z.string();
 export let lastModelRefresh = new Date(0);
 export let lastModelRefreshDurationMs = 0;
@@ -195,15 +197,18 @@ let inflightRefresh: Promise<ModelsRefreshSummary> | null = null;
 
 const createValidModelIdSchema = (modelList: ProcessedModel[]): z.ZodType<string> => {
 	if (modelList.length === 0) {
-		throw new Error("No models available to build validation schema");
+		// Degrade to a permissive schema; requests will be rejected with
+		// "Model not available" instead of crashing the module at import time.
+		logger.warn("[models] No models available; validation schema is permissive");
+		return z.string();
 	}
 	const ids = new Set(modelList.map((m) => m.id));
 	return z.string().refine((value) => ids.has(value), "Invalid model id");
 };
 
-const resolveTaskModel = (modelList: ProcessedModel[]) => {
+const resolveTaskModel = (modelList: ProcessedModel[]): ProcessedModel | undefined => {
 	if (modelList.length === 0) {
-		throw new Error("No models available to select task model");
+		return undefined;
 	}
 
 	if (config.TASK_MODEL) {
@@ -243,7 +248,21 @@ const signatureForModel = (model: ProcessedModel) =>
 
 const applyModelState = (newModels: ProcessedModel[], startedAt: number): ModelsRefreshSummary => {
 	if (newModels.length === 0) {
-		throw new Error("Failed to load any models from upstream");
+		// Keep the previous model state (if any) instead of throwing: a failed
+		// refresh must not take down the whole application.
+		logger.error("[models] Failed to load any models from upstream; keeping previous state");
+		const summary: ModelsRefreshSummary = {
+			refreshedAt: new Date(),
+			durationMs: Date.now() - startedAt,
+			added: [],
+			removed: [],
+			changed: [],
+			total: models.length,
+		};
+		lastModelRefresh = summary.refreshedAt;
+		lastModelRefreshDurationMs = summary.durationMs;
+		lastModelRefreshSummary = summary;
+		return summary;
 	}
 
 	const previousIds = new Set(models.map((m) => m.id));
@@ -382,9 +401,7 @@ const buildModels = async (): Promise<ProcessedModel[]> => {
 			const filteredAndOrdered: ModelConfig[] = [];
 			for (const override of overrides) {
 				const matchKey = override.name?.trim() || override.id?.trim() || "";
-				const found = modelsRaw.find(
-					(model) => model.id === matchKey || model.name === matchKey
-				);
+				const found = modelsRaw.find((model) => model.id === matchKey || model.name === matchKey);
 				if (found) {
 					const { id, name, ...rest } = override;
 					void id;
@@ -413,7 +430,7 @@ const buildModels = async (): Promise<ProcessedModel[]> => {
 			}
 		}
 
-		const builtModels = await Promise.all(
+		const builtResults = await Promise.allSettled(
 			modelsRaw.map((e) =>
 				processModel(e)
 					.then(addEndpoint)
@@ -425,6 +442,14 @@ const buildModels = async (): Promise<ProcessedModel[]> => {
 					}))
 			)
 		);
+		const builtModels: ProcessedModel[] = [];
+		for (const result of builtResults) {
+			if (result.status === "fulfilled") {
+				builtModels.push(result.value);
+			} else {
+				logger.warn({ err: String(result.reason) }, "[models] skipping model that failed to load");
+			}
+		}
 
 		const archBase = (config.LLM_ROUTER_ARCH_BASE_URL || "").trim();
 		const routerLabel = (config.PUBLIC_LLM_ROUTER_DISPLAY_NAME || "Omni").trim() || "Omni";
@@ -491,7 +516,32 @@ const rebuildModels = async (): Promise<ModelsRefreshSummary> => {
 	return applyModelState(newModels, startedAt);
 };
 
-await rebuildModels();
+// Startup refresh must not crash module load when the provider is unreachable:
+// log loudly and retry with a backoff until it succeeds.
+(async () => {
+	try {
+		await rebuildModels();
+	} catch (err) {
+		logger.error(
+			{ err: String(err) },
+			"[models] Initial model load failed; the app will start degraded and retry"
+		);
+		let attempts = 0;
+		const retry = () => {
+			refreshModels()
+				.catch((retryErr) => {
+					attempts++;
+					logger.error({ err: String(retryErr), attempts }, "[models] Model refresh retry failed");
+				})
+				.finally(() => {
+					if (models.length === 0) {
+						setTimeout(retry, Math.min(60_000, 5_000 * 2 ** Math.min(attempts, 4)));
+					}
+				});
+		};
+		retry();
+	}
+})();
 
 export const refreshModels = async (): Promise<ModelsRefreshSummary> => {
 	if (inflightRefresh) {
@@ -506,13 +556,16 @@ export const refreshModels = async (): Promise<ModelsRefreshSummary> => {
 };
 
 export const validateModel = (_models: BackendModel[]) => {
-	// Zod enum function requires 2 parameters
+	// Zod enum function requires 2 parameters; empty list degrades to permissive
+	if (_models.length === 0) {
+		return z.string();
+	}
 	return z.enum([_models[0].id, ..._models.slice(1).map((m) => m.id)]);
 };
 
 // if `TASK_MODEL` is string & name of a model in `MODELS`, then we use `MODELS[TASK_MODEL]`, else we try to parse `TASK_MODEL` as a model config itself
 
 export type BackendModel = Optional<
-	typeof defaultModel,
+	ProcessedModel,
 	"preprompt" | "parameters" | "multimodal" | "unlisted" | "hasInferenceAPI"
 >;

@@ -455,8 +455,8 @@ export class CLI {
     this.output.writeln(this.output.bold('V3 FEATURES:'));
     this.output.printList([
       '15-agent hierarchical mesh coordination',
-      'AgentDB with HNSW indexing (150x-12,500x faster)',
-      'Flash Attention (2.49x-7.47x speedup)',
+      'AgentDB with HNSW vector indexing (measured ~1.9x-4.7x vs brute force)',
+      'Flash Attention (integration available; benchmark pending)',
       'Unified SwarmCoordinator engine',
       'Event-sourced state management',
       'Domain-Driven Design architecture'
@@ -570,7 +570,13 @@ export class CLI {
    */
   private async checkForUpdatesOnStartup(): Promise<void> {
     try {
-      const result = await runStartupUpdateCheck({ autoUpdate: true });
+      // Auto-update is explicitly opt-in: only run when the user enables
+      // CLAUDE_FLOW_AUTO_UPDATE=true (or SWARMLO_AUTO_UPDATE=1). Default is
+      // check + notify only. SWARMLO_NO_AUTO_UPDATE=1 remains the hard
+      // kill-switch inside runStartupUpdateCheck.
+      const autoUpdateOptIn =
+        process.env.CLAUDE_FLOW_AUTO_UPDATE === 'true' || process.env.SWARMLO_AUTO_UPDATE === '1';
+      const result = await runStartupUpdateCheck({ autoUpdate: autoUpdateOptIn });
 
       // Show notifications for available updates that weren't auto-applied
       if (result.checked && result.updatesAvailable.length > 0) {

@@ -104,10 +104,31 @@ export class HandshakeService {
       return { success: false, error: 'Challenge expired' };
     }
 
+    // Verify against the key the peer published through discovery
+    // (remoteNode.publicKey), NOT the key the responder self-reports in the
+    // response — otherwise a man-in-the-middle can answer the challenge with
+    // its own keypair (key substitution attack). A peer with no registered
+    // public key cannot be attested.
+    const registeredPublicKey = remoteNode.publicKey;
+    if (!registeredPublicKey) {
+      this.pendingChallenges.delete(response.challengeId);
+      return {
+        success: false,
+        error: 'Peer has no registered public key; cannot verify challenge',
+      };
+    }
+    if (response.publicKey && response.publicKey !== registeredPublicKey) {
+      this.pendingChallenges.delete(response.challengeId);
+      return {
+        success: false,
+        error: 'Responder public key does not match discovery registry',
+      };
+    }
+
     const isValid = await this.deps.verifySignature(
       pending.challenge.nonce,
       response.signedNonce,
-      response.publicKey,
+      registeredPublicKey,
     );
 
     this.pendingChallenges.delete(response.challengeId);

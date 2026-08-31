@@ -419,7 +419,7 @@ export const zhAgents: Record<string, string> = {
   "agents.step.finalizing": "正在收尾...",
   "agents.step.complete": "已完成！",
   "agents.taskboard.title": "任务分配看板",
-  "agents.taskboard.description": "拖拽任务以分配 Agent",
+  "agents.taskboard.description": "任务随开发阶段自动分配给 Agent",
   "agents.taskboard.mode": "模式：",
   "agents.taskboard.mode.distributed": "分布式",
   "agents.taskboard.mode.pipeline": "流水线",

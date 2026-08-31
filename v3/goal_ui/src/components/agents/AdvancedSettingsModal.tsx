@@ -120,7 +120,13 @@ export function AdvancedSettingsModal() {
   const { t } = useI18n();
   const [settings, setSettings] = useState<AdvancedSettings>(() => {
     const saved = localStorage.getItem('agenticflow-settings');
-    return saved ? JSON.parse(saved) : defaultSettings;
+    if (!saved) return defaultSettings;
+    try {
+      return JSON.parse(saved) as AdvancedSettings;
+    } catch {
+      // 损坏的持久化数据回退到默认配置，而不是让应用崩溃
+      return defaultSettings;
+    }
   });
   const [open, setOpen] = useState(false);
   const { toast } = useToast();

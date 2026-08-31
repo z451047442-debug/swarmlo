@@ -6,22 +6,26 @@ const migration: Migration = {
 	_id: new ObjectId("000000000000000000000010"),
 	name: "Update reports with assistantId to use contentId",
 	up: async () => {
-		await collections.reports.updateMany(
-			{
-				assistantId: { $exists: true, $ne: null },
-			},
-			[
+		// RVF does not support MongoDB pipeline updates (array of $set/$unset
+		// stages), so implement the same transformation in JS: for every report
+		// with a non-null assistantId, set contentId/object and unset assistantId.
+		const reports = await collections.reports
+			.find({ assistantId: { $exists: true, $ne: null } })
+			.toArray();
+
+		for (const report of reports) {
+			const assistantId = (report as unknown as Record<string, unknown>).assistantId;
+			await collections.reports.updateOne(
+				{ _id: report._id },
 				{
 					$set: {
 						object: "assistant",
-						contentId: "$assistantId",
+						contentId: assistantId,
 					},
-				},
-				{
-					$unset: "assistantId",
-				},
-			]
-		);
+					$unset: { assistantId: "" },
+				}
+			);
+		}
 		return true;
 	},
 };

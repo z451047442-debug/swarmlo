@@ -23,7 +23,7 @@ import { spawnNpxSync } from './_npx.mjs';
 // Federation aggregation is list+retrieve only on the federation-spend namespace.
 const CLI_PKG = process.env.CLI_CORE === '1'
   ? '@claude-flow/cli-core@alpha'
-  : 'swarmlo-cli@latest';
+  : 'swarmlo-cli@3.39.1';  // review fix 2026-08-31 — pinned, never @latest
 
 const NS = process.env.FED_NAMESPACE || 'federation-spend';
 

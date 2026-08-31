@@ -5,7 +5,7 @@ description: Swarmlo is a multi-agent orchestration platform for AI coding agent
 
 # Swarmlo
 
-Swarmlo (v3.31.0+) is a cross-agent orchestration layer that ships as three npm packages: `swarmlo` (thin wrapper), `claude-flow` (umbrella), and `@claude-flow/cli` (implementation). Users invoke it as `npx swarmlo <command>`.
+Swarmlo (v3.39.1+) is a cross-agent orchestration layer that ships as three npm packages: `swarmlo` (thin wrapper), `swarmlo-app` (umbrella), and `swarmlo-cli` (implementation). Users invoke it as `npx swarmlo <command>`.
 
 ## When to invoke swarmlo
 
@@ -79,4 +79,4 @@ npx skills add z451047442-debug/swarmlo --all
 
 ## Version
 
-Current: 3.31.0 (stable, published to npm as `swarmlo@latest` / `claude-flow@latest` / `swarmlo-cli@latest`).
+Current: 3.39.1 (stable, published to npm as `swarmlo@latest` / `swarmlo-app@latest` / `swarmlo-cli@latest`).

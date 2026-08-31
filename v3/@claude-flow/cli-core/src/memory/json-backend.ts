@@ -125,13 +125,19 @@ export class JsonMemoryBackend implements MemoryBackend {
     const entry = state.entries[ck];
     if (!entry) return null;
     if (this.isExpired(entry)) {
+      // Real state change (expiry cleanup) — persisted. This is rare, so it
+      // does not cause the read amplification the access-stat update below
+      // used to trigger (a full-file rewrite on EVERY retrieve).
       delete state.entries[ck];
       this.save(state);
       return null;
     }
+    // Access stats are tracked in memory only — the previous code rewrote
+    // the entire JSON file on every read (read amplification). They are
+    // persisted whenever the next real mutation (store/delete/expiry) saves
+    // the whole state, so nothing is lost within a session.
     entry.accessCount++;
     entry.lastAccessed = nowIso();
-    this.save(state);
     return { ...entry };
   }
 

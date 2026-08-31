@@ -5,6 +5,7 @@
  */
 
 import { EventEmitter } from 'events';
+import { timingSafeEqual } from 'node:crypto';
 import { WebSocketServer, WebSocket, RawData } from 'ws';
 import { createServer, Server } from 'http';
 import type {
@@ -218,7 +219,21 @@ export class WebSocketTransport extends EventEmitter implements ITransport {
   private setupWebSocketHandlers(): void {
     if (!this.wss) return;
 
-    this.wss.on('connection', (ws) => {
+    this.wss.on('connection', (ws, req) => {
+      // SECURITY: validate the auth token at upgrade time (same policy as
+      // the HTTP transport) so unauthenticated clients never enter the pool.
+      let upgradedAuthenticated = !this.config.auth?.enabled;
+      if (this.config.auth?.enabled) {
+        const url = new URL(req.url || '', `http://${req.headers.host}`);
+        const token = url.searchParams.get('token') || req.headers['authorization']?.replace(/^Bearer\s+/i, '');
+        upgradedAuthenticated = this.validateToken(token);
+        if (!upgradedAuthenticated) {
+          this.logger.warn('WebSocket connection rejected: invalid auth token');
+          ws.close(4003, 'Invalid token');
+          return;
+        }
+      }
+
       if (this.config.maxConnections && this.clients.size >= this.config.maxConnections) {
         this.logger.warn('Max connections reached, rejecting client');
         ws.close(1013, 'Server at capacity');
@@ -233,7 +248,7 @@ export class WebSocketTransport extends EventEmitter implements ITransport {
         lastActivity: new Date(),
         messageCount: 0,
         isAlive: true,
-        isAuthenticated: !this.config.auth?.enabled,
+        isAuthenticated: upgradedAuthenticated,
       };
 
       this.clients.set(clientId, client);
@@ -282,14 +297,27 @@ export class WebSocketTransport extends EventEmitter implements ITransport {
       const message = this.parseMessage(data);
 
       if (!client.isAuthenticated && this.config.auth?.enabled) {
+        // Post-upgrade authenticate flow (e.g. token provided in the first message).
         if (message.method !== 'authenticate') {
           client.ws.send(this.serializeMessage({
             jsonrpc: '2.0',
             id: message.id || null,
-            error: { code: -32001, message: 'Authentication required' },
+            error: { code: -32003, message: 'Authentication required' },
           } as MCPResponse));
           return;
         }
+
+        const token = (message.params as { token?: string } | undefined)?.token;
+        if (!this.validateToken(token)) {
+          client.ws.send(this.serializeMessage({
+            jsonrpc: '2.0',
+            id: message.id || null,
+            error: { code: -32004, message: 'Invalid token' },
+          } as MCPResponse));
+          return;
+        }
+        client.isAuthenticated = true;
+        this.logger.info('Client authenticated', { id: client.id });
       }
 
       if (message.jsonrpc !== '2.0') {
@@ -316,7 +344,7 @@ export class WebSocketTransport extends EventEmitter implements ITransport {
         }
 
         const startTime = performance.now();
-        const response = await this.requestHandler(message as MCPRequest);
+        const response = await this.requestHandler(message as MCPRequest, client.id);
         const duration = performance.now() - startTime;
 
         this.logger.debug('Request processed', {
@@ -342,6 +370,29 @@ export class WebSocketTransport extends EventEmitter implements ITransport {
         // Ignore send errors
       }
     }
+  }
+
+  /**
+   * SECURITY: Timing-safe token validation against the configured auth tokens.
+   * Returns true when auth is disabled (no token needed).
+   */
+  private validateToken(token: string | undefined): boolean {
+    if (!this.config.auth?.enabled) return true;
+    if (!token) return false;
+    if (!this.config.auth.tokens?.length) return false;
+
+    for (const validToken of this.config.auth.tokens) {
+      const bufA = Buffer.from(token, 'utf-8');
+      const bufB = Buffer.from(validToken, 'utf-8');
+      let equal = bufA.length === bufB.length;
+      if (equal && bufA.length > 0) {
+        equal = timingSafeEqual(bufA, bufB);
+      } else if (bufA.length === 0 && bufB.length === 0) {
+        equal = true;
+      }
+      if (equal) return true;
+    }
+    return false;
   }
 
   private parseMessage(data: RawData): any {

@@ -275,11 +275,16 @@ export class MCPServerManager extends EventEmitter {
     const pid = await this.readPidFile();
 
     if (!pid) {
-      // No PID file found. Detect if we are running in stdio mode
-      // (e.g., launched by Claude Code via `claude mcp add`).
-      const isStdio = !process.stdin.isTTY;
-      const envTransport = process.env.CLAUDE_FLOW_MCP_TRANSPORT;
-      if (isStdio || envTransport === 'stdio' || this.options.transport === 'stdio') {
+      // audit_2026-08-31: `!process.stdin.isTTY` used to report running:true
+      // for ANY process with piped stdin — `echo x | claude-flow mcp status`
+      // or a CI run lied "running" with a live PID while no server existed.
+      // Only report running when THIS process is actually serving the stdio
+      // server: either startStdioServer() set MCP_STDIO_MODE=1, or a server
+      // was started in-process (startTime set) with stdio transport.
+      const servingStdio =
+        this.startTime !== undefined && this.options.transport === 'stdio';
+      const inProcessStdioServer = process.env.MCP_STDIO_MODE === '1';
+      if (servingStdio || inProcessStdioServer) {
         return {
           running: true,
           pid: process.pid,
@@ -433,8 +438,13 @@ export class MCPServerManager extends EventEmitter {
 
     // Catch fatal errors that would otherwise close the transport
     // mid-batch with no JSON-RPC error returned to the client.
+    // audit_2026-08-31: an uncaughtException leaves the process in an
+    // undefined state; logging and soldiering on can loop/corrupt state.
+    // Log, then exit via setImmediate (so the log flush wins the race
+    // against process teardown).
     process.on('uncaughtException', (err) => {
       process.stderr.write(`[mcp-stdio] uncaughtException: ${err.stack || err.message}\n`);
+      setImmediate(() => process.exit(1));
     });
     process.on('unhandledRejection', (reason) => {
       process.stderr.write(`[mcp-stdio] unhandledRejection: ${reason instanceof Error ? reason.stack || reason.message : String(reason)}\n`);
@@ -521,9 +531,19 @@ export class MCPServerManager extends EventEmitter {
         console.error(
           `[${new Date().toISOString()}] ERROR [claude-flow-mcp] Buffer exceeded ${MAX_BUFFER_SIZE} bytes, rejecting`
         );
+        // audit_2026-08-31: the error frame used to omit `id`, so the client
+        // could not correlate the rejection to its request. Best-effort
+        // extract the request id from the buffered JSON before discarding;
+        // null id is the JSON-RPC-legal fallback.
+        let requestId: string | number | null = null;
+        try {
+          const head = JSON.parse(buffer) as { id?: string | number };
+          if (head.id !== undefined) requestId = head.id;
+        } catch { /* partial frame — cannot recover id */ }
         buffer = '';
         writeFrame({
           jsonrpc: '2.0',
+          id: requestId,
           error: { code: -32600, message: 'Request too large' },
         });
         return;

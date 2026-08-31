@@ -270,14 +270,24 @@ export class SamplingManager extends EventEmitter {
 
   /**
    * Call with timeout
+   *
+   * The race loser's late rejection is handled (no-op catch) so a provider
+   * that settles after the timeout does not surface as an unhandled rejection.
    */
   private async callWithTimeout<T>(promise: Promise<T>, timeout: number): Promise<T> {
-    return Promise.race([
-      promise,
-      new Promise<T>((_, reject) => {
-        setTimeout(() => reject(new Error('Sampling timeout')), timeout);
-      }),
-    ]);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeoutPromise = new Promise<T>((_, reject) => {
+      timer = setTimeout(() => reject(new Error('Sampling timeout')), timeout);
+    });
+
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } finally {
+      if (timer) clearTimeout(timer);
+      // Attach a no-op handler so a late rejection from the loser is considered
+      // handled and never becomes an unhandled rejection.
+      promise.catch(() => {});
+    }
   }
 }
 

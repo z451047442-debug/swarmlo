@@ -102,7 +102,7 @@ function persistToMemory(summary) {
   // v3/@claude-flow/cli-core/MIGRATION.md.
   const cliPkg = process.env.CLI_CORE === '1'
     ? '@claude-flow/cli-core@alpha'
-    : 'swarmlo-cli@latest';
+    : 'swarmlo-cli@3.39.1';  // review fix 2026-08-31 — pinned, never @latest
   // spawnSync with explicit args avoids shell-escape pitfalls for the JSON value.
   const r = spawnNpxSync([
     cliPkg, 'memory', 'store',

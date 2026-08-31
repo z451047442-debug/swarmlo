@@ -61,6 +61,27 @@ export class Database {
 			console.log("[RuVocal] Flushing database to disk");
 			flushToDisk();
 		});
+
+		// Periodic TTL cleanup for expiring documents (messageEvents, etc.).
+		// RVF has no TTL index, so sweep expired docs every 5 minutes.
+		const collections = this.getCollections();
+		const ttlSweep = async () => {
+			try {
+				const now = new Date();
+				const deleted = await collections.messageEvents.deleteMany({
+					expiresAt: { $lt: now },
+				});
+				if (deleted.deletedCount > 0) {
+					console.log(
+						`[RuVocal] TTL sweep: removed ${deleted.deletedCount} expired messageEvents`
+					);
+				}
+			} catch (err) {
+				console.error("[RuVocal] TTL sweep failed:", err);
+			}
+		};
+		ttlSweep();
+		setInterval(ttlSweep, 5 * 60_000).unref?.();
 	}
 
 	public static async getInstance(): Promise<Database> {

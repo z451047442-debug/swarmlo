@@ -399,6 +399,10 @@ export class ProviderManager extends EventEmitter {
 
   /**
    * Generate cache key
+   *
+   * Must cover every request parameter that changes the provider output —
+   * a key missing `tools`/`topP`/`stopSequences` would serve one prompt's
+   * tool-enabled or sampling-tuned response for a different prompt.
    */
   private getCacheKey(request: LLMRequest): string {
     return JSON.stringify({
@@ -406,6 +410,9 @@ export class ProviderManager extends EventEmitter {
       model: request.model,
       temperature: request.temperature,
       maxTokens: request.maxTokens,
+      topP: request.topP,
+      stopSequences: request.stopSequences,
+      tools: request.tools,
     });
   }
 

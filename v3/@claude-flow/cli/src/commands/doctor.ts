@@ -13,6 +13,7 @@ import { fileURLToPath } from 'url';
 import { createHash } from 'crypto';
 import { execSync, exec, spawnSync } from 'child_process';
 import { promisify } from 'util';
+import { createRequire } from 'node:module';
 import { decodeKey, isEncryptionEnabled } from '../encryption/vault.js';
 import { isEncryptedBlob } from '../encryption/vault.js';
 import {
@@ -1126,7 +1127,9 @@ async function checkMcpServers(): Promise<HealthCheck> {
     name: 'MCP Servers',
     status: 'warn',
     message: 'No MCP config found',
-    fix: 'claude mcp add swarmlo -- npx -y swarmlo@latest mcp start',
+    // Canonical key is `claude-flow` — the legacy `swarmlo` key (pre-rename)
+    // is what the duplicate-detection check above warns about (#2206).
+    fix: 'claude mcp add claude-flow -- npx -y swarmlo@latest mcp start',
   };
 }
 
@@ -1207,7 +1210,25 @@ async function checkDiskSpace(): Promise<HealthCheck> {
 // Check TypeScript/build (async with proper env inheritance)
 async function checkBuildTools(): Promise<HealthCheck> {
   try {
-    const tscVersion = await runCommand('npx tsc --version', 10000); // tsc can be slow
+    // Local probe only — `npx tsc --version` hit the network (resolving +
+    // possibly installing typescript into the npx cache) on every doctor
+    // run. Resolve typescript from the project's own node_modules instead,
+    // walking up parent directories, and report not-installed without ever
+    // invoking npx.
+    const requireFromCwd = createRequire(join(process.cwd(), 'noop.js'));
+    let tscPath: string | null = null;
+    for (let dir = process.cwd(); dir !== dirname(dir) && !tscPath; dir = dirname(dir)) {
+      try {
+        const resolved = requireFromCwd.resolve('typescript/bin/tsc', { paths: [dir] });
+        if (existsSync(resolved)) tscPath = resolved;
+      } catch {
+        // not in this dir — walk up
+      }
+    }
+    if (!tscPath) {
+      return { name: 'TypeScript', status: 'warn', message: 'Not installed locally', fix: 'npm install -D typescript' };
+    }
+    const tscVersion = await runCommand(`node "${tscPath}" --version`, 10000); // tsc can be slow
     if (!tscVersion || tscVersion.includes('not found')) {
       return { name: 'TypeScript', status: 'warn', message: 'Not installed locally', fix: 'npm install -D typescript' };
     }

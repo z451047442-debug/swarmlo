@@ -30,6 +30,13 @@ export interface DiscoveryServiceDeps {
   signManifest: (manifest: Omit<FederationManifest, 'signature'>) => Promise<string>;
   verifyManifest: (manifest: FederationManifest) => Promise<boolean>;
   onPeerDiscovered?: (node: FederationNode) => void;
+  /**
+   * Called when a static peer is registered without a public key (no
+   * signed manifest). Such peers can never be authenticated — the
+   * handshake will refuse to attest them. Callers should surface this
+   * as a startup warning.
+   */
+  onStaticPeerWithoutKey?: (node: FederationNode) => void;
 }
 
 export interface DiscoveryConfig {
@@ -95,6 +102,7 @@ export class DiscoveryService {
         this.knownPeers.set(node.nodeId, node);
         discovered.push(node);
         this.deps.onPeerDiscovered?.(node);
+        this.deps.onStaticPeerWithoutKey?.(node);
       }
     }
 
@@ -138,6 +146,9 @@ export class DiscoveryService {
 
     this.knownPeers.set(nodeId, node);
     this.deps.onPeerDiscovered?.(node);
+    if (!node.publicKey) {
+      this.deps.onStaticPeerWithoutKey?.(node);
+    }
     return node;
   }
 

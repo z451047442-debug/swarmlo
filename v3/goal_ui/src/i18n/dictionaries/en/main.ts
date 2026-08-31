@@ -22,6 +22,7 @@ export const enMain: Record<string, string> = {
   "main.planningWorkflowDesc": "Analyzing objective, identifying preconditions, calculating optimal action sequence...",
   "main.objectiveLabel": "Objective:",
   "main.startResearch": "Start Research",
+  "main.continueResearch": "Continue Research",
   // ---- Index: stats ----
   "main.statCompleted": "Completed",
   "main.statActive": "Active",

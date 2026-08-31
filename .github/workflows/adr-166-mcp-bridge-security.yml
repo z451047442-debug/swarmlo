@@ -61,14 +61,21 @@ jobs:
           set -euo pipefail
           # No line may map a container port to a public host port.
           # Look for "N.N.N.N:PORT:PORT" or bare "PORT:PORT" patterns under `ports:`.
-          if grep -nE '^\s*-\s+"(?!127\.0\.0\.1|0\.0\.0\.0)?[^"]*3001:3001"' swarmlo/docker-compose.yml \
-             | grep -v '127.0.0.1:3001'; then
-            echo "::error::docker-compose.yml exposes 3001 on non-loopback interface"
-            exit 1
-          fi
-          if grep -nE '^\s*-\s+"(?!127\.0\.0\.1|0\.0\.0\.0)?[^"]*27017:27017"' swarmlo/docker-compose.yml \
-             | grep -v '127.0.0.1:27017'; then
-            echo "::error::docker-compose.yml exposes 27017 on non-loopback interface"
+          # review fix 2026-08-31 — the previous `grep -E '(?!127\.0\.0\.1|…)…'`
+          # used a PCRE lookahead under ERE flags: non-portable (BSD grep
+          # treats the group as literal text) and silently a no-op on GNU
+          # grep. Rewritten in awk — the check is now explicit.
+          BAD_PORTS=$(awk '
+            /3001:3001/ || /27017:27017/ {
+              line = $0
+              gsub(/^[ \t]*/, "", line)
+              if (line ~ /^- "127\.0\.0\.1:(3001|27017):(3001|27017)"$/) next
+              print NR ": " line
+            }
+          ' swarmlo/docker-compose.yml)
+          if [ -n "$BAD_PORTS" ]; then
+            echo "::error::docker-compose.yml exposes 3001/27017 on non-loopback interface:"
+            echo "$BAD_PORTS"
             exit 1
           fi
           # Mongo must run with --auth AND require MONGO_INITDB_ROOT_PASSWORD to boot.

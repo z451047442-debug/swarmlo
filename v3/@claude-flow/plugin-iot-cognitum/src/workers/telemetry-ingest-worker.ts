@@ -22,7 +22,11 @@ export class TelemetryIngestWorker {
 
   start(): void {
     if (this.timer) return;
-    this.timer = setInterval(() => void this.ingest(), this.config.intervalMs);
+    this.timer = setInterval(() => {
+      this.ingest().catch(err => {
+        console.warn('[telemetry-ingest-worker] tick failed:', err instanceof Error ? err.message : err);
+      });
+    }, this.config.intervalMs);
   }
 
   stop(): void {

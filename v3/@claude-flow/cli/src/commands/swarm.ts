@@ -179,7 +179,12 @@ function getSwarmStatus(swarmId?: string) {
   }
 
   return {
-    id: swarmId || (swarmState as Record<string, string>)?.id || 'no-active-swarm',
+    // Backward-compatible read: `swarm start` used to write `swarmId`,
+    // `swarm init` writes `id` — accept both structures.
+    id: swarmId
+      || (swarmState as Record<string, string>)?.id
+      || (swarmState as Record<string, string>)?.swarmId
+      || 'no-active-swarm',
     topology: (swarmState as Record<string, string>)?.topology || 'none',
     status,
     objective: (swarmState as Record<string, string>)?.objective || 'No active objective',
@@ -434,8 +439,8 @@ const initCommand: Command = {
       output.writeln(output.dim('  Setting up communication channels...'));
 
       if (v3Mode) {
-        output.writeln(output.dim('  Enabling Flash Attention (2.49x-7.47x speedup)...'));
-        output.writeln(output.dim('  Configuring AgentDB integration (150x faster)...'));
+        output.writeln(output.dim('  Enabling Flash Attention...'));
+        output.writeln(output.dim('  Configuring AgentDB integration...'));
         output.writeln(output.dim('  Initializing SONA learning system...'));
       }
 
@@ -476,6 +481,9 @@ const initCommand: Command = {
           v3Mode,
           permissions: withPermissions ?? null,
           initializedAt: result.initializedAt,
+          // Unified state.json shape: startedAt alongside id/topology so
+          // `swarm status` can derive elapsed time from either entry point.
+          startedAt: result.initializedAt,
           status: 'ready'
         }, null, 2));
       } catch {
@@ -646,7 +654,13 @@ const startCommand: Command = {
     if (!fs.existsSync(swarmDir)) fs.mkdirSync(swarmDir, { recursive: true });
 
     const executionState = {
+      // Unified state.json shape (#P2): `id`/`topology`/`startedAt` mirror
+      // what `swarm init` writes, so `swarm status`/`stop` behave identically
+      // regardless of which command created the state. `swarmId` is kept for
+      // backward-compatible readers.
+      id: swarmId,
       swarmId,
+      topology: 'hierarchical',
       objective,
       strategy,
       status: 'initialized',
@@ -793,6 +807,22 @@ const stopCommand: Command = {
       return { success: false, exitCode: 1 };
     }
 
+    // #P2 — `stop` must validate the swarmId it was given: fail loudly when
+    // no matching swarm exists instead of reporting success for a no-op.
+    const swarmStateFile = path.join(process.cwd(), '.swarm', 'state.json');
+    let stateId: string | null = null;
+    if (fs.existsSync(swarmStateFile)) {
+      try {
+        const state = JSON.parse(fs.readFileSync(swarmStateFile, 'utf-8'));
+        stateId = (state?.id as string | undefined) ?? (state?.swarmId as string | undefined) ?? null;
+      } catch { /* unreadable state — treat as absent */ }
+    }
+    if (!stateId || stateId !== swarmId) {
+      output.printError(`Swarm '${swarmId}' not found — no matching swarm in ${swarmStateFile}`);
+      output.writeln(output.dim('Start a swarm first with "claude-flow swarm init" or "claude-flow swarm start".'));
+      return { success: false, exitCode: 1 };
+    }
+
     if (ctx.interactive && !force) {
       const confirmed = await confirm({
         message: `Stop swarm ${swarmId}? Progress will be saved.`,
@@ -807,8 +837,7 @@ const stopCommand: Command = {
 
     output.printInfo(`Stopping swarm ${swarmId}...`);
 
-    // Update persisted swarm state if it exists (#1423)
-    const swarmStateFile = path.join(process.cwd(), '.swarm', 'state.json');
+    // Update persisted swarm state (validated above to match swarmId) (#1423)
     if (fs.existsSync(swarmStateFile)) {
       try {
         const state = JSON.parse(fs.readFileSync(swarmStateFile, 'utf-8'));

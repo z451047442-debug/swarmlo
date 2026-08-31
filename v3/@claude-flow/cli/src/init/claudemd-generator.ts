@@ -309,7 +309,7 @@ function intelligenceSystem(): string {
 Pipeline: **RETRIEVE** (vector search) → **JUDGE** (success/failure) → **DISTILL** (extract patterns) → **CONSOLIDATE** (persist)
 
 - **ONNX Embeddings**: all-MiniLM-L6-v2, 384-dim
-- **HNSW/DiskANN**: 150x-12,500x faster search
+- **HNSW/DiskANN**: measured ~1.9x-4.7x vs brute force
 - **SONA**: Sub-millisecond pattern adaptation
 - **Claude Bridge**: Auto-imports \`~/.claude/projects/*/memory/*.md\` into AgentDB`;
 }

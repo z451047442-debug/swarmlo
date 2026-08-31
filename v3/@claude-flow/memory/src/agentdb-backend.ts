@@ -2,7 +2,9 @@
  * AgentDB Backend - Integration with agentdb@2.0.0-alpha.3.4
  *
  * Provides IMemoryBackend implementation using AgentDB with:
- * - HNSW vector search (150x-12,500x faster than brute-force)
+ * - HNSW vector search (measured ~1.9x at N=20k vs brute force in-tree;
+ *   the "150x-12,500x" figure was never reproduced — see
+ *   docs/reviews/intelligence-system-audit-2026-05-29.md)
  * - Native or WASM backend support with graceful fallback
  * - Optional dependency handling (works without hnswlib-node)
  * - Seamless integration with HybridBackend
@@ -107,13 +109,23 @@ export interface AgentDBBackendConfig {
    * Pass `false` to disable entirely regardless of the env flag.
    */
   retrievalGuard?: RetrievalGuardConfig | false;
+
+  /** Injectable logger (defaults to console). Replaces global console.* patching. */
+  logger?: Logger;
+}
+
+/** Minimal logger surface used by the backend */
+interface Logger {
+  log: (...args: unknown[]) => void;
+  warn: (...args: unknown[]) => void;
+  error: (...args: unknown[]) => void;
 }
 
 /**
  * Default configuration
  */
 const DEFAULT_CONFIG: Required<
-  Omit<AgentDBBackendConfig, 'dbPath' | 'embeddingGenerator' | 'retrievalGuard'>
+  Omit<AgentDBBackendConfig, 'dbPath' | 'embeddingGenerator' | 'retrievalGuard' | 'logger'>
 > = {
   namespace: 'default',
   forceWasm: false,
@@ -132,7 +144,6 @@ const DEFAULT_CONFIG: Required<
  * AgentDB Backend
  *
  * Integrates AgentDB for vector search with the V3 memory system.
- * Provides 150x-12,500x faster search compared to brute-force approaches.
  *
  * Features:
  * - HNSW indexing for fast approximate nearest neighbor search
@@ -143,7 +154,7 @@ const DEFAULT_CONFIG: Required<
  */
 export class AgentDBBackend extends EventEmitter implements IMemoryBackend {
   private config: Required<
-    Omit<AgentDBBackendConfig, 'dbPath' | 'embeddingGenerator' | 'retrievalGuard'>
+    Omit<AgentDBBackendConfig, 'dbPath' | 'embeddingGenerator' | 'retrievalGuard' | 'logger'>
   > & {
     dbPath?: string;
     embeddingGenerator?: EmbeddingGenerator;
@@ -152,6 +163,7 @@ export class AgentDBBackend extends EventEmitter implements IMemoryBackend {
   private initialized: boolean = false;
   private available: boolean = false;
   private readonly retrievalGuard: AgentDbRetrievalGuard | null;
+  private readonly logger: Logger;
 
   // In-memory storage for compatibility
   private entries: Map<string, MemoryEntry> = new Map();
@@ -178,6 +190,7 @@ export class AgentDBBackend extends EventEmitter implements IMemoryBackend {
       config.retrievalGuard === false
         ? null
         : new AgentDbRetrievalGuard(config.retrievalGuard || {});
+    this.logger = config.logger ?? console;
   }
 
   /**
@@ -192,13 +205,15 @@ export class AgentDBBackend extends EventEmitter implements IMemoryBackend {
     this.available = AgentDB !== undefined;
 
     if (!this.available) {
-      console.warn('AgentDB not available, using fallback in-memory storage');
+      this.logger.warn('AgentDB not available, using fallback in-memory storage');
       this.initialized = true;
       return;
     }
 
     try {
-      // Initialize AgentDB with config
+      // Initialize AgentDB with config. Note: agentdb's own info-level logs
+      // pass through to the host logger — we no longer monkey-patch the global
+      // console to suppress them.
       this.agentdb = new AgentDB({
         dbPath: this.config.dbPath || ':memory:',
         namespace: this.config.namespace,
@@ -207,25 +222,14 @@ export class AgentDBBackend extends EventEmitter implements IMemoryBackend {
         vectorDimension: this.config.vectorDimension,
       });
 
-      // Suppress agentdb's noisy console.log during init
-      // (EmbeddingService, AgentDB core emit info-level logs we don't need)
-      const origLog = console.log;
-      console.log = (...args: unknown[]) => {
-        const msg = String(args[0] ?? '');
-        if (msg.includes('Transformers.js loaded') ||
-            msg.includes('Using better-sqlite3') ||
-            msg.includes('better-sqlite3 unavailable') ||
-            msg.includes('[AgentDB]')) return;
-        origLog.apply(console, args);
-      };
-      try {
-        await this.agentdb.initialize();
-      } finally {
-        console.log = origLog;
-      }
+      await this.agentdb.initialize();
 
       // Create memory_entries table if it doesn't exist
       await this.createSchema();
+
+      // Rebuild in-memory key/namespace indexes from persisted data so
+      // getByKey/count/query work correctly after a restart.
+      await this.rebuildIndexes();
 
       this.initialized = true;
       this.emit('initialized', {
@@ -233,7 +237,7 @@ export class AgentDBBackend extends EventEmitter implements IMemoryBackend {
         isWasm: this.agentdb.isWasm,
       });
     } catch (error) {
-      console.error('Failed to initialize AgentDB:', error);
+      this.logger.error('Failed to initialize AgentDB:', error);
       this.available = false;
       this.initialized = true;
       this.emit('initialization:failed', { error });
@@ -424,7 +428,7 @@ export class AgentDBBackend extends EventEmitter implements IMemoryBackend {
 
       return this.applyRetrievalGuard(results);
     } catch (error) {
-      console.error('AgentDB search failed, falling back to brute-force:', error);
+      this.logger.error('AgentDB search failed, falling back to brute-force:', error);
       return this.applyRetrievalGuard(await this.bruteForceSearch(embedding, options));
     }
   }
@@ -458,7 +462,7 @@ export class AgentDBBackend extends EventEmitter implements IMemoryBackend {
       const results = await Promise.allSettled(batch.map(entry => this.store(entry)));
       const failures = results.filter(r => r.status === 'rejected');
       if (failures.length > 0) {
-        console.warn(`[AgentDB] bulkInsert: ${failures.length}/${batch.length} entries failed in batch ${Math.floor(i / BATCH_SIZE) + 1}`);
+        this.logger.warn(`[AgentDB] bulkInsert: ${failures.length}/${batch.length} entries failed in batch ${Math.floor(i / BATCH_SIZE) + 1}`);
       }
     }
   }
@@ -588,7 +592,7 @@ export class AgentDBBackend extends EventEmitter implements IMemoryBackend {
     if (!this.agentdb) {
       indexHealth.status = 'degraded';
       indexHealth.message = 'HNSW index not available';
-      recommendations.push('Install agentdb for 150x-12,500x faster vector search');
+      recommendations.push('Install agentdb for vector search (measured ~1.9x vs brute force at N=20k in-tree)');
     }
 
     // Check cache health
@@ -664,6 +668,33 @@ export class AgentDBBackend extends EventEmitter implements IMemoryBackend {
   }
 
   /**
+   * Rebuild in-memory keyIndex/namespaceIndex (and ID mappings) from
+   * persisted AgentDB data. Without this, getByKey()/count()/query() return
+   * stale results after a restart because the in-memory maps start empty.
+   * Best-effort: failures degrade to the pre-existing behavior.
+   */
+  private async rebuildIndexes(): Promise<void> {
+    if (!this.agentdb) return;
+    this.namespaceIndex.clear();
+    this.keyIndex.clear();
+    try {
+      const db = this.agentdb.database;
+      if (!db || typeof db.all !== 'function') return;
+      const rows = await db.all('SELECT id, key, namespace FROM memory_entries');
+      for (const row of rows) {
+        if (!this.namespaceIndex.has(row.namespace)) {
+          this.namespaceIndex.set(row.namespace, new Set());
+        }
+        this.namespaceIndex.get(row.namespace)!.add(row.id);
+        this.keyIndex.set(`${row.namespace}:${row.key}`, row.id);
+        this.registerIdMapping(row.id);
+      }
+    } catch {
+      // Rebuild is best-effort; entries remain reachable by id via getFromAgentDB
+    }
+  }
+
+  /**
    * Store entry in AgentDB
    */
   private async storeInAgentDB(entry: MemoryEntry): Promise<void> {
@@ -704,7 +735,9 @@ export class AgentDBBackend extends EventEmitter implements IMemoryBackend {
         entry.id,
         entry.key,
         entry.content,
-        entry.embedding ? Buffer.from(entry.embedding.buffer) : null,
+        entry.embedding
+          ? Buffer.from(entry.embedding.buffer, entry.embedding.byteOffset, entry.embedding.byteLength)
+          : null,
         entry.type,
         entry.namespace,
         JSON.stringify(entry.tags),
@@ -857,7 +890,7 @@ export class AgentDBBackend extends EventEmitter implements IMemoryBackend {
 
       return searchResults;
     } catch (error) {
-      console.error('HNSW search failed:', error);
+      this.logger.error('HNSW search failed:', error);
       return this.bruteForceSearch(embedding, options);
     }
   }
@@ -1038,7 +1071,7 @@ export class AgentDBBackend extends EventEmitter implements IMemoryBackend {
     const existing = this.numericToStringIdMap.get(numericId);
     if (existing && existing !== stringId) {
       // HIGH-05: Collision detected — use linear probing fallback
-      console.warn(`[HNSW] Hash collision detected: "${stringId}" collides with "${existing}" (numeric: ${numericId})`);
+      this.logger.warn(`[HNSW] Hash collision detected: "${stringId}" collides with "${existing}" (numeric: ${numericId})`);
       let fallbackId = numericId + 1;
       while (this.numericToStringIdMap.has(fallbackId)) {
         fallbackId++;

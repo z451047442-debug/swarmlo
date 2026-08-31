@@ -5,7 +5,8 @@ import type { KeyValuePair } from "$lib/types/Tool";
 import { config } from "$lib/server/config";
 import { logger } from "$lib/server/logger";
 import type { RequestHandler } from "./$types";
-import { isValidUrl } from "$lib/server/urlSafety";
+import { requireAuth } from "$lib/server/api/utils/requireAuth";
+import { assertSafeHostForConnect, isValidUrl, ssrfSafeFetch } from "$lib/server/urlSafety";
 import { isStrictHfMcpLogin, hasNonEmptyToken, isExaMcpServer } from "$lib/server/mcp/hf";
 
 interface HealthCheckRequest {
@@ -25,6 +26,10 @@ interface HealthCheckResponse {
 }
 
 export const POST: RequestHandler = async ({ request, locals }) => {
+	// This endpoint makes server-side outbound connections to arbitrary URLs —
+	// it must not be callable anonymously (SSRF / internal-network probing).
+	requireAuth(locals);
+
 	let client: Client | undefined;
 
 	try {
@@ -49,6 +54,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				{ status: 400, headers: { "Content-Type": "application/json" } }
 			);
 		}
+
+		// Pre-connect IP validation (DNS resolution + private-range rejection);
+		// the transports below also route through the connect-time IP-validated agent.
+		await assertSafeHostForConnect(url);
 
 		// Inject Exa API key for mcp.exa.ai servers via URL param
 		let finalUrl = url;
@@ -111,7 +120,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				version: "1.0.0",
 			});
 
-			const transport = new StreamableHTTPClientTransport(baseUrl, { requestInit });
+			const transport = new StreamableHTTPClientTransport(baseUrl, {
+				requestInit,
+				fetch: ssrfSafeFetch,
+			});
 			logger.info({}, `[MCP Health] Connecting to ${url}...`);
 			await client.connect(transport);
 			logger.info({}, `[MCP Health] Connected successfully via HTTP`);
@@ -174,7 +186,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					version: "1.0.0",
 				});
 
-				const sseTransport = new SSEClientTransport(baseUrl, { requestInit });
+				const sseTransport = new SSEClientTransport(baseUrl, {
+					requestInit,
+					fetch: ssrfSafeFetch,
+				});
 				logger.info({}, `[MCP Health] Connecting via SSE...`);
 				await client.connect(sseTransport);
 				logger.info({}, `[MCP Health] Connected successfully via SSE`);

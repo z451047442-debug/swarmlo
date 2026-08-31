@@ -495,15 +495,39 @@ export class EnhancedPluginRegistry extends EventEmitter {
     const context = this.createPluginContext(entry);
     const timeout = this.config.loadTimeout ?? 30000;
 
-    await Promise.race([
-      entry.plugin.initialize(context),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Initialization timeout')), timeout)
-      ),
-    ]);
+    await this.runWithTimeout(
+      () => entry.plugin.initialize(context),
+      timeout,
+      'Initialization timeout'
+    );
 
     entry.initTime = new Date();
     this.collectExtensionPoints(entry.plugin);
+  }
+
+  /**
+   * Run a promise with a timeout. The timer is always cleared and the losing
+   * side of the race gets a no-op catch so a late rejection cannot surface as
+   * an unhandled rejection.
+   */
+  private async runWithTimeout(
+    run: () => Promise<void>,
+    timeoutMs: number,
+    timeoutMessage: string
+  ): Promise<void> {
+    const runPromise = run();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+    });
+
+    try {
+      await Promise.race([runPromise, timeoutPromise]);
+    } finally {
+      if (timer) clearTimeout(timer);
+      // Swallow the loser's late rejection
+      runPromise.catch(() => undefined);
+    }
   }
 
   /**
@@ -538,18 +562,9 @@ export class EnhancedPluginRegistry extends EventEmitter {
       throw new Error(`Plugin ${name} not found`);
     }
 
-    // Capture state if preserving
-    let state: unknown;
-    if (options?.preserveState && (entry.plugin as any).getState) {
-      state = await (entry.plugin as any).getState();
-    }
-
-    // Shutdown old plugin
-    if (entry.plugin.state === 'initialized') {
-      await entry.plugin.shutdown();
-    }
-
-    // Resolve and validate new plugin
+    // Resolve and validate the replacement FIRST — if it is invalid we must
+    // not tear down the working plugin and leave the registry in a broken
+    // state (the previous order shut the old plugin down before validating)
     const resolved = typeof newPlugin === 'function' ? await newPlugin() : newPlugin;
     if (!validatePlugin(resolved)) {
       throw new Error('Invalid plugin replacement');
@@ -558,6 +573,17 @@ export class EnhancedPluginRegistry extends EventEmitter {
     // Verify same name
     if (resolved.metadata.name !== name) {
       throw new Error(`Plugin name mismatch: expected ${name}, got ${resolved.metadata.name}`);
+    }
+
+    // Capture state if preserving
+    let state: unknown;
+    if (options?.preserveState && (entry.plugin as any).getState) {
+      state = await (entry.plugin as any).getState();
+    }
+
+    // Shutdown old plugin (safe now that the replacement is known-good)
+    if (entry.plugin.state === 'initialized') {
+      await entry.plugin.shutdown();
     }
 
     // Update dependency graph
@@ -569,12 +595,11 @@ export class EnhancedPluginRegistry extends EventEmitter {
     const context = this.createPluginContext(entry);
     const timeout = options?.timeout ?? this.config.loadTimeout ?? 30000;
 
-    await Promise.race([
-      resolved.initialize(context),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Hot reload timeout')), timeout)
-      ),
-    ]);
+    await this.runWithTimeout(
+      () => resolved.initialize(context),
+      timeout,
+      'Hot reload timeout'
+    );
 
     // Restore state if applicable
     if (state && options?.migrateState) {

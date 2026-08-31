@@ -466,6 +466,30 @@ export const ResearchReportModal = ({
     }
   };
 
+  const handleShare = async () => {
+    const shareText = `${userGoal}\n\n${window.location.href}`;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: t("report.modal.title"),
+          text: shareText,
+        });
+      } catch (err) {
+        // 用户取消分享不算错误
+        if ((err as Error)?.name !== "AbortError") {
+          console.warn("Share failed:", err);
+        }
+      }
+      return;
+    }
+    // 不支持 Web Share API 时回退到复制链接
+    try {
+      await navigator.clipboard.writeText(shareText);
+    } catch (err) {
+      console.warn("Copy to clipboard failed:", err);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl h-[85vh] p-0 flex flex-col">
@@ -512,6 +536,7 @@ export const ResearchReportModal = ({
                 variant="outline"
                 size="sm"
                 className="gap-2"
+                onClick={handleShare}
               >
                 <Share2 className="w-4 h-4" />
                 {t("report.modal.share")}

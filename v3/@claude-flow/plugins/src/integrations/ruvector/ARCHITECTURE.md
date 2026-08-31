@@ -18,7 +18,7 @@ The RuVector PostgreSQL Bridge plugin provides a high-performance integration la
 
 ### Key Capabilities
 
-- **Vector Operations**: Similarity search, clustering, quantization (150x-12,500x faster)
+- **Vector Operations**: Similarity search, clustering, quantization
 - **Attention Mechanisms**: Multi-head, self-attention, cross-attention, sparse variants
 - **Graph Processing**: GNN layers, message passing, node/edge embeddings
 - **Hyperbolic Geometry**: Poincare ball, Lorentz model for hierarchical data

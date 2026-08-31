@@ -2564,7 +2564,7 @@ export const hooksIntelligence: MCPTool = {
           implemented: true,
           indexSize: realStats.memory.indexSize,
           memorySizeBytes: realStats.memory.memorySizeBytes,
-          note: 'HNSW vector indexing with 150x-12,500x speedup',
+          note: 'HNSW vector indexing (measured ~1.9x-4.7x vs brute force)',
         },
         flashAttention: {
           enabled: true,

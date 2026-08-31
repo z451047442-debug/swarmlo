@@ -124,10 +124,16 @@ export class GoogleProvider extends BaseProvider {
     super(options);
   }
 
-  protected async doInitialize(): Promise<void> {
+  /** API key narrowed to `string` — throws when unset (mirrors doInitialize). */
+  private requireApiKey(): string {
     if (!this.config.apiKey) {
       throw new AuthenticationError('Google API key is required', 'google');
     }
+    return this.config.apiKey;
+  }
+
+  protected async doInitialize(): Promise<void> {
+    this.requireApiKey();
 
     this.baseUrl = this.config.apiUrl || 'https://generativelanguage.googleapis.com/v1beta';
   }
@@ -135,7 +141,9 @@ export class GoogleProvider extends BaseProvider {
   protected async doComplete(request: LLMRequest): Promise<LLMResponse> {
     const geminiRequest = this.buildRequest(request);
     const model = request.model || this.config.model;
-    const url = `${this.baseUrl}/models/${model}:generateContent?key=${this.config.apiKey}`;
+    // API key goes in the `x-goog-api-key` header — embedding it in the URL
+    // query leaks it into access logs, proxies and error messages.
+    const url = `${this.baseUrl}/models/${model}:generateContent`;
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.config.timeout || 60000);
@@ -143,7 +151,10 @@ export class GoogleProvider extends BaseProvider {
     try {
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': this.requireApiKey(),
+        },
         body: JSON.stringify(geminiRequest),
         signal: controller.signal,
       });
@@ -165,7 +176,9 @@ export class GoogleProvider extends BaseProvider {
   protected async *doStreamComplete(request: LLMRequest): AsyncIterable<LLMStreamEvent> {
     const geminiRequest = this.buildRequest(request);
     const model = request.model || this.config.model;
-    const url = `${this.baseUrl}/models/${model}:streamGenerateContent?key=${this.config.apiKey}&alt=sse`;
+    // `alt=sse` is a non-secret protocol parameter; the API key moves to the
+    // `x-goog-api-key` header so it never appears in URLs/logs.
+    const url = `${this.baseUrl}/models/${model}:streamGenerateContent?alt=sse`;
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), (this.config.timeout || 60000) * 2);
@@ -173,7 +186,10 @@ export class GoogleProvider extends BaseProvider {
     try {
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': this.requireApiKey(),
+        },
         body: JSON.stringify(geminiRequest),
         signal: controller.signal,
       });
@@ -226,7 +242,8 @@ export class GoogleProvider extends BaseProvider {
       }
 
       // Final event
-      const pricing = this.capabilities.pricing[model];
+            const pricing = this.capabilities.pricing[model]
+              ?? { promptCostPer1k: 0, completionCostPer1k: 0, currency: 'USD' };
       const promptTokens = this.estimateTokens(JSON.stringify(request.messages));
 
       yield {
@@ -278,8 +295,10 @@ export class GoogleProvider extends BaseProvider {
 
   protected async doHealthCheck(): Promise<HealthCheckResult> {
     try {
-      const url = `${this.baseUrl}/models?key=${this.config.apiKey}`;
-      const response = await fetch(url);
+      const url = `${this.baseUrl}/models`;
+      const response = await fetch(url, {
+        headers: { 'x-goog-api-key': this.requireApiKey() },
+      });
 
       return {
         healthy: response.ok,
@@ -356,7 +375,8 @@ export class GoogleProvider extends BaseProvider {
   private transformResponse(data: GeminiResponse, request: LLMRequest): LLMResponse {
     const candidate = data.candidates[0];
     const model = request.model || this.config.model;
-    const pricing = this.capabilities.pricing[model];
+        const pricing = this.capabilities.pricing[model]
+            ?? { promptCostPer1k: 0, completionCostPer1k: 0, currency: 'USD' };
 
     const textParts = candidate.content.parts.filter((p) => p.text);
     const content = textParts.map((p) => p.text).join('');

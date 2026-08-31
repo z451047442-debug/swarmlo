@@ -28,7 +28,7 @@ claude $(ls -d plugins/swarmlo-*/ | sed 's|^|--plugin-dir |' | tr '\n' ' ')
 
 | Plugin | Description |
 |--------|-------------|
-| [swarmlo-agentdb](swarmlo-agentdb/) | AgentDB with HNSW vector search (150x-12,500x faster) |
+| [swarmlo-agentdb](swarmlo-agentdb/) | AgentDB with HNSW vector search (measured ~1.9x-4.7x vs brute force) |
 | [swarmlo-rag-memory](swarmlo-rag-memory/) | SOTA RAG — hybrid search, Graph RAG, MMR diversity, memory bridge |
 | [swarmlo-rvf](swarmlo-rvf/) | Portable RVF memory format, session persistence |
 | [swarmlo-ruvector](swarmlo-ruvector/) | [`ruvector`](https://npmjs.com/package/ruvector) — FlashAttention-3, Graph RAG, hybrid search, 103 MCP tools, Brain AGI |

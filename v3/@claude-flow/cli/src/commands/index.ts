@@ -21,7 +21,9 @@ type CommandLoader = () => Promise<{ default?: Command; [key: string]: Command |
  * Command loaders - commands are only imported when needed
  * This reduces initial bundle parse time by ~200ms
  */
-const commandLoaders: Record<string, CommandLoader> = {
+// Exported so completions.ts can generate its shell-completion command list
+// from the live registry instead of a drifting static copy.
+export const commandLoaders: Record<string, CommandLoader> = {
   // P1 Core Commands (frequently used - load first)
   init: () => import('./init.js'),
   start: () => import('./start.js'),

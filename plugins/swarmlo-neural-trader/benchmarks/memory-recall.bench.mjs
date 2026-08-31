@@ -183,7 +183,7 @@ console.log('');
 console.log('## Notes');
 console.log('');
 console.log('- This bench models a **linear scan** baseline. The production');
-console.log('  backend uses HNSW (ADR-006), which is 150x-12,500x faster on');
+console.log('  backend uses HNSW (ADR-006), which is measured ~1.9x-4.7x faster on');
 console.log('  the same data at the same dim — that gap is the optimization');
 console.log('  budget the bench should track as memory grows.');
 console.log('- Embeddings are unit-norm 384-dim Gaussian — a reasonable proxy');

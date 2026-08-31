@@ -9,11 +9,17 @@ import { confirm, select } from '../prompt.js';
 import { callMCPTool, MCPClientError } from '../mcp-client.js';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fork } from 'child_process';
+import { fileURLToPath } from 'url';
 
 // Default configuration
 const DEFAULT_PORT = 3000;
 const DEFAULT_TOPOLOGY = 'hierarchical-mesh';
 const DEFAULT_MAX_AGENTS = 15;
+
+// `start --daemon` uses its OWN PID file — the worker daemon command owns
+// .claude-flow/daemon.pid and the two must not clobber each other.
+const START_DAEMON_PID_FILE = '.claude-flow/start.pid';
 
 // Check if project is initialized
 function isInitialized(cwd: string): boolean {
@@ -22,6 +28,16 @@ function isInitialized(cwd: string): boolean {
 }
 
 // Simple YAML parser for config (basic implementation)
+function parseSimpleYamlScalar(raw: string): unknown {
+  const value = raw.trim();
+  if (value === '') return {};
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  if (!isNaN(Number(value))) return Number(value);
+  if (value.startsWith('"') && value.endsWith('"')) return value.slice(1, -1);
+  return value;
+}
+
 function parseSimpleYaml(content: string): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   const lines = content.split('\n');
@@ -33,27 +49,31 @@ function parseSimpleYaml(content: string): Record<string, unknown> {
     // Skip comments and empty lines
     if (line.trim().startsWith('#') || line.trim() === '') continue;
 
+    // List items (`- value`) attach to the nearest container key, replacing
+    // the empty object placeholder the `key:` line created.
+    const listMatch = line.match(/^(\s*)- ?(.*)$/);
+    if (listMatch) {
+      const indent = listMatch[1].length;
+      while (stack.length > 1 && stack[stack.length - 1].indent >= indent) {
+        stack.pop();
+      }
+      const top = stack[stack.length - 1];
+      if (stack.length >= 2 && top.key) {
+        const owner = stack[stack.length - 2];
+        const item = parseSimpleYamlScalar(listMatch[2]);
+        const existing = owner.obj[top.key];
+        if (Array.isArray(existing)) existing.push(item);
+        else owner.obj[top.key] = [item];
+      }
+      continue;
+    }
+
     const match = line.match(/^(\s*)(\w+):\s*(.*)$/);
     if (!match) continue;
 
     const indent = match[1].length;
     const key = match[2];
-    let value: unknown = match[3].trim();
-
-    // Parse value
-    if (value === '' || value === undefined) {
-      value = {};
-    } else if (value === 'true') {
-      value = true;
-    } else if (value === 'false') {
-      value = false;
-    } else if (value === 'null') {
-      value = null;
-    } else if (!isNaN(Number(value as string)) && value !== '') {
-      value = Number(value);
-    } else if (typeof value === 'string' && value.startsWith('"') && value.endsWith('"')) {
-      value = value.slice(1, -1);
-    }
+    const value = parseSimpleYamlScalar(match[3]);
 
     // Find parent based on indentation
     while (stack.length > 1 && stack[stack.length - 1].indent >= indent) {
@@ -86,6 +106,70 @@ function loadConfig(cwd: string): Record<string, unknown> | null {
   }
 }
 
+/**
+ * #P1 — real daemon backgrounding for `start --daemon`. Forks a detached
+ * child that performs the actual startup and stays alive, then returns
+ * immediately. Mirrors the daemon command's startBackgroundDaemon pattern
+ * (daemon.ts): fork() with detached:true works on Windows too, unref() +
+ * disconnect() sever the IPC pipe so the child survives the parent's exit.
+ * The child writes its own PID file (`.claude-flow/start.pid` — separate
+ * from the worker daemon's `.claude-flow/daemon.pid`, which is owned by
+ * `claude-flow daemon` and must not be clobbered), with a 500ms fallback
+ * write from the parent, same as daemon.ts.
+ */
+async function forkStartDaemon(
+  cwd: string,
+  forwarded: { port: number; topology?: string; skipMcp?: boolean },
+): Promise<CommandResult> {
+  // dist/src/commands/start.js -> dist/src/commands -> dist/src -> dist -> bin/cli.js
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const cliPath = path.resolve(__dirname, '..', '..', '..', 'bin', 'cli.js');
+  if (!fs.existsSync(cliPath)) {
+    output.printError(`CLI not found at: ${cliPath}`);
+    return { success: false, exitCode: 1 };
+  }
+
+  const forkArgs = ['start', '--daemon'];
+  forkArgs.push('--port', String(forwarded.port));
+  if (forwarded.topology) {
+    forkArgs.push('--topology', forwarded.topology);
+  }
+  if (forwarded.skipMcp) {
+    forkArgs.push('--skip-mcp');
+  }
+
+  const child = fork(cliPath, forkArgs, {
+    cwd,
+    detached: true, // own process group on POSIX; independent session on Windows
+    stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
+    env: { ...process.env, CLAUDE_FLOW_START_DAEMON: '1' },
+  });
+
+  const pid = child.pid;
+  if (!pid || pid <= 0) {
+    output.printError('Failed to get daemon PID');
+    return { success: false, exitCode: 1 };
+  }
+
+  child.unref();
+  try { child.disconnect(); } catch { /* IPC channel already closed */ }
+
+  // Give the child time to start and write its own PID file; fall back to
+  // writing it here so a fast parent exit can't leave a race window.
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  const daemonPidPath = path.join(cwd, START_DAEMON_PID_FILE);
+  if (!fs.existsSync(daemonPidPath)) {
+    try { fs.writeFileSync(daemonPidPath, String(pid)); } catch { /* best-effort */ }
+  }
+
+  output.writeln();
+  output.printSuccess(`Started in background (PID: ${pid})`);
+  output.printInfo(`PID file: ${daemonPidPath}`);
+  output.printInfo('Stop with: claude-flow start stop');
+  return { success: true, data: { daemonPid: pid, pidFile: daemonPidPath } };
+}
+
 // Main start action
 const startAction = async (ctx: CommandContext): Promise<CommandResult> => {
   const daemon = ctx.flags.daemon as boolean;
@@ -93,12 +177,25 @@ const startAction = async (ctx: CommandContext): Promise<CommandResult> => {
   const topology = (ctx.flags.topology as string) || DEFAULT_TOPOLOGY;
   const skipMcp = ctx.flags['skip-mcp'] as boolean;
   const cwd = ctx.cwd;
+  // Set by forkStartDaemon on the detached child — lets the child run the
+  // full startup + keep-alive path without forking a grandchild.
+  const isDaemonChild = process.env.CLAUDE_FLOW_START_DAEMON === '1';
 
   // Check initialization
   if (!isInitialized(cwd)) {
     output.printError('Swarmlo is not initialized in this directory');
     output.printInfo('Run "swarmlo init" first to initialize');
     return { success: false, exitCode: 1 };
+  }
+
+  // Parent path for --daemon: fork a detached child that performs the real
+  // startup and stays alive, then return immediately.
+  if (daemon && !isDaemonChild) {
+    return forkStartDaemon(cwd, {
+      port,
+      topology: topology !== DEFAULT_TOPOLOGY ? topology : undefined,
+      skipMcp: skipMcp === true,
+    });
   }
 
   // Load configuration
@@ -210,36 +307,43 @@ const startAction = async (ctx: CommandContext): Promise<CommandResult> => {
       `${output.highlight('claude-flow stop')} - Stop the system`
     ]);
 
-    // Daemon mode
+    // Daemon mode (detached child only — the parent forked above and
+    // returned). Previously the keep-alive interval was unref'd, so the
+    // process exited as soon as this action returned (bin/cli.js calls
+    // process.exit(0) after one-shot commands), leaving a stale PID file.
+    // Now the interval is a ref'd handle (same pattern as the daemon
+    // command's foreground path, daemon.ts) and the process blocks forever,
+    // so the PID in `.claude-flow/daemon.pid` genuinely matches a live
+    // daemon until `claude-flow start stop` removes it.
     if (daemon) {
       output.writeln();
-      output.printInfo('Running in daemon mode. Use "claude-flow stop" to stop.');
+      output.printInfo('Running in daemon mode. Use "claude-flow start stop" to stop.');
 
-      // Store PID for daemon management
-      const daemonPidPath = path.join(cwd, '.claude-flow', 'daemon.pid');
+      // Store PID for daemon management (own PID file — see START_DAEMON_PID_FILE)
+      const daemonPidPath = path.join(cwd, START_DAEMON_PID_FILE);
       fs.writeFileSync(daemonPidPath, String(process.pid));
 
-      // Detach from parent process for true daemon behavior
-      if (process.platform !== 'win32') {
-        // Unix-like systems: create new session
+      const cleanup = () => {
         try {
-          process.stdin.unref?.();
-          process.stdout.unref?.();
-          process.stderr.unref?.();
-        } catch {
-          // Ignore errors if streams can't be unref'd
-        }
+          if (fs.existsSync(daemonPidPath)) fs.unlinkSync(daemonPidPath);
+        } catch { /* ignore */ }
+      };
+      process.on('exit', cleanup);
+      process.on('SIGINT', () => { cleanup(); process.exit(0); });
+      process.on('SIGTERM', () => { cleanup(); process.exit(0); });
+      if (process.platform !== 'win32') {
+        // Prevent SIGHUP from killing the daemon when the terminal closes.
+        process.on('SIGHUP', () => { /* keep running */ });
       }
 
-      // Keep process alive in daemon mode
-      const keepAlive = setInterval(() => {
-        // Heartbeat - check if we should still be running
-        if (!fs.existsSync(daemonPidPath)) {
-          clearInterval(keepAlive);
-          process.exit(0);
-        }
+      // Ref'd keep-alive handle — the event loop cannot drain while this
+      // interval is active, so the process stays alive until stopped. If the
+      // PID file disappears (e.g. `claude-flow start stop` or `daemon stop`
+      // removed it without signalling us), self-terminate.
+      setInterval(() => {
+        if (!fs.existsSync(daemonPidPath)) process.exit(0);
       }, 5000);
-      keepAlive.unref(); // Don't prevent process from exiting if no other work
+      await new Promise(() => {}); // Never resolves — daemon runs until stopped.
     }
 
     const result = {
@@ -337,10 +441,25 @@ const stopCommand: Command = {
         spinner.fail('Swarm was not running');
       }
 
-      // Clean up daemon PID
-      const daemonPidPath = path.join(ctx.cwd, '.claude-flow', 'daemon.pid');
+      // Clean up daemon PID — and terminate the daemon child if it is still
+      // alive (same as the daemon command's stop: SIGTERM, wait, then remove
+      // the PID file). Previously this only deleted the file, orphaning the
+      // background process; the child's keep-alive now also self-terminates
+      // within 5s if the PID file vanishes.
+      const daemonPidPath = path.join(ctx.cwd, START_DAEMON_PID_FILE);
       if (fs.existsSync(daemonPidPath)) {
-        fs.unlinkSync(daemonPidPath);
+        try {
+          const pid = parseInt(fs.readFileSync(daemonPidPath, 'utf-8').trim(), 10);
+          if (!Number.isNaN(pid) && pid !== process.pid) {
+            try {
+              process.kill(pid, 0); // alive?
+              process.kill(pid, 'SIGTERM');
+            } catch { /* already dead */ }
+          }
+        } catch { /* unreadable PID file */ }
+        try {
+          fs.unlinkSync(daemonPidPath);
+        } catch { /* ignore */ }
       }
 
       output.writeln();

@@ -60,9 +60,9 @@ const AGENT_TYPES = [
   { value: 'optimizer', label: 'Optimizer', hint: 'Performance optimization and bottleneck analysis' },
   { value: 'security-architect', label: 'Security Architect', hint: 'Security architecture and threat modeling' },
   { value: 'security-auditor', label: 'Security Auditor', hint: 'CVE remediation and security testing' },
-  { value: 'memory-specialist', label: 'Memory Specialist', hint: 'AgentDB unification (150x-12,500x faster)' },
+  { value: 'memory-specialist', label: 'Memory Specialist', hint: 'AgentDB unification and memory management' },
   { value: 'swarm-specialist', label: 'Swarm Specialist', hint: 'Unified coordination engine' },
-  { value: 'performance-engineer', label: 'Performance Engineer', hint: '2.49x-7.47x optimization targets' },
+  { value: 'performance-engineer', label: 'Performance Engineer', hint: 'Performance optimization and profiling' },
   { value: 'core-architect', label: 'Core Architect', hint: 'Domain-driven design restructure' },
   { value: 'test-architect', label: 'Test Architect', hint: 'TDD London School methodology' }
 ];
@@ -498,7 +498,7 @@ const metricsCommand: Command = {
     const period = ctx.flags.period as string;
 
     // Collect real metrics from .swarm/ state
-    const { existsSync, readFileSync, readdirSync, statSync } = await import('fs');
+    const { existsSync, readFileSync, readdirSync } = await import('fs');
     const { join } = await import('path');
 
     let totalAgents = 0;
@@ -540,13 +540,16 @@ const metricsCommand: Command = {
       } catch { /* ignore */ }
     }
 
-    // Read memory.db stats
+    // Real vector count only — the previous `dbSize / 2048` derivation
+    // fabricated a number from the DB file size. Read the actual vectors.json
+    // ledger when present; otherwise the count stays 0 (honest "none").
     let vectorCount = 0;
-    const dbPath = join(swarmDir, 'memory.db');
-    if (existsSync(dbPath)) {
+    const vectorsJson = join(process.cwd(), '.claude-flow', 'vectors.json');
+    if (existsSync(vectorsJson)) {
       try {
-        const dbSize = statSync(dbPath).size;
-        vectorCount = Math.floor(dbSize / 2048);
+        const data = JSON.parse(readFileSync(vectorsJson, 'utf-8'));
+        if (Array.isArray(data)) vectorCount = data.length;
+        else if (data.vectors) vectorCount = Object.keys(data.vectors).length;
       } catch { /* ignore */ }
     }
 

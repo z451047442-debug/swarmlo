@@ -1,8 +1,12 @@
 import { json } from "@sveltejs/kit";
 import { config } from "$lib/server/config";
+import { requireAdmin } from "$lib/server/api/utils/requireAuth";
 const DEFAULT_OPENAI_BASE = "https://router.huggingface.co/v1";
 
-export async function GET() {
+export async function GET({ locals }) {
+	// Debug endpoint that probes the configured OpenAI base URL — admin only
+	requireAdmin(locals);
+
 	const base = (config.OPENAI_BASE_URL || DEFAULT_OPENAI_BASE).replace(/\/$/, "");
 	try {
 		const res = await fetch(`${base}/models`);

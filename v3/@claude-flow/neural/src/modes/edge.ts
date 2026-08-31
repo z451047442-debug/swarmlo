@@ -29,9 +29,11 @@ export class EdgeMode extends BaseModeImplementation {
   // Minimal pattern storage (compressed)
   private compressedPatterns: Map<string, CompressedPattern> = new Map();
 
-  // Quantized LoRA weights (int8)
+  // Quantized LoRA weights (int8) with per-matrix dequantization scales.
+  // A single shared scale would be silently overwritten whenever two
+  // matrices with different magnitudes are quantized, corrupting both.
   private quantizedWeights: Map<string, Int8Array> = new Map();
-  private quantizationScale: number = 1.0;
+  private quantizationScales: Map<string, number> = new Map();
 
   // Pending async updates
   private pendingUpdates: Array<() => Promise<void>> = [];
@@ -155,8 +157,14 @@ export class EdgeMode extends BaseModeImplementation {
         const qA = this.getOrQuantize(`A_${module}`, A);
         const qB = this.getOrQuantize(`B_${module}`, B);
 
-        // Apply quantized LoRA
-        const adapted = this.applyQuantizedLoRA(input, qA, qB);
+        // Apply quantized LoRA (each matrix dequantizes with its own scale)
+        const adapted = this.applyQuantizedLoRA(
+          input,
+          qA,
+          qB,
+          this.getScale(`A_${module}`),
+          this.getScale(`B_${module}`),
+        );
         const alpha = 0.05; // Very small blending for edge
         for (let i = 0; i < output.length; i++) {
           output[i] = output[i] * (1 - alpha) + adapted[i] * alpha;
@@ -231,30 +239,38 @@ export class EdgeMode extends BaseModeImplementation {
   }
 
   /**
-   * Get or create quantized weights
+   * Get or create quantized weights (stores the per-matrix scale alongside)
    */
   private getOrQuantize(key: string, weights: Float32Array): Int8Array {
     let quantized = this.quantizedWeights.get(key);
     if (!quantized) {
-      quantized = this.quantizeWeights(weights);
+      const { quantized: q, scale } = this.quantizeWeights(weights);
+      quantized = q;
       this.quantizedWeights.set(key, quantized);
+      this.quantizationScales.set(key, scale);
     }
     return quantized;
   }
 
   /**
-   * Quantize float weights to int8
+   * Quantize float weights to int8. Returns the scale together with the
+   * quantized values — each matrix must dequantize with its OWN scale.
    */
-  private quantizeWeights(weights: Float32Array): Int8Array {
+  private quantizeWeights(weights: Float32Array): { quantized: Int8Array; scale: number } {
     const max = Math.max(...weights.map(Math.abs));
-    this.quantizationScale = max > 0 ? 127 / max : 1;
+    const scale = max > 0 ? 127 / max : 1;
 
     const quantized = new Int8Array(weights.length);
     for (let i = 0; i < weights.length; i++) {
-      quantized[i] = Math.round(weights[i] * this.quantizationScale);
+      quantized[i] = Math.round(weights[i] * scale);
     }
 
-    return quantized;
+    return { quantized, scale };
+  }
+
+  /** Dequantization scale for a given quantized matrix key (defaults to 1) */
+  private getScale(key: string): number {
+    return this.quantizationScales.get(key) ?? 1;
   }
 
   /**
@@ -263,23 +279,26 @@ export class EdgeMode extends BaseModeImplementation {
   private applyQuantizedLoRA(
     input: Float32Array,
     qA: Int8Array,
-    qB: Int8Array
+    qB: Int8Array,
+    scaleA: number,
+    scaleB: number
   ): Float32Array {
     const dim = input.length;
     const rank = 1; // Edge mode uses rank-1
 
     const output = new Float32Array(dim);
-    const dequantScale = 1 / this.quantizationScale;
+    const dequantScaleA = 1 / scaleA;
+    const dequantScaleB = 1 / scaleB;
 
     // A * input -> intermediate (scalar for rank-1)
     let intermediate = 0;
     for (let d = 0; d < dim; d++) {
-      intermediate += (qA[d] * dequantScale) * input[d];
+      intermediate += (qA[d] * dequantScaleA) * input[d];
     }
 
     // B * intermediate -> output
     for (let d = 0; d < dim; d++) {
-      output[d] = (qB[d] * dequantScale) * intermediate;
+      output[d] = (qB[d] * dequantScaleB) * intermediate;
     }
 
     return output;

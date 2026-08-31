@@ -13,6 +13,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { createRequire } from 'node:module';
+import { readFileMaybeEncrypted } from '../fs-secure.js';
 
 interface RabitqEntry {
   id: string;
@@ -34,6 +36,22 @@ const REBUILD_DRIFT_THRESHOLD = 0.2; // rebuild when count drifts >20%
 
 let rabitqState: RabitqState | null = null;
 let rabitqInitializing = false;
+
+/**
+ * Resolve the memory root dir, honoring CLAUDE_FLOW_MEMORY_PATH and
+ * claude-flow.config.json memory.persistPath (falls back to cwd/.swarm).
+ * Lazily required from memory-initializer to avoid a static import cycle.
+ */
+function resolveMemoryRoot(): string {
+  try {
+    const cjsRequire = createRequire(import.meta.url);
+    const mod = cjsRequire('./memory-initializer.js') as { getMemoryRoot?: () => string };
+    if (typeof mod.getMemoryRoot === 'function') {
+      return mod.getMemoryRoot();
+    }
+  } catch { /* memory-initializer not resolvable — keep `.swarm` default */ }
+  return path.resolve(process.cwd(), '.swarm');
+}
 
 async function loadRabitqModule(): Promise<{
   RabitqIndex: any;
@@ -92,7 +110,11 @@ export async function buildRabitqIndex(options?: {
     }
 
     const dimensions = options?.dimensions ?? 384;
-    const swarmDir = path.resolve(process.cwd(), '.swarm');
+    // audit_2026-08-31: hardcoded cwd/.swarm ignored CLAUDE_FLOW_MEMORY_PATH
+    // and the claude-flow.config.json memory.persistPath — the same bug
+    // fixed in memory-bridge (#1945). Use getMemoryRoot() (lazy require, no
+    // static import cycle with memory-initializer).
+    const swarmDir = resolveMemoryRoot();
     const dbPath = options?.dbPath ? path.resolve(options.dbPath) : path.join(swarmDir, 'memory.db');
 
     const entries: RabitqEntry[] = [];
@@ -121,7 +143,10 @@ export async function buildRabitqIndex(options?: {
 
       const initSqlJs = (await import('sql.js')).default;
       const SQL = await initSqlJs();
-      const fileBuffer = fs.readFileSync(dbPath);
+      // audit_2026-08-31: memory.db may be encrypted-at-rest
+      // (CLAUDE_FLOW_ENCRYPT_AT_REST=1 → RFE1 blob). Plain readFileSync fed
+      // sql.js ciphertext and the index silently built from nothing.
+      const fileBuffer = readFileMaybeEncrypted(dbPath, null) as Buffer;
       const db = new SQL.Database(fileBuffer);
 
       const result = db.exec(`

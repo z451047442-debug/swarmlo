@@ -20,7 +20,7 @@ import { parseEdgeKey } from './lib/index-records.mjs';
 // no semantic search needed. JSON backend is sufficient.
 const CLI_PKG = process.env.CLI_CORE === '1'
   ? '@claude-flow/cli-core@alpha'
-  : 'swarmlo-cli@latest';
+  : 'swarmlo-cli@3.39.1';
 
 // #2666 point 2: must match whatever ADR_ROOT import.mjs/reindex.mjs were
 // run with — the CLI resolves `.swarm/memory.db` relative to this

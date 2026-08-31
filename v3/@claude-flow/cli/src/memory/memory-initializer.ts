@@ -1799,10 +1799,13 @@ export async function repairVectorIndexes(
       res.tableCreated = true;
     }
 
-    // 384 = default ONNX model dim (Xenova/all-MiniLM-L6-v2); HNSW rejects
-    // dim-mismatched inserts, so this must match the stored embeddings (#1947).
+    // Resolve the configured embedding model's real dimension instead of
+    // hardcoding 384 — bge-m3 (1024-dim) and other models would otherwise
+    // seed vector_indexes with the wrong dim, and HNSW rejects dim-mismatched
+    // inserts, so this must match the stored embeddings (#1947, #3035).
+    const configuredDim = resolveConfiguredEmbedding().dimensions;
     const ensureRow = db.prepare(
-      'INSERT OR IGNORE INTO vector_indexes (id, name, dimensions) VALUES (?, ?, 384)',
+      'INSERT OR IGNORE INTO vector_indexes (id, name, dimensions) VALUES (?, ?, ?)',
     );
     const setCount = db.prepare(
       'UPDATE vector_indexes SET total_vectors = ?, updated_at = ? WHERE name = ?',
@@ -1810,13 +1813,13 @@ export async function repairVectorIndexes(
 
     const backfill = db.transaction(() => {
       // Parity with a fresh install's seed rows.
-      ensureRow.run('default', 'default');
-      ensureRow.run('patterns', 'patterns');
+      ensureRow.run('default', 'default', configuredDim);
+      ensureRow.run('patterns', 'patterns', configuredDim);
 
       const now = Date.now();
       for (const r of nsRows) {
         const ns = String(r.ns || 'default');
-        ensureRow.run(ns, ns);
+        ensureRow.run(ns, ns, configuredDim);
         setCount.run(r.c, now, ns);
         res.namespaces.push(ns);
       }
@@ -2150,12 +2153,14 @@ export async function applyTemporalDecay(dbPath?: string): Promise<{
       const fileBuffer = fs.readFileSync(path_);
       const db = new SQL.Database(fileBuffer);
 
-      // Apply decay: confidence *= exp(-decay_rate * days_since_last_use)
+      // Apply decay: confidence *= exp(-decay_rate * days_since_last_use).
+      // audit_2026-08-31: with decay_rate * days > 1 the multiplier went
+      // negative, pushing confidence below zero — clamp with MAX(0.0, ...).
       const now = Date.now();
       const decayQuery = `
         UPDATE patterns
         SET
-          confidence = confidence * (1.0 - decay_rate * ((? - COALESCE(last_matched_at, created_at)) / 86400000.0)),
+          confidence = MAX(0.0, confidence * (1.0 - decay_rate * ((? - COALESCE(last_matched_at, created_at)) / 86400000.0))),
           updated_at = ?
         WHERE status = 'active'
           AND confidence > 0.1

@@ -150,7 +150,8 @@ export async function archSelectRoute(
 	}
 
 	const headers: HeadersInit = {
-		Authorization: `Bearer ${getApiToken(locals)}`,
+		// User's OIDC token is only handed out when the router endpoint is Hugging Face itself
+		Authorization: `Bearer ${getApiToken(locals, baseURL)}`,
 		"Content-Type": "application/json",
 		// Bill to organization if configured (HuggingChat only)
 		...(config.isHuggingChat && locals?.billingOrganization

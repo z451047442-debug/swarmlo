@@ -1,7 +1,6 @@
 import type { ConversationStats } from "$lib/types/ConversationStats";
 import { CONVERSATION_STATS_COLLECTION, collections } from "$lib/server/database";
 import { logger } from "$lib/server/logger";
-import type { ObjectId } from "mongodb";
 import { acquireLock, refreshLock } from "$lib/migrations/lock";
 import { Semaphores } from "$lib/types/Semaphore";
 
@@ -263,7 +262,7 @@ async function computeStats(params: {
 }
 
 let hasLock = false;
-let lockId: ObjectId | null = null;
+let lockId: string | null = null;
 
 async function maintainLock() {
 	if (hasLock && lockId) {

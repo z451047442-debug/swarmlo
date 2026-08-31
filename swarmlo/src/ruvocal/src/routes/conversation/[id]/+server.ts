@@ -158,16 +158,9 @@ export async function POST({ request, locals, params, getClientAddress }) {
 					)
 				)
 				.default([]),
-			files: z.optional(
-				z.array(
-					z.object({
-						type: z.literal("base64").or(z.literal("hash")),
-						name: z.string(),
-						value: z.string(),
-						mime: z.string(),
-					})
-				)
-			),
+			// NOTE: no `files` field here — file uploads are carried via
+			// multipart form-data (form.getAll("files")), the old JSON `files`
+			// schema was parsed but never used (dual-path drift).
 		})
 		.parse(JSON.parse(json));
 

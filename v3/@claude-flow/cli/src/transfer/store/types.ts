@@ -182,6 +182,8 @@ export interface DownloadResult {
   imported?: boolean;
   verified: boolean;
   size: number;
+  /** Rejection/verification-failure reason (set when success is false). */
+  error?: string;
 }
 
 /**

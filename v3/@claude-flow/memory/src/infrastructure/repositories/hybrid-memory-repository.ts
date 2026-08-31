@@ -1,8 +1,13 @@
 /**
  * Hybrid Memory Repository - Infrastructure Layer
  *
- * Implements IMemoryRepository using SQLite + AgentDB hybrid backend.
- * Per ADR-009, this is the default memory backend.
+ * NOTE (2026-08-31): despite the name, this repository is currently a pure
+ * in-memory implementation (Map-based). It does NOT connect to SQLite or
+ * AgentDB, and all data is lost when the process exits. It is not wired as
+ * the default memory backend; the real persistence path is the
+ * `memory/src/agentdb-backend.ts` / `hybrid-backend.ts` stack. Renaming or
+ * fully wiring this class to a real hybrid backend is tracked separately;
+ * this file is kept honest until then.
  *
  * @module v3/memory/infrastructure/repositories
  */
@@ -58,8 +63,8 @@ export class HybridMemoryRepository implements IMemoryRepository {
   async initialize(): Promise<void> {
     if (this.initialized) return;
 
-    // In production, would initialize SQLite and AgentDB connections
-    // For now, using in-memory implementation
+    // In-memory only (see class-level note): no SQLite/AgentDB connections
+    // are opened, so nothing is persisted across process restarts.
     this.entries = new Map();
     this.namespaceIndex = new Map();
     this.vectorIndex = new Map();

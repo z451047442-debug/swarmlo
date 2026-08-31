@@ -232,7 +232,7 @@ export class OpenAIEmbeddingService extends BaseEmbeddingService {
 
     try {
       const response = await this.callOpenAI([text]);
-      const embedding = new Float32Array(response.data[0].embedding);
+      const embedding = this.applyNormalization(new Float32Array(response.data[0].embedding));
 
       // Cache result
       this.cache.set(text, embedding);
@@ -279,7 +279,7 @@ export class OpenAIEmbeddingService extends BaseEmbeddingService {
 
     if (uncached.length > 0) {
       const response = await this.callOpenAI(uncached.map(u => u.text));
-      apiEmbeddings = response.data.map(d => new Float32Array(d.embedding));
+      apiEmbeddings = response.data.map(d => this.applyNormalization(new Float32Array(d.embedding)));
 
       // Cache results
       uncached.forEach((item, i) => {
@@ -421,7 +421,7 @@ export class TransformersEmbeddingService extends BaseEmbeddingService {
 
     try {
       const output = await this.pipeline(text, { pooling: 'mean', normalize: true });
-      const embedding = new Float32Array(output.data);
+      const embedding = this.applyNormalization(new Float32Array(output.data));
 
       // Cache result
       this.cache.set(text, embedding);
@@ -457,7 +457,7 @@ export class TransformersEmbeddingService extends BaseEmbeddingService {
         this.emitEvent({ type: 'cache_hit', text });
       } else {
         const output = await this.pipeline(text, { pooling: 'mean', normalize: true });
-        const embedding = new Float32Array(output.data);
+        const embedding = this.applyNormalization(new Float32Array(output.data));
         this.cache.set(text, embedding);
         embeddings.push(embedding);
       }
@@ -520,7 +520,7 @@ export class MockEmbeddingService extends BaseEmbeddingService {
       await new Promise(resolve => setTimeout(resolve, this.simulatedLatency));
     }
 
-    const embedding = this.hashEmbedding(text);
+    const embedding = this.applyNormalization(this.hashEmbedding(text));
     this.cache.set(text, embedding);
 
     const latencyMs = performance.now() - startTime;
@@ -545,7 +545,7 @@ export class MockEmbeddingService extends BaseEmbeddingService {
         embeddings.push(cached);
         cacheHits++;
       } else {
-        const embedding = this.hashEmbedding(text);
+        const embedding = this.applyNormalization(this.hashEmbedding(text));
         this.cache.set(text, embedding);
         embeddings.push(embedding);
       }
@@ -602,12 +602,12 @@ export class MockEmbeddingService extends BaseEmbeddingService {
 /**
  * Agentic-Flow embedding service using OptimizedEmbedder
  *
- * Features:
- * - ONNX-based embeddings with SIMD acceleration
- * - 256-entry LRU cache with FNV-1a hash
- * - 8x loop unrolling for cosine similarity
- * - Pre-allocated buffers (no GC pressure)
- * - 3-4x faster batch processing
+ * Features (as provided by the agentic-flow embedder):
+ * - ONNX-based embeddings
+ * - Internal LRU cache and batch processing
+ *
+ * Performance claims ("3-4x faster", "8x loop unrolling", SIMD speedups)
+ * are inherited from upstream agentic-flow and were not measured in-tree.
  */
 export class AgenticFlowEmbeddingService extends BaseEmbeddingService {
   readonly provider: EmbeddingProvider = 'agentic-flow';
@@ -726,7 +726,7 @@ export class AgenticFlowEmbeddingService extends BaseEmbeddingService {
 
     try {
       // Use agentic-flow's optimized embedder (has its own internal cache)
-      const embedding = await this.embedder.embed(text);
+      const embedding = this.applyNormalization(await this.embedder.embed(text));
 
       // Store in our cache as well
       this.cache.set(text, embedding);
@@ -769,7 +769,8 @@ export class AgenticFlowEmbeddingService extends BaseEmbeddingService {
     let batchEmbeddings: Float32Array[] = [];
     if (uncached.length > 0) {
       const uncachedTexts = uncached.map(u => u.text);
-      batchEmbeddings = await this.embedder.embedBatch(uncachedTexts);
+      batchEmbeddings = (await this.embedder.embedBatch(uncachedTexts))
+        .map((e: Float32Array) => this.applyNormalization(e));
 
       // Cache results
       uncached.forEach((item, i) => {
@@ -904,7 +905,8 @@ export interface AutoEmbeddingConfig {
   provider: EmbeddingProvider | 'auto';
   /** Fallback provider if primary fails */
   fallback?: EmbeddingProvider;
-  /** Auto-install agentic-flow if not available (default: true for 'auto' provider) */
+  /** Auto-install agentic-flow if not available. Opt-in (default: false) —
+   *  the service must never silently run npm install on the user's project. */
   autoInstall?: boolean;
   /** Model ID for agentic-flow */
   modelId?: string;
@@ -939,7 +941,7 @@ export interface AutoEmbeddingConfig {
 export async function createEmbeddingServiceAsync(
   config: AutoEmbeddingConfig
 ): Promise<IEmbeddingService> {
-  const { provider, fallback, autoInstall = true, ...rest } = config;
+  const { provider, fallback, autoInstall = false, ...rest } = config;
 
   // Auto provider selection
   if (provider === 'auto') {

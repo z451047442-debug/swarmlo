@@ -4,9 +4,10 @@
 // USAGE
 //   node scripts/threat-model.mjs --path . --fail-on high --format json
 
-import { runHarness, emitDegradedJsonAndExit } from './_harness.mjs';
-
-const SEVERITY_RANK = { clean: 0, low: 1, medium: 2, high: 3 };
+// review fix 2026-08-31 — SEVERITY_RANK imported from _harness.mjs instead of
+// a local literal that was missing `critical` (a CRITICAL worst verdict
+// silently failed to trip `--fail-on high` — the security gate no-op'd).
+import { runHarness, emitDegradedJsonAndExit, SEVERITY_RANK, rankSeverity } from './_harness.mjs';
 
 const ARGS = (() => {
   const a = { path: '.', format: 'json', failOn: 'high' };
@@ -21,7 +22,7 @@ const ARGS = (() => {
 
 function main() {
   if (!SEVERITY_RANK.hasOwnProperty(ARGS.failOn)) {
-    console.error(`threat-model: --fail-on must be one of clean|low|medium|high`);
+    console.error(`threat-model: --fail-on must be one of clean|low|medium|high|critical`);
     process.exit(2);
   }
   const r = runHarness(['threat-model', ARGS.path]);
@@ -37,7 +38,8 @@ function main() {
   const payload = r.json ?? { rawStdout: r.stdout.slice(0, 400) };
   const worst = String(payload?.worst || 'clean').toLowerCase();
   const threshold = SEVERITY_RANK[ARGS.failOn];
-  const triggered = SEVERITY_RANK[worst] >= threshold && threshold > 0;
+  // rankSeverity() — safe accessor: unknown severities rank 0 (never NaN).
+  const triggered = rankSeverity(worst) >= threshold && threshold > 0;
   const alert = {
     threshold: ARGS.failOn, worst, triggered,
     reason: triggered

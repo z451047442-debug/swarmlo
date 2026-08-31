@@ -80,7 +80,7 @@ describe('WitnessVerificationService', () => {
     expect(result.integrityScore).toBe(0.5);
   });
 
-  it('handles empty entries with length > 0', async () => {
+  it('reports empty entries with length > 0 as unverified (data inconsistency)', async () => {
     const deps = makeDeps({
       getWitnessChain: vi.fn().mockResolvedValue({
         length: 10,
@@ -91,13 +91,14 @@ describe('WitnessVerificationService', () => {
     const svc = new WitnessVerificationService(deps);
     const result = await svc.verifyChain('dev-004');
 
-    expect(result.verified).toBe(true);
+    expect(result.verified).toBe(false);
     expect(result.chainLength).toBe(10);
-    expect(result.integrityScore).toBe(0.5);
+    expect(result.integrityScore).toBe(0);
     expect(result.headHash).toBe('abc');
+    expect(result.notes?.[0]).toContain('data inconsistency');
   });
 
-  it('handles empty chain with length 0', async () => {
+  it('reports an empty chain as unverified — nothing to attest', async () => {
     const deps = makeDeps({
       getWitnessChain: vi.fn().mockResolvedValue({
         length: 0,
@@ -107,8 +108,9 @@ describe('WitnessVerificationService', () => {
     const svc = new WitnessVerificationService(deps);
     const result = await svc.verifyChain('dev-005');
 
-    expect(result.verified).toBe(true);
-    expect(result.integrityScore).toBe(1.0);
+    expect(result.verified).toBe(false);
+    expect(result.integrityScore).toBe(0);
+    expect(result.notes?.[0]).toContain('empty');
   });
 
   it('handles entries without hash fields (SDK minimal entries)', async () => {
@@ -217,5 +219,60 @@ describe('WitnessVerificationService', () => {
     expect(result.verified).toBe(false);
     expect(result.gaps).toHaveLength(1);
     expect(result.integrityScore).toBeLessThan(0.5);
+  });
+
+  it('refuses to attest signed entries without a signature verifier', async () => {
+    const deps = makeDeps({
+      getWitnessChain: vi.fn().mockResolvedValue({
+        length: 2,
+        entries: [
+          { epoch: 1, hash: 'h1', signature: 'sig-1' },
+          { epoch: 2, hash: 'h2', previous_hash: 'h1', signature: 'sig-2' },
+        ],
+      }),
+    });
+    const svc = new WitnessVerificationService(deps);
+    const result = await svc.verifyChain('dev-012');
+
+    expect(result.verified).toBe(false);
+    expect(result.notes?.[0]).toContain('no signature verifier is wired');
+  });
+
+  it('verifies signed entries when a verifier is wired', async () => {
+    const verify = vi.fn().mockResolvedValue(true);
+    const deps = makeDeps({
+      getWitnessChain: vi.fn().mockResolvedValue({
+        length: 2,
+        entries: [
+          { epoch: 1, hash: 'h1', signature: 'sig-1' },
+          { epoch: 2, hash: 'h2', previous_hash: 'h1', signature: 'sig-2' },
+        ],
+      }),
+      verifyEntrySignature: verify,
+    });
+    const svc = new WitnessVerificationService(deps);
+    const result = await svc.verifyChain('dev-013');
+
+    expect(verify).toHaveBeenCalledTimes(2);
+    expect(result.verified).toBe(true);
+    expect(result.notes).toBeUndefined();
+  });
+
+  it('rejects the chain when any entry signature fails verification', async () => {
+    const deps = makeDeps({
+      getWitnessChain: vi.fn().mockResolvedValue({
+        length: 2,
+        entries: [
+          { epoch: 1, hash: 'h1', signature: 'sig-1' },
+          { epoch: 2, hash: 'h2', previous_hash: 'h1', signature: 'sig-2' },
+        ],
+      }),
+      verifyEntrySignature: vi.fn().mockResolvedValueOnce(true).mockResolvedValueOnce(false),
+    });
+    const svc = new WitnessVerificationService(deps);
+    const result = await svc.verifyChain('dev-014');
+
+    expect(result.verified).toBe(false);
+    expect(result.notes?.[0]).toContain('failed verification');
   });
 });

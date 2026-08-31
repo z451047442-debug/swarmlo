@@ -278,7 +278,11 @@ function constructPrompt(podTemplate, agent) {
 function roomIdFromLabel(label) {
   const norm = String(label).replace(/^#/, '').toLowerCase();
   const h = createHash('sha256').update(`agentbbs:room:${norm}`).digest('hex').slice(0, 8);
-  return `${norm}-${h}`;
+  // review fix 2026-08-31 — the derived id is used in a file path
+  // (room-<id>.jsonl): strip path separators so a label with `/` or `\`
+  // cannot escape the .agentbbs directory.
+  const safe = norm.replace(/[\\/]/g, '-').replace(/^\.+$/, '_') || 'room';
+  return `${safe}-${h}`;
 }
 
 function roomLogPath(basePath, derivedRoomId) {
@@ -357,6 +361,16 @@ async function runTick(args) {
     process.stderr.write(
       `ERROR: unknown agent types in pod template: ${unknown.join(', ')}\n` +
       `Known types: ${[...KNOWN_AGENT_TYPES].sort().join(', ')}\n`,
+    );
+    process.exit(2);
+  }
+
+  // review fix 2026-08-31 — roomId is interpolated into a ledger file path
+  // (budget/<roomId>.json): reject separators/traversal so a malicious pod
+  // template cannot write outside basePath/budget/.
+  if (typeof template.roomId !== 'string' || !/^[A-Za-z0-9._-]+$/.test(template.roomId)) {
+    process.stderr.write(
+      `ERROR: pod template roomId must be a string matching [A-Za-z0-9._-]+ (got ${JSON.stringify(template.roomId)})\n`,
     );
     process.exit(2);
   }

@@ -5,7 +5,7 @@ import {
   type ContinueDecision,
   ContinueGate,
   createContinueGate,
-} from '../src/continue-gate.ts';
+} from '../src/continue-gate.js';
 
 // ============================================================================
 // Helpers

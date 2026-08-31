@@ -9,6 +9,7 @@ import * as path from 'path';
 import * as os from 'os';
 import { UpdateCheckResult } from './checker.js';
 import { validateUpdate, ValidationResult } from './validator.js';
+import { writeFileRestricted } from '../fs-secure.js';
 
 /**
  * audit_1776853149979: package name and version come from npm-view output and
@@ -72,7 +73,10 @@ function saveHistory(history: UpdateHistoryEntry[]): void {
   ensureDir();
   // Keep only last N entries
   const trimmed = history.slice(-MAX_HISTORY_ENTRIES);
-  fs.writeFileSync(HISTORY_FILE, JSON.stringify(trimmed, null, 2));
+  // writeFileRestricted = atomic (tmp + fsync + rename) + mode 0600. A
+  // plain writeFileSync could leave a truncated history file on crash, and
+  // the file carries package/version strings consumed by rollback.
+  writeFileRestricted(HISTORY_FILE, JSON.stringify(trimmed, null, 2));
 }
 
 function recordUpdate(entry: UpdateHistoryEntry): void {
@@ -128,9 +132,12 @@ export async function executeUpdate(
     // audit_1776853149979: switched to execFileSync('npm', argv) — no shell,
     // so even if validation regressed, metas in update.package would stay
     // literal in the argv slot.
+    // audit_2026-08-31: `--save-exact` rewrote the user's package.json (and
+    // could pin the whole project to a new version) — replaced with
+    // `--no-save` so an update only touches node_modules, never manifests.
     execFileSync(
       'npm',
-      ['install', `${update.package}@${update.latestVersion}`, '--save-exact'],
+      ['install', `${update.package}@${update.latestVersion}`, '--no-save'],
       {
         encoding: 'utf-8',
         stdio: 'pipe',
@@ -240,10 +247,11 @@ export async function rollbackUpdate(
   }
 
   try {
-    // execFileSync, no shell.
+    // execFileSync, no shell. `--no-save` (was --save-exact): rollback must
+    // not rewrite the user's package.json either.
     execFileSync(
       'npm',
-      ['install', `${lastUpdate.package}@${lastUpdate.fromVersion}`, '--save-exact'],
+      ['install', `${lastUpdate.package}@${lastUpdate.fromVersion}`, '--no-save'],
       {
         encoding: 'utf-8',
         stdio: 'pipe',

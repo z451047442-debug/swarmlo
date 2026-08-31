@@ -40,7 +40,9 @@ export class IoTCognitumPlugin implements ClaudeFlowPlugin {
     const config = context.config;
     const defaultFleetId = (config['fleetId'] as string) ?? 'default';
     const defaultZoneId = (config['zoneId'] as string) ?? 'zone-0';
-    const insecure = (config['tlsInsecure'] as boolean) ?? true;
+    // TLS verification is ON by default — skipping it enables MITM on the
+    // device control channel. `tlsInsecure: true` must be an explicit opt-in.
+    const insecure = (config['tlsInsecure'] as boolean) ?? false;
 
     this.coordinator = new IoTCoordinator({
       defaultFleetId,

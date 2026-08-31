@@ -340,7 +340,7 @@ export class MessageBus extends EventEmitter implements IMessageBus {
     return message.id;
   }
 
-  private addToQueue(agentId: string, message: Message): void {
+  private addToQueue(agentId: string, message: Message, attempts = 0): void {
     if (!this.queues.has(agentId)) {
       this.queues.set(agentId, new PriorityMessageQueue());
     }
@@ -355,7 +355,7 @@ export class MessageBus extends EventEmitter implements IMessageBus {
     // O(1) priority-aware insertion
     const entry: MessageQueueEntry = {
       message,
-      attempts: 0,
+      attempts,
       enqueuedAt: new Date(),
     };
 
@@ -469,11 +469,11 @@ export class MessageBus extends EventEmitter implements IMessageBus {
             to: subscription.agentId
           });
         } catch (error) {
-          this.handleDeliveryError(message, entry, error as Error);
+          this.handleDeliveryError(message, entry, error as Error, subscription.agentId);
         }
       });
     } catch (error) {
-      this.handleDeliveryError(message, entry, error as Error);
+      this.handleDeliveryError(message, entry, error as Error, subscription.agentId);
     }
   }
 
@@ -488,13 +488,31 @@ export class MessageBus extends EventEmitter implements IMessageBus {
     this.emit('message.ack_failed', { messageId: message.id, error });
   }
 
-  private handleDeliveryError(message: Message, entry: MessageQueueEntry, error: Error): void {
+  private handleDeliveryError(
+    message: Message,
+    entry: MessageQueueEntry,
+    error: Error,
+    targetAgentId?: string
+  ): void {
     entry.attempts++;
     entry.lastAttemptAt = new Date();
 
     if (entry.attempts < this.config.retryAttempts) {
-      // Re-queue for retry
-      this.addToQueue(message.to, message);
+      // Re-queue for retry. Retry attempts are preserved on the re-queued
+      // entry so the retry budget is actually enforced. Broadcast messages
+      // must be expanded back to real subscriptions: enqueueing them under
+      // `message.to === 'broadcast'` sends them to a queue no subscription
+      // ever processes, leaving the retry stuck forever.
+      if (message.to === 'broadcast') {
+        const recipients = targetAgentId
+          ? [targetAgentId]
+          : Array.from(this.subscriptions.keys()).filter(id => id !== message.from);
+        for (const agentId of recipients) {
+          this.addToQueue(agentId, message, entry.attempts);
+        }
+      } else {
+        this.addToQueue(message.to, message, entry.attempts);
+      }
       this.emit('message.retry', {
         messageId: message.id,
         attempt: entry.attempts

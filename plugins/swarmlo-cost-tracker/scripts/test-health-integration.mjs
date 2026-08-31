@@ -49,8 +49,9 @@ function assert(cond, label) {
 }
 
 function memStore(cwd, key, valueObj) {
+  // review fix 2026-08-31 — pinned, never @latest
   const r = spawnNpxSync([
-    '-y', 'swarmlo-cli@latest', 'memory', 'store',
+    '-y', 'swarmlo-cli@3.39.1', 'memory', 'store',
     '--namespace', NS, '--key', key,
     '--value', JSON.stringify(valueObj),
   ], {
@@ -68,7 +69,7 @@ function memStore(cwd, key, valueObj) {
 
 function memInit(cwd) {
   const r = spawnNpxSync([
-    '-y', 'swarmlo-cli@latest', 'memory', 'init',
+    '-y', 'swarmlo-cli@3.39.1', 'memory', 'init',
   ], {
     cwd,
     stdio: ['ignore', 'pipe', 'pipe'],

@@ -1467,9 +1467,9 @@ const installSupervisorCommand: Command = {
   name: 'install-supervisor',
   description: 'Install OS-level auto-restart supervisor (launchd on macOS, systemd-user on Linux)',
   options: [
-    { name: 'force', short: 'f', type: 'boolean', description: 'Overwrite existing unit file', default: 'false' },
-    { name: 'load', type: 'boolean', description: 'Load/enable the unit immediately', default: 'true' },
-    { name: 'dry-run', type: 'boolean', description: 'Print the unit file content without writing', default: 'false' },
+    { name: 'force', short: 'f', type: 'boolean', description: 'Overwrite existing unit file', default: false },
+    { name: 'load', type: 'boolean', description: 'Load/enable the unit immediately', default: true },
+    { name: 'dry-run', type: 'boolean', description: 'Print the unit file content without writing', default: false },
   ],
   examples: [
     { command: 'claude-flow daemon install-supervisor', description: 'Install + load (auto-restart enabled)' },

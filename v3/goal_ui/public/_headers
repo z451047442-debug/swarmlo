@@ -16,7 +16,6 @@
 # Allow widget-embed.html to be iframed
 /widget-embed.html
   Access-Control-Allow-Origin: *
-  X-Frame-Options: ALLOWALL
   Content-Security-Policy: frame-ancestors *
 
 # API endpoints - if using Supabase functions

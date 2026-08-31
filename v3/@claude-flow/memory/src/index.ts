@@ -1,8 +1,9 @@
 /**
  * @claude-flow/memory - V3 Unified Memory System
  *
- * Provides a unified memory interface backed by AgentDB with HNSW indexing
- * for 150x-12,500x faster vector search compared to brute-force approaches.
+ * Provides a unified memory interface backed by AgentDB with HNSW indexing.
+ * (Measured in-tree: ~1.9x vs brute force at N=20k — the "150x-12,500x"
+ * figure was inherited from upstream and never reproduced.)
  *
  * @module @claude-flow/memory
  *

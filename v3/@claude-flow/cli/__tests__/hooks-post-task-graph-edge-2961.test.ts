@@ -36,6 +36,29 @@ import { tmpdir } from 'os';
 const CLI_BIN = fileURLToPath(new URL('../bin/cli.js', import.meta.url));
 const CLI_BUILT = existsSync(CLI_BIN);
 
+// Windows: the native better-sqlite3 handle (graph-edge-writer) can hold the
+// temp dir open past the assertions — retry the cleanup, and swallow the
+// residual EPERM (observed on Win11) rather than failing the suite on a file
+// lock that has nothing to do with what this test asserts.
+function removeDirWithRetry(dir: string, attempts = 5): void {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      rmSync(dir, { recursive: true, force: true });
+      return;
+    } catch {
+      // still locked — give the handle a moment and retry
+      const sleepMs = 200 * (i + 1);
+      const end = Date.now() + sleepMs;
+      while (Date.now() < end) { /* busy-wait */ }
+    }
+  }
+  try {
+    rmSync(dir, { recursive: true, force: true });
+  } catch {
+    // native handle still holds the dir (Windows) — assertions already ran
+  }
+}
+
 describe.skipIf(!CLI_BUILT)('#2961 hooks post-task (CLI) writes the reinforced-by edge', () => {
   it('a successful CLI post-task call leaves a graph_edges row behind, not just a trajectory', async () => {
     const cwd = mkdtempSync(join(tmpdir(), 'swarmlo-2961-'));
@@ -56,7 +79,7 @@ describe.skipIf(!CLI_BUILT)('#2961 hooks post-task (CLI) writes the reinforced-b
       // await resolves — this is exactly 0 every time, not flaky.
       expect(count).toBeGreaterThan(0);
     } finally {
-      rmSync(cwd, { recursive: true, force: true });
+      removeDirWithRetry(cwd);
     }
   }, 60_000);
 });

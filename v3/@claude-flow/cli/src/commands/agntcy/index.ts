@@ -8,13 +8,13 @@
  *   swarmlo swarm join <namespace>
  *
  * ============================================================================
- * INTEGRATION STATUS: NOT WIRED IN. This module is intentionally
- * self-contained and is NOT imported by, or registered with, the CLI's
- * central command registry/index. A later, separate pass must:
+ * INTEGRATION STATUS: PARTIALLY WIRED. `transport` IS registered in the CLI's
+ * central command registry (`commands/index.ts` commandLoaders →
+ * `./agntcy/transport.js`) and reachable as `swarmlo transport`. The other
+ * two verbs from ADR-380 §2 remain unwired — a later, separate pass must:
  *
- *   1. Add `transportCommand` as a new top-level command (alongside
- *      `agent`, `swarm`, etc. in whatever file enumerates top-level
- *      commands today).
+ *   1. (DONE) `transportCommand` is registered as the top-level `transport`
+ *      command via the commandLoaders entry in `../index.ts`.
  *   2. Merge `agentPublishCommand` into the existing `agentCommand`'s
  *      `subcommands` array in `../agent.ts`.
  *   3. Merge `swarmJoinCommand` into the existing `swarmCommand`'s
