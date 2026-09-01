@@ -226,7 +226,7 @@ export async function exportChecklistDocx(doc: ChecklistDocument): Promise<void>
             bullet: { level: 0 },
             children: [
               new TextRun({ text: ref.title, font: FONT, size: 20 }),
-              new TextRun({ text: `　${ref.url}`, font: FONT, size: 18, color: "6B7280" }),
+              new TextRun({ text: ` ${ref.url}`, font: FONT, size: 18, color: "6B7280" }),
             ],
           })
         );

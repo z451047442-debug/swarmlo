@@ -224,11 +224,15 @@ function atomicWriteJson(file: string, value: unknown): void {
     fs.closeSync(fd);
   }
   fs.renameSync(tmp, file);
-  const dirFd = fs.openSync(path.dirname(file), fs.constants.O_RDONLY);
-  try {
-    fs.fsyncSync(dirFd);
-  } finally {
-    fs.closeSync(dirFd);
+  // Directory fsync is not supported on Windows (EPERM); the rename above is
+  // atomic on NTFS, so skip the dir fsync there.
+  if (process.platform !== 'win32') {
+    const dirFd = fs.openSync(path.dirname(file), fs.constants.O_RDONLY);
+    try {
+      fs.fsyncSync(dirFd);
+    } finally {
+      fs.closeSync(dirFd);
+    }
   }
 }
 

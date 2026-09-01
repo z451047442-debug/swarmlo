@@ -55,6 +55,10 @@ export const zhMain: Record<string, string> = {
   "main.metricActions": "动作",
   "main.metricSources": "来源",
   "main.metricConcepts": "概念",
+  "main.metricPlanCost": "计划代价",
+  "main.metricNodesExpanded": "展开节点",
+  "main.metricParallelSteps": "并行步骤",
+  "main.metricRedundantRemoved": "移除冗余",
   // ---- Index: 步骤 1 目标分析 ----
   "main.stepGoalAnalysisTitle": "目标分析",
   "main.stepGoalAnalysisDesc": "正在分析 \"{goal}\"... 并将其拆解为可执行的子目标。",

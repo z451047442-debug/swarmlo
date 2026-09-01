@@ -10,8 +10,12 @@
 	let canvas: HTMLCanvasElement;
 
 	onMount(() => {
-		const ctx = canvas.getContext("2d");
-		if (!ctx) return;
+		const rawCtx = canvas.getContext("2d");
+		if (!rawCtx) return;
+		// Re-bind after the null guard so the nested `draw()` closure sees a
+		// non-nullable context (function declarations are hoisted, so the
+		// original `ctx` narrowing never reached the closure).
+		const ctx = rawCtx;
 
 		const dpr = Math.min(window.devicePixelRatio, 2);
 		canvas.width = width * dpr;

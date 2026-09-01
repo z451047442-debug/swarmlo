@@ -77,17 +77,17 @@ DROP INDEX CONCURRENTLY IF EXISTS idx_table_column;
 
 After successful migration creation or validation, train patterns:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
-npx swarmlo-cli@latest neural train --pattern-type migrations --epochs 10
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 neural train --pattern-type migrations --epochs 10
 ```
 
 ### Memory Learning
 
 Store migration patterns and validation results:
 ```bash
-npx swarmlo-cli@latest memory store --namespace migrations --key "migration-NNN_NAME" --value "MIGRATION_METADATA_JSON"
-npx swarmlo-cli@latest memory store --namespace migration-patterns --key "pattern-PATTERN_NAME" --value "PATTERN_JSON"
-npx swarmlo-cli@latest memory search --query "migrations adding foreign keys" --namespace migrations
+npx swarmlo-cli@3.39.1 memory store --namespace migrations --key "migration-NNN_NAME" --value "MIGRATION_METADATA_JSON"
+npx swarmlo-cli@3.39.1 memory store --namespace migration-patterns --key "pattern-PATTERN_NAME" --value "PATTERN_JSON"
+npx swarmlo-cli@3.39.1 memory search --query "migrations adding foreign keys" --namespace migrations
 ```
 
 ### Related Plugins

@@ -59,15 +59,15 @@ The running agent has access to these tools (verify with `/gaia validate`):
 
 Store and search run learnings:
 ```bash
-npx swarmlo-cli@latest memory store --namespace gaia-runs --key "run-$(date +%Y%m%d-%H%M)" --value "$SUMMARY_JSON"
-npx swarmlo-cli@latest memory search --namespace gaia-patterns --query "failure mode extraction bug"
+npx swarmlo-cli@3.39.1 memory store --namespace gaia-runs --key "run-$(date +%Y%m%d-%H%M)" --value "$SUMMARY_JSON"
+npx swarmlo-cli@3.39.1 memory search --namespace gaia-patterns --query "failure mode extraction bug"
 ```
 
 ## Neural learning
 
 After each run, train on outcomes:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "gaia-run-$(date +%Y%m%d)" --success true --train-neural true
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "gaia-run-$(date +%Y%m%d)" --success true --train-neural true
 ```
 
 ## Coordination protocol

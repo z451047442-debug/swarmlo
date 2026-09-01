@@ -66,7 +66,7 @@ While running, progress is reported every 5 questions:
 
 Store the run summary in memory for history tracking:
 ```bash
-npx swarmlo-cli@latest memory store \
+npx swarmlo-cli@3.39.1 memory store \
   --namespace gaia-runs \
   --key "run-$(date +%Y%m%d-%H%M)" \
   --value '{"level":$LEVEL,"model":"$MODEL","total":$TOTAL,"passed":$PASSED,"pass_rate":$RATE,"est_cost_usd":$COST}'
@@ -121,7 +121,7 @@ using the `/gaia-debugging` skill if needed.
 ## Phase 6 — Persist learnings
 
 ```bash
-npx swarmlo-cli@latest hooks post-task \
+npx swarmlo-cli@3.39.1 hooks post-task \
   --task-id "gaia-submission-$(date +%Y%m%d)" \
   --success true \
   --train-neural true
@@ -129,7 +129,7 @@ npx swarmlo-cli@latest hooks post-task \
 
 Store any discovered patterns:
 ```bash
-npx swarmlo-cli@latest memory store \
+npx swarmlo-cli@3.39.1 memory store \
   --namespace gaia-patterns \
   --key "submission-notes-$(date +%Y%m%d)" \
   --value "Level $LEVEL, $MODEL: $NOTES"

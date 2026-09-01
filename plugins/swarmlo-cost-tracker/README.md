@@ -77,7 +77,7 @@ Four upstream capabilities are now wired to the cost-tracker surface — every o
 
 | Capability | Where | Surfaced by |
 |---|---|---|
-| **Agent Booster bypass** (Tier 1, $0, WASM) | `hooks_route` emits `[AGENT_BOOSTER_AVAILABLE]` (CLI: `npx swarmlo-cli@latest hooks route --task ...`) | `cost-booster-route` skill |
+| **Agent Booster bypass** (Tier 1, $0, WASM) | `hooks_route` emits `[AGENT_BOOSTER_AVAILABLE]` (CLI: `npx swarmlo-cli@3.39.1 hooks route --task ...`) | `cost-booster-route` skill |
 | **Token optimizer / compact context** | `getTokenOptimizer().getCompactContext()` from `@claude-flow/integration` (uses `agentic-flow` when present) | `cost-compact-context` skill |
 | **Model-outcome feedback loop** | `hooks_model-outcome` (typed equivalent of legacy `routing-outcomes`) | `cost-optimize` skill step 8 |
 | **Optimize + benchmark loop workers** | `hooks_worker-status --worker optimize / --worker benchmark` (declared by swarmlo-loop-workers) | `cost workers` command + `cost-analyst` agent |

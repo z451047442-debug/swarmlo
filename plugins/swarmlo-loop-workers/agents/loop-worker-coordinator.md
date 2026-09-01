@@ -31,13 +31,13 @@ You are the loop worker coordinator. You manage background worker lifecycle acro
 
 ## Workflow
 
-1. Check current worker status: `Bash("npx swarmlo-cli@latest hooks worker status")`
-2. Dispatch needed workers: `Bash("npx swarmlo-cli@latest hooks worker dispatch --trigger WORKER_NAME")`
+1. Check current worker status: `Bash("npx swarmlo-cli@3.39.1 hooks worker status")`
+2. Dispatch needed workers: `Bash("npx swarmlo-cli@3.39.1 hooks worker dispatch --trigger WORKER_NAME")`
 3. Schedule next check based on execution mode
 
 ## Tools
 
-- `Bash(npx swarmlo-cli@latest hooks worker *)` — worker management
+- `Bash(npx swarmlo-cli@3.39.1 hooks worker *)` — worker management
 - `ScheduleWakeup` — loop-mode scheduling
 - `CronCreate` / `CronList` / `CronDelete` — persistent scheduling
 - `mcp__plugin_swarmlo-core_swarmlo__hooks_worker-dispatch` — direct worker dispatch
@@ -48,6 +48,6 @@ You are the loop worker coordinator. You manage background worker lifecycle acro
 
 After completing tasks, store successful patterns:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --quality 0.9
-npx swarmlo-cli@latest memory search --query "TASK_TYPE patterns" --namespace patterns
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --quality 0.9
+npx swarmlo-cli@3.39.1 memory search --query "TASK_TYPE patterns" --namespace patterns
 ```

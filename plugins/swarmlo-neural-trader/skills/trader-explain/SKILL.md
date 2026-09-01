@@ -23,7 +23,7 @@ Steps:
 
 2. **Extract per-feature contribution scores** from the model:
    ```bash
-   npx neural-trader --predict --signal "$SIGNAL_ID" --explain --json
+   npx --ignore-scripts -y neural-trader@2.8.11 --predict --signal "$SIGNAL_ID" --explain --json
    ```
    The expected output shape:
    ```ts

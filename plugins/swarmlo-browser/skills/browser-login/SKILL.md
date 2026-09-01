@@ -32,7 +32,7 @@ Authenticate against a target site once, then vault the resulting session creden
    Tokens that look raw get vault-wrapped (an opaque handle) before AgentDB store; raw values never enter the namespace.
 6. **Store in `browser-cookies`**:
    ```bash
-   npx -y swarmlo-cli@latest memory store --namespace browser-cookies \
+   npx -y swarmlo-cli@3.39.1 memory store --namespace browser-cookies \
      --key "<host>" \
      --value "{vault_handle:<opaque>, expiry:<iso>, aidefence_verdict:safe}"
    ```

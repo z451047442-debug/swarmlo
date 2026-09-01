@@ -194,7 +194,7 @@ if (import.meta.main) {
 async function executeResearchStep(
   step: ResearchStep,
   goal: string,
-  config: any,
+  config: Record<string, unknown>,
   aiModel: string,
   apiKey: string,
   language?: "en" | "zh"
@@ -286,7 +286,7 @@ async function executeResearchStep(
   };
 }
 
-function buildSystemPrompt(config: any): string {
+function buildSystemPrompt(config: Record<string, unknown>): string {
   const depth = config.researchGuidance?.depth || 'moderate';
   const perspective = config.researchGuidance?.perspective || 'balanced';
   const timeframe = config.researchGuidance?.timeframe || 'recent';
@@ -325,7 +325,7 @@ function buildSystemPrompt(config: any): string {
   return prompt;
 }
 
-function buildUserPrompt(step: ResearchStep, goal: string, config: any): string {
+function buildUserPrompt(step: ResearchStep, goal: string, config: Record<string, unknown>): string {
   let prompt = `研究目标：${goal}\n\n`;
   prompt += `当前步骤：${step.stepTitle}\n`;
   prompt += `步骤说明：${step.stepDescription}\n\n`;

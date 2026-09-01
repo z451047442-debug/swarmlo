@@ -27,7 +27,7 @@
 // iter 63 — SEVERITY_RANK + rankSeverity consolidated to _harness.mjs
 // (was local in iter 62; now shared with audit-trend + mcp-scan).
 // review fix 2026-08-31 — runSwarmloCli resolves the PINNED swarmlo-cli
-// instead of `npx swarmlo-cli@latest` (pinned + no per-call registry check).
+// instead of `npx swarmlo-cli@3.39.1` (pinned + no per-call registry check).
 import { runHarness, runMetaharness, runHarnessAsync, runMetaharnessAsync, emitDegradedJsonAndExit, parseMcpScanText, SEVERITY_RANK, rankSeverity, runSwarmloCli } from './_harness.mjs';
 
 // iter 63 — SEVERITY_RANK + rankSeverity moved to _harness.mjs (single

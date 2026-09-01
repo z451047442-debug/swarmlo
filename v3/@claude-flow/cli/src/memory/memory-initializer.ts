@@ -553,7 +553,7 @@ CREATE TABLE IF NOT EXISTS metadata (
 `;
 
 // ============================================================================
-// HNSW INDEX SINGLETON (150x faster vector search)
+// HNSW INDEX SINGLETON (measured ~1.9x-4.7x vs brute-force vector search)
 // Uses @ruvector/core from agentic-flow for WASM-accelerated HNSW
 // ============================================================================
 
@@ -841,7 +841,7 @@ export async function addToHNSWIndex(
 }
 
 /**
- * Search HNSW index (150x faster than brute-force)
+ * Search HNSW index (measured ~1.9x-4.7x vs brute-force)
  * Returns results sorted by similarity (highest first)
  */
 export async function searchHNSWIndex(
@@ -3164,7 +3164,7 @@ export async function storeEntry(options: {
 
 /**
  * Search entries using sql.js with vector similarity
- * Uses HNSW index for 150x faster search when available
+ * Uses HNSW index (measured ~1.9x-4.7x vs brute force) when available
  */
 export async function searchEntries(options: {
   query: string;
@@ -3301,7 +3301,7 @@ export async function searchEntries(options: {
       }
     } catch { /* RaBitQ unavailable, fall through */ }
 
-    // Try HNSW search (150x faster than brute-force)
+    // Try HNSW search (measured ~1.9x-4.7x vs brute-force)
     const hnswResults = await searchHNSWIndex(queryEmbedding, {
       k: provenanceFilter?.length ? Math.max(limit * 4, limit + 32) : limit,
       namespace: effectiveNamespace,

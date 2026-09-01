@@ -6,9 +6,9 @@ $ARGUMENTS
 
 Generate tests by analyzing coverage gaps and applying TDD London School patterns.
 
-1. **Analyze gaps**: `npx swarmlo-cli@latest hooks coverage-gaps --format table`
-2. **Route for coverage**: `npx swarmlo-cli@latest hooks coverage-route --task "$ARGUMENTS"`
-3. **Suggest tests**: `npx swarmlo-cli@latest hooks coverage-suggest --path "$ARGUMENTS"`
+1. **Analyze gaps**: `npx swarmlo-cli@3.39.1 hooks coverage-gaps --format table`
+2. **Route for coverage**: `npx swarmlo-cli@3.39.1 hooks coverage-route --task "$ARGUMENTS"`
+3. **Suggest tests**: `npx swarmlo-cli@3.39.1 hooks coverage-suggest --path "$ARGUMENTS"`
 
 Parse $ARGUMENTS as a file path or module name. Generate tests following these conventions:
 - Place tests adjacent to source: `src/foo.ts` -> `src/foo.test.ts`

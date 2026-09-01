@@ -99,7 +99,7 @@ Claude under user supervision. The argv-vs-shell pitfall doesn't apply.
 Detailed proposal in `aidefence-wiring.md` (sibling doc). Summary:
 
 - Wire point identified: `market-analyst.md` `--symbol $TICKER` input +
-  the `fetchLiveBars` JSON response (the `npx neural-trader --symbol …`
+  the `fetchLiveBars` JSON response (the `npx --ignore-scripts -y neural-trader@2.8.11 --symbol …`
   cloud roundtrip).
 - AIDefence MCP tools to call: `aidefence_has_pii`, `aidefence_scan`,
   `aidefence_is_safe` (same three gates the `swarmlo-browser` and

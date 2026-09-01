@@ -76,12 +76,12 @@ Before telling the user the package is ready:
 
 Store and search submission records:
 ```bash
-npx swarmlo-cli@latest memory store \
+npx swarmlo-cli@3.39.1 memory store \
   --namespace gaia-submissions \
   --key "sub-$(date +%Y%m%d-%H%M)" \
   --value '{"package":"submission-<date>-<sha>","pass_rate":0.208,"model":"claude-sonnet-4-6","signed":true}'
 
-npx swarmlo-cli@latest memory search \
+npx swarmlo-cli@3.39.1 memory search \
   --namespace gaia-submissions \
   --query "submission package 2026"
 ```

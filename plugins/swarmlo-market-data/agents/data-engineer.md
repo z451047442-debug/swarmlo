@@ -64,17 +64,17 @@ Each candlestick pattern is encoded as a fixed-length vector:
 
 After successful data ingestion or pattern detection, train patterns:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
-npx swarmlo-cli@latest neural train --pattern-type market-data --epochs 15
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 neural train --pattern-type market-data --epochs 15
 ```
 
 ### Memory Learning
 
 Store ingested data summaries and detected patterns:
 ```bash
-npx swarmlo-cli@latest memory store --namespace market-data --key "symbol-SYMBOL" --value "OHLCV_SUMMARY_JSON"
-npx swarmlo-cli@latest memory store --namespace market-patterns --key "pattern-PATTERN_ID" --value "PATTERN_METADATA_JSON"
-npx swarmlo-cli@latest memory search --query "bearish reversal patterns for AAPL" --namespace market-patterns
+npx swarmlo-cli@3.39.1 memory store --namespace market-data --key "symbol-SYMBOL" --value "OHLCV_SUMMARY_JSON"
+npx swarmlo-cli@3.39.1 memory store --namespace market-patterns --key "pattern-PATTERN_ID" --value "PATTERN_METADATA_JSON"
+npx swarmlo-cli@3.39.1 memory search --query "bearish reversal patterns for AAPL" --namespace market-patterns
 ```
 
 ### Related Plugins

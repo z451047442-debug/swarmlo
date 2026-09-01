@@ -17,7 +17,7 @@
 //   2  config error
 
 // review fix 2026-08-31 — runSwarmloCli resolves the PINNED swarmlo-cli
-// (local install or versioned cache) instead of `npx swarmlo-cli@latest`.
+// (local install or versioned cache) instead of `npx swarmlo-cli@3.39.1`.
 import { runSwarmloCli } from './_harness.mjs';
 
 const NS = process.env.AUDIT_LIST_NAMESPACE || 'metaharness-audit';

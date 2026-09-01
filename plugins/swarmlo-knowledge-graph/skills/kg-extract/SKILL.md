@@ -39,6 +39,6 @@ When you need to build or update a knowledge graph from source code or documenta
 ## CLI alternative
 
 ```bash
-npx swarmlo-cli@latest memory store --namespace knowledge-graph --key "entity-NAME" --value "METADATA_JSON"
-npx swarmlo-cli@latest memory search --query "entities in auth module" --namespace knowledge-graph
+npx swarmlo-cli@3.39.1 memory store --namespace knowledge-graph --key "entity-NAME" --value "METADATA_JSON"
+npx swarmlo-cli@3.39.1 memory search --query "entities in auth module" --namespace knowledge-graph
 ```

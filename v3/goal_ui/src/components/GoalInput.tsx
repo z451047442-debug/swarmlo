@@ -11,7 +11,7 @@ interface GoalInputProps {
   onSubmit: (goal: string) => void;
   isPlanning: boolean;
   onAdvancedSettings?: () => void;
-  onConfigUpdate?: (config: any) => void;
+  onConfigUpdate?: (config: Record<string, unknown>) => void;
   /** widget 配置里的 defaultGoal，预填到输入框 */
   initialGoal?: string;
 }

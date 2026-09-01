@@ -8,9 +8,9 @@ Run a security scan at the specified depth.
 
 Via CLI:
 ```bash
-npx swarmlo-cli@latest security scan --depth DEPTH --output json
-npx swarmlo-cli@latest security cve --list
-npx swarmlo-cli@latest security threats --model stride --export md
+npx swarmlo-cli@3.39.1 security scan --depth DEPTH --output json
+npx swarmlo-cli@3.39.1 security cve --list
+npx swarmlo-cli@3.39.1 security threats --model stride --export md
 ```
 
 | Depth | Checks |

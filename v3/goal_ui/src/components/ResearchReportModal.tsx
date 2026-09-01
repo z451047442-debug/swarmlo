@@ -119,7 +119,7 @@ export const ResearchReportModal = ({
       const researchContext = steps.map(step => ({
         stepTitle: step.title,
         findings: step.data.map(item => {
-          const details = item.details as any;
+          const details = item.details as Record<string, unknown>;
           return {
             title: item.text,
             content: details?.objective || details?.content || item.text,
@@ -157,7 +157,7 @@ export const ResearchReportModal = ({
   // Extract all research items with their sources as citations
   const allCitations = steps.flatMap(step => 
     step.data.map(item => {
-      const details = item.details as any;
+      const details = item.details as Record<string, unknown>;
       return {
         title: item.text,
         source: details?.source || 'Research Analysis',
@@ -403,7 +403,7 @@ export const ResearchReportModal = ({
       title: step.title,
       description: step.description,
       findings: step.data.map((item) => {
-        const details = item.details as any;
+        const details = item.details as Record<string, unknown>;
         return {
           title: item.text,
           content: details?.objective || details?.content || item.text,
@@ -657,7 +657,7 @@ export const ResearchReportModal = ({
                     {step.title}
                   </h4>
                   {step.data.map((item, itemIdx) => {
-                    const details = item.details as any;
+                    const details = item.details as Record<string, unknown>;
                     return (
                       <div key={itemIdx} className="rounded-lg border p-4 space-y-2">
                         <div className="flex items-start justify-between gap-3">

@@ -877,33 +877,33 @@ export class RvfCollection<T = any> {
 		return [...values];
 	}
 
-	aggregate(
+	aggregate<T2 = T>(
 		pipeline: Record<string, unknown>[],
 		_options?: Record<string, unknown>
 	): {
-		next: () => Promise<T | null>;
-		toArray: () => Promise<T[]>;
-		[Symbol.asyncIterator](): AsyncGenerator<T, void, undefined>;
+		next: () => Promise<T2 | null>;
+		toArray: () => Promise<T2[]>;
+		[Symbol.asyncIterator](): AsyncGenerator<T2, void, undefined>;
 	} {
 		const self = this;
-		let _results: T[] | null = null;
+		let _results: T2[] | null = null;
 		let _idx = 0;
 
-		const getResults = async (): Promise<T[]> => {
+		const getResults = async (): Promise<T2[]> => {
 			if (_results !== null) return _results;
-			_results = await self._aggregateInternal(pipeline);
+			_results = (await self._aggregateInternal(pipeline)) as unknown as T2[];
 			return _results;
 		};
 
 		return {
-			async next(): Promise<T | null> {
+			async next(): Promise<T2 | null> {
 				const results = await getResults();
 				return _idx < results.length ? results[_idx++] : null;
 			},
-			async toArray(): Promise<T[]> {
+			async toArray(): Promise<T2[]> {
 				return getResults();
 			},
-			async *[Symbol.asyncIterator](): AsyncGenerator<T, void, undefined> {
+			async *[Symbol.asyncIterator](): AsyncGenerator<T2, void, undefined> {
 				const results = await getResults();
 				for (const row of results) {
 					yield row;

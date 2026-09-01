@@ -48,7 +48,7 @@ Namespace strings apply to `memory_*` and `embeddings_search` only. The `agentdb
 ## CLI alternative
 
 ```bash
-npx swarmlo-cli@latest memory search --query "your query" --namespace patterns
-npx swarmlo-cli@latest memory store --key "key" --value "value" --namespace patterns
-npx swarmlo-cli@latest memory list --namespace patterns
+npx swarmlo-cli@3.39.1 memory search --query "your query" --namespace patterns
+npx swarmlo-cli@3.39.1 memory store --key "key" --value "value" --namespace patterns
+npx swarmlo-cli@3.39.1 memory list --namespace patterns
 ```

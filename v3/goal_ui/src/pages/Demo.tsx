@@ -36,7 +36,7 @@ const Demo = () => {
 
   useEffect(() => {
     // Configure widget before loading
-    (window as any).SwarmloResearchWidgetConfig = {
+    window.SwarmloResearchWidgetConfig = {
       primaryColor: "#8b5cf6",
       accentColor: "#22c55e",
       backgroundColor: "#1a1a1a",
@@ -92,8 +92,8 @@ const Demo = () => {
           console.log("[Demo] Widget loaded successfully");
 
           // Check if widget initialized
-          if ((window as any).SwarmloResearchWidget) {
-            console.log("[Demo] Widget version:", (window as any).SwarmloResearchWidget.version);
+          if (window.SwarmloResearchWidget) {
+            console.log("[Demo] Widget version:", window.SwarmloResearchWidget.version);
             toast({
               title: t("misc.demoWidgetReady"),
               description: t("misc.demoWidgetReadyDesc"),
@@ -128,8 +128,8 @@ const Demo = () => {
           link.parentNode.removeChild(link);
         }
         // Clear widget config
-        delete (window as any).SwarmloResearchWidgetConfig;
-        delete (window as any).SwarmloResearchWidget;
+        delete window.SwarmloResearchWidgetConfig;
+        delete window.SwarmloResearchWidget;
       };
     };
 

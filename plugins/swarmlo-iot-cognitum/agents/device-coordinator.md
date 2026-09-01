@@ -19,12 +19,12 @@ The full trust-tier table, complete tool catalog (`npx -y -p @claude-flow/plugin
 
 Store device patterns for cross-session learning:
 ```bash
-npx swarmlo-cli@latest memory store --namespace iot-devices --key "device-DEVICEID" --value "TRUST_HISTORY"
+npx swarmlo-cli@3.39.1 memory store --namespace iot-devices --key "device-DEVICEID" --value "TRUST_HISTORY"
 ```
 
 ### Neural learning
 
 After completing tasks, store the outcome so the trust scorer compounds learning across sessions:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
 ```

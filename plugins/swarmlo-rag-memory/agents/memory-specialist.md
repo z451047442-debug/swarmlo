@@ -59,16 +59,16 @@ npx ruvector brain search "query"
 
 ```bash
 # Dense semantic search
-npx swarmlo-cli@latest memory search --query "QUERY" --namespace NAMESPACE --limit 10
+npx swarmlo-cli@3.39.1 memory search --query "QUERY" --namespace NAMESPACE --limit 10
 
 # Store with metadata
-npx swarmlo-cli@latest memory store --key "KEY" --value "VALUE" --namespace NAMESPACE
+npx swarmlo-cli@3.39.1 memory store --key "KEY" --value "VALUE" --namespace NAMESPACE
 
 # List and audit
-npx swarmlo-cli@latest memory list --namespace NAMESPACE --limit 20
+npx swarmlo-cli@3.39.1 memory list --namespace NAMESPACE --limit 20
 
 # Consolidated search across all namespaces
-npx swarmlo-cli@latest memory search --query "QUERY" --limit 10
+npx swarmlo-cli@3.39.1 memory search --query "QUERY" --limit 10
 ```
 
 ### Adaptive Chunking Strategy
@@ -90,7 +90,7 @@ npx swarmlo-cli@latest memory search --query "QUERY" --limit 10
 5. **Re-index** — rebuild HNSW index after consolidation for optimal graph quality
 
 ```bash
-npx swarmlo-cli@latest hooks worker dispatch --trigger consolidate
+npx swarmlo-cli@3.39.1 hooks worker dispatch --trigger consolidate
 ```
 
 ### Namespaces
@@ -108,7 +108,7 @@ npx swarmlo-cli@latest hooks worker dispatch --trigger consolidate
 
 After completing tasks, train on successful retrieval patterns:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
 ```
 
 ### Related Plugins

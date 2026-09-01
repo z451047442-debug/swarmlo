@@ -1,6 +1,6 @@
 ---
 name: trader-portfolio
-description: Optimize portfolio allocation using npx neural-trader mean-variance engine with risk constraints and rebalancing plan
+description: Optimize portfolio allocation using npx --ignore-scripts -y neural-trader@2.8.11 mean-variance engine with risk constraints and rebalancing plan
 allowed-tools: Bash Read mcp__plugin_swarmlo-core_swarmlo__memory_store mcp__plugin_swarmlo-core_swarmlo__memory_retrieve mcp__plugin_swarmlo-core_swarmlo__memory_search mcp__plugin_swarmlo-core_swarmlo__neural_predict mcp__plugin_swarmlo-core_swarmlo__agentdb_pattern-search
 argument-hint: "[--risk-target NUMBER]"
 ---
@@ -13,23 +13,23 @@ Steps:
    `mcp__plugin_swarmlo-core_swarmlo__memory_search({ query: "current portfolio holdings", namespace: "trading-portfolio" })`
 3. Run portfolio optimization:
    ```bash
-   npx neural-trader --portfolio optimize
+   npx --ignore-scripts -y neural-trader@2.8.11 --portfolio optimize
    ```
    With risk target:
    ```bash
-   npx neural-trader --portfolio optimize --risk-target <number>
+   npx --ignore-scripts -y neural-trader@2.8.11 --portfolio optimize --risk-target <number>
    ```
 4. Get risk metrics:
    ```bash
-   npx neural-trader --risk assess --portfolio current
-   npx neural-trader --var --portfolio current
-   npx neural-trader --correlation --portfolio current --flag-threshold 0.8
+   npx --ignore-scripts -y neural-trader@2.8.11 --risk assess --portfolio current
+   npx --ignore-scripts -y neural-trader@2.8.11 --var --portfolio current
+   npx --ignore-scripts -y neural-trader@2.8.11 --correlation --portfolio current --flag-threshold 0.8
    ```
 5. Use SONA for expected return prediction:
    `mcp__plugin_swarmlo-core_swarmlo__neural_predict({ input: "expected returns for [HOLDINGS] given current regime" })`
 6. Generate rebalancing plan:
    ```bash
-   npx neural-trader --portfolio rebalance
+   npx --ignore-scripts -y neural-trader@2.8.11 --portfolio rebalance
    ```
    Output: trades needed, current vs target weights, estimated costs
 7. Search for similar allocations in history:

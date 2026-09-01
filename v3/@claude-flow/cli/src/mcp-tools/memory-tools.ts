@@ -2,7 +2,7 @@
  * Memory MCP Tools for CLI - V3 with sql.js/HNSW Backend
  *
  * UPGRADED: Now uses the advanced sql.js + HNSW backend for:
- * - 150x-12,500x faster semantic search
+ * - HNSW semantic search (measured ~1.9x-4.7x vs brute force)
  * - Vector embeddings with cosine similarity
  * - Persistent SQLite storage (WASM)
  * - Backward compatible with legacy JSON storage (auto-migrates)

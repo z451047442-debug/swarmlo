@@ -65,10 +65,10 @@ Until the 5 lifecycle tools ship, you implement the session contract above by co
 Use the bridged store/search:
 
 ```bash
-npx -y swarmlo-cli@latest memory store --namespace browser-selectors \
+npx -y swarmlo-cli@3.39.1 memory store --namespace browser-selectors \
   --key "<host>:<intent>" --value '<json>'
 
-npx -y swarmlo-cli@latest memory search --namespace browser-selectors \
+npx -y swarmlo-cli@3.39.1 memory search --namespace browser-selectors \
   --query "<host> <intent>"
 ```
 
@@ -100,7 +100,7 @@ You never reach for the 23 MCP tools directly when a skill exists for the task.
 After a successful task:
 
 ```bash
-npx -y swarmlo-cli@latest hooks post-task --task-id "$SID" \
+npx -y swarmlo-cli@3.39.1 hooks post-task --task-id "$SID" \
   --success true --train-neural true
 ```
 

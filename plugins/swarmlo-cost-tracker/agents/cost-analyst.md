@@ -67,9 +67,9 @@ booster.apply({ code, edit, language }) → { output, success, latency, confiden
 
 Store cost patterns and optimization results for cross-session learning:
 ```bash
-npx swarmlo-cli@latest memory store --namespace cost-tracking --key "report-DATE" --value "REPORT_JSON"
-npx swarmlo-cli@latest memory store --namespace cost-patterns --key "optimization-OPT_NAME" --value "OPTIMIZATION_RESULT_JSON"
-npx swarmlo-cli@latest memory search --query "cost savings from model downgrades" --namespace cost-patterns
+npx swarmlo-cli@3.39.1 memory store --namespace cost-tracking --key "report-DATE" --value "REPORT_JSON"
+npx swarmlo-cli@3.39.1 memory store --namespace cost-patterns --key "optimization-OPT_NAME" --value "OPTIMIZATION_RESULT_JSON"
+npx swarmlo-cli@3.39.1 memory search --query "cost savings from model downgrades" --namespace cost-patterns
 ```
 
 ## Background workers
@@ -85,8 +85,8 @@ Use `mcp__plugin_swarmlo-core_swarmlo__hooks_worker-status --worker optimize` an
 
 After generating cost reports or applying optimizations, feed the cost-optimization learning loop so future strategies compound:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
-npx swarmlo-cli@latest neural train --pattern-type cost-optimization --epochs 5
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 neural train --pattern-type cost-optimization --epochs 5
 ```
 
 ## Related plugins

@@ -7,7 +7,7 @@ argument-hint: "[--portfolio-id ID] [--tolerance 1e-6]"
 Solve the mean-variance optimization `Σ · x = μ` via Conjugate Gradient instead of the legacy Neumann series.
 
 **Why CG instead of Neumann (ADR-123 Wedge 8):**
-- Neumann series: ~50 µs at n=256 (legacy `npx neural-trader --portfolio optimize`)
+- Neumann series: ~50 µs at n=256 (legacy `npx --ignore-scripts -y neural-trader@2.8.11 --portfolio optimize`)
 - Conjugate Gradient: ~816 ns at n=256 (this skill)
 - Measured speedup: 40-60×; parity within 1e-4 on a fixed seed.
 
@@ -27,9 +27,9 @@ Steps:
 2. **Read the current covariance matrix Σ and expected-return vector μ** from neural-trader's portfolio API:
    ```bash
    # Primary path (preferred — clean JSON):
-   npx neural-trader --portfolio current --json
+   npx --ignore-scripts -y neural-trader@2.8.11 --portfolio current --json
    # Fallback paths if the --json flag is unavailable on the installed version:
-   npx neural-trader --portfolio current  # parse the text output
+   npx --ignore-scripts -y neural-trader@2.8.11 --portfolio current  # parse the text output
    # OR pull from AgentDB if a prior run stored the matrix there:
    ```
    ```text
@@ -71,7 +71,7 @@ Steps:
 
 4. **Fallback (legacy Neumann)** — if step 3 reports `degraded: true` (non-SPD input, non-square matrix, MCP error) OR if `SWARMLO_NEURAL_TRADER_DISABLE_CG=1`:
    ```bash
-   npx neural-trader --portfolio optimize
+   npx --ignore-scripts -y neural-trader@2.8.11 --portfolio optimize
    ```
    Capture the weights output and tag the artifact metadata with `method: 'neumann-fallback'` and a `reason` field.
 

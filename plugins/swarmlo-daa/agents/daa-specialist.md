@@ -25,8 +25,8 @@ Focus on creating agents that improve measurably over time through feedback loop
 
 Persist cognitive patterns and adaptation history:
 ```bash
-npx swarmlo-cli@latest memory store --namespace daa-patterns --key "cognitive-PATTERN" --value "ADAPTATION_DATA"
-npx swarmlo-cli@latest memory search --query "cognitive pattern for TASK" --namespace daa-patterns
+npx swarmlo-cli@3.39.1 memory store --namespace daa-patterns --key "cognitive-PATTERN" --value "ADAPTATION_DATA"
+npx swarmlo-cli@3.39.1 memory search --query "cognitive pattern for TASK" --namespace daa-patterns
 ```
 
 ### Related Plugins
@@ -38,5 +38,5 @@ npx swarmlo-cli@latest memory search --query "cognitive pattern for TASK" --name
 
 After completing tasks, feed the adaptive-agent learning loop:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
 ```

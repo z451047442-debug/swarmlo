@@ -31,6 +31,6 @@ When you need to understand current spending -- how much each agent costs, which
 ## CLI alternative
 
 ```bash
-npx swarmlo-cli@latest memory search --query "cost report for today" --namespace cost-tracking
-npx swarmlo-cli@latest memory list --namespace cost-tracking
+npx swarmlo-cli@3.39.1 memory search --query "cost report for today" --namespace cost-tracking
+npx swarmlo-cli@3.39.1 memory list --namespace cost-tracking
 ```

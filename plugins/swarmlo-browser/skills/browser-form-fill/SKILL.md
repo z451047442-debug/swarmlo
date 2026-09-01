@@ -26,7 +26,7 @@ Fill a form using a structured field map (`{"first_name": "Ada", "company": "...
 5. **Submit** if `--submit`: locate the submit button via the snapshot, `browser_click`, then `browser_wait` for navigation.
 6. **Persist the template** if a new mapping was discovered:
    ```bash
-   npx -y swarmlo-cli@latest memory store --namespace browser-templates \
+   npx -y swarmlo-cli@3.39.1 memory store --namespace browser-templates \
      --key "<host>:<form-name>" \
      --value "{field_map:{...}, submit_selector:..., post_submit_url_pattern:...}"
    ```

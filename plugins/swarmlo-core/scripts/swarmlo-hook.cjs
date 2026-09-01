@@ -27,7 +27,7 @@
  *
  * Shared behaviour:
  *   1. Prefers a locally installed `swarmlo` or `claude-flow` binary.
- *   2. Falls back to `npx --prefer-offline swarmlo@latest`.
+ *   2. Falls back to `npx --prefer-offline swarmlo@3.39.1`.
  *   3. ALWAYS exits 0 — hook subcommands are best-effort telemetry; a
  *      failure must never surface an error or block a turn.
  *   4. Swallows all stdout/stderr from the invoked CLI.
@@ -138,7 +138,7 @@ function invokeCli(hookSubcommand, hookArgs, stdinData) {
   // itself works correctly. The bash version doesn't hit this because it
   // backgrounded the work.
   if (process.env.SWARMLO_HOOK_SKIP_NPX !== '1') {
-    invokeHook('npx', ['--prefer-offline', '--yes', 'swarmlo@latest'], hookSubcommand, hookArgs, stdinData);
+    invokeHook('npx', ['--prefer-offline', '--yes', 'swarmlo@3.39.1'], hookSubcommand, hookArgs, stdinData);
   }
 }
 

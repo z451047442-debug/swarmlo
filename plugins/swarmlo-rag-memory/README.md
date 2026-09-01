@@ -147,7 +147,7 @@ Results include source attribution: `claude-code`, `auto-memory`, or `agentdb`.
 
 ```bash
 # CLI
-npx swarmlo-cli@latest memory search --query "auth patterns" --smart --limit 10
+npx swarmlo-cli@3.39.1 memory search --query "auth patterns" --smart --limit 10
 
 # MCP
 mcp__plugin_swarmlo-core_swarmlo__memory_search({ query: "auth patterns", smart: true, limit: 10 })
@@ -162,7 +162,7 @@ Queries across all namespaces simultaneously with MMR diversity reranking:
 ```bash
 # Via MCP: memory_search_unified({ query: "auth security", limit: 5 })
 # Via CLI:
-npx swarmlo-cli@latest memory search --query "auth security" --limit 5
+npx swarmlo-cli@3.39.1 memory search --query "auth security" --limit 5
 ```
 
 ## HNSW Performance

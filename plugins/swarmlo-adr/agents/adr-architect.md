@@ -33,13 +33,13 @@ The full ADR markdown template, the AgentDB graph-storage commands for persistin
 
 Store ADR patterns and architectural decisions for cross-project learning:
 ```bash
-npx swarmlo-cli@latest memory store --namespace adr-patterns --key "decision-CATEGORY" --value "CONTEXT_AND_OUTCOME"
-npx swarmlo-cli@latest memory search --query "architectural decision" --namespace adr-patterns
+npx swarmlo-cli@3.39.1 memory store --namespace adr-patterns --key "decision-CATEGORY" --value "CONTEXT_AND_OUTCOME"
+npx swarmlo-cli@3.39.1 memory search --query "architectural decision" --namespace adr-patterns
 ```
 
 ## Neural learning
 
 After completing tasks, feed the ADR-lifecycle learning so future ADR-violation detection compounds:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
 ```

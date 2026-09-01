@@ -2570,7 +2570,7 @@ export const hooksIntelligence: MCPTool = {
           enabled: true,
           status: flashAvailable ? 'active' : 'loading',
           implemented: true, // NOW IMPLEMENTED in alpha.102
-          note: flashAvailable ? 'Flash Attention with O(N) memory (2.49x-7.47x speedup)' : 'Flash Attention loading...',
+          note: flashAvailable ? 'Flash Attention with O(N) memory (benchmark pending)' : 'Flash Attention loading...',
         },
         ewc: {
           enabled: true,

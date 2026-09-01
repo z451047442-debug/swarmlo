@@ -6,9 +6,9 @@ allowed-tools: Bash(npx *) mcp__plugin_swarmlo-core_swarmlo__hooks_worker-dispat
 ---
 Find test coverage gaps via CLI:
 ```bash
-npx swarmlo-cli@latest hooks coverage-gaps --format table --limit 20
-npx swarmlo-cli@latest hooks coverage-route --task "add auth tests"
-npx swarmlo-cli@latest hooks coverage-suggest --path src/
+npx swarmlo-cli@3.39.1 hooks coverage-gaps --format table --limit 20
+npx swarmlo-cli@3.39.1 hooks coverage-route --task "add auth tests"
+npx swarmlo-cli@3.39.1 hooks coverage-suggest --path src/
 ```
 
 Or dispatch the testgaps worker via MCP:

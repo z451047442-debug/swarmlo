@@ -32,7 +32,7 @@ import { similarity } from './_similarity.mjs';
 // iter 63 — shared SEVERITY_RANK from _harness.mjs (was a local literal
 // missing info/warn/error/critical, which caused NaN-compare hazards).
 // review fix 2026-08-31 — runSwarmloCli resolves the PINNED swarmlo-cli
-// instead of `npx swarmlo-cli@latest`.
+// instead of `npx swarmlo-cli@3.39.1`.
 import { SEVERITY_RANK, rankSeverity, runSwarmloCli } from './_harness.mjs';
 
 // iter 63 — SEVERITY_RANK moved to _harness.mjs (imported above)

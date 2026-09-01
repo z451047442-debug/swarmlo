@@ -439,7 +439,7 @@ describe("Aggregation", () => {
 		]);
 
 		const result = await coll
-			.aggregate([
+			.aggregate<{ totalAge: number; count: number }>([
 				{ $group: { _id: null, totalAge: { $sum: "$age" }, count: { $sum: 1 } } },
 			])
 			.toArray();

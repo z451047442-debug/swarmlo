@@ -31,5 +31,5 @@ Before applying migrations to catch issues early -- foreign key references to no
 ## CLI alternative
 
 ```bash
-npx swarmlo-cli@latest memory search --query "migration validation results" --namespace migrations
+npx swarmlo-cli@3.39.1 memory search --query "migration validation results" --namespace migrations
 ```

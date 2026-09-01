@@ -10,7 +10,7 @@ import { useI18n } from '@/i18n';
 interface AgenticFlowEvent {
   type: string;
   timestamp: number;
-  data: any;
+  data: unknown;
 }
 
 interface RealTimeEventLogProps {

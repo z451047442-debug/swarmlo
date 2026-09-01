@@ -26,7 +26,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { similarity } from './_similarity.mjs';
 // review fix 2026-08-31 — runSwarmloCli resolves the PINNED swarmlo-cli
-// instead of `npx swarmlo-cli@latest`.
+// instead of `npx swarmlo-cli@3.39.1`.
 import { runSwarmloCli } from './_harness.mjs';
 
 const NS = process.env.HARNESS_SIMILARITY_NAMESPACE || 'metaharness-audit';

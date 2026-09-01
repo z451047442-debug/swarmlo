@@ -55,6 +55,10 @@ export const enMain: Record<string, string> = {
   "main.metricActions": "Actions",
   "main.metricSources": "Sources",
   "main.metricConcepts": "Concepts",
+  "main.metricPlanCost": "Plan Cost",
+  "main.metricNodesExpanded": "Nodes Expanded",
+  "main.metricParallelSteps": "Parallel Steps",
+  "main.metricRedundantRemoved": "Redundant Removed",
   // ---- Index: step 1 Goal Analysis ----
   "main.stepGoalAnalysisTitle": "Goal Analysis",
   "main.stepGoalAnalysisDesc": "Analyzing \"{goal}\"... and breaking it down into actionable sub-goals.",

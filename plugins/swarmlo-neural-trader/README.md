@@ -55,7 +55,7 @@ claude --plugin-dir plugins/swarmlo-neural-trader
 neural-trader exposes 112+ MCP tools for direct Claude Desktop access:
 
 ```bash
-claude mcp add neural-trader -- npx neural-trader mcp start
+claude mcp add neural-trader -- npx --ignore-scripts -y neural-trader@2.8.11 mcp start
 ```
 
 ## Agents
@@ -121,9 +121,9 @@ trader history
 | N-BEATS | Decomposition | Trend/seasonality decomposition |
 
 ```bash
-npx neural-trader --model lstm --symbol TSLA --confidence 0.95
-npx neural-trader --model transformer --symbol BTC-USD --predict
-npx neural-trader --model nbeats --symbol SPY --decompose
+npx --ignore-scripts -y neural-trader@2.8.11 --model lstm --symbol TSLA --confidence 0.95
+npx --ignore-scripts -y neural-trader@2.8.11 --model transformer --symbol BTC-USD --predict
+npx --ignore-scripts -y neural-trader@2.8.11 --model nbeats --symbol SPY --decompose
 ```
 
 ## Strategy Types
@@ -224,9 +224,9 @@ This plugin relies on `@claude-flow/memory@3.0.0-alpha.18` for the lifecycle gua
 
 The new `trader-portfolio-cg` skill solves the mean-variance problem `Σ · x = μ` via Conjugate Gradient instead of the legacy Neumann series. CG is provably optimal for symmetric positive-definite inputs (covariance matrices are SPD by construction), and the upstream `sublinear-time-solver@1.7.0` benchmark shows **~816 ns CG vs ~50 µs Neumann at n=256 — a measured 40-60× speedup** ([ADR-123 §162 Row 8](../../v3/docs/adr/ADR-123-sublinear-integration.md)).
 
-**When it's used**: any time the team wants optimal portfolio weights — call `/trader-portfolio-cg` instead of `/trader-portfolio`. The skill reads the current covariance and expected-return vector from `npx neural-trader --portfolio current --json`, dispatches to `mcp__swarmlo-sublinear__solve` (when the `swarmlo-sublinear` plugin is registered), and writes weights with provenance metadata (`method: 'cg-sublinear' | 'cg-local' | 'neumann-fallback'`) to the `trading-risk` namespace.
+**When it's used**: any time the team wants optimal portfolio weights — call `/trader-portfolio-cg` instead of `/trader-portfolio`. The skill reads the current covariance and expected-return vector from `npx --ignore-scripts -y neural-trader@2.8.11 --portfolio current --json`, dispatches to `mcp__swarmlo-sublinear__solve` (when the `swarmlo-sublinear` plugin is registered), and writes weights with provenance metadata (`method: 'cg-sublinear' | 'cg-local' | 'neumann-fallback'`) to the `trading-risk` namespace.
 
-**How to disable**: set `SWARMLO_NEURAL_TRADER_DISABLE_CG=1` to skip the CG path entirely and fall back to the legacy `npx neural-trader --portfolio optimize` route. Useful for A/B validation or when an upstream covariance regression breaks SPD.
+**How to disable**: set `SWARMLO_NEURAL_TRADER_DISABLE_CG=1` to skip the CG path entirely and fall back to the legacy `npx --ignore-scripts -y neural-trader@2.8.11 --portfolio optimize` route. Useful for A/B validation or when an upstream covariance regression breaks SPD.
 
 **Parity guarantee**: `||cg_solution − neumann_solution||_∞ < 1e-4` on every benchmark seed — verified by `benchmarks/portfolio-cg.bench.mjs` and asserted by `scripts/smoke-neural-trader-portfolio-cg.mjs`.
 

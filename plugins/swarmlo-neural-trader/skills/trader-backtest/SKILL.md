@@ -1,6 +1,6 @@
 ---
 name: trader-backtest
-description: Run a historical backtest using npx neural-trader with Rust/NAPI engine (8-19x faster) and walk-forward validation; Ed25519-sign the result for paper→live tamper evidence (ADR-126 Phase 4)
+description: Run a historical backtest using npx --ignore-scripts -y neural-trader@2.8.11 with Rust/NAPI engine (8-19x faster) and walk-forward validation; Ed25519-sign the result for paper→live tamper evidence (ADR-126 Phase 4)
 allowed-tools: Bash Read mcp__plugin_swarmlo-core_swarmlo__memory_store mcp__plugin_swarmlo-core_swarmlo__memory_retrieve mcp__plugin_swarmlo-core_swarmlo__memory_search mcp__plugin_swarmlo-core_swarmlo__memory_delete mcp__plugin_swarmlo-core_swarmlo__neural_train mcp__plugin_swarmlo-core_swarmlo__agentdb_pattern-store
 argument-hint: "<strategy-name> --symbol <TICKER> [--period 2020-2024]"
 ---
@@ -14,11 +14,11 @@ Steps:
    If not found, list available: `mcp__plugin_swarmlo-core_swarmlo__memory_search({ query: "strategy", namespace: "trading-strategies", limit: 10 })`
 3. Run backtest via neural-trader CLI:
    ```bash
-   npx neural-trader --backtest --strategy <name> --symbol <TICKER> --period <range> --walk-forward
+   npx --ignore-scripts -y neural-trader@2.8.11 --backtest --strategy <name> --symbol <TICKER> --period <range> --walk-forward
    ```
    For multi-indicator strategies:
    ```bash
-   npx neural-trader --backtest --strategy multi-indicator --position-sizing kelly --symbol SPY --period 2020-2024
+   npx --ignore-scripts -y neural-trader@2.8.11 --backtest --strategy multi-indicator --position-sizing kelly --symbol SPY --period 2020-2024
    ```
 4. Capture performance metrics from output: total return, annualized return, Sharpe ratio, Sortino ratio, max drawdown, win rate, profit factor, number of trades.
 5. Dedup prior backtests for the same `(strategyId, paramsHash)` before storing the fresh one (ADR-125 lifecycle / ADR-126 Phase 2 — `keep-newest` semantics):

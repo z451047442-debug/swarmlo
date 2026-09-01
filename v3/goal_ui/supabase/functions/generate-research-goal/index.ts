@@ -165,7 +165,7 @@ AI 与机器学习领域优秀多样化研究目标示例：
     }
 
     const result = JSON.parse(toolCall.function.arguments);
-    const goals = result.goals.map((g: any) => g.title);
+    const goals = result.goals.map((g: { title: string }) => g.title);
 
     console.log('Generated goals:', goals);
 

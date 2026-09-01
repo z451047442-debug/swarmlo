@@ -103,7 +103,7 @@ Several plugins wrap standalone npm packages for deeper functionality:
 npm install neural-trader ruvector
 
 # Add as MCP servers (optional, for direct tool access)
-claude mcp add neural-trader -- npx neural-trader mcp start
+claude mcp add neural-trader -- npx --ignore-scripts -y neural-trader@2.8.11 mcp start
 claude mcp add ruvector -- npx ruvector mcp start
 ```
 

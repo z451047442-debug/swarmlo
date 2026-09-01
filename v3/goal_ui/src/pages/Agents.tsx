@@ -27,6 +27,7 @@ import {
   Network,
   CheckCircle2
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useI18n } from "@/i18n";
 import { AgentStatusCard } from "@/components/agents/AgentStatusCard";
 import { TaskBoard, type TaskItem } from "@/components/agents/TaskBoard";
@@ -37,6 +38,7 @@ import { AgentStep, StepStatus } from "@/components/AgentStep";
 import { DevelopmentStep } from "@/components/DevelopmentStep";
 import { StateAssessmentCard } from "@/components/StateAssessmentCard";
 import { AdvancedSettingsModal } from "@/components/agents/AdvancedSettingsModal";
+import { loadAdvancedSettings, type AdvancedSettings } from "@/lib/agenticSettings";
 import { PlanVisualization } from "@/components/agents/PlanVisualization";
 import { StepExecutionPanel } from "@/components/agents/StepExecutionPanel";
 import { AgentActivityPanel } from "@/components/agents/AgentActivityPanel";
@@ -44,12 +46,11 @@ import { RealTimeEventLog } from "@/components/agents/RealTimeEventLog";
 import { ResearchReviewCard } from "@/components/ResearchReviewCard";
 
 type AgentStatus = "idle" | "working" | "blocked";
-type SwarmMode = "distributed" | "pipeline" | "collaborative";
 
 interface Agent {
   id: string;
   name: string;
-  icon: any;
+  icon: LucideIcon;
   status: AgentStatus;
   currentTask?: string;
 }
@@ -90,6 +91,9 @@ const TASK_DEPENDS_ON: Record<number, number> = {
  * 阶段 4（部署）在看板上没有任务卡，这里补上 devops——部署阶段总得有人干活。
  * task 字段存 i18n key，渲染时再翻译。
  */
+/** 固定 agent 名册（顺序即分配优先级） */
+const AGENT_IDS = ["arch", "impl", "test", "review", "docs", "devops"] as const;
+
 const AGENT_PHASE_ACTIVITY: Record<number, Array<{ id: string; task: string }>> = {
   0: [
     { id: "arch", task: "agents.taskboard.task1" },
@@ -132,32 +136,24 @@ const DETERMINISTIC_TASK_COUNTS: Record<string, number[]> = {
   devops: [0, 1, 1, 2, 3, 4],
 };
 
-/** 高级设置（AdvancedSettingsModal 写入 localStorage 的部分字段） */
-interface SavedAdvancedSettings {
-  execution?: { enableQualityGates?: boolean };
-}
-
-/** 读取 AdvancedSettingsModal 保存的设置；损坏数据回退为空对象 */
-const loadAdvancedSettings = (): SavedAdvancedSettings => {
-  try {
-    const raw = localStorage.getItem("agenticflow-settings");
-    return raw ? (JSON.parse(raw) as SavedAdvancedSettings) : {};
-  } catch {
-    return {};
-  }
-};
+/**
+ * 高级设置（AdvancedSettingsModal 写入 localStorage 的完整配置）。
+ * 读取逻辑在 src/lib/agenticSettings.ts：结构校验 + 缺失字段回退默认值。
+ * swarm 配置区在此真实生效：maxAgents/autoScaling 决定活跃 agent 上限，
+ * strategy 决定任务分配方式，topology 决定依赖图连线形态。
+ */
+type SwarmSettings = AdvancedSettings["swarm"];
 
 export default function Agents() {
   const { t } = useI18n();
   const [goal, setGoal] = useState("");
-  const [swarmMode, setSwarmMode] = useState<SwarmMode>("distributed");
   const [isRunning, setIsRunning] = useState(false);
   const [currentPhase, setCurrentPhase] = useState(0);
   const [isPlanGenerated, setIsPlanGenerated] = useState(false);
   const [workflowStage, setWorkflowStage] = useState<"research" | "review" | "development">("research");
   const [devPhase, setDevPhase] = useState(0);
   /** 高级设置（AdvancedSettingsModal 保存到 localStorage，此处读取并生效） */
-  const [advancedSettings] = useState<SavedAdvancedSettings>(loadAdvancedSettings);
+  const [advancedSettings] = useState<AdvancedSettings>(loadAdvancedSettings);
 
   const [agents, setAgents] = useState<Agent[]>([
     { id: "arch", name: "agents.agent.arch", icon: GitBranch, status: "idle" },
@@ -207,15 +203,67 @@ export default function Agents() {
   }, [workflowStage, devPhase]);
 
   /**
-   * 按开发阶段推进 6 个 agent 的状态快照：活跃者 working（携带当前任务 key），
+   * 按 swarm 配置计算某开发阶段应处于 working 的 agent 集合与活跃上限（纯函数，渲染也用它展示）：
+   * - 上限：autoScaling 关闭时取 swarm.maxAgents；开启时在 autoScaling.min/maxAgents
+   *   区间内按开发进度线性缩放（进度 % 即缩放因子）。
+   * - strategy：specialized 只派阶段匹配 agent；balanced 在容量允许时让整个名册参与；
+   *   adaptive 在进度越过 scaleUpThreshold 后用满容量，在 scaleDown~scaleUp 之间按进度插值溢出。
+   */
+  const computeSwarmAllocation = (phase: number, swarm: SwarmSettings): { workingIds: string[]; cap: number } => {
+    const roster = AGENT_IDS as readonly string[];
+    const phaseActiveIds = (AGENT_PHASE_ACTIVITY[phase] ?? []).map((a) => a.id);
+    const progressPct = (phase / Math.max(developmentPhases.length, 1)) * 100;
+
+    // 活跃上限：autoScaling 关闭时取 maxAgents；开启时按进度在 [min, max] 区间缩放
+    let cap = swarm.maxAgents;
+    if (swarm.autoScaling.enabled) {
+      const min = Math.min(Math.max(swarm.autoScaling.minAgents, 1), roster.length);
+      const max = Math.min(Math.max(swarm.autoScaling.maxAgents, min), roster.length);
+      cap = min + Math.round((progressPct / 100) * (max - min));
+    }
+    cap = Math.max(1, Math.min(cap, roster.length));
+
+    // 阶段匹配者优先入队
+    const working: string[] = [];
+    for (const id of phaseActiveIds) {
+      if (working.length >= cap) break;
+      if (roster.includes(id) && !working.includes(id)) working.push(id);
+    }
+
+    // 按 strategy 决定溢出（追加名册中尚未工作的 agent）
+    if (swarm.strategy === "balanced" || (swarm.strategy === "adaptive" && progressPct >= swarm.autoScaling.scaleUpThreshold)) {
+      for (const id of roster) {
+        if (working.length >= cap) break;
+        if (!working.includes(id)) working.push(id);
+      }
+    } else if (swarm.strategy === "adaptive" && progressPct > swarm.autoScaling.scaleDownThreshold) {
+      const denom = Math.max(1, swarm.autoScaling.scaleUpThreshold - swarm.autoScaling.scaleDownThreshold);
+      const frac = Math.min(1, (progressPct - swarm.autoScaling.scaleDownThreshold) / denom);
+      const spillTarget = Math.min(cap, working.length + Math.round(frac * (cap - working.length)));
+      for (const id of roster) {
+        if (working.length >= spillTarget) break;
+        if (!working.includes(id)) working.push(id);
+      }
+    }
+
+    return { workingIds: working, cap };
+  };
+
+  /**
+   * 按开发阶段推进 agent 的状态快照：workingIds 内者 working（携带当前任务 key），
    * review 在实现完成前 blocked，其余 idle。阶段分布与看板共用 AGENT_PHASE_ACTIVITY。
    * currentTask 存 i18n key，由渲染点翻译——运行中切换语言不会留下旧语言文本。
    */
   const applyDevPhaseToAgents = (phase: number) => {
+    const { workingIds } = computeSwarmAllocation(phase, advancedSettings.swarm);
+    const primaryTask = AGENT_PHASE_ACTIVITY[phase]?.[0]?.task ?? "agents.actions.support";
     setAgents((prev) =>
       prev.map((agent): Agent => {
-        const active = AGENT_PHASE_ACTIVITY[phase]?.find((a) => a.id === agent.id);
-        if (active) return { ...agent, status: "working", currentTask: active.task };
+        if (workingIds.includes(agent.id)) {
+          const active = AGENT_PHASE_ACTIVITY[phase]?.find((a) => a.id === agent.id);
+          // 溢出（非阶段匹配）的 agent 持阶段主任务，表示协作支援
+          return { ...agent, status: "working", currentTask: active?.task ?? primaryTask };
+        }
         if (agent.id === "review" && phase < REVIEW_UNBLOCKED_AT_PHASE) {
           return { ...agent, status: "blocked", currentTask: "agents.taskboard.task4" };
         }
@@ -785,8 +833,25 @@ export default function Agents() {
 
   // Translates i18n keys stored in the phase arrays into the current language
   // before they are passed down to AgentStep / DevelopmentStep.
-  const translatePhase = (phase: any): any => {
-    const data = (phase.data ?? []).map((item: any) => ({
+  type PhaseMetric = { label: string; value: string };
+  type PhaseDataItem = {
+    text: string;
+    details?: {
+      objective: string;
+      agents?: string[];
+      effects?: string[];
+      sources?: string[];
+      metrics?: PhaseMetric[];
+    };
+  };
+  type PhaseRecord = {
+    title: string;
+    description: string;
+    data?: PhaseDataItem[];
+    metrics?: PhaseMetric[];
+  };
+  const translatePhase = (phase: PhaseRecord): PhaseRecord => {
+    const data = (phase.data ?? []).map((item: PhaseDataItem) => ({
       ...item,
       text: t(item.text),
       details: item.details
@@ -796,7 +861,7 @@ export default function Agents() {
             agents: item.details.agents?.map((a: string) => t(a)),
             effects: item.details.effects?.map((e: string) => t(e)),
             sources: item.details.sources?.map((s: string) => t(s)),
-            metrics: item.details.metrics?.map((m: any) => ({ ...m, label: t(m.label), value: t(m.value) })),
+            metrics: item.details.metrics?.map((m: PhaseMetric) => ({ ...m, label: t(m.label), value: t(m.value) })),
           }
         : undefined,
     }));
@@ -805,7 +870,7 @@ export default function Agents() {
       title: t(phase.title),
       description: t(phase.description),
       data,
-      metrics: phase.metrics?.map((m: any) => ({ ...m, label: t(m.label), value: t(m.value) })),
+      metrics: phase.metrics?.map((m: PhaseMetric) => ({ ...m, label: t(m.label), value: t(m.value) })),
     };
   };
 
@@ -1005,7 +1070,7 @@ export default function Agents() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <DependencyGraph />
+                      <DependencyGraph topology={advancedSettings.swarm.topology} />
                     </CardContent>
                   </Card>
 
@@ -1278,6 +1343,26 @@ export default function Agents() {
                   <Network className="w-4 h-4 text-primary" />
                   {t('agents.dev.swarmStatus')}
                 </h3>
+                {/* 当前 swarm 配置快照：拓扑 / 策略 / 活跃上限（由 computeSwarmAllocation 真实计算） */}
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <Badge variant="outline" className="text-xs">
+                    {t(`agents.settings.swarm.topology.short.${advancedSettings.swarm.topology}`)}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {t(`agents.settings.swarm.strategy.short.${advancedSettings.swarm.strategy}`)}
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs">
+                    {t('agents.dev.swarmCap', { cap: computeSwarmAllocation(devPhase, advancedSettings.swarm).cap })}
+                  </Badge>
+                  {advancedSettings.swarm.autoScaling.enabled && (
+                    <Badge variant="secondary" className="text-xs">
+                      {t('agents.dev.swarmScaling', {
+                        min: advancedSettings.swarm.autoScaling.minAgents,
+                        max: advancedSettings.swarm.autoScaling.maxAgents,
+                      })}
+                    </Badge>
+                  )}
+                </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {agents.map((agent) => (
                     <AgentStatusCard
@@ -1296,7 +1381,7 @@ export default function Agents() {
 
           <TabsContent value="tasks">
             <div className="space-y-6">
-              <TaskBoard swarmMode={swarmMode} tasks={tasks} />
+              <TaskBoard strategy={advancedSettings.swarm.strategy} tasks={tasks} />
 
               {/* Task Dependencies */}
               <Card>
@@ -1307,7 +1392,10 @@ export default function Agents() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <DependencyGraph />
+                  <DependencyGraph
+                    topology={advancedSettings.swarm.topology}
+                    agents={agents.map((a) => ({ id: a.id, status: a.status }))}
+                  />
                 </CardContent>
               </Card>
             </div>

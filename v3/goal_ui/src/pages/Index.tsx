@@ -38,6 +38,7 @@ import { ReviseResearchForm, type ResearchConfig } from "@/components/ReviseRese
 import { StateAssessmentCard } from "@/components/StateAssessmentCard";
 import { GOAPConfigDisplay } from "@/components/GOAPConfigDisplay";
 import { GOAPPlanner, parseGoal, type Step, type DataItem } from "@/lib/goapPlanner";
+import { hasSavedAdvancedSettings, loadAdvancedSettings } from "@/lib/agenticSettings";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/i18n";
@@ -281,7 +282,7 @@ const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
   const [showFinalAnalysis, setShowFinalAnalysis] = useState(restored?.showFinalAnalysis ?? false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showReviseForm, setShowReviseForm] = useState(false);
-  const [finalRecommendations, setFinalRecommendations] = useState<any[]>(restored?.finalRecommendations ?? []);
+  const [finalRecommendations, setFinalRecommendations] = useState<Array<{ title?: string; content?: string; source?: string }>>(restored?.finalRecommendations ?? []);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const [researchConfig, setResearchConfig] = useState<ResearchConfig>(restored?.researchConfig ?? defaultResearchConfig);
   const [currentGOAPState, setCurrentGOAPState] = useState<Record<string, boolean | string | number>>(restored?.currentGOAPState ?? defaultResearchConfig.stateDefinition.currentState);
@@ -300,6 +301,7 @@ const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
       {
         name: "analyzeGoal",
         cost: 1,
+        costBreakdown: { time: 1, resources: 1, tokens: 2 },
         preconditions: { goalDefined: true },
         effects: { goalParsed: true },
         stepGenerator: (userGoal: string) => ({
@@ -348,6 +350,7 @@ const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
       {
         name: "assessState",
         cost: 1,
+        costBreakdown: { time: 1, resources: 2, tokens: 1 },
         preconditions: { goalParsed: true },
         effects: { stateAssessed: true },
         stepGenerator: () => ({
@@ -391,6 +394,7 @@ const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
       {
         name: "gatherInformation",
         cost: 2,
+        costBreakdown: { time: 4, resources: 3, tokens: 5 },
         preconditions: { stateAssessed: true },
         effects: { informationGathered: true },
         stepGenerator: () => ({
@@ -433,6 +437,7 @@ const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
       {
         name: "analyzeDocuments",
         cost: 2,
+        costBreakdown: { time: 3, resources: 4, tokens: 4 },
         preconditions: { informationGathered: true },
         effects: { documentsAnalyzed: true },
         stepGenerator: () => ({
@@ -482,6 +487,7 @@ const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
       {
         name: "synthesizeKnowledge",
         cost: 2,
+        costBreakdown: { time: 2, resources: 2, tokens: 3 },
         preconditions: { documentsAnalyzed: true },
         effects: { knowledgeSynthesized: true },
         stepGenerator: () => ({
@@ -531,6 +537,7 @@ const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
       {
         name: "generateInsights",
         cost: 2,
+        costBreakdown: { time: 2, resources: 1, tokens: 2 },
         preconditions: { knowledgeSynthesized: true },
         effects: { insightsGenerated: true },
         stepGenerator: () => ({
@@ -580,6 +587,7 @@ const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
       {
         name: "verify",
         cost: 1,
+        costBreakdown: { time: 2, resources: 3, tokens: 2 },
         preconditions: { insightsGenerated: true },
         effects: { verified: true },
         stepGenerator: () => ({
@@ -642,9 +650,16 @@ const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
     // Reset GOAP state to initial
     setCurrentGOAPState(researchConfig.stateDefinition.currentState);
 
-    // Create GOAP planner
+    // Create GOAP planner —— 读取 AdvancedSettingsModal 持久化的 goap 配置，
+    // 算法/启发式/代价方法/优化项真实参与规划（见 goapPlanner.ts 的搜索实现）
     const actions = createGOAPActions(goal);
-    const planner = new GOAPPlanner(actions);
+    const goapSettings = loadAdvancedSettings().goap;
+    const planner = new GOAPPlanner(actions, {
+      algorithm: goapSettings.algorithm,
+      heuristic: goapSettings.heuristic,
+      costMethod: goapSettings.costMethod,
+      optimization: goapSettings.optimization,
+    });
 
     // Calculate adaptive metrics based on goal complexity and GOAP config
     const goalComplexity = goal.split(' ').length;
@@ -695,11 +710,17 @@ const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
       return;
     }
 
-    // Update Goal Analysis step with adaptive metrics
+    // Update Goal Analysis step with adaptive metrics + 规划行为统计
+    // （planCost/nodesExpanded/parallelSteps/redundantRemoved 由 planner 按所选
+    //  算法与代价方法真实计算——切换 costMethod/algorithm 后这里会变化）
     if (plan[0]) {
       plan[0].metrics = [
         { label: t("main.metricSubGoals"), value: String(adaptiveSubGoals) },
-        { label: t("main.metricActions"), value: String(adaptiveActions) }
+        { label: t("main.metricActions"), value: String(adaptiveActions) },
+        { label: t("main.metricPlanCost"), value: String(planner.lastStats.planCost) },
+        { label: t("main.metricNodesExpanded"), value: String(planner.lastStats.nodesExpanded) },
+        { label: t("main.metricParallelSteps"), value: String(planner.lastStats.parallelSteps) },
+        { label: t("main.metricRedundantRemoved"), value: String(planner.lastStats.redundantRemoved) },
       ];
     }
 
@@ -719,6 +740,9 @@ const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
   // Execute research plan
   const executeResearch = async (stepsToExecute?: Step[], researchGoal?: string) => {
     const initialSteps = stepsToExecute || steps;
+    // modelRouter 配置（AdvancedSettingsModal 持久化）随请求传给 research-step
+    // edge function：仅在用户显式保存过设置时下发，未保存时保持 gateway 默认行为。
+    const modelRouter = hasSavedAdvancedSettings() ? loadAdvancedSettings().modelRouter : undefined;
     console.log('executeResearch started, steps:', initialSteps.length);
     console.log('GOAP Config:', {
       executionMode: researchConfig.goapConfig.executionMode,
@@ -738,7 +762,7 @@ const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
     await new Promise(resolve => setTimeout(resolve, 4500));
 
     // Keep a working copy that we update with AI data
-    let workingSteps = [...initialSteps];
+    const workingSteps = [...initialSteps];
 
     // Process each step sequentially
     for (let i = 0; i < workingSteps.length; i++) {
@@ -778,7 +802,7 @@ const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
           const previousStepsData = workingSteps.slice(0, i).map(step => ({
             stepTitle: step.title,
             data: step.data.map(item => {
-              const details = item.details as any;
+              const details = item.details as Record<string, unknown>;
               return {
                 id: '',
                 title: item.text,
@@ -801,6 +825,7 @@ const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
               stepDescription: currentStep.description,
               stepType: currentStep.id,
               aiModel: widgetConfig.aiModel,
+              modelRouter,
               config: {
                 researchGuidance: researchConfig.researchGuidance,
                 prompts: researchConfig.prompts,
@@ -839,7 +864,7 @@ const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
             console.log(`✅ Gemini returned ${data.length} items for step ${i}`);
             
             // Transform AI data into step data format
-            const aiData = data.map((item: any) => ({
+            const aiData = data.map((item: Record<string, unknown>) => ({
               text: item.title,
               icon: Sparkles,
               details: {
@@ -901,7 +926,7 @@ const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
         const allResearchContext = workingSteps.map(step => ({
           stepTitle: step.title,
           data: step.data.map(item => {
-            const details = item.details as any;
+            const details = item.details as Record<string, unknown>;
             return {
               id: '',
               title: item.text,
@@ -921,6 +946,7 @@ const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
             stepDescription: `Based on all research findings, provide specific, actionable recommendations that directly answer: "${researchGoal || userGoal}". Include concrete suggestions with supporting data from the research.`,
             stepType: "final-report",
             aiModel: widgetConfig.aiModel,
+            modelRouter,
             previousStepsData: allResearchContext,
           },
         });
@@ -1529,7 +1555,7 @@ const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
                         }}
                       >
                         <div className="space-y-4">
-                          {finalRecommendations.slice(0, 4).map((rec: any, idx: number) => (
+                          {finalRecommendations.slice(0, 4).map((rec: { title?: string; content?: string; source?: string }, idx: number) => (
                             <div key={idx} className="rounded p-4" style={{ backgroundColor: `${widgetConfig.accentColor}0d` }}>
                               <div className="font-medium mb-1" style={{ color: widgetConfig.textColor }}>{rec.title}</div>
                               <p className="text-sm" style={{ color: widgetConfig.secondaryTextColor }}>{rec.content}</p>

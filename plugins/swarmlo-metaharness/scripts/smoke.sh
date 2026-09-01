@@ -231,12 +231,12 @@ step "17r. _harness.mjs pinned-version + no-@latest regression guard (supersedes
 F="$ROOT/scripts/_harness.mjs"
 miss=""
 # SECURITY (HIGH, converged review 2026-07): the pre-consolidation helper
-# shelled to `npx -y metaharness@latest` — a compromised upstream publish
+# shelled to `npx -y metaharness@0.3.0` — a compromised upstream publish
 # would execute arbitrary code on user machines, and @latest forced a
 # registry check per call. Lock the fix: NO @latest anywhere in the loader,
 # a pinned tilde range, and node-direct invocation of resolved bin paths
 # (local walk-up install or one-time versioned cache).
-if grep -q "metaharness@latest" "$F" 2>/dev/null; then
+if grep -q "metaharness@0.3.0" "$F" 2>/dev/null; then
   miss="$miss at-latest-regressed"
 fi
 grep -q "METAHARNESS_PIN_VERSION = '~" "$F" 2>/dev/null || miss="$miss no-pinned-range"
@@ -2120,7 +2120,7 @@ grep -q "OPENROUTER_API_KEY" "$F" || miss="$miss no-secret-name"
 # Verifies the key against OpenRouter (live HTTP)
 grep -q "openrouter.ai/api/v1" "$F" || miss="$miss no-openrouter-http"
 # Scaffold + lifecycle commands
-grep -q "metaharness@latest.*new\|metaharness new\|'test-harness'" "$F" || miss="$miss no-scaffold-call"
+grep -q "metaharness@0.3.0.*new\|metaharness new\|'test-harness'" "$F" || miss="$miss no-scaffold-call"
 grep -q "harness.*doctor\|harness', 'doctor\|\\['doctor'" "$F" || miss="$miss no-doctor-call"
 grep -q "harness.*score\|'score'" "$F" || miss="$miss no-score-call"
 # Anti-regression: scaffold MUST cd into a temp dir (--target is ignored

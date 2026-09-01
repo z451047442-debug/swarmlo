@@ -5,7 +5,9 @@ import { describe, expect, it } from "vitest";
 // function used to insert conversations used for testing
 const getConversations = async () => (await getCollectionsEarly()).conversations;
 
-export const insertLegacyConversation = async () => {
+// Helpers return the id as a string so callers can feed it straight into
+// `new ObjectId(id)` regardless of which DB backend produced it.
+export const insertLegacyConversation = async (): Promise<string> => {
 	const conversations = await getConversations();
 	const res = await conversations.insertOne({
 		_id: new ObjectId(),
@@ -37,10 +39,10 @@ export const insertLegacyConversation = async () => {
 			},
 		],
 	});
-	return res.insertedId;
+	return res.insertedId.toString();
 };
 
-export const insertLinearBranchConversation = async () => {
+export const insertLinearBranchConversation = async (): Promise<string> => {
 	const conversations = await getConversations();
 	const res = await conversations.insertOne({
 		_id: new ObjectId(),
@@ -81,10 +83,10 @@ export const insertLinearBranchConversation = async () => {
 			},
 		],
 	});
-	return res.insertedId;
+	return res.insertedId.toString();
 };
 
-export const insertSideBranchesConversation = async () => {
+export const insertSideBranchesConversation = async (): Promise<string> => {
 	const conversations = await getConversations();
 	const res = await conversations.insertOne({
 		_id: new ObjectId(),
@@ -146,7 +148,7 @@ export const insertSideBranchesConversation = async () => {
 			},
 		],
 	});
-	return res.insertedId;
+	return res.insertedId.toString();
 };
 
 describe("inserting conversations", () => {

@@ -55,7 +55,7 @@ describe("GET /api/v2/user/reports", () => {
 			updatedAt: new Date(),
 		};
 
-		await collections.reports.insertMany([report1, report2]);
+		await collections.reports.insertMany([{ ...report1 }, { ...report2 }]);
 
 		const res = await GET(mockRequestEvent(locals));
 		const data = await parseResponse<Report[]>(res);

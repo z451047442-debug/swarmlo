@@ -381,7 +381,9 @@ export class PostgresCollection<T extends Record<string, unknown>> {
 		const id = doc._id
 			? typeof doc._id === "string"
 				? doc._id
-				: (doc._id as ObjectId).toString()
+				: doc._id instanceof ObjectId
+					? doc._id.toString()
+					: String(doc._id)
 			: randomUUID();
 
 		const entries = Object.entries(doc).filter(([k]) => k !== "_id");

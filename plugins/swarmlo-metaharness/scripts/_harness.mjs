@@ -242,7 +242,7 @@ export function runHarnessAsync(args, opts) {
 // swarmlo-cli resolution — PINNED, never @latest (review fix 2026-08-31).
 //
 // Consumers (oia-audit / audit-list / audit-trend / similarity) previously
-// spawned `npx swarmlo-cli@latest`, which (a) executed unpinned code on
+// spawned `npx swarmlo-cli@3.39.1`, which (a) executed unpinned code on
 // every call and (b) forced an npm registry metadata check per invocation.
 // Same resolution order as the metaharness bins above: an already-installed
 // local swarmlo-cli satisfying the pin (free), then a one-time versioned

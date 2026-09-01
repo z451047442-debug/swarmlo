@@ -41,8 +41,11 @@ export async function createTestUser(): Promise<{
 		expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
 	};
 
-	await collections.users.insertOne(user);
-	await collections.sessions.insertOne(session);
+	// Spread into fresh object literals: named interfaces carry no index
+	// signature, so insertOne's `Partial<T> & Record<string, unknown>` param
+	// can't take them directly.
+	await collections.users.insertOne({ ...user });
+	await collections.sessions.insertOne({ ...session });
 
 	return {
 		user,
@@ -71,7 +74,7 @@ export async function createTestConversation(
 		...overrides,
 	};
 
-	await collections.conversations.insertOne(conv);
+	await collections.conversations.insertOne({ ...conv });
 	return conv;
 }
 

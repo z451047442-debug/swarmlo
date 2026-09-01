@@ -15,8 +15,8 @@ state, or active-agent status.
 Run these commands in order:
 
 ```bash
-npx swarmlo-cli@latest doctor
-npx swarmlo-cli@latest status
+npx swarmlo-cli@3.39.1 doctor
+npx swarmlo-cli@3.39.1 status
 ```
 
 Summarize the diagnostics and status together. Do not repair, reset, start,
@@ -28,8 +28,8 @@ Only when the user explicitly asks to fix or auto-repair the installation,
 replace the first command with:
 
 ```bash
-npx swarmlo-cli@latest doctor --fix
-npx swarmlo-cli@latest status
+npx swarmlo-cli@3.39.1 doctor --fix
+npx swarmlo-cli@3.39.1 status
 ```
 
 Report what the repair changed and the resulting status. Never infer

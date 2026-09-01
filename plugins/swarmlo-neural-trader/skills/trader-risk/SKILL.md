@@ -1,6 +1,6 @@
 ---
 name: trader-risk
-description: Assess portfolio risk using npx neural-trader — VaR, CVaR, Sharpe, position sizing, circuit breaker status
+description: Assess portfolio risk using npx --ignore-scripts -y neural-trader@2.8.11 — VaR, CVaR, Sharpe, position sizing, circuit breaker status
 allowed-tools: Bash Read mcp__plugin_swarmlo-core_swarmlo__memory_store mcp__plugin_swarmlo-core_swarmlo__memory_search
 argument-hint: "[--symbol TICKER] [--portfolio NAME]"
 ---
@@ -12,17 +12,17 @@ Steps:
 2. Run risk assessment:
    ```bash
    # Single position
-   npx neural-trader --risk assess --symbol TICKER
-   npx neural-trader --var --symbol TICKER --investment 10000
+   npx --ignore-scripts -y neural-trader@2.8.11 --risk assess --symbol TICKER
+   npx --ignore-scripts -y neural-trader@2.8.11 --var --symbol TICKER --investment 10000
 
    # Portfolio-wide
-   npx neural-trader --risk assess --portfolio NAME
-   npx neural-trader --correlation --portfolio NAME --flag-threshold 0.8
+   npx --ignore-scripts -y neural-trader@2.8.11 --risk assess --portfolio NAME
+   npx --ignore-scripts -y neural-trader@2.8.11 --correlation --portfolio NAME --flag-threshold 0.8
    ```
 3. Calculate position sizing:
    ```bash
-   npx neural-trader --risk-tolerance 0.02 --symbol TICKER
-   npx neural-trader --position-sizing kelly --symbol TICKER
+   npx --ignore-scripts -y neural-trader@2.8.11 --risk-tolerance 0.02 --symbol TICKER
+   npx --ignore-scripts -y neural-trader@2.8.11 --position-sizing kelly --symbol TICKER
    ```
 4. Check circuit breaker status:
    - Daily loss limit (3%), weekly loss limit (5%)
