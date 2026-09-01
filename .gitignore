@@ -115,6 +115,7 @@ yarn-error.log*
 .mcp.json
 !plugins/*/.mcp.json
 claude-flow.config.json
+claude-flow.config.export.json
 .swarm/
 .hive-mind/
 .claude-flow/
