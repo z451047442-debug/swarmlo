@@ -70,23 +70,25 @@ export const AgentStep = ({
       // Reset states when step becomes active
       setLoadingItems(new Set());
       setCompletedItems(new Set());
-      
-      // Simulate loading each item
+
+      // Simulate loading each item（记录 timer 以便卸载/状态切换时清理）
+      const timers: ReturnType<typeof setTimeout>[] = [];
       data.forEach((_, idx) => {
-        setTimeout(() => {
+        timers.push(setTimeout(() => {
           setLoadingItems(prev => new Set([...prev, idx]));
-          
+
           // Complete item after 800ms
-          setTimeout(() => {
+          timers.push(setTimeout(() => {
             setLoadingItems(prev => {
               const next = new Set(prev);
               next.delete(idx);
               return next;
             });
             setCompletedItems(prev => new Set([...prev, idx]));
-          }, 800);
-        }, idx * 150);
+          }, 800));
+        }, idx * 150));
       });
+      return () => timers.forEach(clearTimeout);
     } else if (status === "completed") {
       // All items completed
       setCompletedItems(new Set(data.map((_, idx) => idx)));
@@ -119,7 +121,7 @@ export const AgentStep = ({
       {/* Status indicator */}
       <div className="absolute -left-2 sm:-left-3 top-1/2 -translate-y-1/2">
         <div
-          className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-3 border-background transition-all duration-500"
+          className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-background transition-all duration-500"
           style={{
             backgroundColor: status === "pending" ? cardBorderColor : status === "active" ? primaryColor : status === "completed" ? successColor : cardBorderColor,
             animation: status === "active" ? "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite" : undefined,

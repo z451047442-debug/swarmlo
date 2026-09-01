@@ -5,7 +5,7 @@
 
 import { basename } from 'node:path';
 
-export const CLI_PKG = 'swarmlo-cli@latest';
+export const CLI_PKG = 'swarmlo-cli@3.39.1';
 
 export function adrRecordKey(adr) {
   return `${adr.id}::${basename(adr.file, '.md')}`;

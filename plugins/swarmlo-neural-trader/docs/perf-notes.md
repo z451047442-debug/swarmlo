@@ -39,7 +39,7 @@ ADR-126 Phase 3 / #2080 work and is referenced read-only here.
   N=5000 → 47.87× scaling vs the ideal-linear 50× (so 96% of linear).
   p95 at N=5000 is ~4.2 ms.
 - **Proposed optimization (UPSTREAM)**: the production `memory_search`
-  already uses HNSW per ADR-006, which gives 150x–12,500× speedups on
+  already uses HNSW per ADR-006, which gives measured ~1.9x–4.7x speedups on
   this exact workload. The plugin doesn't need a local change — what we
   DO need is a regression gate: when the skill's recall@10 drops below
   0.8, the HNSW build params (M, efConstruction) drifted and need a

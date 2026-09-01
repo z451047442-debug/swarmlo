@@ -17,12 +17,50 @@ import { collections } from "$lib/server/database";
 import JSON5 from "json5";
 import { logger } from "$lib/server/logger";
 import { ObjectId } from "mongodb";
+import { Address4, Address6 } from "ip-address";
+import { isIP } from "node:net";
 import { adminTokenManager } from "./adminToken";
 import type { User } from "$lib/types/User";
 import type { Session } from "$lib/types/Session";
 import { base } from "$app/paths";
 import { acquireLock, isDBLocked, releaseLock } from "$lib/migrations/lock";
 import { Semaphores } from "$lib/types/Semaphore";
+
+function ipInSubnet(ip: string, cidr: string): boolean {
+	const [net, bits] = cidr.split("/");
+	const prefix = bits ? parseInt(bits, 10) : isIP(net) === 6 ? 128 : 32;
+	try {
+		const addr = isIP(ip) === 4 ? new Address4(ip).bigInteger() : new Address6(ip).bigInteger();
+		const netAddr =
+			isIP(net) === 4 ? new Address4(net).bigInteger() : new Address6(net).bigInteger();
+		return addr >> BigInt(128 - prefix) === netAddr >> BigInt(128 - prefix);
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Whether the client address belongs to a configured trusted reverse proxy.
+ *
+ * TRUSTED_EMAIL_HEADER is only honored for requests that actually come from a
+ * trusted proxy (TRUSTED_PROXY_ADDRESSES, comma-separated IPs or CIDRs).
+ * Without an explicit proxy address list, the header is never trusted, so an
+ * attacker cannot spoof an arbitrary email and take over a session.
+ */
+export function isTrustedProxyAddress(clientAddress: string | undefined): boolean {
+	if (!clientAddress) return false;
+	// ConfigProxy is a string-returning proxy; cast to read the dynamic key.
+	const trustedProxies = (config as unknown as Record<string, string>).TRUSTED_PROXY_ADDRESSES;
+	const allowed = (trustedProxies || "")
+		.split(",")
+		.map((s: string) => s.trim())
+		.filter(Boolean);
+	if (allowed.length === 0) return false;
+	return allowed.some((cidr: string) => {
+		if (!cidr.includes("/")) return cidr === clientAddress;
+		return ipInSubnet(clientAddress, cidr);
+	});
+}
 
 export interface OIDCSettings {
 	redirectURI: string;
@@ -399,12 +437,16 @@ export async function authenticateRequest(
 	headers: HeaderRecord,
 	cookie: CookieRecord,
 	url: URL,
-	isApi?: boolean
+	isApi?: boolean,
+	isTrustedProxy = false
 ): Promise<App.Locals & { secretSessionId: string }> {
 	const token = cookie.get(config.COOKIE_NAME);
 
 	let email = null;
-	if (config.TRUSTED_EMAIL_HEADER) {
+	// TRUSTED_EMAIL_HEADER is only honored when the request provably comes from
+	// a configured trusted proxy; otherwise inbound header spoofing would allow
+	// arbitrary email impersonation and session takeover.
+	if (config.TRUSTED_EMAIL_HEADER && isTrustedProxy) {
 		email = headers.get(config.TRUSTED_EMAIL_HEADER);
 	}
 

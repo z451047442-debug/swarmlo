@@ -310,6 +310,8 @@ export class RvfBackend implements IMemoryBackend {
     if (!entry) return null;
     entry.accessCount++;
     entry.lastAccessedAt = Date.now();
+    // Access counts must be persisted, otherwise they never reach disk
+    this.dirty = true;
     return entry;
   }
 
@@ -366,8 +368,12 @@ export class RvfBackend implements IMemoryBackend {
 
     if (q.type === 'semantic' && q.embedding && this.hnswIndex) {
       const searchResults = this.hnswIndex.search(q.embedding, q.limit, q.threshold);
-      const idSet = new Set(searchResults.map(r => r.id));
-      results = results.filter(e => idSet.has(e.id));
+      // Rank results by similarity — insertion order would defeat the
+      // entire point of a semantic query.
+      const ranked = new Map(searchResults.map(r => [r.id, r.score]));
+      results = results
+        .filter(e => ranked.has(e.id))
+        .sort((a, b) => (ranked.get(b.id)! - ranked.get(a.id)!));
     }
 
     const offset = q.offset ?? 0;

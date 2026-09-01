@@ -6,7 +6,7 @@ allowed-tools: Bash(npx *) mcp__plugin_swarmlo-core_swarmlo__swarm_status mcp__p
 ---
 Use the Monitor tool to stream swarm events in real time instead of polling:
 
-Run via Monitor: `npx swarmlo-cli@latest swarm watch --stream`
+Run via Monitor: `npx swarmlo-cli@3.39.1 swarm watch --stream`
 
 This streams NDJSON events for agent spawns, task completions, memory writes, and health checks. Each stdout line triggers a notification.
 

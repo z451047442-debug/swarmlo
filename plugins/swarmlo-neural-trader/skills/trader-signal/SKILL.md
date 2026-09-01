@@ -1,6 +1,6 @@
 ---
 name: trader-signal
-description: Generate trading signals using npx neural-trader anomaly detection engine with Z-score scoring and neural prediction
+description: Generate trading signals using npx --ignore-scripts -y neural-trader@2.8.11 anomaly detection engine with Z-score scoring and neural prediction
 allowed-tools: Bash Read mcp__plugin_swarmlo-core_swarmlo__memory_store mcp__plugin_swarmlo-core_swarmlo__memory_retrieve mcp__plugin_swarmlo-core_swarmlo__memory_search mcp__plugin_swarmlo-core_swarmlo__memory_delete mcp__plugin_swarmlo-core_swarmlo__neural_predict mcp__plugin_swarmlo-core_swarmlo__agentdb_pattern-search
 argument-hint: "[--strategy NAME] [--symbols AAPL,MSFT]"
 ---
@@ -11,11 +11,11 @@ Steps:
    `npm ls neural-trader 2>/dev/null || npm install --ignore-scripts neural-trader`
 2. Scan for signals:
    ```bash
-   npx neural-trader --signal scan --symbols <TICKERS>
+   npx --ignore-scripts -y neural-trader@2.8.11 --signal scan --symbols <TICKERS>
    ```
    With a specific strategy:
    ```bash
-   npx neural-trader --signal scan --strategy <name> --symbols <TICKERS>
+   npx --ignore-scripts -y neural-trader@2.8.11 --signal scan --strategy <name> --symbols <TICKERS>
    ```
 3. If --strategy specified, load strategy filters:
    `mcp__plugin_swarmlo-core_swarmlo__memory_retrieve({ key: "strategy-NAME", namespace: "trading-strategies" })`

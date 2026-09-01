@@ -103,20 +103,16 @@ const SLOW_QUERY_THRESHOLD_MS = 1000;
 
 /**
  * Distance metric to pgvector operator mapping.
+ *
+ * pgvector only implements cosine (<=>), euclidean (<->), and dot (<#>).
+ * All other metrics previously mapped to operators that do not exist in
+ * pgvector — they are now explicitly rejected with a "not supported" error
+ * instead of silently building a query that fails at the database layer.
  */
-const DISTANCE_OPERATORS: Record<DistanceMetric, string> = {
+const DISTANCE_OPERATORS: Partial<Record<DistanceMetric, string>> = {
   cosine: '<=>',
   euclidean: '<->',
   dot: '<#>',
-  hamming: '<~>',
-  manhattan: '<+>',
-  chebyshev: '<+>', // Not directly supported, fallback
-  jaccard: '<~>',   // Binary similarity
-  minkowski: '<->',  // Fallback to L2
-  bray_curtis: '<->', // Fallback
-  canberra: '<->',    // Fallback
-  mahalanobis: '<->', // Fallback
-  correlation: '<=>',  // Similar to cosine
 };
 
 /**
@@ -505,44 +501,52 @@ class VectorOps {
     const tableName = options.tableName ?? 'vectors';
     const vectorColumn = options.vectorColumn ?? DEFAULT_VECTOR_COLUMN;
     const metric = options.metric ?? 'cosine';
-    const operator = DISTANCE_OPERATORS[metric] ?? '<=>';
+    const operator = DISTANCE_OPERATORS[metric];
+    if (!operator) {
+      throw new Error(
+        `Unsupported distance metric '${metric}' for pgvector: only cosine, euclidean, and dot are supported`
+      );
+    }
 
-    // Build query vector string
+    // Build query vector string (validates every element is a finite number)
     const queryVector = this.formatVector(options.query);
 
-    // Set HNSW parameters if specified
-    if (options.efSearch) {
+    // Set HNSW parameters if specified — Number-validated, then parameterized
+    if (options.efSearch !== undefined) {
       await this.connectionManager.query(
-        `SET LOCAL hnsw.ef_search = ${options.efSearch}`
+        `SET LOCAL hnsw.ef_search = $1`,
+        [this.toNonNegativeInt(options.efSearch, 'efSearch')]
       );
     }
 
     // Set IVF probes if specified
-    if (options.probes) {
+    if (options.probes !== undefined) {
       await this.connectionManager.query(
-        `SET LOCAL ivfflat.probes = ${options.probes}`
+        `SET LOCAL ivfflat.probes = $1`,
+        [this.toNonNegativeInt(options.probes, 'probes')]
       );
     }
 
-    // Build SELECT clause
+    // Build SELECT clause — every column identifier is escaped
     const selectColumns = options.selectColumns ?? ['id'];
-    const columnList = [...selectColumns];
+    const columnList = selectColumns.map(col => this.escapeIdentifier(col));
 
     if (options.includeVector) {
-      columnList.push(vectorColumn);
+      columnList.push(this.escapeIdentifier(vectorColumn));
     }
     if (options.includeMetadata) {
       columnList.push('metadata');
     }
 
-    // Add distance/similarity calculation
-    const distanceExpr = `${vectorColumn} ${operator} '${queryVector}'::vector`;
+    // Distance expression uses a parameterized vector literal ($1) so the
+    // query vector can never be interpreted as SQL
+    const params: unknown[] = [queryVector];
+    let paramIndex = 2;
+    const distanceExpr = `${this.escapeIdentifier(vectorColumn)} ${operator} $1::vector`;
     columnList.push(`(${distanceExpr}) as distance`);
 
     // Build WHERE clause
     const whereClauses: string[] = [];
-    const params: unknown[] = [];
-    let paramIndex = 1;
 
     if (options.threshold !== undefined) {
       if (metric === 'cosine' || metric === 'dot') {
@@ -575,12 +579,14 @@ class VectorOps {
     }
 
     if (options.whereClause) {
-      whereClauses.push(`(${options.whereClause})`);
-      if (options.whereParams) {
-        // Re-index parameters in the custom WHERE clause
-        const reindexed = options.whereParams.map(() => `$${paramIndex++}`);
+      // Re-index placeholders in the custom WHERE clause so they line up with
+      // the parameter numbering already used above
+      let clause = options.whereClause;
+      if (options.whereParams && options.whereParams.length > 0) {
+        clause = clause.replace(/\$\d+/g, () => `$${paramIndex++}`);
         params.push(...options.whereParams);
       }
+      whereClauses.push(`(${clause})`);
     }
 
     // Build final query
@@ -592,7 +598,7 @@ class VectorOps {
     }
 
     sql += ` ORDER BY ${distanceExpr} ASC`;
-    sql += ` LIMIT ${options.k}`;
+    sql += ` LIMIT ${this.toNonNegativeInt(options.k, 'k')}`;
 
     const result = await this.connectionManager.query<{
       id: string | number;
@@ -701,11 +707,11 @@ class VectorOps {
           const metadata = item.metadata ? JSON.stringify(item.metadata) : null;
 
           if (item.id !== undefined) {
-            values.push(`($${paramIndex++}, '${vector}'::vector, $${paramIndex++}::jsonb)`);
-            params.push(item.id, metadata);
+            values.push(`($${paramIndex++}, $${paramIndex++}::vector, $${paramIndex++}::jsonb)`);
+            params.push(item.id, vector, metadata);
           } else {
-            values.push(`(gen_random_uuid(), '${vector}'::vector, $${paramIndex++}::jsonb)`);
-            params.push(metadata);
+            values.push(`(gen_random_uuid(), $${paramIndex++}::vector, $${paramIndex++}::jsonb)`);
+            params.push(vector, metadata);
           }
         }
 
@@ -713,7 +719,7 @@ class VectorOps {
         sql += `(id, ${this.escapeIdentifier(vectorColumn)}, metadata) VALUES ${values.join(', ')}`;
 
         if (options.upsert) {
-          const conflictCols = options.conflictColumns ?? ['id'];
+          const conflictCols = (options.conflictColumns ?? ['id']).map(col => this.escapeIdentifier(col));
           sql += ` ON CONFLICT (${conflictCols.join(', ')}) DO UPDATE SET `;
           sql += `${this.escapeIdentifier(vectorColumn)} = EXCLUDED.${this.escapeIdentifier(vectorColumn)}, `;
           sql += `metadata = EXCLUDED.metadata`;
@@ -741,12 +747,12 @@ class VectorOps {
 
               const sql = `INSERT INTO ${schemaPrefix}${this.escapeIdentifier(tableName)} ` +
                 `(id, ${this.escapeIdentifier(vectorColumn)}, metadata) VALUES ` +
-                `($1, '${vector}'::vector, $2::jsonb)` +
+                `($1, $2::vector, $3::jsonb)` +
                 (options.returning ? ' RETURNING id' : '');
 
               const result = await this.connectionManager.query<{ id: string }>(
                 sql,
-                [item.id ?? null, metadata]
+                [item.id ?? null, vector, metadata]
               );
 
               if (options.returning && result.rows.length > 0) {
@@ -798,7 +804,8 @@ class VectorOps {
 
     if (options.vector) {
       const vector = this.formatVector(options.vector);
-      setClauses.push(`${this.escapeIdentifier(vectorColumn)} = '${vector}'::vector`);
+      setClauses.push(`${this.escapeIdentifier(vectorColumn)} = $${paramIndex++}::vector`);
+      params.push(vector);
     }
 
     if (options.metadata) {
@@ -881,16 +888,17 @@ class VectorOps {
     // Build operator class based on metric
     const opClass = this.getOperatorClass(options.metric ?? 'cosine', options.indexType);
 
-    // Build WITH clause for index parameters
+    // Build WITH clause for index parameters — Number-validated before
+    // interpolation (same injection class as LIMIT/SET LOCAL)
     const withParams: string[] = [];
     if (options.m !== undefined) {
-      withParams.push(`m = ${options.m}`);
+      withParams.push(`m = ${this.toNonNegativeInt(options.m, 'm')}`);
     }
     if (options.efConstruction !== undefined) {
-      withParams.push(`ef_construction = ${options.efConstruction}`);
+      withParams.push(`ef_construction = ${this.toNonNegativeInt(options.efConstruction, 'efConstruction')}`);
     }
     if (options.lists !== undefined) {
-      withParams.push(`lists = ${options.lists}`);
+      withParams.push(`lists = ${this.toNonNegativeInt(options.lists, 'lists')}`);
     }
 
     const withClause = withParams.length > 0 ? ` WITH (${withParams.join(', ')})` : '';
@@ -1020,15 +1028,50 @@ class VectorOps {
       },
     };
 
-    return opClasses[indexType]?.[metric] ?? 'vector_cosine_ops';
+    const opClass = opClasses[indexType]?.[metric];
+    if (!opClass) {
+      throw new Error(
+        `Unsupported metric '${metric}' for ${indexType} index: only cosine, euclidean, and dot are supported`
+      );
+    }
+    return opClass;
   }
 
   /**
    * Format vector for SQL.
+   *
+   * Validates that every element is a finite number before it can be embedded
+   * in a query — an attacker-controlled vector literal can otherwise smuggle
+   * arbitrary SQL into the generated statement.
    */
   private formatVector(vector: number[] | Float32Array): string {
     const arr = Array.isArray(vector) ? vector : Array.from(vector);
+    if (arr.length === 0) {
+      throw new Error('Vector must not be empty');
+    }
+    for (const element of arr) {
+      if (typeof element !== 'number' || !Number.isFinite(element)) {
+        throw new Error('Vector elements must all be finite numbers');
+      }
+    }
     return `[${arr.join(',')}]`;
+  }
+
+  /**
+   * Strictly validate a value as a non-negative safe integer
+   * (used for LIMIT / SET LOCAL / index parameters before interpolation).
+   */
+  private toNonNegativeInt(value: unknown, name: string): number {
+    const num = typeof value === 'number' ? value : Number(value);
+    if (
+      !Number.isFinite(num) ||
+      num < 0 ||
+      !Number.isInteger(num) ||
+      num > Number.MAX_SAFE_INTEGER
+    ) {
+      throw new Error(`Invalid ${name}: expected a non-negative integer, got ${JSON.stringify(value)}`);
+    }
+    return num;
   }
 
   /**

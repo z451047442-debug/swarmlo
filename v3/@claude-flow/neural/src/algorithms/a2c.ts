@@ -192,15 +192,18 @@ export class A2CAlgorithm {
     }
 
     // Apply gradients
-    this.applyGradients(sharedGrad, policyGrad, valueGrad, this.buffer.length);
+    const batchSize = this.buffer.length;
+    this.applyGradients(sharedGrad, policyGrad, valueGrad, batchSize);
+
+    // Record statistics BEFORE clearing the buffer, otherwise the averages
+    // are always computed over an empty array (0 / 0 => NaN or 0).
+    this.updateCount++;
+    this.avgPolicyLoss = batchSize > 0 ? totalPolicyLoss / batchSize : 0;
+    this.avgValueLoss = batchSize > 0 ? totalValueLoss / batchSize : 0;
+    this.avgEntropy = batchSize > 0 ? totalEntropy / batchSize : 0;
 
     // Clear buffer
     this.buffer = [];
-    this.updateCount++;
-
-    this.avgPolicyLoss = totalPolicyLoss / this.buffer.length || 0;
-    this.avgValueLoss = totalValueLoss / this.buffer.length || 0;
-    this.avgEntropy = totalEntropy / this.buffer.length || 0;
 
     const elapsed = performance.now() - startTime;
     if (elapsed > 10) {

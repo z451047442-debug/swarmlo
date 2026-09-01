@@ -38,7 +38,7 @@ Prereq: `ANTHROPIC_API_KEY` (or `CLAUDE_API_KEY`) + Managed Agents beta access. 
 
 3. **Pre-flight cheap.** Before a 1000-path / multi-year run, do a tiny smoke first (1 MC path, ~3 months) — catches a bad strategy name / symbol in seconds:
    ```
-   managed_agent_prompt({ sessionId, message: "Run `npx neural-trader --backtest --strategy <name> --symbol <TICKER> --period <last 3 months> --mc-paths 1`. Just confirm it ran and report the Sharpe. Then stop.", maxWaitMs: 60000 })
+   managed_agent_prompt({ sessionId, message: "Run `npx --ignore-scripts -y neural-trader@2.8.11 --backtest --strategy <name> --symbol <TICKER> --period <last 3 months> --mc-paths 1`. Just confirm it ran and report the Sharpe. Then stop.", maxWaitMs: 60000 })
    ```
    If that fails, fix the args before the real run (and `managed_agent_terminate`).
 
@@ -46,7 +46,7 @@ Prereq: `ANTHROPIC_API_KEY` (or `CLAUDE_API_KEY`) + Managed Agents beta access. 
    ```
    managed_agent_prompt({
      sessionId,
-     message: "Run `npx neural-trader --backtest --strategy <name> --symbol <TICKER> --period <range> --walk-forward --mc-paths <N>` (for training: `npx neural-trader --train --model <lstm|transformer|nbeats> --symbol <TICKER> --period <range>`; for a sweep: loop the configs and run each). Report: total return, annualized return, Sharpe, Sortino, max drawdown, win rate, profit factor, # trades, 95% CVaR. Write the equity curve to /tmp/equity.csv and the trade log to /tmp/trades.csv. Then stop.",
+     message: "Run `npx --ignore-scripts -y neural-trader@2.8.11 --backtest --strategy <name> --symbol <TICKER> --period <range> --walk-forward --mc-paths <N>` (for training: `npx --ignore-scripts -y neural-trader@2.8.11 --train --model <lstm|transformer|nbeats> --symbol <TICKER> --period <range>`; for a sweep: loop the configs and run each). Report: total return, annualized return, Sharpe, Sortino, max drawdown, win rate, profit factor, # trades, 95% CVaR. Write the equity curve to /tmp/equity.csv and the trade log to /tmp/trades.csv. Then stop.",
      maxWaitMs: <generous — minutes>
    })
    → { finished, status, stopReason, assistantText (the metrics), toolUses }
@@ -78,8 +78,8 @@ Prereq: `ANTHROPIC_API_KEY` (or `CLAUDE_API_KEY`) + Managed Agents beta access. 
 ```
 managed_agent_create  { "name":"nt-cloud", "model":"claude-haiku-4-5-20251001", "packages":{"npm":["neural-trader"]}, "initScript":"npm install -g --ignore-scripts neural-trader >/dev/null 2>&1 || true" }
   → { sessionId:"sesn_…", environmentId:"env_…" }
-managed_agent_prompt   { "sessionId":"sesn_…", "message":"Run `npx neural-trader --backtest --strategy multi-indicator --symbol SPY --period 2020-2024 --walk-forward --mc-paths 1000`. Report Sharpe/Sortino/max-DD/win-rate/CVaR; write /tmp/equity.csv. Then stop.", "maxWaitMs":600000 }
-  → { finished:true, status:"idle", assistantText:"<metrics>", toolUses:[{bash:"npx neural-trader --backtest …"}] }
+managed_agent_prompt   { "sessionId":"sesn_…", "message":"Run `npx --ignore-scripts -y neural-trader@2.8.11 --backtest --strategy multi-indicator --symbol SPY --period 2020-2024 --walk-forward --mc-paths 1000`. Report Sharpe/Sortino/max-DD/win-rate/CVaR; write /tmp/equity.csv. Then stop.", "maxWaitMs":600000 }
+  → { finished:true, status:"idle", assistantText:"<metrics>", toolUses:[{bash:"npx --ignore-scripts -y neural-trader@2.8.11 --backtest …"}] }
 # … memory_store the metrics, agentdb_pattern-store if Sharpe>1.5, record cost …
 managed_agent_terminate { "sessionId":"sesn_…", "environmentId":"env_…" }
 ```

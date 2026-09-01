@@ -12,11 +12,6 @@ describe(
 	() => {
 		beforeAll(async () => {
 			await ready;
-			try {
-				await collections.semaphores.createIndex({ key: 1 }, { unique: true });
-			} catch (e) {
-				// Index might already exist, ignore error
-			}
 		}, 20000);
 
 		it("should not have duplicates guid", async () => {
@@ -31,12 +26,15 @@ describe(
 			);
 			const locks = results.filter((r) => r);
 
+			// RVF locks are in-memory (single-process store) — the semaphores
+			// collection is no longer used for locking.
 			const semaphores = await collections.semaphores.find({}).toArray();
 
 			expect(locks.length).toBe(1);
 			expect(semaphores).toBeDefined();
-			expect(semaphores.length).toBe(1);
-			expect(semaphores?.[0].key).toBe(Semaphores.TEST_MIGRATION);
+			expect(semaphores.length).toBe(0);
+			expect(typeof locks[0]).toBe("string");
+			await releaseLock(Semaphores.TEST_MIGRATION, locks[0] as string);
 		});
 
 		it("should read the lock correctly", async () => {
@@ -50,20 +48,17 @@ describe(
 
 		it("should refresh the lock", async () => {
 			const lockId = await acquireLock(Semaphores.TEST_MIGRATION);
-
 			assert(lockId);
 
-			// get the updatedAt time
+			// refreshLock keeps the lock alive: it returns true and a competing
+			// acquire still fails while the lock is held.
+			expect(await refreshLock(Semaphores.TEST_MIGRATION, lockId)).toBe(true);
+			expect(await isDBLocked(Semaphores.TEST_MIGRATION)).toBe(true);
 
-			const updatedAtInitially = (await collections.semaphores.findOne({}))?.updatedAt;
+			// A stale lockId cannot refresh (or release) the live lock.
+			expect(await refreshLock(Semaphores.TEST_MIGRATION, "stale-id")).toBe(false);
 
-			await refreshLock(Semaphores.TEST_MIGRATION, lockId);
-
-			const updatedAtAfterRefresh = (await collections.semaphores.findOne({}))?.updatedAt;
-
-			expect(updatedAtInitially).toBeDefined();
-			expect(updatedAtAfterRefresh).toBeDefined();
-			expect(updatedAtInitially).not.toBe(updatedAtAfterRefresh);
+			await releaseLock(Semaphores.TEST_MIGRATION, lockId);
 		});
 
 		afterEach(async () => {

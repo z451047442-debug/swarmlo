@@ -3,7 +3,10 @@
  * Wraps agent-browser CLI for programmatic access
  */
 
-import { spawn, execSync, execFileSync } from 'child_process';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
+
+const execFileAsync = promisify(execFile);
 import type {
   ActionResult,
   Snapshot,
@@ -70,34 +73,36 @@ export class AgentBrowserAdapter {
     }
 
     return new Promise((resolve) => {
-      try {
-        const result = execFileSync('agent-browser', fullArgs, {
-          encoding: 'utf-8',
-          timeout: this.timeout + 5000,
-          stdio: ['pipe', 'pipe', 'pipe'],
-        });
+      // execFile (async) instead of execFileSync — the synchronous variant
+      // blocks the event loop for the whole child-process run
+      execFileAsync('agent-browser', fullArgs, {
+        encoding: 'utf-8',
+        timeout: this.timeout + 5000,
+        maxBuffer: 10 * 1024 * 1024,
+      })
+        .then(({ stdout }) => {
+          const duration = Date.now() - startTime;
 
-        const duration = Date.now() - startTime;
-
-        if (jsonOutput) {
-          try {
-            const parsed = JSON.parse(result);
-            resolve({
-              success: parsed.success !== false,
-              data: (parsed.data || parsed) as T,
-              duration,
-            });
-          } catch {
-            resolve({ success: true, data: result.trim() as T, duration });
+          if (jsonOutput) {
+            try {
+              const parsed = JSON.parse(stdout);
+              resolve({
+                success: parsed.success !== false,
+                data: (parsed.data || parsed) as T,
+                duration,
+              });
+            } catch {
+              resolve({ success: true, data: stdout.trim() as T, duration });
+            }
+          } else {
+            resolve({ success: true, data: stdout.trim() as T, duration });
           }
-        } else {
-          resolve({ success: true, data: result.trim() as T, duration });
-        }
-      } catch (error) {
-        const duration = Date.now() - startTime;
-        const message = error instanceof Error ? error.message : String(error);
-        resolve({ success: false, error: message, duration });
-      }
+        })
+        .catch((error) => {
+          const duration = Date.now() - startTime;
+          const message = error instanceof Error ? error.message : String(error);
+          resolve({ success: false, error: message, duration });
+        });
     });
   }
 
@@ -637,16 +642,16 @@ export class AgentBrowserAdapter {
     if (withDeps) args.push('--with-deps');
 
     return new Promise((resolve) => {
-      try {
-        const result = execFileSync('agent-browser', args, {
-          encoding: 'utf-8',
-          timeout: 300000, // 5 minutes for download
+      execFileAsync('agent-browser', args, {
+        encoding: 'utf-8',
+        timeout: 300000, // 5 minutes for download
+        maxBuffer: 10 * 1024 * 1024,
+      })
+        .then(({ stdout }) => resolve({ success: true, data: stdout }))
+        .catch((error) => {
+          const message = error instanceof Error ? error.message : String(error);
+          resolve({ success: false, error: message });
         });
-        resolve({ success: true, data: result });
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        resolve({ success: false, error: message });
-      }
     });
   }
 }

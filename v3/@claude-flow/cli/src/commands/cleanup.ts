@@ -21,6 +21,41 @@ const CLAUDE_OWNED_SUBDIRS = [
 ];
 
 /**
+ * Known swarmlo-owned marker filenames per artifact directory. `cleanup
+ * --force` only deletes a directory after at least one of these markers is
+ * found inside it (recursively, capped) — a generic-named directory such as
+ * `./data` that merely collides with the artifact list, but holds user
+ * files, is refused instead of rm -rf'd (P1: accidental user-data loss).
+ */
+const SWARMLO_MARKERS: Record<string, string[]> = {
+  [join('.claude', 'helpers')]: [
+    'hook-handler.cjs', 'intelligence.cjs', 'helpers.manifest.json',
+    'auto-memory-hook.mjs', '.helpers-version',
+  ],
+  '.claude-flow': [
+    'CAPABILITIES.md', 'config.json', 'manifest.json', 'commands.json',
+    'learning.json', 'AGENTS.md',
+  ],
+  'data': [
+    'memory.db', 'memory.sqlite', 'memory.sqlite3', 'memory.json',
+    'agentdb.sqlite', 'agentdb.json', 'hnsm.sqlite', 'claude-flow.db',
+  ],
+  '.swarm': [
+    'state.json', 'swarm-state.json', 'swarm.json', 'agents.json',
+    'ledger.json', 'memory.db', 'permission-audit.jsonl',
+    'router-parallel.jsonl', 'learning.json',
+  ],
+  '.hive-mind': [
+    'state.json', 'consensus.json', 'ledger.json', 'hive-mind-state.json', 'memory.json',
+  ],
+  'coordination': ['state.json', 'ledger.json', 'tasks.json', 'coordination.json'],
+  'memory': [
+    'memory.db', 'memory.sqlite', 'memory.sqlite3', 'memory.json',
+    'index.json', 'namespaces.json', 'agentdb.sqlite', 'hnsm.sqlite',
+  ],
+};
+
+/**
  * Artifact directories and files that claude-flow/swarmlo may create
  */
 const ARTIFACT_DIRS = [
@@ -43,6 +78,42 @@ const KEEP_CONFIG_PATHS = [
   'claude-flow.config.json',
   join('.claude', 'settings.json'),
 ];
+
+/**
+ * True when the directory contains at least one known swarmlo marker file
+ * (recursive, depth- and entry-capped so a huge user directory can't make
+ * the check expensive). Dirent-typed checks never follow symlinks, so a
+ * symlinked tree cannot be validated through the link.
+ */
+function containsSwarmloMarker(fullPath: string, markers: string[]): boolean {
+  if (markers.length === 0) return false;
+  let scanned = 0;
+  const walk = (dir: string, depth: number): boolean => {
+    if (depth <= 0 || scanned > 500) return false;
+    let entries;
+    try {
+      entries = readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return false;
+    }
+    for (const entry of entries) {
+      if (scanned++ > 500) return false;
+      if (entry.isFile() && markers.includes(entry.name)) return true;
+      if (entry.isDirectory() && walk(join(dir, entry.name), depth - 1)) return true;
+    }
+    return false;
+  };
+  return walk(fullPath, 3);
+}
+
+/** True when the directory contains no entries at all. */
+function isDirEmpty(fullPath: string): boolean {
+  try {
+    return readdirSync(fullPath).length === 0;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Calculate the total size of a path (file or directory) in bytes
@@ -195,6 +266,7 @@ export const cleanupCommand: Command = {
     let removedCount = 0;
     let removedSize = 0;
     let skippedCount = 0;
+    let refusedCount = 0;
 
     for (const item of found) {
       const sizeStr = formatSize(item.size);
@@ -221,6 +293,15 @@ export const cleanupCommand: Command = {
               writeFileSync(fullPath, JSON.stringify(raw, null, 2) + '\n', 'utf-8');
             } catch { /* settings.json parse failed, skip */ }
           } else if (item.type === 'dir') {
+            // P1 ownership guard: only delete a directory when it actually
+            // contains swarmlo artifacts. Empty dirs are inert (nothing is
+            // lost), anything else must show a marker or be refused.
+            const markers = SWARMLO_MARKERS[item.path] ?? [];
+            if (!isDirEmpty(fullPath) && !containsSwarmloMarker(fullPath, markers)) {
+              output.writeln(output.error(`  [refused] dir  ${item.path}  - no swarmlo marker files found (${markers.join(', ') || 'none'}); refusing to delete`));
+              refusedCount++;
+              continue;
+            }
             rmSync(fullPath, { recursive: true, force: true });
           } else {
             rmSync(fullPath, { force: true });
@@ -249,6 +330,9 @@ export const cleanupCommand: Command = {
       output.writeln(output.dim('  This was a dry run. Use --force to actually remove artifacts.'));
     } else {
       output.writeln(`  Removed ${removedCount} artifact(s) totaling ${formatSize(removedSize)}`);
+      if (refusedCount > 0) {
+        output.writeln(`  Refused ${refusedCount} item(s) — no swarmlo markers found, preserved`);
+      }
       if (skippedCount > 0) {
         output.writeln(`  Preserved ${skippedCount} item(s) (--keep-config)`);
       }
@@ -257,11 +341,11 @@ export const cleanupCommand: Command = {
     output.writeln();
 
     return {
-      success: true,
+      success: refusedCount === 0,
       message: dryRun
         ? `Dry run: ${found.length} artifact(s) found`
         : `Removed ${removedCount} artifact(s)`,
-      data: { found, removedCount, removedSize, dryRun },
+      data: { found, removedCount, removedSize, refusedCount, dryRun },
     };
   },
 };

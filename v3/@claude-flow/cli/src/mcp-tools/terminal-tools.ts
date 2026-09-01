@@ -138,7 +138,7 @@ export const terminalTools: MCPTool[] = [
   },
   {
     name: 'terminal_execute',
-    description: 'Execute a command in a terminal session Use when native Bash is wrong because you need a persistent terminal session across turns/agents with output capture and replay. For one-shot shell commands, native Bash is fine.',
+    description: 'Execute a command in a terminal session Use when native Bash is wrong because you need a persistent terminal session across turns/agents with output capture and replay. For one-shot shell commands, native Bash is fine. SECURITY NOTICE: full command output and session history are persisted in plaintext (encrypted only when CLAUDE_FLOW_ENCRYPT_AT_REST=1 is enabled) under .claude-flow/terminals/store.json in the project root — do not run commands whose output is secret.',
     category: 'terminal',
     inputSchema: {
       type: 'object',

@@ -40,14 +40,14 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { ContinueGate } from '../src/continue-gate.ts';
-import { ThreatDetector, CollusionDetector, MemoryQuorum } from '../src/adversarial.ts';
-import { DeterministicToolGateway } from '../src/gateway.ts';
-import { MemoryWriteGate, createMemoryEntry } from '../src/memory-gate.ts';
-import { CoherenceScheduler, EconomicGovernor } from '../src/coherence.ts';
-import { TrustAccumulator, TrustSystem } from '../src/trust.ts';
-import { AuthorityGate, IrreversibilityClassifier } from '../src/authority.ts';
-import { MetaGovernor } from '../src/meta-governance.ts';
+import { ContinueGate } from '../src/continue-gate.js';
+import { ThreatDetector, CollusionDetector, MemoryQuorum } from '../src/adversarial.js';
+import { DeterministicToolGateway } from '../src/gateway.js';
+import { MemoryWriteGate, createMemoryEntry } from '../src/memory-gate.js';
+import { CoherenceScheduler, EconomicGovernor } from '../src/coherence.js';
+import { TrustAccumulator, TrustSystem } from '../src/trust.js';
+import { AuthorityGate, IrreversibilityClassifier } from '../src/authority.js';
+import { MetaGovernor } from '../src/meta-governance.js';
 
 // ============================================================================
 // Benchmark helper

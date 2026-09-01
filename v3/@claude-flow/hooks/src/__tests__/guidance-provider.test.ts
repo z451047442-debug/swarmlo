@@ -34,11 +34,15 @@ describe('GuidanceProvider', () => {
       expect(context).toContain('Performance Targets');
     });
 
-    it('should include HNSW performance targets', async () => {
+    it('should include HNSW performance targets (honest measured numbers)', async () => {
       const context = await provider.generateSessionContext();
 
       expect(context).toContain('HNSW search');
-      expect(context).toContain('150x');
+      expect(context).toContain('~1.9x');
+      // The false "150x faster" claim form was withdrawn in-tree — ensure it
+      // doesn't leak back (the text may still mention it as "not reproduced")
+      expect(context).not.toContain('150x-12,500x faster');
+      expect(context).not.toContain('2.49x');
     });
 
     it('should include code quality rules', async () => {

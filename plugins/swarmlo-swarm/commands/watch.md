@@ -6,8 +6,8 @@ $ARGUMENTS
 
 Start a live event stream for the active swarm. Use the Monitor tool to run:
 
-`npx swarmlo-cli@latest swarm watch --stream`
+`npx swarmlo-cli@3.39.1 swarm watch --stream`
 
 Each line is an NDJSON event (agent spawn, task update, memory write, health ping). Notifications arrive as events occur -- no polling needed.
 
-For one-shot status checks, use `/status` or `npx swarmlo-cli@latest swarm status` instead.
+For one-shot status checks, use `/status` or `npx swarmlo-cli@3.39.1 swarm status` instead.

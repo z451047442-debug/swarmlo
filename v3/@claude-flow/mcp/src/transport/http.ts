@@ -5,6 +5,7 @@
  */
 
 import { EventEmitter } from 'events';
+import { timingSafeEqual, createHash } from 'node:crypto';
 import express, { Express, Request, Response, NextFunction } from 'express';
 import { createServer, Server } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
@@ -52,6 +53,7 @@ export class HttpTransport extends EventEmitter implements ITransport {
   private errors = 0;
   private httpRequests = 0;
   private wsMessages = 0;
+  private wsConnectionCounter = 0;
 
   constructor(
     private readonly logger: ILogger,
@@ -320,8 +322,10 @@ export class HttpTransport extends EventEmitter implements ITransport {
         authenticated: !!this.config.auth?.enabled,
       });
 
+      const transportId = `http-ws-${++this.wsConnectionCounter}`;
+
       ws.on('message', async (data) => {
-        await this.handleWebSocketMessage(ws, data.toString());
+        await this.handleWebSocketMessage(ws, data.toString(), transportId);
       });
 
       ws.on('close', () => {
@@ -400,7 +404,7 @@ export class HttpTransport extends EventEmitter implements ITransport {
       }
 
       try {
-        const response = await this.requestHandler(message as MCPRequest);
+        const response = await this.requestHandler(message as MCPRequest, this.transportIdFor(req));
         res.json(response);
         this.messagesSent++;
       } catch (error) {
@@ -417,7 +421,7 @@ export class HttpTransport extends EventEmitter implements ITransport {
     }
   }
 
-  private async handleWebSocketMessage(ws: WebSocket, data: string): Promise<void> {
+  private async handleWebSocketMessage(ws: WebSocket, data: string, transportId?: string): Promise<void> {
     this.wsMessages++;
     this.messagesReceived++;
 
@@ -447,7 +451,7 @@ export class HttpTransport extends EventEmitter implements ITransport {
           return;
         }
 
-        const response = await this.requestHandler(message as MCPRequest);
+        const response = await this.requestHandler(message as MCPRequest, transportId);
         ws.send(JSON.stringify(response));
         this.messagesSent++;
       }
@@ -476,8 +480,6 @@ export class HttpTransport extends EventEmitter implements ITransport {
    * SECURITY: Timing-safe token comparison to prevent timing attacks
    */
   private timingSafeCompare(a: string, b: string): boolean {
-    const crypto = require('crypto');
-
     // Ensure both strings are the same length for timing-safe comparison
     const bufA = Buffer.from(a, 'utf-8');
     const bufB = Buffer.from(b, 'utf-8');
@@ -485,11 +487,28 @@ export class HttpTransport extends EventEmitter implements ITransport {
     // If lengths differ, still do a comparison to prevent length-based timing
     if (bufA.length !== bufB.length) {
       // Compare against itself to maintain constant time
-      crypto.timingSafeEqual(bufA, bufA);
+      timingSafeEqual(bufA, bufA);
       return false;
     }
 
-    return crypto.timingSafeEqual(bufA, bufB);
+    return timingSafeEqual(bufA, bufB);
+  }
+
+  /**
+   * Derive a stable per-client connection id for an HTTP request.
+   *
+   * HTTP is connectionless, so the auth token (hashed, never stored in the
+   * clear) identifies the client across requests. When auth is disabled
+   * there is no per-client identity and the server falls back to a single
+   * shared default session (previous singleton behavior).
+   */
+  private transportIdFor(req: Request): string | undefined {
+    if (!this.config.auth?.enabled) return undefined;
+    const auth = req.headers.authorization;
+    if (!auth) return undefined;
+    const token = auth.replace(/^Bearer\s+/i, '');
+    if (!token) return undefined;
+    return `http-auth:${createHash('sha256').update(token).digest('hex')}`;
   }
 
   private validateAuth(req: Request): { valid: boolean; error?: string } {

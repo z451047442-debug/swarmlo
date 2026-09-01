@@ -35,7 +35,11 @@ export function writeStateJson(name: string, value: unknown): boolean {
     fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
     const target = statePath(name);
     // Write-then-rename so a crash never leaves a truncated state file.
-    const tmp = `${target}.tmp`;
+    // Unique tmp name (pid + random suffix): concurrent writers of the same
+    // state file each get their own tmp sibling, so one process's rename can
+    // never clobber another's in-flight write (the fixed `${target}.tmp` name
+    // silently lost concurrent updates).
+    const tmp = `${target}.tmp-${process.pid}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
     fs.writeFileSync(tmp, JSON.stringify(value, null, 2), { encoding: 'utf-8', mode: 0o600 });
     fs.renameSync(tmp, target);
     return true;

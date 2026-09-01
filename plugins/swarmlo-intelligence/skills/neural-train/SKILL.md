@@ -85,10 +85,10 @@ mcp tool call hooks_intelligence-reset --json
 ## CLI alternatives
 
 ```bash
-npx swarmlo-cli@latest neural train --pattern-type coordination --epochs 10
-npx swarmlo-cli@latest neural patterns --list
-npx swarmlo-cli@latest neural status
-npx swarmlo-cli@latest neural compress
-npx swarmlo-cli@latest hooks pretrain --model-type moe --epochs 10
-npx swarmlo-cli@latest hooks build-agents --agent-types coder,tester
+npx swarmlo-cli@3.39.1 neural train --pattern-type coordination --epochs 10
+npx swarmlo-cli@3.39.1 neural patterns --list
+npx swarmlo-cli@3.39.1 neural status
+npx swarmlo-cli@3.39.1 neural compress
+npx swarmlo-cli@3.39.1 hooks pretrain --model-type moe --epochs 10
+npx swarmlo-cli@3.39.1 hooks build-agents --agent-types coder,tester
 ```

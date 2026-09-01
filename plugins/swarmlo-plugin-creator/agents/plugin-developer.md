@@ -26,8 +26,8 @@ Test with: `claude --plugin-dir ./plugins/<name>`
 
 Store successful plugin patterns for template improvement:
 ```bash
-npx swarmlo-cli@latest memory store --namespace plugin-patterns --key "plugin-TYPE" --value "STRUCTURE_AND_CONFIG"
-npx swarmlo-cli@latest memory search --query "plugin scaffold for TYPE" --namespace plugin-patterns
+npx swarmlo-cli@3.39.1 memory store --namespace plugin-patterns --key "plugin-TYPE" --value "STRUCTURE_AND_CONFIG"
+npx swarmlo-cli@3.39.1 memory search --query "plugin scaffold for TYPE" --namespace plugin-patterns
 ```
 
 
@@ -35,6 +35,6 @@ npx swarmlo-cli@latest memory search --query "plugin scaffold for TYPE" --namesp
 
 After completing tasks, store successful patterns:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
-npx swarmlo-cli@latest memory search --query "TASK_TYPE patterns" --namespace patterns
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 memory search --query "TASK_TYPE patterns" --namespace patterns
 ```

@@ -2181,7 +2181,7 @@ jobs:
           fi
 
   publish:
-    name: Publish to npm (alpha)
+    name: Publish to npm (v3alpha)
     runs-on: ubuntu-latest
     needs: [build, smoke-install-no-bsqlite, plugin-hooks-smoke, witness-verify]
     if: github.ref == 'refs/heads/v3' && github.event_name == 'push'
@@ -2211,9 +2211,9 @@ jobs:
         working-directory: v3
         run: pnpm build
 
-      - name: Publish alpha
+      - name: Publish v3alpha
         working-directory: v3
-        run: pnpm publish:alpha
+        run: pnpm publish:v3alpha
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 

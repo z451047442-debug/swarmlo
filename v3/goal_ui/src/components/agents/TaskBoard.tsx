@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { GripVertical, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { useI18n } from "@/i18n";
+import type { SwarmStrategy } from "@/lib/agenticSettings";
 
 export interface TaskItem {
   id: number;
@@ -15,7 +16,8 @@ export interface TaskItem {
 }
 
 interface TaskBoardProps {
-  swarmMode: string;
+  /** swarm 分配策略（AdvancedSettingsModal 持久化），决定看板展示的分配模式 */
+  strategy: SwarmStrategy;
   tasks: TaskItem[];
 }
 
@@ -26,7 +28,7 @@ const columns = [
   { id: "done", title: "agents.taskboard.col.done", icon: CheckCircle2 },
 ];
 
-export const TaskBoard = ({ swarmMode, tasks }: TaskBoardProps) => {
+export const TaskBoard = ({ strategy, tasks }: TaskBoardProps) => {
   const { t } = useI18n();
 
   const priorityLabel = (priority: string): string => {
@@ -35,9 +37,11 @@ export const TaskBoard = ({ swarmMode, tasks }: TaskBoardProps) => {
     return t('agents.taskboard.priority.low');
   };
 
-  const modeLabel = (mode: string): string => {
-    if (mode === 'distributed') return t('agents.taskboard.mode.distributed');
-    if (mode === 'pipeline') return t('agents.taskboard.mode.pipeline');
+  // 分配策略 → 看板模式描述：specialized 按角色分工（pipeline），balanced 均摊（distributed），
+  // adaptive 按负载动态（collaborative）——与 Agents.tsx 的 computeSwarmAllocation 语义一致。
+  const modeLabel = (strategy: SwarmStrategy): string => {
+    if (strategy === 'balanced') return t('agents.taskboard.mode.distributed');
+    if (strategy === 'specialized') return t('agents.taskboard.mode.pipeline');
     return t('agents.taskboard.mode.collaborative');
   };
 
@@ -49,7 +53,7 @@ export const TaskBoard = ({ swarmMode, tasks }: TaskBoardProps) => {
           <CardDescription>{t('agents.taskboard.description')}</CardDescription>
           <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
             <span>{t('agents.taskboard.mode')}</span>
-            <Badge variant="outline">{modeLabel(swarmMode)}</Badge>
+            <Badge variant="outline">{modeLabel(strategy)}</Badge>
           </div>
         </CardHeader>
         <CardContent>

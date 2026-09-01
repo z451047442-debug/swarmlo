@@ -5,7 +5,9 @@
  * No JSON - all patterns stored as vectors in memory.db
  *
  * Features:
- * - Real HNSW indexing (M=16, efConstruction=200) for 150x+ faster search
+ * - HNSW indexing (M=16, efConstruction=200); the "150x+" figure was never
+ *   reproduced in-tree (measured ~1.9x at N=20k — see
+ *   docs/reviews/intelligence-system-audit-2026-05-29.md)
  * - ONNX embeddings via @claude-flow/embeddings (MiniLM-L6 384-dim)
  * - AgentDB backend for persistence
  * - Pattern promotion from short-term to long-term memory
@@ -13,6 +15,7 @@
  * @module @claude-flow/hooks/reasoningbank
  */
 
+import { createHash } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import type { HookContext, HookEvent } from '../types.js';
 
@@ -376,7 +379,7 @@ export class ReasoningBank extends EventEmitter {
 
     let results: Array<{ pattern: GuidancePattern; similarity: number }> = [];
 
-    // Try HNSW search first (150x+ faster)
+    // Try HNSW search first (fast approximate search)
     if (this.hnswIndex && this.useRealBackend) {
       const hnswStart = performance.now();
       try {
@@ -735,6 +738,11 @@ export class ReasoningBank extends EventEmitter {
 
     try {
       await this.agentDB.store({
+        // id is REQUIRED: without it the entry is stored under an undefined
+        // id and updateInStorage()/deleteFromStorage() (which key on
+        // pattern.id) can never hit it — updates are silently lost and
+        // re-stores accumulate duplicates forever.
+        id: pattern.id,
         key: pattern.id,
         namespace: `patterns:${type}`,
         content: pattern.strategy,
@@ -939,7 +947,9 @@ class RealEmbeddingService implements IEmbeddingService {
   }
 
   async embed(text: string): Promise<Float32Array> {
-    const cacheKey = text.slice(0, 200);
+    // Full SHA-256 cache key — prefix truncation collides and would return
+    // a different text's embedding.
+    const cacheKey = createHash('sha256').update(text).digest('hex');
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey)!;
     }
@@ -967,30 +977,20 @@ class FallbackEmbeddingService implements IEmbeddingService {
   }
 
   async embed(text: string): Promise<Float32Array> {
-    const cacheKey = text.slice(0, 200);
+    // Full SHA-256 cache key — prefix truncation collides and would return
+    // a different text's embedding.
+    const cacheKey = createHash('sha256').update(text).digest('hex');
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey)!;
     }
 
-    // Try agentic-flow ONNX embeddings first
-    try {
-      const { execFileSync } = await import('child_process');
-      // Use execFileSync with shell: false to prevent command injection
-      // Pass text as argument array to avoid shell interpolation
-      const safeText = text.slice(0, 500).replace(/[\x00-\x1f]/g, ''); // Remove control chars
-      const result = execFileSync(
-        'npx',
-        ['agentic-flow@alpha', 'embeddings', 'generate', safeText, '--format', 'json'],
-        { encoding: 'utf-8', timeout: 10000, shell: false, stdio: ['pipe', 'pipe', 'pipe'] }
-      );
-      const parsed = JSON.parse(result);
-      const embedding = new Float32Array(parsed.embedding || parsed);
-      this.cache.set(cacheKey, embedding);
-      return embedding;
-    } catch {
-      // Fallback to hash-based embedding
-      return this.hashEmbed(text);
-    }
+    // NOTE (2026-08-31): the previous implementation shelled out to
+    // `npx agentic-flow@alpha embeddings generate` synchronously (blocking
+    // the event loop) and would also trigger network installs. It has been
+    // removed; the fallback service now uses deterministic hash embeddings.
+    const embedding = this.hashEmbed(text);
+    this.cache.set(cacheKey, embedding);
+    return embedding;
   }
 
   private hashEmbed(text: string): Float32Array {

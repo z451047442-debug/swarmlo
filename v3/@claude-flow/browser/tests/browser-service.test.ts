@@ -5,10 +5,11 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { BrowserService, createBrowserService } from '../src/application/browser-service.js';
 
-// Mock execSync for agent-browser CLI
+// Mock execFile (async) for agent-browser CLI
 vi.mock('child_process', () => ({
-  execSync: vi.fn(() => JSON.stringify({ success: true, data: { test: 'value' } })),
-  spawn: vi.fn(),
+  execFile: vi.fn((_file: unknown, _args: unknown, _options: unknown, cb: (err: Error | null, result: { stdout: string; stderr: string }) => void) => {
+    cb(null, { stdout: JSON.stringify({ success: true, data: { test: 'value' } }), stderr: '' });
+  }),
 }));
 
 describe('BrowserService', () => {

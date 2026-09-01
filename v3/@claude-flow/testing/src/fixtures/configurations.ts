@@ -366,7 +366,7 @@ export const mcpConfigs: Record<string, MCPConfig> = {
 export const performanceConfigs: Record<string, PerformanceConfig> = {
   v3Targets: {
     targets: {
-      flashAttentionSpeedup: [2.49, 7.47],
+      flashAttentionSpeedup: [1.0, 20],
       agentDBSearchImprovement: [150, 12500],
       memoryReduction: 0.50,
       startupTime: 500,

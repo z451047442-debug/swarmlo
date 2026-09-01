@@ -10,6 +10,7 @@
  * - Lazy initialization (no startup cost if not used)
  */
 
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { dirname } from 'path';
 
@@ -169,16 +170,12 @@ export class PersistentEmbeddingCache {
   }
 
   /**
-   * Generate cache key from text
+   * Generate cache key from text.
+   * Full SHA-256 digest: a 32-bit FNV-1a key has a >1% collision rate at
+   * ~10k entries, which silently returns the WRONG embedding for a query.
    */
   private hashKey(text: string): string {
-    // FNV-1a hash for fast, deterministic key generation
-    let hash = 0x811c9dc5;
-    for (let i = 0; i < text.length; i++) {
-      hash ^= text.charCodeAt(i);
-      hash = (hash * 0x01000193) >>> 0;
-    }
-    return `emb_${hash.toString(16)}_${text.length}`;
+    return `emb_${createHash('sha256').update(text).digest('hex')}`;
   }
 
   /**

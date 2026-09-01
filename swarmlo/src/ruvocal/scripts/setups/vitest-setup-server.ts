@@ -3,12 +3,18 @@ import dotenv from "dotenv";
 import { resolve } from "path";
 import fs from "fs";
 
-// Load the .env file
+// Load the .env file — optional: tests must run without a committed env
+// template. Fall back to .env.local, then to an empty environment.
 const envPath = resolve(__dirname, "../../.env");
-dotenv.config({ path: envPath });
+const envLocalPath = resolve(__dirname, "../../.env.local");
+dotenv.config({ path: fs.existsSync(envPath) ? envPath : envLocalPath });
 
-// Read the .env file content
-const envContent = fs.readFileSync(envPath, "utf-8");
+// Read the .env file content (empty string when neither exists)
+const envContent = fs.existsSync(envPath)
+	? fs.readFileSync(envPath, "utf-8")
+	: fs.existsSync(envLocalPath)
+		? fs.readFileSync(envLocalPath, "utf-8")
+		: "";
 
 // Parse the .env content
 const envVars = dotenv.parse(envContent);
@@ -35,6 +41,9 @@ vi.mock("$env/dynamic/private", async () => {
 			...privateEnv,
 			// RVF store uses in-memory for tests (no file path = no persistence)
 			RVF_DB_PATH: "",
+			// OIDC claim defaults: without a committed .env, OIDConfig parses
+			// NAME_CLAIM as "" which breaks updateUser's zod setKey.
+			OPENID_NAME_CLAIM: privateEnv["OPENID_NAME_CLAIM"] || "name",
 		},
 	};
 });

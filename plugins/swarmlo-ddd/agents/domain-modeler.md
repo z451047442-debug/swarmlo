@@ -28,8 +28,8 @@ The DDD building-block vocabulary (Entity / Value Object / Aggregate Root / Doma
 ## Tools
 
 - `Read`, `Grep`, `Glob` — analyze existing codebase for domain concepts.
-- `npx swarmlo-cli@latest memory search --query "domain MODEL" --namespace patterns` — retrieve prior domain models.
-- `npx swarmlo-cli@latest memory store --key "domain-CONTEXT" --value "MODEL" --namespace tasks` — persist domain decisions.
+- `npx swarmlo-cli@3.39.1 memory search --query "domain MODEL" --namespace patterns` — retrieve prior domain models.
+- `npx swarmlo-cli@3.39.1 memory store --key "domain-CONTEXT" --value "MODEL" --namespace tasks` — persist domain decisions.
 
 ## Cross-references
 
@@ -41,14 +41,14 @@ The DDD building-block vocabulary (Entity / Value Object / Aggregate Root / Doma
 
 Before starting work, search for prior domain models and patterns:
 ```bash
-npx swarmlo-cli@latest memory search --query "bounded context DOMAIN" --namespace patterns
-npx swarmlo-cli@latest memory search --query "aggregate DOMAIN" --namespace tasks
+npx swarmlo-cli@3.39.1 memory search --query "bounded context DOMAIN" --namespace patterns
+npx swarmlo-cli@3.39.1 memory search --query "aggregate DOMAIN" --namespace tasks
 ```
 
 ## Neural learning
 
 After completing tasks, store successful patterns so future domain models inherit them:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
-npx swarmlo-cli@latest memory store --key "ddd-pattern-CONTEXT" --value "APPROACH" --namespace patterns
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 memory store --key "ddd-pattern-CONTEXT" --value "APPROACH" --namespace patterns
 ```

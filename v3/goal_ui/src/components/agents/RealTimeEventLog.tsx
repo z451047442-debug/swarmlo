@@ -10,7 +10,7 @@ import { useI18n } from '@/i18n';
 interface AgenticFlowEvent {
   type: string;
   timestamp: number;
-  data: any;
+  data: unknown;
 }
 
 interface RealTimeEventLogProps {
@@ -49,6 +49,8 @@ export function RealTimeEventLog({ events, maxEvents = 100 }: RealTimeEventLogPr
     a.href = url;
     a.download = `events-${Date.now()}.json`;
     a.click();
+    // 下载触发后立即释放对象 URL，避免内存泄漏
+    URL.revokeObjectURL(url);
   };
 
   return (

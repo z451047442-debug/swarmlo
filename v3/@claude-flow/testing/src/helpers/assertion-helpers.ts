@@ -275,16 +275,13 @@ function removeFields(obj: Record<string, unknown>, fields: string[]): Record<st
  * });
  */
 export function assertV3PerformanceTargets(metrics: V3PerformanceMetrics): void {
-  // Search speedup: 150x - 12500x
+  // Search speedup bounds reflect MEASURED HNSW figures (~1.9x at N=20k,
+  // ~3.2x-4.7x at N=5k). The former 150x-12,500x range was never
+  // reproduced and is not asserted. Flash attention has no measured
+  // speedup in-tree, so it is not asserted at all.
   if (metrics.searchSpeedup !== undefined) {
-    expect(metrics.searchSpeedup).toBeGreaterThanOrEqual(150);
-    expect(metrics.searchSpeedup).toBeLessThanOrEqual(12500);
-  }
-
-  // Flash attention speedup: 2.49x - 7.47x
-  if (metrics.flashAttentionSpeedup !== undefined) {
-    expect(metrics.flashAttentionSpeedup).toBeGreaterThanOrEqual(2.49);
-    expect(metrics.flashAttentionSpeedup).toBeLessThanOrEqual(7.47);
+    expect(metrics.searchSpeedup).toBeGreaterThanOrEqual(1.0);
+    expect(metrics.searchSpeedup).toBeLessThanOrEqual(20);
   }
 
   // Memory reduction: >= 50%
@@ -581,15 +578,12 @@ export function registerCustomMatchers(): void {
     toMeetV3PerformanceTargets(received: V3PerformanceMetrics) {
       const issues: string[] = [];
 
+      // Measured HNSW figures: ~1.9x at N=20k / ~3.2x-4.7x at N=5k. A result
+      // below 1.0x is a regression vs brute force. Flash attention has no
+      // measured in-tree speedup, so it is deliberately not gated here.
       if (received.searchSpeedup !== undefined) {
-        if (received.searchSpeedup < 150) {
-          issues.push(`Search speedup ${received.searchSpeedup}x is below minimum 150x`);
-        }
-      }
-
-      if (received.flashAttentionSpeedup !== undefined) {
-        if (received.flashAttentionSpeedup < 2.49) {
-          issues.push(`Flash attention speedup ${received.flashAttentionSpeedup}x is below minimum 2.49x`);
+        if (received.searchSpeedup < 1.0) {
+          issues.push(`Search speedup ${received.searchSpeedup}x is a regression vs brute force`);
         }
       }
 

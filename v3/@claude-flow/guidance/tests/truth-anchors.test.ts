@@ -1,3 +1,4 @@
+import { createHmac } from 'node:crypto';
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   type TruthSourceKind,
@@ -11,7 +12,7 @@ import {
   TruthResolver,
   createTruthAnchorStore,
   createTruthResolver,
-} from '../src/truth-anchors.ts';
+} from '../src/truth-anchors.js';
 
 // ============================================================================
 // TruthAnchorStore Tests
@@ -822,26 +823,18 @@ describe('TruthAnchorStore', () => {
     });
 
     it('should import anchors to empty store', () => {
-      const anchors: TruthAnchor[] = [
-        {
-          id: 'anchor-1',
-          kind: 'human-attestation',
-          claim: 'Imported claim',
-          evidence: 'Imported evidence',
-          attesterId: 'importer',
-          signature: 'a'.repeat(64),
-          timestamp: Date.now(),
-          validFrom: Date.now(),
-          validUntil: null,
-          supersedes: [],
-          tags: [],
-          metadata: {},
-        },
-      ];
+      // Anchors must be signed with the same signing key to import.
+      const sourceStore = new TruthAnchorStore({ signingKey: testSigningKey });
+      const anchor = sourceStore.anchor({
+        kind: 'human-attestation',
+        claim: 'Imported claim',
+        evidence: 'Imported evidence',
+        attesterId: 'importer',
+      });
 
-      store.importAnchors(anchors);
+      store.importAnchors([anchor]);
       expect(store.size).toBe(1);
-      expect(store.get('anchor-1')).toEqual(anchors[0]);
+      expect(store.get(anchor.id)).toEqual(anchor);
     });
 
     it('should append to existing anchors', () => {
@@ -852,24 +845,15 @@ describe('TruthAnchorStore', () => {
         attesterId: 'tester',
       });
 
-      const imported: TruthAnchor[] = [
-        {
-          id: 'anchor-2',
-          kind: 'hardware-signal',
-          claim: 'Imported',
-          evidence: 'Evidence',
-          attesterId: 'importer',
-          signature: 'b'.repeat(64),
-          timestamp: Date.now(),
-          validFrom: Date.now(),
-          validUntil: null,
-          supersedes: [],
-          tags: [],
-          metadata: {},
-        },
-      ];
+      const sourceStore = new TruthAnchorStore({ signingKey: testSigningKey });
+      const imported = sourceStore.anchor({
+        kind: 'hardware-signal',
+        claim: 'Imported',
+        evidence: 'Evidence',
+        attesterId: 'importer',
+      });
 
-      store.importAnchors(imported);
+      store.importAnchors([imported]);
       expect(store.size).toBe(2);
     });
 
@@ -883,12 +867,63 @@ describe('TruthAnchorStore', () => {
 
       const duplicate: TruthAnchor = {
         ...anchor,
-        claim: 'Modified claim', // Different content, same ID
+        claim: 'Modified claim', // Different content, same ID (re-signed to stay valid)
       };
+      const { signature, ...rest } = duplicate;
+      duplicate.signature = createHmac('sha256', testSigningKey)
+        .update(
+          [
+            duplicate.id,
+            duplicate.kind,
+            duplicate.claim,
+            duplicate.evidence,
+            duplicate.attesterId,
+            String(duplicate.timestamp),
+            String(duplicate.validFrom),
+            String(duplicate.validUntil ?? 'null'),
+            duplicate.supersedes.join(','),
+            duplicate.tags.join(','),
+            JSON.stringify(duplicate.metadata),
+          ].join('|')
+        )
+        .digest('hex');
 
       store.importAnchors([duplicate]);
       expect(store.size).toBe(1);
       expect(store.get(anchor.id)?.claim).toBe('Original'); // Original preserved
+    });
+
+    it('should refuse anchors with invalid signatures', () => {
+      const forged: TruthAnchor = {
+        id: 'forged-anchor',
+        kind: 'human-attestation',
+        claim: 'Forged claim',
+        evidence: 'Evidence',
+        attesterId: 'attacker',
+        signature: 'a'.repeat(64), // Not a valid HMAC for this store's key
+        timestamp: Date.now(),
+        validFrom: Date.now(),
+        validUntil: null,
+        supersedes: [],
+        tags: [],
+        metadata: {},
+      };
+
+      expect(() => store.importAnchors([forged])).toThrow(/signature verification failed/);
+      expect(store.size).toBe(0); // Nothing was appended
+    });
+
+    it('should refuse anchors signed with a different key', () => {
+      const otherStore = new TruthAnchorStore({ signingKey: 'other-key' });
+      const anchor = otherStore.anchor({
+        kind: 'human-attestation',
+        claim: 'Wrong key',
+        evidence: 'Evidence',
+        attesterId: 'other',
+      });
+
+      expect(() => store.importAnchors([anchor])).toThrow(/signature verification failed/);
+      expect(store.size).toBe(0);
     });
 
     it('should round-trip export/import correctly', () => {

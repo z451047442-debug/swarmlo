@@ -55,17 +55,17 @@ export interface BatchResult {
 let wasmModule: Record<string, (...args: unknown[]) => unknown> | null = null;
 let loadAttempted = false;
 
-function tryLoadWasm(): Record<string, (...args: unknown[]) => unknown> | null {
+async function tryLoadWasm(): Promise<Record<string, (...args: unknown[]) => unknown> | null> {
   if (loadAttempted) return wasmModule;
   loadAttempted = true;
 
   try {
-    // Dynamic require — works in Node.js, gracefully fails elsewhere
-    const path = new URL('../wasm-pkg/guidance_kernel.js', import.meta.url);
-    // Use createRequire for ESM compatibility
-    const { createRequire } = require('node:module');
-    const requireFn = createRequire(import.meta.url);
-    wasmModule = requireFn(path.pathname);
+    // Load the WASM host bundle with a dynamic `import`. The previous
+    // `require('node:module')` call threw a ReferenceError inside this ESM
+    // package, which made the WASM kernel permanently unavailable.
+    const wasmUrl = new URL('../wasm-pkg/guidance_kernel.js', import.meta.url);
+    const mod = (await import(wasmUrl.href)) as Record<string, (...args: unknown[]) => unknown>;
+    wasmModule = mod;
 
     // Initialize kernel
     if (wasmModule && typeof wasmModule.kernel_init === 'function') {
@@ -119,12 +119,13 @@ let kernelInstance: WasmKernel | null = null;
 
 /**
  * Get the WASM kernel instance. Automatically falls back to JS if WASM is
- * unavailable. Thread-safe (single initialization).
+ * unavailable. Thread-safe (single initialization; concurrent callers share
+ * the same load promise).
  */
-export function getKernel(): WasmKernel {
+export async function getKernel(): Promise<WasmKernel> {
   if (kernelInstance) return kernelInstance;
 
-  const wasm = tryLoadWasm();
+  const wasm = await tryLoadWasm();
 
   if (wasm) {
     kernelInstance = {
@@ -191,8 +192,8 @@ export function getKernel(): WasmKernel {
 /**
  * Check if the WASM kernel is available without initializing it.
  */
-export function isWasmAvailable(): boolean {
-  return getKernel().available;
+export async function isWasmAvailable(): Promise<boolean> {
+  return (await getKernel()).available;
 }
 
 /**

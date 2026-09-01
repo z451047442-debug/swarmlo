@@ -129,7 +129,9 @@ async function main() {
     projectionResult.exitCode = 0;
   }
 
-  const maxExit = Math.max(...results.map((r) => r.exitCode));
+  // review fix 2026-08-31 — all checks skipped → empty array; Math.max() of
+  // [] is -Infinity, which process.exit() rejects as a non-integer code.
+  const maxExit = results.length > 0 ? Math.max(...results.map((r) => r.exitCode)) : 0;
 
   const payload = {
     config: {

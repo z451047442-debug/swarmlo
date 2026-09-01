@@ -5,7 +5,7 @@
  * Features:
  * - MicroLoRA: <1µs adaptation with rank-2 LoRA (2.3M ops/s)
  * - SONA: Self-Optimizing Neural Architecture (624k learn/s, 60k search/s)
- * - Flash Attention: 2.49x-7.47x speedup (9k ops/s)
+ * - Flash Attention: integration available (benchmark pending)
  * - Trajectory Buffer: Learning from success/failure
  * - Contrastive Learning: InfoNCE loss
  *
@@ -580,7 +580,7 @@ export function getTrajectoryStats(): {
 }
 
 /**
- * Compute attention with Flash Attention (2.49x-7.47x faster)
+ * Compute attention with Flash Attention (benchmark pending)
  */
 export function computeFlashAttention(
   query: Float32Array,

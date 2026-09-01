@@ -178,7 +178,7 @@ async function main() {
     //   chain-tools      : 180s  (drift_from_history + oia_audit + audit_list)
     // iter 131 — bumped chain-tool budget 90s → 180s. audit_list still
     // timed out at 90s in CI; locally it runs in ~4s, but CI's
-    // `npx swarmlo-cli@latest memory list` invocation pays both
+    // `npx swarmlo-cli@3.39.1 memory list` invocation pays both
     // the npx fetch AND a full CLI startup (which loads agentic-flow +
     // ONNX). 180s gives 30x headroom over the local cost.
     const isChainTool = tool.name === 'metaharness_drift_from_history'
@@ -188,7 +188,7 @@ async function main() {
       // calls) but the cold-cache `npx -y @metaharness/redblue@~0.1.4`
       // fetch can take 30-60s. 180s gives 3x headroom.
       || tool.name === 'metaharness_redblue'
-      // learn: cold-cache `npx -y metaharness@latest` fetch dominates.
+      // learn: cold-cache `npx -y metaharness@0.3.0` fetch dominates.
       // gepa: one-time `npm install --prefix ~/.swarmlo/darwin-cache-*`
       // fallback install can take 30-60s on cold cache.
       || tool.name === 'metaharness_learn'

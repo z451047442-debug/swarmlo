@@ -634,9 +634,7 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                       goapConfig: { ...config.goapConfig, enableReplanning: checked },
                     })
                   }
-                  style={{
-                    ['--primary' as any]: primaryColor,
-                  }}
+                  style={{ '--primary': primaryColor } as React.CSSProperties}
                 />
               </div>
 
@@ -653,9 +651,7 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                       goapConfig: { ...config.goapConfig, costOptimization: checked },
                     })
                   }
-                  style={{
-                    ['--primary' as any]: primaryColor,
-                  }}
+                  style={{ '--primary': primaryColor } as React.CSSProperties}
                 />
               </div>
 
@@ -672,9 +668,7 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                       goapConfig: { ...config.goapConfig, parallelExecution: checked },
                     })
                   }
-                  style={{
-                    ['--primary' as any]: primaryColor,
-                  }}
+                  style={{ '--primary': primaryColor } as React.CSSProperties}
                 />
               </div>
 
@@ -695,9 +689,7 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                             goapConfig: { ...config.goapConfig, replanningTriggers: newTriggers },
                           });
                         }}
-                        style={{
-                          ['--primary' as any]: primaryColor,
-                        }}
+                        style={{ '--primary': primaryColor } as React.CSSProperties}
                       />
                       <Label htmlFor={option.value} className="cursor-pointer text-sm">
                         {t(option.key)}
@@ -949,9 +941,7 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                       actionConfig: { ...config.actionConfig, enableFallbacks: checked },
                     })
                   }
-                  style={{
-                    ['--primary' as any]: primaryColor,
-                  }}
+                  style={{ '--primary': primaryColor } as React.CSSProperties}
                 />
               </div>
 
@@ -968,9 +958,7 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                       actionConfig: { ...config.actionConfig, validatePreconditions: checked },
                     })
                   }
-                  style={{
-                    ['--primary' as any]: primaryColor,
-                  }}
+                  style={{ '--primary': primaryColor } as React.CSSProperties}
                 />
               </div>
 
@@ -987,9 +975,7 @@ export const ReviseResearchForm = ({ currentGoal, onSubmit, onCancel, initialCon
                       actionConfig: { ...config.actionConfig, trackEffects: checked },
                     })
                   }
-                  style={{
-                    ['--primary' as any]: primaryColor,
-                  }}
+                  style={{ '--primary': primaryColor } as React.CSSProperties}
                 />
               </div>
             </CardContent>

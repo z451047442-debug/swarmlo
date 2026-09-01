@@ -6,10 +6,10 @@ $ARGUMENTS
 
 Swarm lifecycle management.
 
-**Init**: `npx swarmlo-cli@latest swarm init --topology hierarchical --max-agents 8 --strategy specialized`
-**Status**: `npx swarmlo-cli@latest swarm status`
-**Health**: `npx swarmlo-cli@latest swarm health`
-**Shutdown**: `npx swarmlo-cli@latest swarm shutdown`
+**Init**: `npx swarmlo-cli@3.39.1 swarm init --topology hierarchical --max-agents 8 --strategy specialized`
+**Status**: `npx swarmlo-cli@3.39.1 swarm status`
+**Health**: `npx swarmlo-cli@3.39.1 swarm health`
+**Shutdown**: `npx swarmlo-cli@3.39.1 swarm shutdown`
 
 Parse $ARGUMENTS to determine the subcommand. If no arguments, show swarm status.
 

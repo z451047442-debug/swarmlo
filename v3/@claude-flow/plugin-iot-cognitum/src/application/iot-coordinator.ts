@@ -211,9 +211,19 @@ export class IoTCoordinator {
         return entry.agent.firmwareVersion;
       },
       deployFirmware: async (_deviceId: string, _version: string) => {
-        // OTA deployment requires Cognitum Cloud API (not available via local Seed SDK).
-        // Stub returns success; real implementation will use cloud control plane.
-        return { success: true };
+        // The Seed SDK's `ota` resource only exposes config()/checkNow() —
+        // there is no firmware deployment API in the local SDK, and OTA
+        // deploy requires the Cognitum Cloud control plane, which this
+        // plugin does not have credentials for. Return an explicit failure
+        // instead of a fake success: a rollout that "succeeds" without
+        // touching the device would strand fleets on stale firmware.
+        return {
+          success: false,
+          error:
+            'Firmware deployment not implemented: the local Seed SDK OTA ' +
+            'resource only supports config()/checkNow(); OTA deployment ' +
+            'requires the Cognitum Cloud control plane',
+        };
       },
       getDeviceAnomalyScore: async (deviceId: string) => {
         const entry = this.requireEntry(deviceId);

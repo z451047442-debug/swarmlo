@@ -1,7 +1,7 @@
 # Verification Run — 2026-05-06
 
 This is a verification run report against the witness manifest in
-[`verification.md.json`](./verification.md.json) (issued at commit
+[`witness-fixes.json`](./witness-fixes.json) (issued at commit
 `63b9ac35d1d33d01e877fee88f9da5664ccdfe31`, ruflo `3.6.28`).
 
 ## Summary
@@ -76,7 +76,7 @@ Once those merge, a follow-up verification run can refresh the manifest to a new
 
 ## Files
 
-- [`verification.md`](./verification.md) — original witness manifest documentation
-- [`verification.md.json`](./verification.md.json) — machine-readable witness manifest (unchanged by this run)
+- [`witness-fixes.json`](./witness-fixes.json) — machine-readable witness manifest (unchanged by this run)
+- [`inventory.json`](./inventory.json) — verified file inventory
 
 This document records a successful verification of all 55 fixes against the current `origin/main`.

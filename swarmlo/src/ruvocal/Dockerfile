@@ -1,5 +1,4 @@
 # syntax=docker/dockerfile:1
-ARG INCLUDE_DB=false
 
 FROM node:24-slim AS base
 
@@ -28,11 +27,12 @@ RUN mkdir -p /home/user/.npm && chown -R 1000:1000 /home/user/.npm
 
 USER user
 
+# Configuration is injected at runtime via the DOTENV_LOCAL env var or a bound
+# volume — never baked into the image from a local .env file (secrets must not
+# be embedded in images).
+ARG DOTENV_LOCAL=
+ENV DOTENV_LOCAL=${DOTENV_LOCAL}
 
-COPY --chown=1000 .env /app/.env
-# Remove empty placeholder values that block .env.local overrides via dotenv-cli -c
-RUN sed -i 's/^MODELS=$/# MODELS=/' /app/.env && \
-    sed -i 's/^TASK_MODEL=$/# TASK_MODEL=/' /app/.env
 COPY --chown=1000 entrypoint.sh /app/entrypoint.sh
 COPY --chown=1000 package.json /app/package.json
 COPY --chown=1000 package-lock.json /app/package-lock.json
@@ -58,29 +58,8 @@ COPY --link --chown=1000 . .
 RUN git config --global --add safe.directory /app && \
     npm run build
 
-# mongo image
-FROM mongo:7 AS mongo
-
-# image to be used if INCLUDE_DB is false
-FROM base AS local_db_false
-
-# image to be used if INCLUDE_DB is true
-FROM base AS local_db_true
-
-# copy mongo from the other stage
-COPY --from=mongo /usr/bin/mongo* /usr/bin/
-
-ENV MONGODB_URL=mongodb://localhost:27017
-USER root
-RUN mkdir -p /data/db
-RUN chown -R 1000:1000 /data/db
-USER user
 # final image
-FROM local_db_${INCLUDE_DB} AS final
-
-# build arg to determine if the database should be included
-ARG INCLUDE_DB=false
-ENV INCLUDE_DB=${INCLUDE_DB}
+FROM base AS final
 
 # svelte requires APP_BASE at build time so it must be passed as a build arg
 ARG APP_BASE=

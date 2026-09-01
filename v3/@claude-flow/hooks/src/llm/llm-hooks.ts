@@ -11,6 +11,7 @@
  * @module @claude-flow/hooks/llm/llm-hooks
  */
 
+import { createHash } from 'node:crypto';
 import { reasoningBank } from '../reasoningbank/index.js';
 
 // ===== TYPES =====
@@ -102,7 +103,9 @@ function generateCacheKey(provider: string, model: string, request: LLMRequestPa
     temperature: request.temperature,
     maxTokens: request.maxTokens,
   };
-  return Buffer.from(JSON.stringify(normalized)).toString('base64').slice(0, 64);
+  // Full SHA-256 digest (hex) — truncated base64 keys can collide and
+  // return request A's response for request B.
+  return createHash('sha256').update(JSON.stringify(normalized)).digest('hex');
 }
 
 function getCached(key: string): CacheEntry | undefined {

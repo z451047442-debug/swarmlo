@@ -26,7 +26,11 @@ export class HealthProbeWorker {
 
   start(): void {
     if (this.timer) return;
-    this.timer = setInterval(() => void this.probe(), this.config.intervalMs);
+    this.timer = setInterval(() => {
+      this.probe().catch(err => {
+        console.warn('[health-probe-worker] tick failed:', err instanceof Error ? err.message : err);
+      });
+    }, this.config.intervalMs);
   }
 
   stop(): void {

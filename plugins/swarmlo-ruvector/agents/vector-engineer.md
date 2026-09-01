@@ -175,8 +175,8 @@ The experimental neural substrate (`embed neural --help`) may expose richer proj
 
 Store vector configurations and search patterns in AgentDB:
 ```bash
-npx swarmlo-cli@latest memory store --namespace vector-patterns --key "hnsw-config-DOMAIN" --value "M=16,efC=200,efS=50"
-npx swarmlo-cli@latest memory search --query "HNSW configuration" --namespace vector-patterns
+npx swarmlo-cli@3.39.1 memory store --namespace vector-patterns --key "hnsw-config-DOMAIN" --value "M=16,efC=200,efS=50"
+npx swarmlo-cli@3.39.1 memory search --query "HNSW configuration" --namespace vector-patterns
 ```
 
 ### Related Plugins
@@ -190,5 +190,5 @@ npx swarmlo-cli@latest memory search --query "HNSW configuration" --namespace ve
 
 After completing tasks, store successful patterns:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
 ```

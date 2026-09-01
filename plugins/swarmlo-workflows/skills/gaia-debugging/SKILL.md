@@ -80,7 +80,7 @@ node v3/@claude-flow/cli/bin/cli.js gaia-bench run \
 node … gaia-bench run --task-id $TASK_ID --models $MODEL --output json
 
 # If now passing, store the pattern
-npx swarmlo-cli@latest memory store \
+npx swarmlo-cli@3.39.1 memory store \
   --namespace gaia-debug-patterns \
   --key "fix-$FAILURE_CODE-$(date +%Y%m%d)" \
   --value "task_id=$TASK_ID, mode=$FAILURE_CODE, fix=$FIX_DESCRIPTION"
@@ -102,7 +102,7 @@ Expected: `web_search`, `file_read`, `web_browse`, `image_describe`, `python_exe
 
 After resolving a debugging session, store the finding:
 ```bash
-npx swarmlo-cli@latest memory store \
+npx swarmlo-cli@3.39.1 memory store \
   --namespace gaia-debug-patterns \
   --key "session-$(date +%Y%m%d-%H%M)" \
   --value '{"task_id":"$TASK_ID","failure_mode":"$CODE","fix":"$FIX","verified":true}'
@@ -110,7 +110,7 @@ npx swarmlo-cli@latest memory store \
 
 Search for similar past failures:
 ```bash
-npx swarmlo-cli@latest memory search \
+npx swarmlo-cli@3.39.1 memory search \
   --namespace gaia-debug-patterns \
   --query "extraction bug final answer regex"
 ```

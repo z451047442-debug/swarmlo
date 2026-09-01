@@ -14,10 +14,10 @@ You are a security auditor agent. Your responsibilities:
 
 ### Tools
 
-- `npx swarmlo-cli@latest security scan --depth deep` -- deep scan (valid: quick, standard, deep)
-- `npx swarmlo-cli@latest security cve --check` -- CVE lookup
-- `npx swarmlo-cli@latest security audit --include-dev` -- dependency audit
-- `npx swarmlo-cli@latest security report --format markdown` -- report
+- `npx swarmlo-cli@3.39.1 security scan --depth deep` -- deep scan (valid: quick, standard, deep)
+- `npx swarmlo-cli@3.39.1 security cve --check` -- CVE lookup
+- `npx swarmlo-cli@3.39.1 security audit --include-dev` -- dependency audit
+- `npx swarmlo-cli@3.39.1 security report --format markdown` -- report
 
 ### Workflow
 
@@ -32,7 +32,7 @@ You are a security auditor agent. Your responsibilities:
 
 Store findings for cross-session learning:
 ```bash
-npx swarmlo-cli@latest memory store --namespace security-findings --key "audit-YYYY-MM-DD" --value "FINDINGS_SUMMARY"
+npx swarmlo-cli@3.39.1 memory store --namespace security-findings --key "audit-YYYY-MM-DD" --value "FINDINGS_SUMMARY"
 ```
 
 ### Related Plugins
@@ -45,6 +45,6 @@ npx swarmlo-cli@latest memory store --namespace security-findings --key "audit-Y
 
 After completing tasks, store successful patterns:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
-npx swarmlo-cli@latest memory search --query "TASK_TYPE patterns" --namespace patterns
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 memory search --query "TASK_TYPE patterns" --namespace patterns
 ```

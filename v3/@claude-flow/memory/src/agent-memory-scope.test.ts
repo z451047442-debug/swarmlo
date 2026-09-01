@@ -116,23 +116,25 @@ describe('resolveAgentMemoryDir', () => {
 
   it('should resolve project scope to gitRoot/.claude/agent-memory/name/', () => {
     mockExistsSync.mockImplementation((p: string) => {
-      return String(p) === path.join('/workspaces/my-project', '.git');
+      // path.resolve: the impl resolves candidates first; on win32 that
+      // includes the drive prefix, so the mock must compare the same shape.
+      return String(p) === path.resolve('/workspaces/my-project', '.git');
     });
 
     const result = resolveAgentMemoryDir('coder', 'project', '/workspaces/my-project/src');
     expect(result).toBe(
-      path.join('/workspaces/my-project', '.claude', 'agent-memory', 'coder'),
+      path.resolve('/workspaces/my-project', '.claude', 'agent-memory', 'coder'),
     );
   });
 
   it('should resolve local scope to gitRoot/.claude/agent-memory-local/name/', () => {
     mockExistsSync.mockImplementation((p: string) => {
-      return String(p) === path.join('/workspaces/my-project', '.git');
+      return String(p) === path.resolve('/workspaces/my-project', '.git');
     });
 
     const result = resolveAgentMemoryDir('researcher', 'local', '/workspaces/my-project/src');
     expect(result).toBe(
-      path.join('/workspaces/my-project', '.claude', 'agent-memory-local', 'researcher'),
+      path.resolve('/workspaces/my-project', '.claude', 'agent-memory-local', 'researcher'),
     );
   });
 

@@ -4,6 +4,7 @@ import { base } from "$app/paths";
 import { dev } from "$app/environment";
 import {
 	authenticateRequest,
+	isTrustedProxyAddress,
 	loginEnabled,
 	refreshSessionCookie,
 	triggerOauthFlow,
@@ -75,11 +76,28 @@ export async function handleRequest({ event, resolve }: HandleInput): Promise<Re
 			}
 
 			const isApi = event.url.pathname.startsWith(`${base}/api/`);
+
+			// TRUSTED_EMAIL_HEADER is only honored for requests that provably come
+			// from a configured trusted proxy. For everyone else, strip the inbound
+			// header so a client can never spoof a proxied identity.
+			const clientAddress = getClientAddressSafe(event);
+			const isTrustedProxy = isTrustedProxyAddress(clientAddress);
+			const trustedEmailHeader = (config as unknown as Record<string, string>).TRUSTED_EMAIL_HEADER;
+			const authHeaders =
+				isTrustedProxy || !trustedEmailHeader
+					? event.request.headers
+					: (() => {
+							const out = new Headers(event.request.headers);
+							out.delete(trustedEmailHeader);
+							return out;
+						})();
+
 			const auth = await authenticateRequest(
-				event.request.headers,
+				authHeaders,
 				event.cookies,
 				event.url,
-				isApi
+				isApi,
+				isTrustedProxy
 			);
 
 			event.locals.sessionId = auth.sessionId;

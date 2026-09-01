@@ -4,6 +4,9 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import { agentCommand } from '../src/commands/agent.js';
 import { swarmCommand } from '../src/commands/swarm.js';
 import { memoryCommand } from '../src/commands/memory.js';
@@ -477,13 +480,22 @@ describe('Swarm Commands', () => {
       const stopCmd = swarmCommand.subcommands?.find(c => c.name === 'stop');
       expect(stopCmd).toBeDefined();
 
-      ctx.args = ['swarm-123'];
-      ctx.flags = { force: true, _: [] };
-      const result = await stopCmd!.action!(ctx);
+      // stop validates the stored swarm id — create matching state first
+      const stateDir = path.join(process.cwd(), '.swarm');
+      const stateFile = path.join(stateDir, 'state.json');
+      fs.mkdirSync(stateDir, { recursive: true });
+      fs.writeFileSync(stateFile, JSON.stringify({ id: 'swarm-123' }));
+      try {
+        ctx.args = ['swarm-123'];
+        ctx.flags = { force: true, _: [] };
+        const result = await stopCmd!.action!(ctx);
 
-      expect(result.success).toBe(true);
-      expect(result.data).toHaveProperty('swarmId', 'swarm-123');
-      expect(result.data).toHaveProperty('stopped', true);
+        expect(result.success).toBe(true);
+        expect(result.data).toHaveProperty('swarmId', 'swarm-123');
+        expect(result.data).toHaveProperty('stopped', true);
+      } finally {
+        fs.rmSync(stateFile, { force: true });
+      }
     });
 
     it('should fail without swarm ID', async () => {
@@ -585,10 +597,17 @@ describe('Memory Commands', () => {
     // a fresh checkout. Bumping per-test rather than file-wide so the rest
     // of the suite still fails fast on regressions.
     it('should search memory', { timeout: 60_000 }, async () => {
+      const initCmd = memoryCommand.subcommands?.find(c => c.name === 'init');
       const searchCmd = memoryCommand.subcommands?.find(c => c.name === 'search');
+      expect(initCmd).toBeDefined();
       expect(searchCmd).toBeDefined();
 
-      ctx.flags = { query: 'authentication', _: [] };
+      // Honest memory layer: search requires an initialized store. Neutralize
+      // host encryption flags and use keyword search (no ONNX download).
+      process.env.CLAUDE_FLOW_ENCRYPT_AT_REST = '0';
+      ctx.cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'mem-search-'));
+      await initCmd!.action!(ctx);
+      ctx.flags = { query: 'authentication', type: 'keyword', _: [] };
       const result = await searchCmd!.action!(ctx);
 
       expect(result.success).toBe(true);
@@ -606,9 +625,14 @@ describe('Memory Commands', () => {
 
   describe('memory list', () => {
     it('should list memory entries', async () => {
+      const initCmd = memoryCommand.subcommands?.find(c => c.name === 'init');
       const listCmd = memoryCommand.subcommands?.find(c => c.name === 'list');
+      expect(initCmd).toBeDefined();
       expect(listCmd).toBeDefined();
 
+      process.env.CLAUDE_FLOW_ENCRYPT_AT_REST = '0';
+      ctx.cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'mem-list-'));
+      await initCmd!.action!(ctx);
       const result = await listCmd!.action!(ctx);
 
       expect(result.success).toBe(true);
@@ -725,9 +749,8 @@ describe('Config Commands', () => {
       ctx.flags = { key: 'swarm.maxAgents', value: '20', _: [] };
       const result = await setCmd!.action!(ctx);
 
-      // #1425: config set is not yet implemented
-      expect(result.success).toBe(false);
-      expect(result.exitCode).toBe(1);
+      // #1425 fixed — config set now persists via ConfigManager
+      expect(result.success).toBe(true);
     });
 
     it('should fail without key and value', async () => {
@@ -759,9 +782,8 @@ describe('Config Commands', () => {
       ctx.flags = { force: true, _: [] };
       const result = await resetCmd!.action!(ctx);
 
-      // #1425: config reset is not yet implemented
-      expect(result.success).toBe(false);
-      expect(result.exitCode).toBe(1);
+      // #1425 fixed — config reset now real-implements per-section resets
+      expect(result.success).toBe(true);
     });
   });
 
@@ -772,9 +794,8 @@ describe('Config Commands', () => {
 
       const result = await exportCmd!.action!(ctx);
 
-      // #1425: config export is not yet implemented
-      expect(result.success).toBe(false);
-      expect(result.exitCode).toBe(1);
+      // #1425 fixed — config export writes the config file
+      expect(result.success).toBe(true);
     });
   });
 

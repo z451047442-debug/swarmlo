@@ -197,7 +197,10 @@ export class SQLiteBackend extends EventEmitter implements IMemoryBackend {
         INSERT OR REPLACE INTO memory_embeddings (entry_id, embedding)
         VALUES (?, ?)
       `);
-      embeddingStmt.run(entry.id, Buffer.from(entry.embedding.buffer));
+      embeddingStmt.run(
+        entry.id,
+        Buffer.from(entry.embedding.buffer, entry.embedding.byteOffset, entry.embedding.byteLength),
+      );
     }
 
     // ADR-125 Phase 5 — mirror into FTS5 for keyword search.
@@ -813,7 +816,10 @@ export class SQLiteBackend extends EventEmitter implements IMemoryBackend {
         INSERT OR REPLACE INTO memory_embeddings (entry_id, embedding)
         VALUES (?, ?)
       `);
-      embeddingStmt.run(entry.id, Buffer.from(entry.embedding.buffer));
+      embeddingStmt.run(
+        entry.id,
+        Buffer.from(entry.embedding.buffer, entry.embedding.byteOffset, entry.embedding.byteLength),
+      );
     }
   }
 }

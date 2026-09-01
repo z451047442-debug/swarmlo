@@ -51,12 +51,15 @@ export async function POST({ params, locals }) {
 	await Promise.all(
 		files.map(async (file) => {
 			const newFilename = file.filename.replace(`${conversation._id}-`, `${shared._id}-`);
-			// copy files from `${conversation._id}-` to `${shared._id}-` by downloading and reuploaidng
-			const downloadStream = collections.bucket.openDownloadStream(file._id);
+			// copy files from `${conversation._id}-` to `${shared._id}-` by downloading and reuploading
+			const chunks = await collections.bucket.openDownloadStream(file._id).toArray();
 			const uploadStream = collections.bucket.openUploadStream(newFilename, {
 				metadata: { ...file.metadata, conversation: shared._id.toString() },
 			});
-			downloadStream.pipe(uploadStream);
+			for (const chunk of chunks) {
+				uploadStream.write(chunk);
+			}
+			await uploadStream.end();
 		})
 	);
 

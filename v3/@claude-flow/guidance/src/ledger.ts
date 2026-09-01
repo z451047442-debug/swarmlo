@@ -282,12 +282,18 @@ export class RunLedger {
   }
 
   /**
-   * Finalize and store an event
+   * Finalize and store an event.
+   *
+   * Deduplicates by eventId: an event already recorded via `logEvent` (which
+   * pushes it into the ledger) must not be appended a second time when the
+   * caller finalizes the same object.
    */
   finalizeEvent(event: RunEvent): RunEvent {
     event.durationMs = Date.now() - event.timestamp;
-    this.events.push(event);
-    this.evictIfNeeded();
+    if (!this.events.some(e => e.eventId === event.eventId)) {
+      this.events.push(event);
+      this.evictIfNeeded();
+    }
     return event;
   }
 

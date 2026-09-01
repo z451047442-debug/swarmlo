@@ -64,6 +64,21 @@ export class PatternDownloader {
     }
 
     try {
+      // audit_2026-08-31: pattern.name flows straight into a filesystem path
+      // below. A hostile registry entry (or a tampered one) can smuggle `..`
+      // or path separators and write outside the cache dir. Whitelist
+      // [A-Za-z0-9._-] and reject anything else — before path resolution.
+      const safeName = typeof pattern.name === 'string' ? pattern.name : '';
+      if (!/^[A-Za-z0-9._-]{1,128}$/.test(safeName) || safeName.includes('..')) {
+        return {
+          success: false,
+          pattern,
+          verified: false,
+          size: 0,
+          error: `Refusing to download: pattern.name contains disallowed characters (name="${safeName.slice(0, 64)}")`,
+        };
+      }
+
       // Determine output path
       const outputPath = this.resolveOutputPath(pattern, options);
       console.log(`[Download] Output path: ${outputPath}`);
@@ -105,14 +120,23 @@ export class PatternDownloader {
         }
       }
 
-      // Verify signature if available
+      // Verify signature if available. Fail-closed: a present-but-invalid
+      // signature rejects the download (was: warn-only). A signed registry
+      // entry that fails verification is either corrupt or tampered — writing
+      // it to the cache dir would poison every later import.
       if (pattern.signature && pattern.publicKey) {
         const sigVerified = this.verifySignature(content, pattern.signature, pattern.publicKey);
         if (!sigVerified) {
-          console.warn(`[Download] Warning: Signature verification failed!`);
-        } else {
-          console.log(`[Download] Signature verified!`);
+          console.error(`[Download] Signature verification FAILED — rejecting ${pattern.displayName}`);
+          return {
+            success: false,
+            pattern,
+            verified: false,
+            size: content.length,
+            error: 'Signature verification failed',
+          };
         }
+        console.log(`[Download] Signature verified!`);
       }
 
       // Write to file
@@ -311,8 +335,10 @@ export class PatternDownloader {
         Buffer.from(expectedSig, 'hex')
       );
     } catch {
-      // If crypto verification fails, check basic format
-      return signature.length > 20 && publicKey.length > 20;
+      // audit_2026-08-31: the old fallback treated "signature/hex looks
+      // plausibly long" as verified — a fake signature with a fake key
+      // sailed straight through. Verification failures must fail closed.
+      return false;
     }
   }
 

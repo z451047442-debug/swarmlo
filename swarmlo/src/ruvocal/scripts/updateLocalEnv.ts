@@ -1,3 +1,9 @@
+/**
+ * LOCAL DEVELOPMENT ONLY — this script regenerates .env.local from the chart's
+ * prod.yaml for running the app on a dev machine. It intentionally rewrites
+ * COOKIE_SECURE=false / LOG_LEVEL=info / NODE_ENV=development, which are
+ * unsuitable for any deployed environment. Do NOT run it in CI or on servers.
+ */
 import fs from "fs";
 import yaml from "js-yaml";
 

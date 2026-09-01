@@ -177,7 +177,10 @@ export function validatePath(
  */
 export function safePath(baseDir: string, ...segments: string[]): string {
   const resolved = path.resolve(baseDir, ...segments);
-  const normalizedBase = path.normalize(baseDir);
+  // Resolve the base to an absolute path too: path.normalize('/project')
+  // yields a drive-relative `\project` on Windows, which never prefixes the
+  // drive-anchored resolved path and makes the guard misfire
+  const normalizedBase = path.resolve(baseDir);
 
   if (!resolved.startsWith(normalizedBase + path.sep) && resolved !== normalizedBase) {
     throw new Error(`Path traversal blocked: ${resolved}`);
@@ -204,7 +207,7 @@ export async function safePathAsync(baseDir: string, ...segments: string[]): Pro
     return realResolved;
   } catch (error) {
     // Handle non-existent files
-    const normalizedBase = path.normalize(baseDir);
+    const normalizedBase = path.resolve(baseDir);
     if (!resolved.startsWith(normalizedBase + path.sep) && resolved !== normalizedBase) {
       throw new Error(`Path traversal blocked: ${resolved}`);
     }

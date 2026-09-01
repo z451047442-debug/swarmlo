@@ -1,32 +1,11 @@
 
+# Review fix 2026-08-31 — removed the stale empty category-comment block
+# ("# Binaries / # Build outputs / # Claude-Flow specific / ...") that had
+# no rules beneath it and duplicated the section headers below.
 !/memory/agents/README.md
 !/memory/sessions/README.md
 !bin/claude-flow
 !v3/@claude-flow/
-# Binaries
-# Build outputs
-
-# Claude-Flow specific
-# Dependencies
-# Development
-# Dot folders to ignore (except .claude, .claude-plugin, .git, .github, .githooks)
-# Environment
-# Exclude @claude-flow module directories from ignore patterns
-# IDE
-# Logs
-# MCP/Swarm
-# OS
-# Python
-# Removed Windows wrapper files
-# SPARC/Roo files (not used)
-# SQLite Database Files
-# Temp files
-# Temporary files
-# Test artifacts
-# Test outputs
-# Testing
-# memory/
-# sessions/
 *$py.class
 *.db
 *.db-journal
@@ -136,6 +115,7 @@ yarn-error.log*
 .mcp.json
 !plugins/*/.mcp.json
 claude-flow.config.json
+claude-flow.config.export.json
 .swarm/
 .hive-mind/
 .claude-flow/

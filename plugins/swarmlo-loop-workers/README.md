@@ -59,7 +59,7 @@ Invocation pattern (CLI + MCP):
 
 ```bash
 # CLI
-npx swarmlo-cli@latest hooks worker dispatch --trigger document --scope api
+npx swarmlo-cli@3.39.1 hooks worker dispatch --trigger document --scope api
 
 # MCP
 mcp tool call hooks_worker-dispatch --json -- '{"trigger": "document", "scope": "api"}'

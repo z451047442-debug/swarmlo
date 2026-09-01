@@ -11,6 +11,8 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 
 vi.mock('node:fs', () => ({
   readFileSync: vi.fn().mockReturnValue(new Uint8Array([0])),
+  existsSync: vi.fn().mockReturnValue(true),
+  statSync: vi.fn().mockReturnValue({ isFile: () => true }),
 }));
 
 vi.mock('node:module', () => ({
@@ -135,7 +137,14 @@ import {
 // the real @ruvector/rvagent-wasm import still happens. Local runs where
 // the WASM binary is built work fine; CI without postinstall doesn't.
 // See ruvllm-wasm.test.ts for the same pattern.
-const __SKIP_WASM_TESTS = process.env.CI === 'true';
+// The real `await import('@ruvector/rvagent-wasm')` runs during module
+// load even with the vi.mock in place, and crashes on hosts where the
+// native WASM binary can't initialize (no postinstall output / CI). The
+// binary file may still resolve on disk while the runtime import fails, so
+// presence checks are unreliable — run this suite only where the native
+// module is known-good: SWARMLO_RUN_WASM_TESTS=1.
+const __SKIP_WASM_TESTS =
+  process.env.SWARMLO_RUN_WASM_TESTS !== '1';
 
 describe.skipIf(__SKIP_WASM_TESTS)('agent-wasm integration', () => {
   describe('detection and init', () => {

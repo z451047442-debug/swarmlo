@@ -88,8 +88,14 @@ function isPrivateOrLoopback(host: string): boolean {
   }
   // IPv6 bracketed addresses and other special forms — be conservative and
   // accept only public-looking literals. Reject obvious private/local forms.
-  if (host.startsWith('fc') || host.startsWith('fd')) return true;  // fc00::/7 ULA
-  if (host.startsWith('fe80:')) return true;                        // link-local
+  // audit_2026-08-31: the fc/fd prefix tests were applied to DNS hostnames
+  // too — `fcloud.com` (starts with "fc") was blocked as ULA. IPv6 ULA tests
+  // only make sense on literals: a hostname carrying ':' IS an IPv6 literal
+  // (URL.hostname strips the brackets).
+  if (host.includes(':')) {
+    if (host.startsWith('fc') || host.startsWith('fd')) return true;  // fc00::/7 ULA
+    if (host.startsWith('fe80:')) return true;                        // link-local
+  }
   return false;
 }
 

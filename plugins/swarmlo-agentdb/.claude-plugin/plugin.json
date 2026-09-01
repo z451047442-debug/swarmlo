@@ -3,8 +3,8 @@
   "description": "Substrate plugin for Swarmlo memory: AgentDB controller bridge (15 agentdb_* MCP tools), RuVector ONNX embeddings (10 embeddings_* tools incl. RaBitQ 32x quantization), and WASM HNSW pattern router (3 ruvllm_hnsw_* tools)",
   "version": "0.3.1",
   "author": {
-    "name": "ruvnet",
-    "url": "https://github.com/ruvnet"
+    "name": "z451047442-debug",
+    "url": "https://github.com/z451047442-debug"
   },
   "homepage": "https://github.com/z451047442-debug/swarmlo",
   "license": "MIT",

@@ -155,8 +155,11 @@ export class FlashAttention {
     if (!this.scoreBuffer || this.scoreBuffer.length < numK) {
       this.scoreBuffer = new Float32Array(numK);
     }
-    if (!this.expBuffer || this.expBuffer.length < (useTopK ? topK : numK)) {
-      this.expBuffer = new Float32Array(useTopK ? topK : numK);
+    // Allocate by numK (not topK): the simple path writes exps[ki] for
+    // all ki < numK whenever useTopK is true but numK <= 128, so a topK-sized
+    // buffer would overflow and corrupt the output with NaN.
+    if (!this.expBuffer || this.expBuffer.length < numK) {
+      this.expBuffer = new Float32Array(numK);
     }
     if (!this.accumBuffer || this.accumBuffer.length < dim) {
       this.accumBuffer = new Float64Array(dim);

@@ -35,10 +35,51 @@ declare global {
   }
 }
 
+/**
+ * "#rrggbb" / "#rgb" → "h s% l%" HSL 三元组。
+ * 设计系统的颜色类（如 text-primary）走 hsl(var(--primary))，
+ * 因此注入 hex 时必须同步生成三元组，否则第三方嵌入时 primary 类全部失效。
+ */
+function hexToHslTriplet(hex: string): string {
+  let m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!m) {
+    const short = /^#?([a-f\d])([a-f\d])([a-f\d])$/i.exec(hex);
+    if (!short) return "";
+    m = ["", ...short.slice(1).map((ch) => ch + ch)];
+  }
+  const r = parseInt(m[1], 16) / 255;
+  const g = parseInt(m[2], 16) / 255;
+  const b = parseInt(m[3], 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  let h = 0;
+  let s = 0;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      default: h = (r - g) / d + 4;
+    }
+    h /= 6;
+  }
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
+
+/** hex 直接注入 + 同步生成 hsl 三元组，两套消费方式都有效 */
+function applyWidgetColor(container: HTMLElement, property: string, hslProperty: string, value: string | undefined): void {
+  if (!value) return;
+  container.style.setProperty(property, value);
+  const triplet = hexToHslTriplet(value);
+  if (triplet) container.style.setProperty(hslProperty, triplet);
+}
+
 // Widget initialization function
 function initSwarmloResearchWidget(containerId: string = "swarmlo-research-widget-container"): void {
   console.log("[Swarmlo Research] Starting initialization...");
-  
+
   const container = document.getElementById(containerId);
   if (!container) {
     console.error(`[Swarmlo Research] Container with id "${containerId}" not found`);
@@ -51,11 +92,11 @@ function initSwarmloResearchWidget(containerId: string = "swarmlo-research-widge
   const config = window.SwarmloResearchWidgetConfig;
   if (config) {
     console.log("[Swarmlo Research] Applying configuration:", config);
-    if (config.primaryColor) container.style.setProperty("--primary", config.primaryColor);
-    if (config.accentColor) container.style.setProperty("--accent", config.accentColor);
-    if (config.backgroundColor) container.style.setProperty("--background", config.backgroundColor);
-    if (config.cardBackgroundColor) container.style.setProperty("--card", config.cardBackgroundColor);
-    if (config.textColor) container.style.setProperty("--foreground", config.textColor);
+    applyWidgetColor(container, "--primary", "--primary-hsl", config.primaryColor);
+    applyWidgetColor(container, "--accent", "--accent-hsl", config.accentColor);
+    applyWidgetColor(container, "--background", "--background-hsl", config.backgroundColor);
+    applyWidgetColor(container, "--card", "--card-hsl", config.cardBackgroundColor);
+    applyWidgetColor(container, "--foreground", "--foreground-hsl", config.textColor);
     if (config.fontFamily) container.style.fontFamily = config.fontFamily;
   }
 
@@ -71,7 +112,7 @@ function initSwarmloResearchWidget(containerId: string = "swarmlo-research-widge
           React.createElement(
             QueryClientProvider,
             { client: queryClient },
-            React.createElement(Index, null),
+            React.createElement(Index, { defaultGoal: config?.defaultGoal }),
             React.createElement(Toaster, null)
           )
         )

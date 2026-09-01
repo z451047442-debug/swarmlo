@@ -92,11 +92,11 @@ test('buildLaunchSpec uses process.execPath + the resolved bin plus "mcp start" 
   assert.equal(spec.shell, false);
 });
 
-test('buildLaunchSpec falls back to npx -y swarmlo-cli@latest mcp start when nothing resolves', () => {
+test('buildLaunchSpec falls back to npx -y swarmlo-cli@3.39.1 mcp start when nothing resolves', () => {
   const spec = buildLaunchSpec(null);
   const expectedCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
   assert.equal(spec.command, expectedCmd);
-  assert.deepEqual(spec.args, ['-y', 'swarmlo-cli@latest', ...MCP_ARGS]);
+  assert.deepEqual(spec.args, ['-y', 'swarmlo-cli@3.39.1', ...MCP_ARGS]);
   // Windows .cmd shims need shell:true to spawn at all; other platforms
   // spawn npx directly with no shell involved.
   assert.equal(spec.shell, process.platform === 'win32');

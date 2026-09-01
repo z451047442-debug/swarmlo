@@ -1,6 +1,6 @@
 # Swarmlo — Overview · Usage · Status
 
-> The complementary doc to [`USERGUIDE.md`](USERGUIDE.md) (deep reference) and [`/verification.md`](../verification.md) (cryptographic witness). This doc tells you **what Swarmlo is**, **how to use it day-to-day**, and **what currently works** — without the encyclopedic reference depth.
+> The complementary doc to [`USERGUIDE.md`](USERGUIDE.md) (deep reference) and [`verification/README.md`](../verification/README.md) (cryptographic witness). This doc tells you **what Swarmlo is**, **how to use it day-to-day**, and **what currently works** — without the encyclopedic reference depth.
 
 ---
 
@@ -12,7 +12,7 @@ The runtime is the `swarmlo` npm package. End-user surface is:
 
 - **MCP server** — exposes 323 tools to Claude Code (memory, agents, swarm coordination, hooks, GitHub integration, browser automation, etc.).
 - **CLI** — 45 top-level commands (`swarmlo agent`, `swarmlo swarm`, `swarmlo memory`, `swarmlo hooks`, `swarmlo verify`, …) for terminal/script use.
-- **Claude Code plugins** — 32 installable plugins (`swarmlo-core`, `swarmlo-federation`, `swarmlo-cost-tracker`, …) that bundle agent + skill + slash-command definitions.
+- **Claude Code plugins** — 39 installable plugins (`swarmlo-core`, `swarmlo-federation`, `swarmlo-cost-tracker`, …) that bundle agent + skill + slash-command definitions.
 - **WASM kernels** — Rust-compiled WASM for the policy engine, embeddings, and proof system; plugged into the same MCP/CLI surface.
 
 For the "why" — coordinated swarms, self-learning memory, federated comms, enterprise security — see [`README.md`](../README.md).
@@ -46,7 +46,7 @@ Full command reference: [`USERGUIDE.md`](USERGUIDE.md).
 
 ## Status — what currently works
 
-**Snapshot at `swarmlo@3.10.2` / `@claude-flow/cli@3.10.1`**, branch `main` @ commit `cdd5308d8`. Capability counts updated 2026-05-25 via quality-sweep audit (see `docs/QUALITY-SWEEP.md`).
+**Snapshot at `swarmlo@3.39.1` / `swarmlo-cli@3.39.1`**, branch `main` @ commit `16f6045` (review fix 2026-08-31 — prior snapshot pinned 3.10.2, superseded by the 3.39.x publish train).
 
 ### Test baseline
 
@@ -62,7 +62,7 @@ Full command reference: [`USERGUIDE.md`](USERGUIDE.md).
 |---|---|---|
 | MCP tools | **323** | `verification/inventory.json` + quality-sweep audit 2026-05-25 |
 | CLI commands (top-level) | **45** | quality-sweep audit 2026-05-25 (commands/index.ts) |
-| Plugins (`plugins/swarmlo-*`) | **33** | quality-sweep audit 2026-05-25 (33 dirs with .claude-plugin/plugin.json) |
+| Plugins (`plugins/swarmlo-*`) | **39** | review fix 2026-08-31 (39 dirs with .claude-plugin/plugin.json) |
 | Agent definitions | **45** | quality-sweep audit 2026-05-25 (plugins/*/agents/*.md count) |
 
 ### Recently shipped (since `swarmlo@3.6.24` published)
@@ -103,7 +103,7 @@ Tracked in the project task list (see GitHub Project / `TaskList`):
 
 ### Verification
 
-Every fix in `verification.md` is signed with Ed25519 keyed off the git commit. To verify your installed bytes match what was witnessed:
+Every fix in the witness manifest (`verification/witness-fixes.json`) is signed with Ed25519 keyed off the git commit. To verify your installed bytes match what was witnessed:
 
 ```bash
 swarmlo verify
@@ -111,7 +111,7 @@ swarmlo verify
 
 The command fetches the manifest, recomputes SHA-256 for every cited file, re-derives the public key from the git commit, and verifies the signature. Drift in any fix produces a non-zero exit + a structured error pointing at the regressed file.
 
-Per-capability witness signing for the full 300-tool / 49-command surface is in flight — see tasks #25 / #26.
+Per-capability witness signing for the full 323-tool / 45-command surface is in flight — see tasks #25 / #26.
 
 ## Where to go next
 
@@ -120,6 +120,6 @@ Per-capability witness signing for the full 300-tool / 49-command surface is in 
 | Pitch / why-swarmlo | [`README.md`](../README.md) |
 | Day-to-day commands + config | This doc, plus [`USERGUIDE.md`](USERGUIDE.md) for depth |
 | Architecture decisions | [`v3/docs/adr/`](../v3/docs/adr/) — ADR-093, ADR-095, ADR-096, ADR-097 are the recent ones |
-| Cryptographic proof of build correctness | [`verification.md`](../verification.md) + [`swarmlo verify`](#verification) |
+| Cryptographic proof of build correctness | [`verification/README.md`](../verification/README.md) + [`swarmlo verify`](#verification) |
 | Plugin development | [`USERGUIDE.md` → Plugin section](USERGUIDE.md#-ecosystem--integrations) |
-| Open issues + roadmap | [GitHub Issues](https://github.com/ruvnet/claude-flow/issues) |
+| Open issues + roadmap | [GitHub Issues](https://github.com/z451047442-debug/swarmlo/issues) |

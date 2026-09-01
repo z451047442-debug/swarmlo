@@ -116,6 +116,12 @@ export class RvfLearningStore {
   private initialized = false;
   private autoPersistTimer: ReturnType<typeof setInterval> | null = null;
 
+  /**
+   * Serializes file writes. Concurrent persist() calls (timer + explicit
+   * flush) could otherwise interleave and lose writes.
+   */
+  private persistQueue: Promise<void> = Promise.resolve();
+
   constructor(config: RvfLearningStoreConfig) {
     this.config = {
       storePath: config.storePath,
@@ -252,42 +258,57 @@ export class RvfLearningStore {
   /**
    * Flush all in-memory state to disk. The entire file is rewritten
    * to ensure consistency (patterns may have been updated in-place).
+   *
+   * Writes are serialized through a promise queue: the dirty flag is
+   * re-checked inside the queue so two concurrent persist() calls cannot
+   * interleave and lose an update made while the file write was in flight.
    */
   async persist(): Promise<void> {
     if (!this.dirty) return;
 
-    ensureDirectory(this.config.storePath);
+    const task = async (): Promise<void> => {
+      // Re-check inside the queue: an earlier queued persist may have
+      // already flushed these changes.
+      if (!this.dirty) return;
 
-    const lines: string[] = [MAGIC_HEADER];
+      ensureDirectory(this.config.storePath);
 
-    // Patterns
-    for (const pattern of this.patterns.values()) {
-      lines.push(JSON.stringify({ type: 'pattern', data: pattern }));
-    }
+      const lines: string[] = [MAGIC_HEADER];
 
-    // LoRA adapters
-    for (const lora of this.loraAdapters.values()) {
-      lines.push(JSON.stringify({ type: 'lora', data: lora }));
-    }
+      // Patterns
+      for (const pattern of this.patterns.values()) {
+        lines.push(JSON.stringify({ type: 'pattern', data: pattern }));
+      }
 
-    // EWC state
-    if (this.ewcState) {
-      lines.push(JSON.stringify({ type: 'ewc', data: this.ewcState }));
-    }
+      // LoRA adapters
+      for (const lora of this.loraAdapters.values()) {
+        lines.push(JSON.stringify({ type: 'lora', data: lora }));
+      }
 
-    // Trajectories
-    for (const traj of this.trajectories) {
-      lines.push(JSON.stringify({ type: 'trajectory', data: traj }));
-    }
+      // EWC state
+      if (this.ewcState) {
+        lines.push(JSON.stringify({ type: 'ewc', data: this.ewcState }));
+      }
 
-    const content = lines.join('\n') + '\n';
-    const tmpPath = this.config.storePath + '.tmp';
+      // Trajectories
+      for (const traj of this.trajectories) {
+        lines.push(JSON.stringify({ type: 'trajectory', data: traj }));
+      }
 
-    await fs.promises.writeFile(tmpPath, content, 'utf-8');
-    await fs.promises.rename(tmpPath, this.config.storePath);
+      const content = lines.join('\n') + '\n';
+      const tmpPath = this.config.storePath + '.tmp';
 
-    this.dirty = false;
-    this.log(`Persisted: ${this.patterns.size} patterns, ${this.loraAdapters.size} LoRA, ${this.trajectories.length} trajectories`);
+      await fs.promises.writeFile(tmpPath, content, 'utf-8');
+      await fs.promises.rename(tmpPath, this.config.storePath);
+
+      this.dirty = false;
+      this.log(`Persisted: ${this.patterns.size} patterns, ${this.loraAdapters.size} LoRA, ${this.trajectories.length} trajectories`);
+    };
+
+    // Chain onto the queue; keep the chain alive even if a task rejects.
+    const result = this.persistQueue.then(task);
+    this.persistQueue = result.catch(() => undefined);
+    return result;
   }
 
   /** Persist and release resources */

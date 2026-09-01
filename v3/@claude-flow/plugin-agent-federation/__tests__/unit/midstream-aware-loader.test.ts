@@ -67,6 +67,10 @@ describe('loadFederationTransport — ADR-120 Step 2', () => {
     } else {
       process.env.MIDSTREAMER_QUIC_NATIVE = originalEnv;
     }
+    // Only the `midstreamer/quic` subpath can be (un)mocked — the bare
+    // `midstreamer` root package has no "." export and fails vite resolution
+    // the moment a mock id is registered for it.
+    vi.doUnmock('midstreamer/quic');
   });
 
   it('defers to agentic-flow when MIDSTREAMER_QUIC_NATIVE is unset', async () => {
@@ -84,15 +88,46 @@ describe('loadFederationTransport — ADR-120 Step 2', () => {
     expect(loaded.source).toBe('agentic-flow-loader');
   });
 
-  it('defers to agentic-flow with no error noise when midstreamer is not installed', async () => {
+  it('defers to agentic-flow with no error noise when midstreamer is unavailable', async () => {
     process.env.MIDSTREAMER_QUIC_NATIVE = '1';
-    // No need to mock 'midstreamer' — the dynamic import will throw
-    // MODULE_NOT_FOUND and the loader is supposed to fall through.
+    // Simulate a missing optional peer dependency: a module that exists but
+    // exposes none of the expected surface (the loader's probe treats it as
+    // a clean miss). Note: midstreamer@0.3.1 IS installed in this workspace,
+    // so the loader must be explicitly mocked here — the historical "no need
+    // to mock" assumption is stale.
+    vi.doMock('midstreamer/quic', () => ({
+      // Full export surface so vitest's mock validation passes; the loader
+      // only needs `loadQuicTransport` (and thus the surface) to be absent
+      // for a clean miss.
+      default: undefined,
+      loadQuicTransport: undefined,
+      isNative: () => false,
+      isStub: () => false,
+    }));
     const loaded = await loadFederationTransport();
     expect(loaded.source).toBe('agentic-flow-loader');
     // `fallbackReason` is only set when a probe ran to completion and
     // produced a diagnostic; a clean miss leaves it unset.
     expect(loaded.fallbackReason).toBeUndefined();
+  });
+
+  it('uses the midstreamer QUIC transport when available and opted in', async () => {
+    process.env.MIDSTREAMER_QUIC_NATIVE = '1';
+    vi.doMock('midstreamer/quic', () => ({
+      loadQuicTransport: vi.fn(async () => ({
+        send: vi.fn(),
+        onMessage: vi.fn(),
+        close: vi.fn(),
+        __mockSource: 'midstreamer-mock',
+      })),
+      isNative: () => true,
+      isStub: () => false,
+    }));
+    const loaded = await loadFederationTransport();
+    expect(loaded.source).toBe('midstreamer-native');
+    expect(
+      (loaded.transport as unknown as { __mockSource: string }).__mockSource,
+    ).toBe('midstreamer-mock');
   });
 
   it('passes config through to the underlying loader', async () => {

@@ -164,15 +164,27 @@ class WebSocketFallbackTransport implements AgentTransport {
     const url = address.includes('://') ? address : `ws://${address}`;
     const socket = new WebSocket(url) as WebSocketLike;
 
+    // Connection timeout — without it a black-holed endpoint (SYN dropped,
+    // unreachable host) hangs the caller forever. 10s cap, matching the
+    // handshake challenge timeout; the socket is closed on timeout.
+    const CONNECT_TIMEOUT_MS = 10_000;
     await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        socket.close();
+        reject(new Error(`WebSocket connect timed out after ${CONNECT_TIMEOUT_MS}ms: ${url}`));
+      }, CONNECT_TIMEOUT_MS);
       socket.on('open', () => {
+        clearTimeout(timer);
         socket.send(JSON.stringify(message), (err?: Error) => {
           socket.close();
           if (err) reject(err);
           else resolve();
         });
       });
-      socket.on('error', (err: unknown) => reject(err instanceof Error ? err : new Error(String(err))));
+      socket.on('error', (err: unknown) => {
+        clearTimeout(timer);
+        reject(err instanceof Error ? err : new Error(String(err)));
+      });
     });
   }
 
@@ -180,7 +192,7 @@ class WebSocketFallbackTransport implements AgentTransport {
     this.handlers.push(handler);
   }
 
-  async listen(port = Number(this.config.port ?? 0), host = String(this.config.host ?? '0.0.0.0')): Promise<void> {
+  async listen(port = Number(this.config.port ?? 0), host = String(this.config.host ?? '127.0.0.1')): Promise<void> {
     const { WebSocketServer } = await import('ws');
     const server = new WebSocketServer({ port, host }) as WebSocketServerLike;
     this.server = server;
@@ -245,20 +257,24 @@ async function probeMidstreamerTransport(
 
   let mod: unknown;
   try {
-    // Lazy + indirect so bundlers don't try to resolve at compile time.
     // Prefer the `midstreamer/quic` sub-path (added in midstreamer@0.3.1
     // per upstream ruvnet/midstream#81) which exposes
     // `loadQuicTransport` directly without WASM init. Fall back to the
     // root `midstreamer` package for older versions that put the QUIC
     // surface on the default export.
-    const dynamicImport: (s: string) => Promise<unknown> = new Function(
-      's',
-      'return import(s)',
-    ) as (s: string) => Promise<unknown>;
+    //
+    // The specifier is a VARIABLE, not a literal and not `new Function`:
+    // a literal makes vite/bundlers resolve this optional peer dependency
+    // at build/transform time (and fail hard when it is absent); a
+    // `new Function` wrapper defeats static analysis but is itself an
+    // eval-style bypass. A variable specifier is left as a plain runtime
+    // dynamic import that throws MODULE_NOT_FOUND when absent.
+    const quicSubpath = 'midstreamer/quic';
+    const rootPackage = 'midstreamer';
     try {
-      mod = await dynamicImport('midstreamer/quic');
+      mod = await import(quicSubpath);
     } catch {
-      mod = await dynamicImport('midstreamer');
+      mod = await import(rootPackage);
     }
   } catch {
     return null;

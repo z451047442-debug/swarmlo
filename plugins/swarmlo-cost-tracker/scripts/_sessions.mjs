@@ -16,9 +16,10 @@
 
 import { spawnNpxSync } from './_npx.mjs';
 
+// review fix 2026-08-31 — pinned, never @latest (spawnNpxSync adds -y).
 const CLI_PKG = process.env.CLI_CORE === '1'
   ? '@claude-flow/cli-core@alpha'
-  : 'swarmlo-cli@latest';
+  : 'swarmlo-cli@3.39.1';
 
 export function memoryListAllKeys(namespace) {
   const r = spawnNpxSync([

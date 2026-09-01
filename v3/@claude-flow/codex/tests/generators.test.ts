@@ -249,7 +249,9 @@ describe('generateAgentsMd', () => {
 
       expect(result).toContain('## Performance Targets');
       expect(result).toContain('HNSW Search');
-      expect(result).toContain('150x-12,500x faster');
+      // Measured figures — the previous 150x-12,500x claim was never
+      // reproduced and must not be advertised in generated guidance.
+      expect(result).toContain('~1.9x at N=20k, ~3.2x-4.7x at N=5k vs brute force (measured)');
     });
 
     it('should include testing section', async () => {

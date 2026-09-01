@@ -16,6 +16,12 @@
 // Types
 export * from './types.js';
 
+// Used by addHook() below. These are ESM imports — the previous
+// `require('./registry/index.js')` inside the ESM build crashed the
+// public API the moment addHook was called.
+import { registerHook } from './registry/index.js';
+import { HookPriority } from './types.js';
+
 // ReasoningBank - Vector-based pattern learning
 export {
   ReasoningBank,
@@ -263,10 +269,7 @@ export function addHook(
     name?: string;
   }
 ): string {
-  const { registerHook: register } = require('./registry/index.js');
-  const { HookPriority } = require('./types.js');
-
-  return register(
+  return registerHook(
     event,
     handler,
     options?.priority ?? HookPriority.Normal,

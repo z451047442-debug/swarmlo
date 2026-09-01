@@ -321,8 +321,33 @@ const resetCommand: Command = {
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     try {
-      const configPath = configManager.reset(ctx.cwd);
-      output.writeln(`Configuration reset to defaults: ${configPath}`);
+      const section = ctx.flags.section as string | undefined;
+
+      // Full reset (no section, or explicit "all").
+      if (!section || section === 'all') {
+        const configPath = configManager.reset(ctx.cwd);
+        output.writeln(`Configuration reset to defaults: ${configPath}`);
+        return { success: true };
+      }
+
+      // Section reset: restore the DEFAULT_CONFIG value for that section via
+      // the config manager's set() so it persists atomically like any other
+      // mutation. `providers` is not a top-level section in DEFAULT_CONFIG —
+      // its default lives under agents.providers.
+      const defaults = configManager.getDefaults() as Record<string, unknown>;
+      const defaultValue = section === 'providers'
+        ? ((defaults.agents as Record<string, unknown> | undefined)?.providers ?? [])
+        : defaults[section];
+
+      if (defaultValue === undefined) {
+        output.printError(`Unknown configuration section: ${section}`);
+        return { success: false, exitCode: 1 };
+      }
+
+      configManager.set(ctx.cwd, section, defaultValue);
+      const configPath = configManager.findConfig(ctx.cwd) ?? configManager.getConfigPath()
+        ?? path.join(ctx.cwd, 'claude-flow.config.json');
+      output.writeln(`Configuration section '${section}' reset to defaults: ${configPath}`);
       return { success: true };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);

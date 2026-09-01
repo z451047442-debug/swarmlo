@@ -55,25 +55,18 @@ export async function createConversationFromShare(
 	const files = await collections.bucket.find({ filename: { $regex: `^${sharedId}-` } }).toArray();
 
 	await Promise.all(
-		files.map(
-			(file) =>
-				new Promise<void>((resolve, reject) => {
-					try {
-						const newFilename = file.filename.replace(`${sharedId}-`, `${newConvId}-`);
-						const downloadStream = collections.bucket.openDownloadStream(file._id);
-						const uploadStream = collections.bucket.openUploadStream(newFilename, {
-							metadata: { ...file.metadata, conversation: newConvId },
-						});
-						downloadStream
-							.on("error", reject)
-							.pipe(uploadStream)
-							.on("error", reject)
-							.on("finish", () => resolve());
-					} catch (e) {
-						reject(e);
-					}
-				})
-		)
+		files.map(async (file) => {
+			// RVF GridFS exposes async toArray()/end() instead of stream pipe semantics
+			const chunks = await collections.bucket.openDownloadStream(file._id).toArray();
+			const newFilename = file.filename.replace(`${sharedId}-`, `${newConvId}-`);
+			const uploadStream = collections.bucket.openUploadStream(newFilename, {
+				metadata: { ...file.metadata, conversation: newConvId },
+			});
+			for (const chunk of chunks) {
+				uploadStream.write(chunk);
+			}
+			await uploadStream.end();
+		})
 	);
 
 	if (MetricsServer.isEnabled()) {

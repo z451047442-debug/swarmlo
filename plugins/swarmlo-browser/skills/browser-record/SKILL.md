@@ -37,7 +37,7 @@ Primitive on which every other browser skill composes. Opens a named browser ses
    ```
 6. **Index in AgentDB** under `browser-sessions`:
    ```bash
-   npx -y swarmlo-cli@latest memory store --namespace browser-sessions \
+   npx -y swarmlo-cli@3.39.1 memory store --namespace browser-sessions \
      --key "$SID" --value "{rvf_id:$SID,host:...,task:...,verdict:pass}"
    ```
 

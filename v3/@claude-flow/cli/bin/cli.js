@@ -42,8 +42,14 @@ function _filterAdvertisedMcpTools(tools) {
   const argv = process.argv.slice(2);
   const toolsIndex = argv.findIndex((arg) => arg === '--tools');
   const inlineTools = argv.find((arg) => arg.startsWith('--tools='));
+  // Defensive parsing: `--tools` must only consume the NEXT argument when it
+  // actually looks like a value. A trailing `--tools` or a `--tools` followed
+  // by another flag (e.g. `--tools --verbose`) would otherwise swallow the
+  // flag as the tool selector and silently advertise nothing.
+  const nextArg = toolsIndex >= 0 ? argv[toolsIndex + 1] : undefined;
+  const nextIsValue = nextArg !== undefined && nextArg !== '' && !nextArg.startsWith('-');
   const configured = process.env.CLAUDE_FLOW_MCP_TOOLS
-    || (toolsIndex >= 0 ? argv[toolsIndex + 1] : undefined)
+    || (nextIsValue ? nextArg : undefined)
     || (inlineTools ? inlineTools.slice('--tools='.length) : undefined);
   if (!configured || configured.trim().toLowerCase() === 'all') return tools;
   const selectors = new Set(

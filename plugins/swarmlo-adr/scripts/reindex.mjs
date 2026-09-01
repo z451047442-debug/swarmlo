@@ -58,7 +58,7 @@ import {
 if (process.env.CLI_CORE === '1') {
   console.warn(
     '[swarmlo-adr] warning: CLI_CORE=1 is ignored — writing to the default ' +
-    "`swarmlo-cli@latest` store so `swarmlo memory search` can find the records (#2781).",
+    "`swarmlo-cli@3.39.1` store so `swarmlo memory search` can find the records (#2781).",
   );
 }
 

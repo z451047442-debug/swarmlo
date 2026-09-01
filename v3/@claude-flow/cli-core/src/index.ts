@@ -28,6 +28,7 @@
  */
 
 import { fileURLToPath } from 'node:url';
+import { realpathSync } from 'node:fs';
 import { runMemoryCommand } from './commands/memory.js';
 
 // Re-export foundation surface so plugin authors can pin to cli-core.
@@ -69,8 +70,6 @@ const isMain = (() => {
     if (import.meta.url === fileURL) return true;
     // npm bin-shim case: argv[1] is the .bin/claude-flow-core symlink.
     // Resolve real path and compare.
-    const { realpathSync } = require('node:fs');
-    const { fileURLToPath } = require('node:url');
     const argvReal = realpathSync(process.argv[1]);
     const moduleReal = realpathSync(fileURLToPath(import.meta.url));
     return argvReal === moduleReal;

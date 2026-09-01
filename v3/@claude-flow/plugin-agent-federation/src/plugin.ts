@@ -7,7 +7,7 @@ import type {
 } from '@claude-flow/shared/src/plugin-interface.js';
 
 import * as ed from '@noble/ed25519';
-import { createHash } from 'node:crypto';
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
@@ -92,6 +92,16 @@ export class AgentFederationPlugin implements ClaudeFlowPlugin {
     const config = context.config;
 
     const nodeId = (config['nodeId'] as string) ?? `node-${Date.now().toString(36)}`;
+    // Path-safety: nodeId is interpolated into a file name
+    // (.claude-flow/federation/key-<nodeId>.json) and into log lines. Any
+    // path separator, `..`, or quote would allow traversal/injection, so we
+    // enforce the same strict identifier rule as the security package's
+    // SAFE_IDENTIFIER (AD-095 hardening).
+    if (!/^[a-zA-Z][a-zA-Z0-9_-]*$/.test(nodeId)) {
+      throw new TypeError(
+        `Invalid federation nodeId ${JSON.stringify(nodeId)}: must match [a-zA-Z][a-zA-Z0-9_-]*`,
+      );
+    }
     const endpoint = (config['endpoint'] as string) ?? 'ws://localhost:9100';
     const complianceMode = (config['complianceMode'] as ComplianceMode) ?? 'none';
     const staticPeers = (config['staticPeers'] as string[]) ?? [];
@@ -205,6 +215,17 @@ export class AgentFederationPlugin implements ClaudeFlowPlugin {
         onPeerDiscovered: (node) => {
           context.logger.info(`Peer discovered: ${node.nodeId} at ${node.endpoint}`);
         },
+        onStaticPeerWithoutKey: (node) => {
+          // Static peers configured as bare endpoints have no signed
+          // manifest and therefore no authenticated public key. They stay
+          // UNTRUSTED and can never pass an attested handshake — warn loudly
+          // so operators know to supply a manifest (or trust them explicitly).
+          context.logger.warn(
+            `Static peer ${node.nodeId} at ${node.endpoint} has no public key ` +
+              '(configured as a bare endpoint, no signed manifest). It cannot be ' +
+              'attested by handshake and remains UNTRUSTED.',
+          );
+        },
       },
       { staticPeers },
     );
@@ -222,7 +243,15 @@ export class AgentFederationPlugin implements ClaudeFlowPlugin {
     });
 
     const piiPipeline = new PIIPipelineService(
-      { hashFunction: (val, salt) => `hash-${salt}-${val.slice(0, 4)}` },
+      {
+        // Real salted SHA-256 over the full value — the previous
+        // implementation returned the first 4 plaintext characters, leaking
+        // PII. The full digest is kept, so the same input with the same salt
+        // always maps to the same hash (stable joins across events) while the
+        // plaintext never leaves this process.
+        hashFunction: (val, salt) =>
+          createHash('sha256').update(`${salt}:${val}`).digest('hex'),
+      },
       { hashSalt },
     );
 
@@ -333,8 +362,21 @@ export class AgentFederationPlugin implements ClaudeFlowPlugin {
     const routing = new RoutingService({
       generateEnvelopeId: generateId,
       generateNonce: () => `nonce-${Math.random().toString(36).slice(2)}`,
-      signEnvelope: (payload, token) => `hmac-${token.slice(0, 6)}-${payload.length}`,
-      verifyEnvelope: () => true,
+      signEnvelope: (payload, token) =>
+        // Real HMAC-SHA256 keyed by the session token (RoutingService signs
+        // the canonical envelope bytes and verifies with the same token).
+        // Previously a forgeable stub (`hmac-<token prefix>-<length>`).
+        createHmac('sha256', token).update(payload).digest('hex'),
+      verifyEnvelope: (payload, signature, token) => {
+        if (!token || !signature) return false;
+        const expected = createHmac('sha256', token).update(payload).digest();
+        try {
+          // Constant-time compare — never a plain `===` on hex strings.
+          return timingSafeEqual(expected, Buffer.from(signature, 'hex'));
+        } catch {
+          return false;
+        }
+      },
       scanPii: (text, trustLevel) => {
         const result = piiPipeline.transform(text, trustLevel as TrustLevel);
         return {
@@ -430,7 +472,19 @@ export class AgentFederationPlugin implements ClaudeFlowPlugin {
     // need to free a port.
     const listenPort = config['port'] as number | undefined;
     if (transport && typeof listenPort === 'number' && transport.listen) {
-      const listenHost = (config['host'] as string | undefined) ?? '0.0.0.0';
+      // Loopback by default (ADR-166 posture). Binding 0.0.0.0 or any
+      // non-loopback interface over plain ws:// exposes the control plane
+      // to MITM — require an explicit opt-in and warn loudly.
+      const listenHost = (config['host'] as string | undefined) ?? '127.0.0.1';
+      const isLoopback = listenHost === '127.0.0.1' || listenHost === 'localhost' || listenHost === '::1';
+      const usesWss = /^wss:\/\//i.test(endpoint) || endpoint.includes('wss://');
+      if (!isLoopback && !usesWss) {
+        context.logger.warn(
+          `Federation listening on non-loopback ${listenHost}:${listenPort} with ` +
+            `endpoint ${endpoint} (plain ws://, no TLS). Traffic is not ` +
+            'encrypted — use wss:// or a loopback bind in production.',
+        );
+      }
       try {
         await transport.listen(listenPort, listenHost);
         context.logger.info(`Federation listening on ${listenHost}:${listenPort}`);

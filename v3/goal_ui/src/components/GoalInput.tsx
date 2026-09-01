@@ -11,11 +11,13 @@ interface GoalInputProps {
   onSubmit: (goal: string) => void;
   isPlanning: boolean;
   onAdvancedSettings?: () => void;
-  onConfigUpdate?: (config: any) => void;
+  onConfigUpdate?: (config: Record<string, unknown>) => void;
+  /** widget 配置里的 defaultGoal，预填到输入框 */
+  initialGoal?: string;
 }
 
-export const GoalInput = ({ onSubmit, isPlanning, onAdvancedSettings, onConfigUpdate }: GoalInputProps) => {
-  const [goal, setGoal] = useState("");
+export const GoalInput = ({ onSubmit, isPlanning, onAdvancedSettings, onConfigUpdate, initialGoal }: GoalInputProps) => {
+  const [goal, setGoal] = useState(initialGoal ?? "");
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
   const { t } = useI18n();

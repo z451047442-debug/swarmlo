@@ -43,7 +43,7 @@ Immediately downgrade a peer to UNTRUSTED when:
 
 Store federation patterns for cross-session learning:
 ```bash
-npx swarmlo-cli@latest memory store --namespace federation --key "peer-NODEID" --value "TRUST_HISTORY"
+npx swarmlo-cli@3.39.1 memory store --namespace federation --key "peer-NODEID" --value "TRUST_HISTORY"
 ```
 
 
@@ -51,6 +51,6 @@ npx swarmlo-cli@latest memory store --namespace federation --key "peer-NODEID" -
 
 After completing tasks, store successful patterns:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
-npx swarmlo-cli@latest memory search --query "TASK_TYPE patterns" --namespace patterns
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 memory search --query "TASK_TYPE patterns" --namespace patterns
 ```

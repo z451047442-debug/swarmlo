@@ -12,7 +12,7 @@ import {
   createTrustAccumulator,
   createTrustLedger,
   createTrustSystem,
-} from '../src/trust.ts';
+} from '../src/trust.js';
 
 // ============================================================================
 // Standalone getTrustBasedRateLimit Function Tests

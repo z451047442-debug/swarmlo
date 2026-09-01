@@ -85,5 +85,5 @@ Use MCP tools for persistence and learning:
 
 After completing a plan, feed the planner trajectory store so future replans inherit the outcome:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --store-results true
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --store-results true
 ```

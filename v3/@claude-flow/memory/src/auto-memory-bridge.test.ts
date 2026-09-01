@@ -86,7 +86,8 @@ function createTestInsight(overrides: Partial<MemoryInsight> = {}): MemoryInsigh
 describe('resolveAutoMemoryDir', () => {
   it('should derive path from working directory', () => {
     const result = resolveAutoMemoryDir('/workspaces/my-project');
-    expect(result).toContain('.claude/projects/');
+    // Platform-agnostic separator check (win32 uses backslashes)
+    expect(result).toMatch(/\.claude[\\/]projects[\\/]/);
     expect(result).toContain('memory');
     expect(result).not.toContain('//');
   });

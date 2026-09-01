@@ -26,6 +26,7 @@ import {
 import { buildImageRefResolver } from "./fileRefs";
 import { prepareMessagesWithFiles } from "$lib/server/textGeneration/utils/prepareFiles";
 import { makeImageProcessor } from "$lib/server/endpoints/images";
+import { isHuggingFaceHost } from "$lib/server/apiToken";
 import { logger } from "$lib/server/logger";
 import { AbortedGenerations } from "$lib/server/abortedGenerations";
 
@@ -168,6 +169,16 @@ export async function* runMcpFlow({
 		logger.warn({}, "[mcp] all selected MCP servers rejected by URL safety guard");
 		return "not_applicable";
 	}
+
+	// The user's OIDC access token may only be forwarded to completion endpoints
+	// hosted by the OIDC provider itself (Hugging Face); any other baseURL keeps
+	// the server-side key, so the user token is never leaked to third parties.
+	const userTokenHeader = (l: unknown) => {
+		const tok = (l as { token?: string } | undefined)?.token;
+		return tok && isHuggingFaceHost(config.OPENAI_BASE_URL)
+			? { Authorization: `Bearer ${tok}` }
+			: {};
+	};
 
 	// Optionally attach the logged-in user's HF token to the official HF MCP server only.
 	// Never override an explicit Authorization header, and require token to look like an HF token.
@@ -492,7 +503,7 @@ export async function* runMcpFlow({
 					headers: {
 						"ChatUI-Conversation-ID": conv._id.toString(),
 						"X-use-cache": "false",
-						...(locals?.token ? { Authorization: `Bearer ${locals.token}` } : {}),
+						...userTokenHeader(locals),
 					},
 				}
 			);
@@ -651,7 +662,7 @@ export async function* runMcpFlow({
 							headers: {
 								"ChatUI-Conversation-ID": conv._id.toString(),
 								"X-use-cache": "false",
-								...(locals?.token ? { Authorization: `Bearer ${locals.token}` } : {}),
+								...userTokenHeader(locals),
 							},
 						}
 					);

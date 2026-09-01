@@ -394,7 +394,7 @@ describe('Proof envelope', () => {
 describe('Replay test', () => {
   it('should produce identical decisions for the same trace', () => {
     const { result } = runDefaultCell();
-    const runner = createConformanceRunner();
+    const runner = createConformanceRunner(undefined, 'conformance-test-key');
     const replay = runner.runReplayTest(result.traceEvents);
 
     expect(replay.identical).toBe(true);
@@ -414,7 +414,7 @@ describe('Replay test', () => {
       coherenceEvent.decision = 'tampered_value';
     }
 
-    const runner = createConformanceRunner();
+    const runner = createConformanceRunner(undefined, 'conformance-test-key');
     const replay = runner.runReplayTest(tampered);
 
     expect(replay.identical).toBe(false);
@@ -425,7 +425,7 @@ describe('Replay test', () => {
   });
 
   it('should handle empty trace gracefully', () => {
-    const runner = createConformanceRunner();
+    const runner = createConformanceRunner(undefined, 'conformance-test-key');
     const replay = runner.runReplayTest([]);
 
     expect(replay.identical).toBe(true);
@@ -440,7 +440,7 @@ describe('Replay test', () => {
 
 describe('ConformanceRunner.runConformanceTest', () => {
   it('should pass all conformance checks', () => {
-    const runner = createConformanceRunner();
+    const runner = createConformanceRunner(undefined, 'conformance-test-key');
     const testResult = runner.runConformanceTest();
 
     // Overall pass
@@ -453,7 +453,7 @@ describe('ConformanceRunner.runConformanceTest', () => {
   });
 
   it('should have all expected check names', () => {
-    const runner = createConformanceRunner();
+    const runner = createConformanceRunner(undefined, 'conformance-test-key');
     const testResult = runner.runConformanceTest();
 
     const checkNames = testResult.checks.map((c) => c.name);
@@ -472,14 +472,14 @@ describe('ConformanceRunner.runConformanceTest', () => {
   });
 
   it('should return a valid proof hash', () => {
-    const runner = createConformanceRunner();
+    const runner = createConformanceRunner(undefined, 'conformance-test-key');
     const testResult = runner.runConformanceTest();
 
     expect(testResult.proofHash).toMatch(/^[0-9a-f]{64}$/);
   });
 
   it('should complete within a reasonable duration', () => {
-    const runner = createConformanceRunner();
+    const runner = createConformanceRunner(undefined, 'conformance-test-key');
     const testResult = runner.runConformanceTest();
 
     // Should complete in under 5 seconds even on slow CI
@@ -487,7 +487,7 @@ describe('ConformanceRunner.runConformanceTest', () => {
   });
 
   it('should produce a non-empty trace', () => {
-    const runner = createConformanceRunner();
+    const runner = createConformanceRunner(undefined, 'conformance-test-key');
     const testResult = runner.runConformanceTest();
 
     expect(testResult.trace.length).toBeGreaterThan(0);
@@ -515,13 +515,17 @@ describe('Factory functions', () => {
   });
 
   it('createConformanceRunner should return a runner', () => {
-    const runner = createConformanceRunner();
+    const runner = createConformanceRunner(undefined, 'conformance-test-key');
     expect(runner).toBeInstanceOf(ConformanceRunner);
+  });
+
+  it('createConformanceRunner without a signing key should throw', () => {
+    expect(() => createConformanceRunner()).toThrow(/signingKey/);
   });
 
   it('createConformanceRunner with custom authority', () => {
     const authority = makeAuthority({ agentId: 'custom-agent' });
-    const runner = createConformanceRunner(authority);
+    const runner = createConformanceRunner(authority, 'conformance-test-key');
     const testResult = runner.runConformanceTest();
     expect(testResult.passed).toBe(true);
   });

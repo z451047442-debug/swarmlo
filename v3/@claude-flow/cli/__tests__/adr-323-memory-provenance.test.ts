@@ -47,7 +47,26 @@ function searchJson(query: string, cwd: string, extraArgs: string[] = []) {
   const { stdout } = run(['memory', 'search', '-q', query, '-n', 'adr323', '--threshold', '0.05', '--format', 'json', ...extraArgs], cwd);
   const start = stdout.indexOf('{');
   expect(start).toBeGreaterThanOrEqual(0);
-  return JSON.parse(stdout.slice(start)) as { results: Array<{ key: string; provenanceType?: string }> };
+  // Honest CLI output may append human-readable notices after the JSON
+  // payload — extract the first balanced JSON object instead of parsing
+  // the whole stream.
+  const slice = stdout.slice(start);
+  let depth = 0;
+  let end = 0;
+  let inString = false;
+  for (let i = 0; i < slice.length; i++) {
+    const ch = slice[i];
+    if (inString) {
+      if (ch === '\\') { i++; continue; }
+      if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') { inString = true; continue; }
+    if (ch === '{') depth++;
+    else if (ch === '}') { depth--; if (depth === 0) { end = i + 1; break; } }
+  }
+  expect(end).toBeGreaterThan(0);
+  return JSON.parse(slice.slice(0, end)) as { results: Array<{ key: string; provenanceType?: string }> };
 }
 
 describe.skipIf(!CLI_BUILT)('ADR-323 typed memory provenance', () => {

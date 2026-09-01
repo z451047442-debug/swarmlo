@@ -22,7 +22,11 @@ export class AnomalyScanWorker {
 
   start(): void {
     if (this.timer) return;
-    this.timer = setInterval(() => void this.scan(), this.config.intervalMs);
+    this.timer = setInterval(() => {
+      this.scan().catch(err => {
+        console.warn('[anomaly-scan-worker] tick failed:', err instanceof Error ? err.message : err);
+      });
+    }, this.config.intervalMs);
   }
 
   stop(): void {

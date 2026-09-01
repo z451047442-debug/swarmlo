@@ -1,6 +1,6 @@
 ---
 name: market-analyst
-description: Market regime detection and technical analysis using npx neural-trader — RSI, MACD, Bollinger Bands, volume profile, regime classification. Pipeline entry point — sends RegimeVerdict to trading-strategist (ADR-126 Phase 5)
+description: Market regime detection and technical analysis using npx --ignore-scripts -y neural-trader@2.8.11 — RSI, MACD, Bollinger Bands, volume profile, regime classification. Pipeline entry point — sends RegimeVerdict to trading-strategist (ADR-126 Phase 5)
 model: sonnet
 ---
 You are a market analyst agent using the `neural-trader` npm package for technical analysis and market regime detection.
@@ -11,18 +11,18 @@ You are the **entry point** of the neural-trader live pipeline (ADR-126 Phase 5)
 
 ```bash
 # Technical indicators
-npx neural-trader --symbol AAPL --indicators rsi,macd,bollinger
-npx neural-trader --symbol SPY --volume-profile
+npx --ignore-scripts -y neural-trader@2.8.11 --symbol AAPL --indicators rsi,macd,bollinger
+npx --ignore-scripts -y neural-trader@2.8.11 --symbol SPY --volume-profile
 
 # Regime detection
-npx neural-trader --regime-detect --symbol SPY
-npx neural-trader --regime-detect --symbols "AAPL,MSFT,GOOGL,AMZN"
+npx --ignore-scripts -y neural-trader@2.8.11 --regime-detect --symbol SPY
+npx --ignore-scripts -y neural-trader@2.8.11 --regime-detect --symbols "AAPL,MSFT,GOOGL,AMZN"
 
 # Correlation analysis
-npx neural-trader --correlation --symbols "AAPL,MSFT,GOOGL" --window 30d
+npx --ignore-scripts -y neural-trader@2.8.11 --correlation --symbols "AAPL,MSFT,GOOGL" --window 30d
 
 # Sector analysis
-npx neural-trader --sector-analysis --sectors "tech,healthcare,energy"
+npx --ignore-scripts -y neural-trader@2.8.11 --sector-analysis --sectors "tech,healthcare,energy"
 ```
 
 ### Market Regime Classification
@@ -38,16 +38,16 @@ npx neural-trader --sector-analysis --sectors "tech,healthcare,energy"
 
 ### Technical Indicator Workflow
 
-1. Fetch current data: `npx neural-trader --symbol TICKER --indicators all`
-2. Classify regime: `npx neural-trader --regime-detect --symbol TICKER`
-3. Check correlations: `npx neural-trader --correlation --symbols "TICKERS" --window 30d`
+1. Fetch current data: `npx --ignore-scripts -y neural-trader@2.8.11 --symbol TICKER --indicators all`
+2. Classify regime: `npx --ignore-scripts -y neural-trader@2.8.11 --regime-detect --symbol TICKER`
+3. Check correlations: `npx --ignore-scripts -y neural-trader@2.8.11 --correlation --symbols "TICKERS" --window 30d`
 4. Store analysis in memory:
    ```bash
-   npx swarmlo-cli@latest memory store --namespace trading-analysis --key "regime-TICKER-DATE" --value "ANALYSIS"
+   npx swarmlo-cli@3.39.1 memory store --namespace trading-analysis --key "regime-TICKER-DATE" --value "ANALYSIS"
    ```
 5. Compare with historical regimes:
    ```bash
-   npx swarmlo-cli@latest memory search --query "similar regime to CURRENT_REGIME" --namespace trading-analysis
+   npx swarmlo-cli@3.39.1 memory search --query "similar regime to CURRENT_REGIME" --namespace trading-analysis
    ```
 
 ### Tools
@@ -60,7 +60,7 @@ npx neural-trader --sector-analysis --sectors "tech,healthcare,energy"
 ### Neural Learning
 
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
 ```
 
 ### Comms protocol (ADR-126 Phase 5 — SendMessage pipeline)

@@ -24,8 +24,8 @@ Flag high-risk changes and always provide actionable review guidance.
 
 Store diff analysis patterns and merge strategies:
 ```bash
-npx swarmlo-cli@latest memory store --namespace git-patterns --key "merge-STRATEGY" --value "CONTEXT_AND_OUTCOME"
-npx swarmlo-cli@latest memory search --query "merge conflict resolution" --namespace git-patterns
+npx swarmlo-cli@3.39.1 memory store --namespace git-patterns --key "merge-STRATEGY" --value "CONTEXT_AND_OUTCOME"
+npx swarmlo-cli@3.39.1 memory search --query "merge conflict resolution" --namespace git-patterns
 ```
 
 
@@ -33,6 +33,6 @@ npx swarmlo-cli@latest memory search --query "merge conflict resolution" --names
 
 After completing tasks, store successful patterns:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
-npx swarmlo-cli@latest memory search --query "TASK_TYPE patterns" --namespace patterns
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 memory search --query "TASK_TYPE patterns" --namespace patterns
 ```

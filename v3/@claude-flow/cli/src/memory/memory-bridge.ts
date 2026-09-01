@@ -92,8 +92,13 @@ function getDbPath(customPath?: string): string {
   if (customPath === ':memory:') return ':memory:';
   const resolved = path.resolve(customPath);
   // Ensure the path doesn't escape the working directory.
+  // audit_2026-08-31: `resolved.startsWith(cwd)` is a raw prefix check — with
+  // cwd=/proj, /proj-evil/memory.db slipped through as "safe". path.relative
+  // computes true containment: a result starting with `..` (or absolute,
+  // which happens on Windows drive changes) means the path escapes.
   const cwd = process.cwd();
-  if (!resolved.startsWith(cwd)) {
+  const rel = path.relative(cwd, resolved);
+  if (rel.startsWith('..') || path.isAbsolute(rel)) {
     return path.join(defaultDir, 'memory.db'); // fallback to safe default
   }
   return resolved;

@@ -5,7 +5,7 @@
 [![Try the UI Beta — flo.ruv.io](https://img.shields.io/badge/_Try_the_UI_Beta-flo.ruv.io-6366f1?style=for-the-badge&logoColor=white&logo=svelte)](https://flo.ruv.io/)
 [![npm version (swarmlo)](https://img.shields.io/npm/v/swarmlo?label=npx%20swarmlo&style=for-the-badge&logo=npm&color=cb3837)](https://www.npmjs.com/package/swarmlo)
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Star on GitHub](https://img.shields.io/github/stars/ruvnet/claude-flow?style=for-the-badge&logo=github&color=gold)](https://github.com/z451047442-debug/swarmlo)
+[![Star on GitHub](https://img.shields.io/github/stars/z451047442-debug/swarmlo?style=for-the-badge&logo=github&color=gold)](https://github.com/z451047442-debug/swarmlo)
 
 <!-- Ecosystem strip (collapsed visually with flat-square) -->
 [![Goal Planner](https://img.shields.io/badge/_Goal_Planner-goal.ruv.io-8b5cf6?style=flat-square&logoColor=white&logo=react)](https://goal.ruv.io/)
@@ -24,7 +24,7 @@
 
 </div>
 
-> **Agent = Model + Harness.** The model writes; the harness gives it tools, memory, loops, sandboxes, and controls so it can actually work. **Swarmlo is the harness** — the execution layer around Claude Code and Codex that adds 100+ specialized agents, coordinated swarms, self-learning memory, federated comms across machines, and enterprise security guardrails. So agents don't just run, they collaborate.
+> **Agent = Model + Harness.** The model writes; the harness gives it tools, memory, loops, sandboxes, and controls so it can actually work. **Swarmlo is the harness** — the execution layer around Claude Code and Codex that adds 60+ specialized agents, coordinated swarms, self-learning memory, federated comms across machines, and enterprise security guardrails. So agents don't just run, they collaborate.
 
 One `npx swarmlo init` gives Claude Code a nervous system: agents self-organize into swarms, learn from every task, remember across sessions, and — with federation — securely talk to agents on other machines without leaking data. You keep writing code. Swarmlo handles the coordination.
 
@@ -36,7 +36,7 @@ User --> Swarmlo (CLI/MCP) --> Router --> Swarm --> Agents --> Memory --> LLM Pr
                           +---- Learning Loop <-------+
 ```
 
-> **New to Swarmlo?** You don't need to learn 314 MCP tools or 26 CLI commands. After `init`, just use Claude Code normally — the hooks system automatically routes tasks, learns from successful patterns, and coordinates agents in the background.
+> **New to Swarmlo?** You don't need to learn 323 MCP tools or 45 CLI commands. After `init`, just use Claude Code normally — the hooks system automatically routes tasks, learns from successful patterns, and coordinates agents in the background.
 
 <details>
 <summary><strong>📖 Background — where the name comes from</strong></summary>
@@ -53,7 +53,7 @@ There are **two different install paths** with very different surface areas. Pic
 
 | | **Claude Code Plugin** | **CLI install (`npx swarmlo init`)** |
 |---|---|---|
-| What it gives you | Slash commands + a few skills + agent definitions per-plugin | Full Swarmlo loop — 98 agents, 60+ commands, 30 skills, MCP server, hooks, daemon |
+| What it gives you | Slash commands + a few skills + agent definitions per-plugin | Full Swarmlo loop — 60+ agents, 60+ commands, 30 skills, MCP server, hooks, daemon |
 | Files in your workspace | **Zero** | `.claude/`, `.claude-flow/`, `CLAUDE.md`, helpers, settings |
 | MCP server registered | Only if `swarmlo-core` is installed (it ships its own `.mcp.json`) — most other plugins don't | Yes |
 | Hooks installed | No | Yes |
@@ -75,7 +75,7 @@ There are **two different install paths** with very different surface areas. Pic
 This adds slash commands and agent definitions. `swarmlo-core` (installed above) does register its own MCP server on install — its tools are callable as `mcp__plugin_swarmlo-core_swarmlo__*` (e.g. `mcp__plugin_swarmlo-core_swarmlo__memory_store`), not the bare `memory_store`/`swarm_init`/`agent_spawn` names the CLI-track scaffold uses. Other plugins generally don't ship their own MCP server. For the full loop with the CLI-track tool names, use Path B below.
 
 <details>
-<summary><strong>🔌 All 35 plugins</strong></summary>
+<summary><strong>🔌 All 39 plugins</strong></summary>
 
 #### Core & Orchestration
 

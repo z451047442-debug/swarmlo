@@ -30,5 +30,5 @@ When you need to ingest raw market data (price and volume) for a symbol and prep
 ## CLI alternative
 
 ```bash
-npx swarmlo-cli@latest memory store --namespace market-data --key "symbol-SYMBOL-DATE" --value "OHLCV_JSON"
+npx swarmlo-cli@3.39.1 memory store --namespace market-data --key "symbol-SYMBOL-DATE" --value "OHLCV_JSON"
 ```

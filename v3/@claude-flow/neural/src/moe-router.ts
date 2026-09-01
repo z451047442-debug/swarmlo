@@ -631,11 +631,38 @@ export class MoERouter {
         return false;
       }
 
-      // Load weights
-      this.W1 = new Float32Array(model.weights.W1.flat());
-      this.b1 = new Float32Array(model.weights.b1);
-      this.W2 = new Float32Array(model.weights.W2.flat());
-      this.b2 = new Float32Array(model.weights.b2);
+      // Validate shapes BEFORE assigning — a mismatched file would otherwise
+      // silently corrupt the router (e.g. W1 sized for a different input dim).
+      const w1 = new Float32Array(model.weights.W1.flat());
+      const b1 = new Float32Array(model.weights.b1);
+      const w2 = new Float32Array(model.weights.W2.flat());
+      const b2 = new Float32Array(model.weights.b2);
+
+      if (w1.length !== HIDDEN_DIM * INPUT_DIM) {
+        console.warn(
+          `[MoE] Weight shape mismatch: W1 expected ${HIDDEN_DIM * INPUT_DIM}, got ${w1.length}`
+        );
+        return false;
+      }
+      if (b1.length !== HIDDEN_DIM) {
+        console.warn(`[MoE] Weight shape mismatch: b1 expected ${HIDDEN_DIM}, got ${b1.length}`);
+        return false;
+      }
+      if (w2.length !== NUM_EXPERTS * HIDDEN_DIM) {
+        console.warn(
+          `[MoE] Weight shape mismatch: W2 expected ${NUM_EXPERTS * HIDDEN_DIM}, got ${w2.length}`
+        );
+        return false;
+      }
+      if (b2.length !== NUM_EXPERTS) {
+        console.warn(`[MoE] Weight shape mismatch: b2 expected ${NUM_EXPERTS}, got ${b2.length}`);
+        return false;
+      }
+
+      this.W1 = w1;
+      this.b1 = b1;
+      this.W2 = w2;
+      this.b2 = b2;
 
       // Load stats
       this.updateCount = model.stats.updateCount || 0;

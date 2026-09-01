@@ -35,6 +35,14 @@ interface ResearchConfig {
   };
 }
 
+/** modelRouter 配置（前端 AdvancedSettingsModal 持久化后随请求下发） */
+interface ModelRouter {
+  primaryProvider?: "anthropic" | "openrouter" | "gemini" | "local";
+  strategy?: "cost" | "speed" | "quality" | "privacy" | "balanced";
+  maxCostPerRequest?: number;
+  enableFallback?: boolean;
+}
+
 interface ResearchRequest {
   goal: string;
   stepTitle: string;
@@ -42,6 +50,7 @@ interface ResearchRequest {
   stepType: string;
   aiModel?: string;
   language?: "en" | "zh";
+  modelRouter?: ModelRouter;
   config?: ResearchConfig;
   previousStepsData?: Array<{
     stepTitle: string;
@@ -80,17 +89,17 @@ async function fetchDeepSeekSearch(query: string, apiKey: string): Promise<strin
     }
     const data = await response.json();
     console.log('DeepSeek web search response:', data);
-    const message = (data.output ?? []).find((item: any) => item.type === 'message');
+    const message = (data.output ?? []).find((item: { type: string }) => item.type === 'message');
     const text = message?.output_text
       || (message?.content ?? [])
-        .filter((c: any) => c.type === 'output_text')
-        .map((c: any) => c.text)
+        .filter((c: { type: string }) => c.type === 'output_text')
+        .map((c: { text: string }) => c.text)
         .join('\n')
       || data.output_text
       || '';
     const links = (data.output ?? [])
-      .filter((item: any) => item.type === 'web_search_call' && item.action?.type === 'open_page' && item.action?.url)
-      .map((item: any) => item.action.url.split('#')[0]);
+      .filter((item: { type: string; action?: { type?: string; url?: string } }) => item.type === 'web_search_call' && item.action?.type === 'open_page' && item.action?.url)
+      .map((item: { action?: { url?: string } }) => (item.action?.url ?? '').split('#')[0]);
     const linkText = links.length
       ? `\n\n参考链接（真实检索）：\n${links.map((url: string) => `- ${url}`).join('\n')}`
       : '';
@@ -107,19 +116,20 @@ export async function handler(req: Request): Promise<Response> {
   }
 
   try {
-    const { goal, stepTitle, stepDescription, stepType, aiModel, language, config, previousStepsData }: ResearchRequest = await req.json();
-    
-    console.log('Research request:', { 
-      goal, 
-      stepTitle, 
-      stepDescription, 
-      stepType, 
-      aiModel, 
+    const { goal, stepTitle, stepDescription, stepType, aiModel, language, modelRouter, config, previousStepsData }: ResearchRequest = await req.json();
+
+    console.log('Research request:', {
+      goal,
+      stepTitle,
+      stepDescription,
+      stepType,
+      aiModel,
       previousStepsCount: previousStepsData?.length || 0,
       configProvided: !!config,
       depth: config?.researchGuidance?.depth,
       perspective: config?.researchGuidance?.perspective,
-      focusAreas: config?.researchGuidance?.focusAreas?.length || 0
+      focusAreas: config?.researchGuidance?.focusAreas?.length || 0,
+      modelRouter: modelRouter ?? null
     });
 
     const AI_BASE_URL = Deno.env.get('AI_BASE_URL') ?? 'https://ai.gateway.lovable.dev/v1';
@@ -127,6 +137,84 @@ export async function handler(req: Request): Promise<Response> {
     if (!AI_API_KEY) {
       throw new Error('AI_API_KEY is not configured (set AI_API_KEY or LOVABLE_API_KEY)');
     }
+
+    // ---- modelRouter：按 primaryProvider 选择端点/密钥/模型档位 ----
+    // 前端仅在用户显式保存过高级设置时下发 modelRouter；未下发时 provider 回落
+    // 'local'（AI_BASE_URL gateway），行为与以前完全一致。
+    const provider = modelRouter?.primaryProvider ?? 'local';
+
+    // 各 provider 的 OpenAI 兼容 chat/completions 端点（请求形态一致）
+    const PROVIDER_BASE_URLS: Record<string, string | undefined> = {
+      anthropic: Deno.env.get('AI_ANTHROPIC_BASE_URL') ?? 'https://api.anthropic.com/v1',
+      openrouter: Deno.env.get('AI_OPENROUTER_BASE_URL') ?? 'https://openrouter.ai/api/v1',
+      gemini: Deno.env.get('AI_GEMINI_BASE_URL') ?? 'https://generativelanguage.googleapis.com/v1beta/openai',
+      local: undefined, // gateway
+    };
+    const PROVIDER_API_KEYS: Record<string, string | undefined> = {
+      anthropic: Deno.env.get('ANTHROPIC_API_KEY'),
+      openrouter: Deno.env.get('OPENROUTER_API_KEY'),
+      gemini: Deno.env.get('GEMINI_API_KEY'),
+      local: undefined, // 复用 AI_API_KEY
+    };
+    const effectiveBaseUrl = PROVIDER_BASE_URLS[provider] ?? AI_BASE_URL;
+    const effectiveApiKey = PROVIDER_API_KEYS[provider] ?? AI_API_KEY;
+
+    // strategy → 模型档位。环境变量 AI_MODEL_<STRATEGY> 可覆盖；'local' 走 gateway，
+    // 由 gateway 决定模型（回落请求 aiModel / AI_MODEL）。
+    const TIER_MODELS: Record<string, Record<string, string>> = {
+      anthropic: {
+        cost: 'claude-haiku-4-5-20251001',
+        speed: 'claude-haiku-4-5-20251001',
+        quality: 'claude-sonnet-4-20250514',
+        privacy: 'claude-sonnet-4-20250514',
+        balanced: 'claude-sonnet-4-20250514',
+      },
+      openrouter: {
+        cost: 'deepseek/deepseek-chat-v3-0324:free',
+        speed: 'google/gemini-2.5-flash',
+        quality: 'anthropic/claude-sonnet-4-20250514',
+        privacy: 'deepseek/deepseek-chat-v3-0324:free',
+        balanced: 'anthropic/claude-sonnet-4-20250514',
+      },
+      gemini: {
+        cost: 'gemini-2.5-flash',
+        speed: 'gemini-2.5-flash',
+        quality: 'gemini-2.5-pro',
+        privacy: 'gemini-2.5-flash',
+        balanced: 'gemini-2.5-flash',
+      },
+      local: { cost: '', speed: '', quality: '', privacy: '', balanced: '' },
+    };
+    const strategy = modelRouter?.strategy ?? 'balanced';
+    const tierModel = TIER_MODELS[provider]?.[strategy];
+    const envModelOverride = Deno.env.get(`AI_MODEL_${strategy.toUpperCase()}`);
+    const resolvedModel = envModelOverride
+      || (provider !== 'local' && tierModel ? tierModel : '')
+      || aiModel
+      || Deno.env.get('AI_MODEL')
+      || 'google/gemini-2.5-flash';
+
+    // maxCostPerRequest 预算 → max_tokens 上限。按所选模型档位的估算输出单价换算
+    // （$ / 百万 token；近似值，edge function 拿不到精确账单——这是有意的诚实近似）。
+    // 预算越低响应越短，从而真实限制单请求成本。
+    const TOKEN_PRICE_PER_MILLION: Record<string, number> = {
+      'claude-sonnet-4-20250514': 15,
+      'anthropic/claude-sonnet-4-20250514': 15,
+      'claude-haiku-4-5-20251001': 5,
+      'gemini-2.5-pro': 10,
+      'gemini-2.5-flash': 2.5,
+      'deepseek/deepseek-chat-v3-0324:free': 0,
+    };
+    const pricePerToken = (TOKEN_PRICE_PER_MILLION[resolvedModel] ?? 5) / 1_000_000;
+    const maxTokens = Math.max(128, Math.min(8192, Math.floor((modelRouter?.maxCostPerRequest ?? 1.0) / Math.max(pricePerToken, 1e-6))));
+
+    console.log('modelRouter resolved:', {
+      provider,
+      strategy,
+      baseUrl: effectiveBaseUrl,
+      model: resolvedModel,
+      maxTokens: modelRouter ? maxTokens : 'unset (gateway default)',
+    });
 
     // Use custom system prompt if provided, otherwise use default
     const defaultSystemPrompt = `你是一名资深研究分析师，擅长开展全面研究并产出实质性发现。
@@ -299,114 +387,159 @@ ${config?.filters?.dateRange ? `\n- 重点采用来自以下时间段的信息�
 }`;
 
     // DeepSeek 端点：先走官方 Responses API 联网搜索，把真实检索汇总注入提示词
+    // （按解析后的有效端点判断——provider 切换后同样生效）
     let searchContext = '';
-    if (AI_BASE_URL.includes('deepseek')) {
+    if (effectiveBaseUrl.includes('deepseek')) {
       const searchQuery = `${goal || stepTitle} - ${stepTitle}: ${stepDescription}`.slice(0, 800);
-      searchContext = await fetchDeepSeekSearch(searchQuery, AI_API_KEY);
+      searchContext = await fetchDeepSeekSearch(searchQuery, effectiveApiKey);
     }
     const finalUserPrompt = searchContext
       ? `${userPrompt}\n\n---\n以下是最新联网搜索汇总（真实检索、时效最新，请优先采用其中信息并用于来源引用）：\n${searchContext}`
       : userPrompt;
 
-    const response = await fetch(`${AI_BASE_URL}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${AI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: aiModel || Deno.env.get('AI_MODEL') || 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: finalUserPrompt }
-        ],
-        tools: [
-          ...(Deno.env.get('AI_ENABLE_SEARCH') === '1'
-            ? [{
-                type: "google_search_retrieval",
-                google_search_retrieval: {
-                  dynamic_retrieval_config: {
-                    mode: "MODE_DYNAMIC",
-                    dynamic_threshold: 0.3
+    // google_search_retrieval 是 Google/Vertex 专用工具，anthropic/openrouter 端点不支持——
+    // 仅 gateway（local）保留 AI_ENABLE_SEARCH 开关下的该工具。
+    const supportsGoogleSearchRetrieval = provider === 'local';
+    const buildChatBody = (model: string, maxTokensOverride?: number) => ({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: finalUserPrompt }
+      ],
+      tools: [
+        ...(supportsGoogleSearchRetrieval && Deno.env.get('AI_ENABLE_SEARCH') === '1'
+          ? [{
+              type: "google_search_retrieval",
+              google_search_retrieval: {
+                dynamic_retrieval_config: {
+                  mode: "MODE_DYNAMIC",
+                  dynamic_threshold: 0.3
+                }
+              }
+            }]
+          : []),
+        {
+          type: "function",
+          function: {
+            name: "generate_research_data",
+            description: "Generate research data items for the given step based on current web search results",
+            parameters: {
+              type: "object",
+              properties: {
+                items: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      title: {
+                        type: "string",
+                        description: "Specific finding with key metrics or breakthrough details"
+                      },
+                      content: {
+                        type: "string",
+                        description: "Detailed research findings with data, examples, and implications (4-5 sentences minimum)"
+                      },
+                      source: {
+                        type: "string",
+                        description: "REQUIRED: Credible source with year (e.g., 'Nature Physics (2024)', 'McKinsey Report 2024')"
+                      },
+                      confidence: {
+                        type: "number",
+                        minimum: config?.parameters?.minConfidence ? (config.parameters.minConfidence / 100) : 0.7,
+                        maximum: 0.95,
+                        description: "Confidence score based on finding specificity"
+                      }
+                    },
+                    required: ["title", "content", "source", "confidence"],
+                    additionalProperties: false
                   }
                 }
-              }]
-            : []),
-          {
-            type: "function",
-            function: {
-              name: "generate_research_data",
-              description: "Generate research data items for the given step based on current web search results",
-              parameters: {
-                type: "object",
-                properties: {
-                  items: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        title: { 
-                          type: "string",
-                          description: "Specific finding with key metrics or breakthrough details"
-                        },
-                        content: { 
-                          type: "string",
-                          description: "Detailed research findings with data, examples, and implications (4-5 sentences minimum)"
-                        },
-                        source: { 
-                          type: "string",
-                          description: "REQUIRED: Credible source with year (e.g., 'Nature Physics (2024)', 'McKinsey Report 2024')"
-                        },
-                        confidence: { 
-                          type: "number", 
-                          minimum: config?.parameters?.minConfidence ? (config.parameters.minConfidence / 100) : 0.7, 
-                          maximum: 0.95,
-                          description: "Confidence score based on finding specificity"
-                        }
-                      },
-                      required: ["title", "content", "source", "confidence"],
-                      additionalProperties: false
-                    }
-                  }
-                },
-                required: ["items"],
-                additionalProperties: false
-              }
+              },
+              required: ["items"],
+              additionalProperties: false
             }
           }
-        ],
-        ...(AI_BASE_URL.includes('deepseek') ? { thinking: { type: 'disabled' } } : {}),
-        tool_choice: { type: "function", function: { name: "generate_research_data" } }
-      }),
+        }
+      ],
+      ...(effectiveBaseUrl.includes('deepseek') ? { thinking: { type: 'disabled' } } : {}),
+      // 预算换算出的 max_tokens 上限只在显式下发 modelRouter 时生效（不改变默认行为）
+      ...(modelRouter ? { max_tokens: maxTokens } : {}),
+      tool_choice: { type: "function", function: { name: "generate_research_data" } }
     });
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        console.error('Rate limit exceeded');
-        return new Response(JSON.stringify({ error: "Rate limits exceeded. Please try again later." }), {
-          status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      if (response.status === 402) {
-        console.error('Payment required');
-        return new Response(JSON.stringify({ error: "AI usage limit reached. Please add credits to continue." }), {
-          status: 402,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      const errorText = await response.text();
-      console.error('AI gateway error:', response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
-    }
+    // 调用所选 provider 的 chat/completions；失败时按 enableFallback 决定是否回退 gateway
+    const callChatCompletions = async (baseUrl: string, apiKey: string, model: string): Promise<unknown> => {
+      const response = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(buildChatBody(model)),
+      });
 
-    const data = await response.json();
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`AI provider error (${baseUrl}):`, response.status, errorText);
+        throw new Error(`AI provider error: ${response.status}`, { cause: response.status });
+      }
+      return await response.json();
+    };
+
+    let data: unknown;
+    try {
+      data = await callChatCompletions(effectiveBaseUrl, effectiveApiKey, resolvedModel);
+    } catch (err) {
+      // enableFallback：主 provider 失败时用原始 aiModel 回退到默认 gateway
+      const status = err instanceof Error && typeof err.cause === 'number' ? err.cause : 0;
+      if (modelRouter?.enableFallback && provider !== 'local') {
+        console.warn(`Primary provider (${provider}) failed, falling back to gateway:`, err);
+        try {
+          data = await callChatCompletions(
+            AI_BASE_URL,
+            AI_API_KEY,
+            aiModel || Deno.env.get('AI_MODEL') || 'google/gemini-2.5-flash',
+          );
+        } catch (fallbackErr) {
+          console.error('Gateway fallback also failed:', fallbackErr);
+          if (status === 429 || (fallbackErr instanceof Error && typeof fallbackErr.cause === 'number' && fallbackErr.cause === 429)) {
+            return new Response(JSON.stringify({ error: "Rate limits exceeded. Please try again later." }), {
+              status: 429,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+          if (status === 402 || (fallbackErr instanceof Error && typeof fallbackErr.cause === 'number' && fallbackErr.cause === 402)) {
+            return new Response(JSON.stringify({ error: "AI usage limit reached. Please add credits to continue." }), {
+              status: 402,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+          throw new Error(`AI gateway error: ${fallbackErr instanceof Error ? fallbackErr.message : fallbackErr}`);
+        }
+      } else {
+        if (status === 429) {
+          console.error('Rate limit exceeded');
+          return new Response(JSON.stringify({ error: "Rate limits exceeded. Please try again later." }), {
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        if (status === 402) {
+          console.error('Payment required');
+          return new Response(JSON.stringify({ error: "AI usage limit reached. Please add credits to continue." }), {
+            status: 402,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        throw err;
+      }
+    }
     console.log('AI response received:', data);
 
     // Extract grounding metadata (citations from Google Search)
     const groundingMetadata = data.choices?.[0]?.message?.grounding_metadata;
     const groundingSources = groundingMetadata?.search_entry_point?.rendered_content || 
-                            groundingMetadata?.grounding_supports?.map((s: any) => ({
+                            groundingMetadata?.grounding_supports?.map((s: { segment?: { text?: string }; source?: { uri?: string; title?: string } }) => ({
                               url: s.segment?.text || s.source?.uri,
                               title: s.source?.title
                             })) || [];
@@ -422,7 +555,7 @@ ${config?.filters?.dateRange ? `\n- 重点采用来自以下时间段的信息�
     const researchItems = JSON.parse(toolCall.function.arguments).items;
 
     // Transform to match the expected interface and enrich with grounding citations
-    const formattedData: ResearchDataItem[] = researchItems.map((item: any, index: number) => {
+    const formattedData: ResearchDataItem[] = researchItems.map((item: { source?: string; title?: string; [key: string]: unknown }, index: number) => {
       // If the item doesn't have a source, try to use grounding sources
       let source = item.source;
       if (!source && groundingSources.length > index) {

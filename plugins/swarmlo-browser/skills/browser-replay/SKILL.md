@@ -33,7 +33,7 @@ Re-drive a recorded session trajectory. Used for regression testing, determinist
 4. **For each trajectory step**, dispatch the matching MCP tool (`browser_click`, `browser_fill`, `browser_eval`, etc.) with the recorded args.
 5. **On selector miss**, do *not* fail immediately — query the `browser-selectors` namespace for an embedding-similar selector for the same `<host>:<intent>` and retry once:
    ```bash
-   npx -y swarmlo-cli@latest memory search --namespace browser-selectors \
+   npx -y swarmlo-cli@3.39.1 memory search --namespace browser-selectors \
      --query "<host> <intent>" --limit 5
    ```
 6. **Record a new trajectory** for the replay run (allocate a fresh RVF container, lineage-tracked via `rvf derive`).

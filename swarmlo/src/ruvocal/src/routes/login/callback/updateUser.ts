@@ -111,7 +111,7 @@ export async function updateUser(params: {
 
 	// check if user already exists
 	const existingUser = await collections.users.findOne({ hfUserId });
-	let userId = existingUser?._id;
+	let userId = existingUser?._id?.toString();
 
 	// update session cookie on login
 	const previousSessionId = locals.sessionId;
@@ -166,7 +166,11 @@ export async function updateUser(params: {
 			isEarlyAccess,
 		});
 
-		userId = insertedId;
+		// insertedId may come from either the RVF store (its own ObjectId class)
+		// or MongoDB — normalize to a plain string id, matching how RVF
+		// findOne returns _id. Wrapping in mongodb ObjectId would store a
+		// different type than user lookups return and break $set matches.
+		userId = insertedId.toString();
 
 		await collections.sessions.insertOne({
 			_id: new ObjectId(),

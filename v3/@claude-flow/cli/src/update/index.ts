@@ -80,8 +80,15 @@ export async function runStartupUpdateCheck(options: {
     result.checked = true;
     result.updatesAvailable = results;
 
-    // Auto-update if enabled
-    if (options.autoUpdate !== false) {
+    // Auto-update runs ONLY on explicit opt-in (`autoUpdate: true`), and is
+    // still disabled when SWARMLO_NO_AUTO_UPDATE=1 is set. The previous
+    // `!== false` default meant every startup silently ran
+    // `npm install <pkg>@<version> --no-save` in the user's project — no
+    // explicit consent, and (previously with --save-exact) a rewrite of the
+    // user's package.json. Never auto-execute without an explicit opt-in.
+    const autoUpdateEnabled =
+      options.autoUpdate === true && process.env.SWARMLO_NO_AUTO_UPDATE !== '1';
+    if (autoUpdateEnabled) {
       const autoUpdateable = results.filter((r) => r.shouldAutoUpdate);
 
       if (autoUpdateable.length > 0) {

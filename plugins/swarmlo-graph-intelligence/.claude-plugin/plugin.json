@@ -3,8 +3,8 @@
   "description": "Swarmlo Graph Intelligence Engine — real-time relationship intelligence with complexity-aware execution. Single-entry personalized PageRank, streaming delta updates, witness-signed reasoning artifacts, federation-distributable PR vectors. Built on sublinear-time-solver@1.7.0.",
   "version": "0.1.0-alpha.1",
   "author": {
-    "name": "ruvnet",
-    "url": "https://github.com/ruvnet"
+    "name": "z451047442-debug",
+    "url": "https://github.com/z451047442-debug"
   },
   "homepage": "https://github.com/z451047442-debug/swarmlo",
   "license": "MIT",

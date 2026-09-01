@@ -2564,13 +2564,13 @@ export const hooksIntelligence: MCPTool = {
           implemented: true,
           indexSize: realStats.memory.indexSize,
           memorySizeBytes: realStats.memory.memorySizeBytes,
-          note: 'HNSW vector indexing with 150x-12,500x speedup',
+          note: 'HNSW vector indexing (measured ~1.9x-4.7x vs brute force)',
         },
         flashAttention: {
           enabled: true,
           status: flashAvailable ? 'active' : 'loading',
           implemented: true, // NOW IMPLEMENTED in alpha.102
-          note: flashAvailable ? 'Flash Attention with O(N) memory (2.49x-7.47x speedup)' : 'Flash Attention loading...',
+          note: flashAvailable ? 'Flash Attention with O(N) memory (benchmark pending)' : 'Flash Attention loading...',
         },
         ewc: {
           enabled: true,

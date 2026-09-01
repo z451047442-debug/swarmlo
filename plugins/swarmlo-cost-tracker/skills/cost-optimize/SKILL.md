@@ -42,6 +42,6 @@ When costs are higher than expected or you want to proactively reduce spending. 
 ## CLI alternative
 
 ```bash
-npx swarmlo-cli@latest memory search --query "cost optimization strategies" --namespace cost-patterns
-npx swarmlo-cli@latest memory store --key "opt-2026-05-04" --value '{...}' --namespace cost-patterns
+npx swarmlo-cli@3.39.1 memory search --query "cost optimization strategies" --namespace cost-patterns
+npx swarmlo-cli@3.39.1 memory store --key "opt-2026-05-04" --value '{...}' --namespace cost-patterns
 ```

@@ -13,7 +13,7 @@ For continuous doc maintenance via CronCreate:
 Detect drift by comparing current code against existing docs and flagging inconsistencies.
 
 Scoped generation:
-- API docs: `npx swarmlo-cli@latest hooks worker dispatch --trigger document --scope api`
-- Full project: `npx swarmlo-cli@latest hooks worker dispatch --trigger document --scope full`
+- API docs: `npx swarmlo-cli@3.39.1 hooks worker dispatch --trigger document --scope api`
+- Full project: `npx swarmlo-cli@3.39.1 hooks worker dispatch --trigger document --scope full`
 
 Store the approach: `mcp__plugin_swarmlo-core_swarmlo__memory_store({ key: "doc-pattern", value: "APPROACH", namespace: "patterns" })`

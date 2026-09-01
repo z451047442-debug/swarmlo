@@ -178,7 +178,9 @@ export class EnforcementGates {
           ].join('\n'),
           metadata: {
             matchedPattern: match[0],
-            fullCommand: command,
+            // Only the matched fragment is stored — never the full command,
+            // which may contain unrelated sensitive content.
+            commandFragment: match[0],
           },
         };
       }

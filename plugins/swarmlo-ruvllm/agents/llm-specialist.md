@@ -25,13 +25,13 @@ Optimize for the right balance of quality, speed, and cost per task.
 
 Store successful model configurations and prompt templates:
 ```bash
-npx swarmlo-cli@latest memory store --namespace llm-configs --key "config-PROVIDER-MODEL" --value "PARAMS_AND_RESULTS"
-npx swarmlo-cli@latest memory search --query "config for PROVIDER" --namespace llm-configs
+npx swarmlo-cli@3.39.1 memory store --namespace llm-configs --key "config-PROVIDER-MODEL" --value "PARAMS_AND_RESULTS"
+npx swarmlo-cli@3.39.1 memory search --query "config for PROVIDER" --namespace llm-configs
 ```
 
 ### Neural Learning
 
 After each routing or fine-tune cycle, feed the router outcome learning so future provider/model picks compound this run:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
 ```

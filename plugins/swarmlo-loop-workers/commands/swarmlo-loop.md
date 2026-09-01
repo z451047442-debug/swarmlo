@@ -19,4 +19,4 @@ Available workers (12 total):
 - **consolidate** (low) -- memory consolidation
 - **preload** (low) -- resource preloading
 
-Run the worker via `npx swarmlo-cli@latest hooks worker dispatch --trigger WORKER_NAME`, then use `ScheduleWakeup` with delay 270s (cache-warm) to schedule the next iteration.
+Run the worker via `npx swarmlo-cli@3.39.1 hooks worker dispatch --trigger WORKER_NAME`, then use `ScheduleWakeup` with delay 270s (cache-warm) to schedule the next iteration.

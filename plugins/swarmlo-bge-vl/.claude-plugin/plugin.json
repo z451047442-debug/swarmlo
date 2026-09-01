@@ -2,7 +2,7 @@
   "name": "swarmlo-bge-vl",
   "description": "BGE-VL multimodal (vision-language) embeddings for swarmlo — Python sidecar over BAAI/bge-vl-* with an isolated 768-dim bge-vl.db (ADR-384). Removable per ADR-150: missing Python degrades to {degraded:true} exit 0.",
   "version": "0.1.0",
-  "author": { "name": "ruvnet", "url": "https://github.com/ruvnet" },
+  "author": { "name": "z451047442-debug", "url": "https://github.com/z451047442-debug" },
   "homepage": "https://github.com/z451047442-debug/swarmlo",
   "license": "MIT",
   "keywords": ["swarmlo", "bge-vl", "multimodal", "embeddings", "vision-language", "python-sidecar", "adr-384", "adr-150", "optional-dependency", "graceful-degradation"]

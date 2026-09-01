@@ -8,6 +8,7 @@ import { output } from '../output.js';
 import { confirm, select, multiSelect, input } from '../prompt.js';
 import * as fs from 'fs';
 import * as path from 'path';
+import { pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import {
   executeInit,
@@ -79,7 +80,7 @@ async function resolveCodexInitializer(cwd: string): Promise<CodexInitializerCto
     async () => {
       const projectPath = path.join(cwd, 'node_modules', '@claude-flow', 'codex', 'dist', 'index.js');
       if (fs.existsSync(projectPath)) {
-        const mod = await import(`file://${projectPath}`);
+        const mod = await import(pathToFileURL(projectPath).href);
         return mod.CodexInitializer;
       }
       throw new Error('Not found in project');
@@ -90,7 +91,7 @@ async function resolveCodexInitializer(cwd: string): Promise<CodexInitializerCto
       const globalPath = execSync('npm root -g', { encoding: 'utf-8' }).trim();
       const codexPath = path.join(globalPath, '@claude-flow', 'codex', 'dist', 'index.js');
       if (fs.existsSync(codexPath)) {
-        const mod = await import(`file://${codexPath}`);
+        const mod = await import(pathToFileURL(codexPath).href);
         return mod.CodexInitializer;
       }
       throw new Error('Not found globally');
@@ -1034,6 +1035,10 @@ const wizardCommand: Command = {
           options.hooks.sessionStart = hooks.includes('sessionStart');
           options.hooks.stop = hooks.includes('stop');
           options.hooks.notification = hooks.includes('notification');
+          // The wizard asks about PermissionRequest but previously dropped the
+          // choice on the floor — thread it into options.hooks so the selected
+          // value is actually carried through instead of silently discarded.
+          (options.hooks as { permissionRequest?: boolean }).permissionRequest = hooks.includes('permissionRequest');
         }
       }
 
@@ -1065,7 +1070,7 @@ const wizardCommand: Command = {
         message: 'Select memory backend:',
         options: [
           { value: 'hybrid', label: 'Hybrid', hint: 'SQLite + AgentDB (recommended)' },
-          { value: 'agentdb', label: 'AgentDB', hint: '150x faster vector search' },
+          { value: 'agentdb', label: 'AgentDB', hint: 'HNSW vector search (measured ~1.9x-4.7x)' },
           { value: 'sqlite', label: 'SQLite', hint: 'Standard SQL storage' },
           { value: 'memory', label: 'In-Memory', hint: 'Fast but non-persistent' },
         ],

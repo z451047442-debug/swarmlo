@@ -63,7 +63,9 @@ vi.mock("@modelcontextprotocol/sdk/client/sse.js", () => {
 // Import AFTER vi.mock declarations.
 import { getClient, drainPool, McpRateLimitedError } from "./clientPool";
 
-const server = { name: "test-server", url: "https://example.test/mcp", headers: {} };
+// Loopback host: clientPool performs a pre-connect SSRF host check (real DNS
+// resolution), which must not run against the fake example.test domain.
+const server = { name: "test-server", url: "http://localhost:3210/mcp", headers: {} };
 
 describe("clientPool — rate-limit and HTTP error handling", () => {
 	beforeEach(async () => {
@@ -78,10 +80,7 @@ describe("clientPool — rate-limit and HTTP error handling", () => {
 
 	it("skips SSE fallback on 429 and throws McpRateLimitedError", async () => {
 		httpConnectMock.mockRejectedValue(
-			new StreamableHTTPError(
-				429,
-				"Error POSTing to endpoint: Rate exceeded. Retry-After: 7"
-			)
+			new StreamableHTTPError(429, "Error POSTing to endpoint: Rate exceeded. Retry-After: 7")
 		);
 
 		await expect(getClient(server)).rejects.toBeInstanceOf(McpRateLimitedError);
@@ -92,10 +91,7 @@ describe("clientPool — rate-limit and HTTP error handling", () => {
 
 	it("honors Retry-After when present in the error message", async () => {
 		httpConnectMock.mockRejectedValue(
-			new StreamableHTTPError(
-				429,
-				"Error POSTing to endpoint: Rate exceeded. Retry-After: 12"
-			)
+			new StreamableHTTPError(429, "Error POSTing to endpoint: Rate exceeded. Retry-After: 12")
 		);
 
 		try {
@@ -122,17 +118,13 @@ describe("clientPool — rate-limit and HTTP error handling", () => {
 	});
 
 	it("skips SSE fallback on 4xx (e.g. 401)", async () => {
-		httpConnectMock.mockRejectedValue(
-			new StreamableHTTPError(401, "Unauthorized")
-		);
+		httpConnectMock.mockRejectedValue(new StreamableHTTPError(401, "Unauthorized"));
 		await expect(getClient(server)).rejects.toThrow(/HTTP 401/);
 		expect(sseConnectMock).not.toHaveBeenCalled();
 	});
 
 	it("skips SSE fallback on 5xx (e.g. 503)", async () => {
-		httpConnectMock.mockRejectedValue(
-			new StreamableHTTPError(503, "Service Unavailable")
-		);
+		httpConnectMock.mockRejectedValue(new StreamableHTTPError(503, "Service Unavailable"));
 		await expect(getClient(server)).rejects.toThrow(/HTTP 503/);
 		expect(sseConnectMock).not.toHaveBeenCalled();
 	});
@@ -148,9 +140,7 @@ describe("clientPool — rate-limit and HTTP error handling", () => {
 	});
 
 	it("falls back to SSE on 408 Request Timeout (recoverable)", async () => {
-		httpConnectMock.mockRejectedValue(
-			new StreamableHTTPError(408, "Request Timeout")
-		);
+		httpConnectMock.mockRejectedValue(new StreamableHTTPError(408, "Request Timeout"));
 		sseConnectMock.mockResolvedValue(undefined);
 
 		const client = await getClient(server);
@@ -160,9 +150,7 @@ describe("clientPool — rate-limit and HTTP error handling", () => {
 
 	it("surfaces 429 even when the SSE fallback also reports 429", async () => {
 		httpConnectMock.mockRejectedValue(new Error("transport mismatch")); // forces SSE attempt
-		sseConnectMock.mockRejectedValue(
-			new Error("SSE error: Non-200 status code (429)")
-		);
+		sseConnectMock.mockRejectedValue(new Error("SSE error: Non-200 status code (429)"));
 
 		try {
 			await getClient(server);

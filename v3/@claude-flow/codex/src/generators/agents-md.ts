@@ -358,8 +358,8 @@ function generateFull(options: AgentsMdOptions): string {
 
 | Metric | Target | Notes |
 |--------|--------|-------|
-| HNSW Search | 150x-12,500x faster | Vector operations |
-| Memory Reduction | 50-75% | Int8 quantization |
+| HNSW Search | ~1.9x at N=20k, ~3.2x-4.7x at N=5k vs brute force (measured) | Vector operations |
+| Memory Reduction | 3.84x compression, cosine 0.99999 (measured, Int8) | Quantization |
 | MCP Response | <100ms | API latency |
 | CLI Startup | <500ms | Cold start |
 | SONA Adaptation | <0.05ms | Neural learning |

@@ -3,38 +3,9 @@
  * Handles version bumping, changelog generation, and git tagging
  */
 
-import { execSync, execFileSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
-
-/**
- * Allowed git commands for security - prevents command injection
- */
-const ALLOWED_GIT_COMMANDS = [
-  'git status --porcelain',
-  'git rev-parse HEAD',
-  'git log',
-  'git tag',
-  'git add',
-  'git commit',
-  'git describe',
-];
-
-/**
- * Validate command against allowlist to prevent command injection
- */
-function validateCommand(cmd: string): void {
-  // Check for shell metacharacters
-  if (/[;&|`$()<>]/.test(cmd)) {
-    throw new Error(`Invalid command: contains shell metacharacters`);
-  }
-
-  // Must start with an allowed command prefix
-  const isAllowed = ALLOWED_GIT_COMMANDS.some(prefix => cmd.startsWith(prefix));
-  if (!isAllowed) {
-    throw new Error(`Command not allowed: ${cmd.split(' ')[0]}`);
-  }
-}
 import type {
   ReleaseOptions,
   ReleaseResult,
@@ -43,6 +14,50 @@ import type {
   ChangelogEntry,
   VersionBumpType
 } from './types.js';
+
+/**
+ * Strict semver whitelist: three purely numeric segments with an optional
+ * `-channel.N` prerelease suffix. Rejects newlines, quotes, whitespace and
+ * every shell metacharacter — a version that passes this can never inject
+ * into a command line.
+ */
+const STRICT_VERSION_RE = /^\d+\.\d+\.\d+(?:-[a-z][a-z0-9]*\.\d+)?$/;
+
+/**
+ * Throw unless `value` is a strict semver (see STRICT_VERSION_RE).
+ */
+function assertValidVersion(value: string, label = 'version'): void {
+  if (!STRICT_VERSION_RE.test(value)) {
+    throw new Error(
+      `Invalid ${label}: ${JSON.stringify(value)} (must match e.g. 1.2.3 or 1.2.3-alpha.1)`
+    );
+  }
+}
+
+/**
+ * Charset for non-version tokens passed to git (tag prefix, changelog path).
+ * No whitespace, quotes, or shell metacharacters; must not start with `-`
+ * (would be parsed as a git flag) or `/` (would escape the repo root).
+ */
+const SAFE_TOKEN_RE = /^[A-Za-z0-9][A-Za-z0-9._/-]*$/;
+
+function assertSafeToken(value: string, label: string): void {
+  if (!SAFE_TOKEN_RE.test(value) || value.includes('..')) {
+    throw new Error(`Invalid ${label}: ${JSON.stringify(value)}`);
+  }
+}
+
+/**
+ * Args we pass to git ourselves; anything else starting with `-` is rejected.
+ */
+const ALLOWED_GIT_FLAGS = new Set([
+  '--porcelain',
+  '--tags',
+  '--abbrev=0',
+  '-m',
+  '-a',
+  '--pretty=format:%H%n%s%n%an%n%ai%n---COMMIT---',
+]);
 
 export class ReleaseManager {
   private cwd: string;
@@ -76,6 +91,13 @@ export class ReleaseManager {
     };
 
     try {
+      // Whitelist-validate every user-controlled value BEFORE any command runs
+      if (version) {
+        assertValidVersion(version, 'version option');
+      }
+      assertSafeToken(tagPrefix, 'tagPrefix');
+      assertSafeToken(changelogPath, 'changelogPath');
+
       // Read package.json
       const pkgPath = join(this.cwd, 'package.json');
       if (!existsSync(pkgPath)) {
@@ -87,7 +109,7 @@ export class ReleaseManager {
 
       // Check for uncommitted changes
       if (!skipValidation) {
-        const gitStatus = this.execCommand('git status --porcelain', true);
+        const gitStatus = this.execCommand(['git', 'status', '--porcelain'], true);
         if (gitStatus && !dryRun) {
           result.warnings?.push('Uncommitted changes detected');
         }
@@ -95,6 +117,7 @@ export class ReleaseManager {
 
       // Determine new version
       result.newVersion = version || this.bumpVersion(pkg.version, bumpType, channel);
+      assertValidVersion(result.newVersion, 'bumped version');
 
       // Generate changelog if requested
       if (generateChangelog) {
@@ -118,19 +141,20 @@ export class ReleaseManager {
         const commitMessage = `chore(release): ${result.newVersion}`;
 
         // Stage changes
-        this.execCommand(`git add package.json ${changelogPath}`);
+        this.execCommand(['git', 'add', 'package.json', changelogPath]);
 
         // Commit
-        this.execCommand(`git commit -m "${commitMessage}"`);
+        this.execCommand(['git', 'commit', '-m', commitMessage]);
 
-        result.commitHash = this.execCommand('git rev-parse HEAD', true).trim();
+        result.commitHash = this.execCommand(['git', 'rev-parse', 'HEAD'], true).trim();
       }
 
       // Create git tag
       if (createTag && !dryRun) {
         result.tag = `${tagPrefix}${result.newVersion}`;
+        assertSafeToken(result.tag, 'tag');
         const tagMessage = `Release ${result.newVersion}`;
-        this.execCommand(`git tag -a ${result.tag} -m "${tagMessage}"`);
+        this.execCommand(['git', 'tag', '-a', result.tag, '-m', tagMessage]);
       }
 
       result.success = true;
@@ -205,7 +229,8 @@ export class ReleaseManager {
    */
   private getCommitsSinceLastTag(): GitCommit[] {
     try {
-      const lastTag = this.execCommand('git describe --tags --abbrev=0', true).trim();
+      const lastTag = this.execCommand(['git', 'describe', '--tags', '--abbrev=0'], true).trim();
+      assertSafeToken(lastTag, 'git describe output');
       const range = `${lastTag}..HEAD`;
       return this.parseCommits(range);
     } catch {
@@ -219,11 +244,11 @@ export class ReleaseManager {
    */
   private parseCommits(range: string): GitCommit[] {
     const format = '--pretty=format:%H%n%s%n%an%n%ai%n---COMMIT---';
-    const cmd = range
-      ? `git log ${range} ${format}`
-      : `git log ${format}`;
+    const args = range
+      ? ['git', 'log', range, format]
+      : ['git', 'log', format];
 
-    const output = this.execCommand(cmd, true);
+    const output = this.execCommand(args, true);
     const commits: GitCommit[] = [];
 
     const commitBlocks = output.split('---COMMIT---').filter(Boolean);
@@ -344,15 +369,42 @@ export class ReleaseManager {
   }
 
   /**
-   * Execute command safely with validation
-   * Only allows git commands from the allowlist
+   * Execute a git command safely.
+   * Commands are passed as an argument array to execFileSync — no shell is
+   * involved, so shell metacharacters in values are inert. Every non-flag
+   * argument is additionally validated against a safe charset and must not
+   * start with `-` (which git would treat as a flag).
    */
-  private execCommand(cmd: string, returnOutput = false): string {
-    // Validate command against allowlist
-    validateCommand(cmd);
+  private execCommand(args: string[], returnOutput = false): string {
+    if (args.length === 0 || args[0] !== 'git') {
+      throw new Error('Only git commands are allowed');
+    }
+
+    let isMessageValue = false;
+    for (const arg of args.slice(1)) {
+      if (isMessageValue) {
+        // Value following `-m` is a single array element (no shell involved);
+        // only forbid NUL bytes and absurd length.
+        if (arg.includes('\0') || arg.length > 4096) {
+          throw new Error(`Invalid git message value`);
+        }
+        isMessageValue = false;
+        continue;
+      }
+      if (arg.startsWith('-')) {
+        if (!ALLOWED_GIT_FLAGS.has(arg)) {
+          throw new Error(`Invalid git flag: ${JSON.stringify(arg)}`);
+        }
+        isMessageValue = arg === '-m';
+        continue;
+      }
+      if (!SAFE_TOKEN_RE.test(arg)) {
+        throw new Error(`Invalid git argument: ${JSON.stringify(arg)}`);
+      }
+    }
 
     try {
-      const output = execSync(cmd, {
+      const output = execFileSync('git', args.slice(1), {
         cwd: this.cwd,
         encoding: 'utf-8',
         stdio: returnOutput ? 'pipe' : 'inherit',

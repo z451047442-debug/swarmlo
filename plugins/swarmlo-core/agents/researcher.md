@@ -67,8 +67,8 @@ Use a graph-traversal approach — each research step expands the frontier of kn
 - `WebSearch`, `WebFetch` — external research
 
 **Memory (simple key-value):**
-- `npx swarmlo-cli@latest memory search --query "TOPIC" --namespace patterns`
-- `npx swarmlo-cli@latest memory store --key "research-TOPIC" --value "FINDINGS" --namespace tasks`
+- `npx swarmlo-cli@3.39.1 memory search --query "TOPIC" --namespace patterns`
+- `npx swarmlo-cli@3.39.1 memory store --key "research-TOPIC" --value "FINDINGS" --namespace tasks`
 
 Never modify source code. Your output informs architects, coders, and testers.
 
@@ -76,5 +76,5 @@ Never modify source code. Your output informs architects, coders, and testers.
 
 After completing tasks, store successful patterns and link them in the knowledge graph:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
 ```

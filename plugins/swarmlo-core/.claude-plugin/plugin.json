@@ -3,8 +3,8 @@
   "description": "Foundation plugin — registers the swarmlo MCP server (300+ tools across memory/agentdb/embeddings/hooks/aidefence/neural/autopilot/browser/agent/swarm), provides 4 generalist agents (coder/researcher/reviewer/witness-curator), 5 skills (discover-plugins/init-project/swarmlo-doctor/swarmlo-status/witness), and a curated plugin-discovery catalog",
   "version": "0.2.6",
   "author": {
-    "name": "ruvnet",
-    "url": "https://github.com/ruvnet"
+    "name": "z451047442-debug",
+    "url": "https://github.com/z451047442-debug"
   },
   "homepage": "https://github.com/z451047442-debug/swarmlo",
   "license": "MIT",

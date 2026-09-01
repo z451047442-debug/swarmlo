@@ -91,7 +91,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --doctor, -d     Run diagnostics after install"
             echo "  --no-init        Skip project initialization (enabled by default)"
             echo "  --full, -f       Full setup (global + mcp + doctor + init)"
-            echo "  --version=X.X.X  Install specific version (default: alpha)"
+            echo "  --version=X.X.X  Install specific version (default: latest)"
             echo "  --help, -h       Show this help"
             exit 0
             ;;

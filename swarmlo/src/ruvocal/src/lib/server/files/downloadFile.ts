@@ -8,9 +8,11 @@ export async function downloadFile(
 	sha256: string,
 	convId: Conversation["_id"] | SharedConversation["_id"]
 ): Promise<MessageFile & { type: "base64" }> {
-	const fileId = collections.bucket.find({ filename: `${convId.toString()}-${sha256}` });
+	const files = await collections.bucket
+		.find({ filename: `${convId.toString()}-${sha256}` })
+		.toArray();
 
-	const file = await fileId.next();
+	const file = files[0];
 	if (!file) {
 		error(404, "File not found");
 	}
@@ -18,17 +20,12 @@ export async function downloadFile(
 		error(403, "You don't have access to this file.");
 	}
 
-	const mime = file.metadata?.mime;
+	const mime = String(file.metadata?.mime ?? "");
 	const name = file.filename;
 
-	const fileStream = collections.bucket.openDownloadStream(file._id);
-
-	const buffer = await new Promise<Buffer>((resolve, reject) => {
-		const chunks: Uint8Array[] = [];
-		fileStream.on("data", (chunk) => chunks.push(chunk));
-		fileStream.on("error", reject);
-		fileStream.on("end", () => resolve(Buffer.concat(chunks)));
-	});
+	// RVF GridFS exposes async toArray() instead of a data/end event stream
+	const chunks = await collections.bucket.openDownloadStream(file._id).toArray();
+	const buffer = Buffer.concat(chunks);
 
 	return { type: "base64", name, value: buffer.toString("base64"), mime };
 }

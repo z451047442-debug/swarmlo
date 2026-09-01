@@ -9,8 +9,26 @@
 
 import { EventEmitter } from 'node:events';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import initSqlJs, { Database as SqlJsDatabase } from 'sql.js';
 import { safeJsonParse } from './json-security.js';
+
+// ===== WASM resolution =====
+
+// Cached resolved local WASM path: `undefined` = not probed yet,
+// `null` = not resolvable locally (fall back to CDN with a warning).
+let localWasmPath: string | null | undefined;
+
+function resolveLocalWasmPath(): string | null {
+  if (localWasmPath !== undefined) return localWasmPath;
+  try {
+    const require = createRequire(import.meta.url);
+    localWasmPath = require.resolve('sql.js/dist/sql-wasm.wasm');
+  } catch {
+    localWasmPath = null;
+  }
+  return localWasmPath;
+}
 import {
   IMemoryBackend,
   MemoryEntry,
@@ -102,17 +120,32 @@ export class SqlJsBackend extends EventEmitter implements IMemoryBackend {
     this.config = { ...DEFAULT_CONFIG, ...config };
   }
 
+  /** Resolve the WASM file for sql.js: explicit config → local bundle → CDN. */
+  private locateWasmFile(file: string): string {
+    if (this.config.wasmPath) return this.config.wasmPath;
+
+    const local = resolveLocalWasmPath();
+    if (local) return local;
+
+    if (this.config.verbose) {
+      console.warn(
+        '[SqlJsBackend] sql.js WASM not found in node_modules; falling back to ' +
+        'CDN https://sql.js.org/dist — offline environments will fail to load.',
+      );
+    }
+    return `https://sql.js.org/dist/${file}`;
+  }
+
   /**
    * Initialize the SqlJs backend
    */
   async initialize(): Promise<void> {
     if (this.initialized) return;
 
-    // Load sql.js WASM
+    // Load sql.js WASM — prefer the locally bundled sql-wasm.wasm inside
+    // node_modules so offline environments work; CDN only as a last resort.
     this.SQL = await initSqlJs({
-      locateFile: this.config.wasmPath
-        ? () => this.config.wasmPath!
-        : (file) => `https://sql.js.org/dist/${file}`,
+      locateFile: (file) => this.locateWasmFile(file),
     });
 
     // Load existing database if exists and not in-memory
@@ -242,7 +275,7 @@ export class SqlJsBackend extends EventEmitter implements IMemoryBackend {
     `;
 
     const embeddingBuffer = entry.embedding
-      ? Buffer.from(entry.embedding.buffer)
+      ? Buffer.from(entry.embedding.buffer, entry.embedding.byteOffset, entry.embedding.byteLength)
       : null;
 
     this.db!.run(stmt, [
@@ -296,7 +329,10 @@ export class SqlJsBackend extends EventEmitter implements IMemoryBackend {
     this.stats.queryCount++;
     this.stats.totalQueryTime += duration;
 
-    if (!row || Object.keys(row).length === 0) {
+    // sql.js's getAsObject can return a non-empty object (columns bound to
+    // undefined) for a MISSING row, so the empty-keys check alone is not
+    // enough — a real row always has a defined `id`.
+    if (!row || row.id === undefined || Object.keys(row).length === 0) {
       return null;
     }
 
@@ -326,7 +362,8 @@ export class SqlJsBackend extends EventEmitter implements IMemoryBackend {
     this.stats.queryCount++;
     this.stats.totalQueryTime += duration;
 
-    if (!row || Object.keys(row).length === 0) {
+    // See get(): sql.js may return a non-empty object for a missing row.
+    if (!row || row.id === undefined || Object.keys(row).length === 0) {
       return null;
     }
 

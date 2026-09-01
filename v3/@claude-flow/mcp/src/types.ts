@@ -497,7 +497,7 @@ export interface CompletionResult {
 // Transport Types
 // ============================================================================
 
-export type RequestHandler = (request: MCPRequest) => Promise<MCPResponse>;
+export type RequestHandler = (request: MCPRequest, transportId?: string) => Promise<MCPResponse>;
 
 export type NotificationHandler = (notification: MCPNotification) => Promise<void>;
 
@@ -647,8 +647,8 @@ export const ErrorCodes = {
   UNKNOWN_ERROR: -32001,
   REQUEST_CANCELLED: -32800,
   RATE_LIMITED: -32000,
-  AUTHENTICATION_REQUIRED: -32001,
-  AUTHORIZATION_FAILED: -32002,
+  AUTHENTICATION_REQUIRED: -32003,
+  AUTHORIZATION_FAILED: -32004,
 } as const;
 
 export class MCPServerError extends Error {

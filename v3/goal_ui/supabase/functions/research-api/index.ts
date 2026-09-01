@@ -1,3 +1,6 @@
+// DEPRECATED：前端从未调用本函数，功能与 research-step 重叠。
+// 保留仅为向后兼容；新代码请使用 research-step。
+// 注意：本函数同样匿名可调用（见仓库 README 的安全提示），公开部署前须加鉴权/限流。
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -191,7 +194,7 @@ if (import.meta.main) {
 async function executeResearchStep(
   step: ResearchStep,
   goal: string,
-  config: any,
+  config: Record<string, unknown>,
   aiModel: string,
   apiKey: string,
   language?: "en" | "zh"
@@ -283,7 +286,7 @@ async function executeResearchStep(
   };
 }
 
-function buildSystemPrompt(config: any): string {
+function buildSystemPrompt(config: Record<string, unknown>): string {
   const depth = config.researchGuidance?.depth || 'moderate';
   const perspective = config.researchGuidance?.perspective || 'balanced';
   const timeframe = config.researchGuidance?.timeframe || 'recent';
@@ -322,7 +325,7 @@ function buildSystemPrompt(config: any): string {
   return prompt;
 }
 
-function buildUserPrompt(step: ResearchStep, goal: string, config: any): string {
+function buildUserPrompt(step: ResearchStep, goal: string, config: Record<string, unknown>): string {
   let prompt = `研究目标：${goal}\n\n`;
   prompt += `当前步骤：${step.stepTitle}\n`;
   prompt += `步骤说明：${step.stepDescription}\n\n`;

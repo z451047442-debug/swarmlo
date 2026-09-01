@@ -13,8 +13,8 @@ Today the `market-analyst` agent (the pipeline entry point per ADR-126
 Phase 5) fetches market data via:
 
 ```bash
-npx neural-trader --symbol AAPL --indicators rsi,macd,bollinger
-npx neural-trader --regime-detect --symbol SPY
+npx --ignore-scripts -y neural-trader@2.8.11 --symbol AAPL --indicators rsi,macd,bollinger
+npx --ignore-scripts -y neural-trader@2.8.11 --regime-detect --symbol SPY
 ```
 
 The two attack-relevant surfaces are:
@@ -55,7 +55,7 @@ already use — same pattern, different ingest source.
                         └───────┬───────┘
                                 │ safe
                                 ▼
-                  npx neural-trader --symbol AAPL …
+                  npx --ignore-scripts -y neural-trader@2.8.11 --symbol AAPL …
                                 │
                                 ▼
                     ┌──────────────────────┐

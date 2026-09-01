@@ -119,7 +119,7 @@ export const ResearchReportModal = ({
       const researchContext = steps.map(step => ({
         stepTitle: step.title,
         findings: step.data.map(item => {
-          const details = item.details as any;
+          const details = item.details as Record<string, unknown>;
           return {
             title: item.text,
             content: details?.objective || details?.content || item.text,
@@ -157,7 +157,7 @@ export const ResearchReportModal = ({
   // Extract all research items with their sources as citations
   const allCitations = steps.flatMap(step => 
     step.data.map(item => {
-      const details = item.details as any;
+      const details = item.details as Record<string, unknown>;
       return {
         title: item.text,
         source: details?.source || 'Research Analysis',
@@ -403,7 +403,7 @@ export const ResearchReportModal = ({
       title: step.title,
       description: step.description,
       findings: step.data.map((item) => {
-        const details = item.details as any;
+        const details = item.details as Record<string, unknown>;
         return {
           title: item.text,
           content: details?.objective || details?.content || item.text,
@@ -466,6 +466,30 @@ export const ResearchReportModal = ({
     }
   };
 
+  const handleShare = async () => {
+    const shareText = `${userGoal}\n\n${window.location.href}`;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: t("report.modal.title"),
+          text: shareText,
+        });
+      } catch (err) {
+        // 用户取消分享不算错误
+        if ((err as Error)?.name !== "AbortError") {
+          console.warn("Share failed:", err);
+        }
+      }
+      return;
+    }
+    // 不支持 Web Share API 时回退到复制链接
+    try {
+      await navigator.clipboard.writeText(shareText);
+    } catch (err) {
+      console.warn("Copy to clipboard failed:", err);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl h-[85vh] p-0 flex flex-col">
@@ -512,6 +536,7 @@ export const ResearchReportModal = ({
                 variant="outline"
                 size="sm"
                 className="gap-2"
+                onClick={handleShare}
               >
                 <Share2 className="w-4 h-4" />
                 {t("report.modal.share")}
@@ -632,7 +657,7 @@ export const ResearchReportModal = ({
                     {step.title}
                   </h4>
                   {step.data.map((item, itemIdx) => {
-                    const details = item.details as any;
+                    const details = item.details as Record<string, unknown>;
                     return (
                       <div key={itemIdx} className="rounded-lg border p-4 space-y-2">
                         <div className="flex items-start justify-between gap-3">

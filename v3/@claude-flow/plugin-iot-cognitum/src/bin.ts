@@ -70,7 +70,8 @@ function makeContext(): PluginContext {
     config: {
       fleetId: process.env.IOT_FLEET_ID ?? 'default',
       zoneId: process.env.IOT_ZONE_ID ?? 'zone-0',
-      tlsInsecure: process.env.IOT_TLS_INSECURE !== 'false',
+      // Opt-in only: `IOT_TLS_INSECURE=true` disables TLS verification.
+      tlsInsecure: process.env.IOT_TLS_INSECURE === 'true',
     },
     eventBus: {
       emit: noop,

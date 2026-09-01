@@ -1,9 +1,14 @@
 ---
 name: trader
-description: Neural trading via npx neural-trader — strategies, backtesting, signals, risk, portfolio optimization
+description: Neural trading via npx --ignore-scripts -y neural-trader@2.8.11 — strategies, backtesting, signals, risk, portfolio optimization
 ---
 $ARGUMENTS
 Manage neural trading strategies via the `neural-trader` npm package. Parse subcommand from $ARGUMENTS.
+
+> SECURITY (review fix 2026-08-31): `neural-trader` ships a fork-bombing
+> install hook on non-linux-x64 hosts (#1974). Every invocation below is
+> PINNED to `neural-trader@2.8.11` and passes `--ignore-scripts` so the
+> install script never runs. Never invoke it unpinned without the flag.
 
 Usage: /trader <subcommand> [options]
 
@@ -21,47 +26,47 @@ Subcommands:
 Steps by subcommand:
 
 **strategy create**:
-1. Run: `npx neural-trader --strategy <type> --symbol <TICKER> --create`
+1. Run: `npx --ignore-scripts -y neural-trader@2.8.11 --strategy <type> --symbol <TICKER> --create`
 2. Store strategy config in memory:
-   `npx swarmlo-cli@latest memory store --key "strategy-NAME" --value "CONFIG" --namespace trading-strategies`
+   `npx -y swarmlo-cli@3.39.1 memory store --key "strategy-NAME" --value "CONFIG" --namespace trading-strategies`
 
 **backtest**:
-1. Run: `npx neural-trader --backtest --strategy <name> --symbol <TICKER> --period <range> --walk-forward`
+1. Run: `npx --ignore-scripts -y neural-trader@2.8.11 --backtest --strategy <name> --symbol <TICKER> --period <range> --walk-forward`
 2. Capture Sharpe ratio, max drawdown, win rate, profit factor from output
 3. Store results:
-   `npx swarmlo-cli@latest memory store --key "backtest-ID" --value "RESULTS" --namespace trading-backtests`
+   `npx -y swarmlo-cli@3.39.1 memory store --key "backtest-ID" --value "RESULTS" --namespace trading-backtests`
 4. If Sharpe > 1.5, train SONA:
-   `npx swarmlo-cli@latest neural train --pattern-type trading-strategy --epochs 10`
+   `npx swarmlo-cli@3.39.1 neural train --pattern-type trading-strategy --epochs 10`
 
 **train**:
-1. Run: `npx neural-trader --model <lstm|transformer|nbeats> --symbol <TICKER> --confidence 0.95`
+1. Run: `npx --ignore-scripts -y neural-trader@2.8.11 --model <lstm|transformer|nbeats> --symbol <TICKER> --confidence 0.95`
 2. Capture predictions and confidence intervals from output
 
 **signal scan**:
-1. Run: `npx neural-trader --signal scan --symbols <TICKERS>`
-2. If --strategy specified, run: `npx neural-trader --signal scan --strategy <name>`
+1. Run: `npx --ignore-scripts -y neural-trader@2.8.11 --signal scan --symbols <TICKERS>`
+2. If --strategy specified, run: `npx --ignore-scripts -y neural-trader@2.8.11 --signal scan --strategy <name>`
 3. Store signals:
-   `npx swarmlo-cli@latest memory store --key "signal-TIMESTAMP" --value "SIGNALS" --namespace trading-signals`
+   `npx -y swarmlo-cli@3.39.1 memory store --key "signal-TIMESTAMP" --value "SIGNALS" --namespace trading-signals`
 
 **risk assess**:
-1. Run: `npx neural-trader --risk assess --symbol <TICKER>`
-   or: `npx neural-trader --var --symbol <TICKER> --investment <amount>`
-2. Run: `npx neural-trader --risk-tolerance 0.02 --symbol <TICKER>` for position sizing
+1. Run: `npx --ignore-scripts -y neural-trader@2.8.11 --risk assess --symbol <TICKER>`
+   or: `npx --ignore-scripts -y neural-trader@2.8.11 --var --symbol <TICKER> --investment <amount>`
+2. Run: `npx --ignore-scripts -y neural-trader@2.8.11 --risk-tolerance 0.02 --symbol <TICKER>` for position sizing
 3. Store assessment:
-   `npx swarmlo-cli@latest memory store --key "risk-ID" --value "METRICS" --namespace trading-risk`
+   `npx -y swarmlo-cli@3.39.1 memory store --key "risk-ID" --value "METRICS" --namespace trading-risk`
 
 **portfolio optimize**:
-1. Run: `npx neural-trader --portfolio optimize`
-   or: `npx neural-trader --portfolio optimize --risk-target <number>`
-2. Run: `npx neural-trader --portfolio rebalance` to generate trade plan
+1. Run: `npx --ignore-scripts -y neural-trader@2.8.11 --portfolio optimize`
+   or: `npx --ignore-scripts -y neural-trader@2.8.11 --portfolio optimize --risk-target <number>`
+2. Run: `npx --ignore-scripts -y neural-trader@2.8.11 --portfolio rebalance` to generate trade plan
 3. Store allocation:
-   `npx swarmlo-cli@latest memory store --key "portfolio-TIMESTAMP" --value "ALLOCATION" --namespace trading-portfolio`
+   `npx -y swarmlo-cli@3.39.1 memory store --key "portfolio-TIMESTAMP" --value "ALLOCATION" --namespace trading-portfolio`
 
 **live**:
-1. Run: `npx neural-trader --broker <name> --strategy <name> --swarm enabled`
+1. Run: `npx --ignore-scripts -y neural-trader@2.8.11 --broker <name> --strategy <name> --swarm enabled`
 2. Monitor output for trade executions and risk alerts
 3. Circuit breakers auto-enforce: daily 3% loss halt, weekly 5% size reduction
 
 **history**:
-1. Search memory: `npx swarmlo-cli@latest memory search --query "trade history" --namespace trading-history`
+1. Search memory: `npx -y swarmlo-cli@3.39.1 memory search --query "trade history" --namespace trading-history`
 2. Show recent trades with PnL, strategy attribution, and aggregate metrics

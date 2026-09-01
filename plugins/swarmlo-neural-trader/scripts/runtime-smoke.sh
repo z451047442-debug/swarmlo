@@ -48,7 +48,7 @@ run_and_check() {
   shift 2
   step "$label"
   local out
-  if ! out=$(npx neural-trader "$@" 2>&1); then
+  if ! out=$(npx --no-install neural-trader "$@" 2>&1); then
     bad "command exited non-zero: $out"
     return
   fi
@@ -82,7 +82,7 @@ else
 fi
 
 step "10. --version"
-if npx neural-trader --version 2>&1 | grep -qE "^${NT_PIN%.*}\."; then
+if npx --no-install neural-trader --version 2>&1 | grep -qE "^${NT_PIN%.*}\."; then
   ok
 else
   bad "version mismatch"
@@ -94,7 +94,7 @@ assert_field() {
   shift 2
   step "$label"
   local out value
-  out=$(npx neural-trader "$@" 2>&1)
+  out=$(npx --no-install neural-trader "$@" 2>&1)
   value=$(echo "$out" | jq -r "$field" 2>/dev/null)
   if [[ -n "$value" && "$value" != "null" && "$value" != "false" ]]; then
     ok

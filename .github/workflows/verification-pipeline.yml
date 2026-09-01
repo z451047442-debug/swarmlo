@@ -47,7 +47,7 @@ jobs:
         run: |
           VERIFICATION_ID="verify-$(date +%Y%m%d-%H%M%S)-${{ github.sha }}"
           echo "verification-id=$VERIFICATION_ID" >> $GITHUB_OUTPUT
-          echo "test-matrix={\"include\":[{\"os\":\"ubuntu-latest\",\"node\":\"18\"},{\"os\":\"ubuntu-latest\",\"node\":\"20\"},{\"os\":\"macos-latest\",\"node\":\"20\"},{\"os\":\"windows-latest\",\"node\":\"20\"}]}" >> $GITHUB_OUTPUT
+          echo "test-matrix={\"include\":[{\"os\":\"ubuntu-latest\",\"node\":\"20\"},{\"os\":\"ubuntu-latest\",\"node\":\"22\"},{\"os\":\"macos-latest\",\"node\":\"20\"},{\"os\":\"windows-latest\",\"node\":\"20\"}]}" >> $GITHUB_OUTPUT
           echo "cache-key=${{ env.CACHE_VERSION }}-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
@@ -148,12 +148,6 @@ jobs:
           npm run lint -- --format=json --output-file=eslint-report.json || true
           npm run lint
 
-      - name: TypeScript type checking
-        run: |
-          echo "🔍 Type checking..."
-          npm run typecheck || echo "⚠️ Type checking skipped (TypeScript compiler crash)"
-        continue-on-error: true
-
       - name: Format checking
         run: |
           echo "🎨 Checking code formatting..."
@@ -213,31 +207,16 @@ jobs:
           exit 1
         shell: bash
 
-      - name: Run unit tests
+      # The previous steps called root scripts that do not exist
+      # (test:unit/test:integration/test:performance/test:coverage) and
+      # swallowed every failure with `|| echo` — the job could never fail.
+      # Replaced with real, deterministic, self-contained integrity checks
+      # (no build required) that fail loudly when the repo is inconsistent.
+      - name: Repository integrity checks
         run: |
-          echo "🧪 Running unit tests..."
-          npm run test:unit || echo "⚠️ Some unit tests failed (Jest teardown issues - non-blocking)"
-        continue-on-error: true
-
-      - name: Run integration tests
-        run: |
-          echo "🔗 Running integration tests..."
-          npm run test:integration || echo "⚠️ Some integration tests failed (non-blocking)"
-        continue-on-error: true
-
-      - name: Run performance tests
-        if: matrix.os == 'ubuntu-latest' && matrix.node == '20'
-        run: |
-          echo "⚡ Running performance tests..."
-          npm run test:performance || echo "⚠️ Some performance tests failed (non-blocking)"
-        continue-on-error: true
-
-      - name: Generate coverage report
-        if: matrix.os == 'ubuntu-latest' && matrix.node == '20'
-        run: |
-          echo "📊 Generating coverage report..."
-          npm run test:coverage || echo "⚠️ Coverage generation failed (non-blocking)"
-        continue-on-error: true
+          echo "🧪 Running repository integrity checks..."
+          node scripts/audit-umbrella-version-lockstep.mjs
+          node scripts/check-metaharness-pins.mjs
           
       - name: Upload test results
         if: always()
@@ -247,6 +226,7 @@ jobs:
           path: |
             coverage/
             test-reports/
+          if-no-files-found: ignore
           retention-days: 30
 
   # Build verification - simplified for V3 monorepo structure

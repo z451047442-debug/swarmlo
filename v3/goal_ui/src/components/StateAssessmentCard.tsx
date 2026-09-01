@@ -32,18 +32,20 @@ export const StateAssessmentCard = ({
   const totalCount = goalStateEntries.length;
   const progressPercentage = Math.round((completedCount / totalCount) * 100);
 
-  // Animate state entries appearing one by one
+  // Animate state entries appearing one by one（timer 记录以便卸载/依赖变化时清理）
   useEffect(() => {
     const allKeys = currentStateEntries.map(([key]) => key);
     setVisibleStates([]);
-    
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
     allKeys.forEach((key, index) => {
-      setTimeout(() => {
+      timers.push(setTimeout(() => {
         setVisibleStates(prev => [...prev, key]);
         setAnimatingState(key);
-        setTimeout(() => setAnimatingState(null), 600);
-      }, index * 150);
+        timers.push(setTimeout(() => setAnimatingState(null), 600));
+      }, index * 150));
     });
+    return () => timers.forEach(clearTimeout);
   }, [JSON.stringify(currentState)]);
 
   // Check if state has changed (for highlighting)

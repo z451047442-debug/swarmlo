@@ -84,8 +84,16 @@ export class MCPServer extends EventEmitter implements IMCPServer {
   private running = false;
   private startTime?: Date;
   private startupDuration?: number;
-  private currentSession?: MCPSession;
-  private resourceSubscriptions: Map<string, Set<string>> = new Map(); // sessionId -> subscribed URIs
+  /**
+   * Session per transport connection. Each connection (identified by the
+   * transport-provided transportId, e.g. a WS client id or an HTTP socket
+   * endpoint) owns its own session so concurrent clients never cross-talk.
+   * `defaultSession` is the fallback for transports that do not supply a
+   * transportId (e.g. stdio, single-connection transports).
+   */
+  private readonly sessionsByTransport: Map<string, MCPSession> = new Map();
+  private defaultSession?: MCPSession;
+  private resourceSubscriptions: Map<string, Map<string, string>> = new Map(); // sessionId -> uri -> subscriptionId
 
   private readonly serverInfo = {
     name: 'Claude-Flow MCP Server V3',
@@ -274,6 +282,8 @@ export class MCPServer extends EventEmitter implements IMCPServer {
       this.sessionManager.clearAll();
       this.taskManager.destroy();
       this.resourceSubscriptions.clear();
+      this.sessionsByTransport.clear();
+      this.defaultSession = undefined;
       this.rateLimiter.destroy();
 
       if (this.connectionPool) {
@@ -281,7 +291,6 @@ export class MCPServer extends EventEmitter implements IMCPServer {
       }
 
       this.running = false;
-      this.currentSession = undefined;
 
       this.logger.info('MCP server stopped');
       this.emit('server:stopped');
@@ -386,13 +395,19 @@ export class MCPServer extends EventEmitter implements IMCPServer {
 
   terminateSession(sessionId: string): boolean {
     const result = this.sessionManager.closeSession(sessionId, 'Terminated by server');
-    if (this.currentSession?.id === sessionId) {
-      this.currentSession = undefined;
+    for (const [transportId, session] of this.sessionsByTransport) {
+      if (session.id === sessionId) {
+        this.sessionsByTransport.delete(transportId);
+      }
     }
+    if (this.defaultSession?.id === sessionId) {
+      this.defaultSession = undefined;
+    }
+    this.resourceSubscriptions.delete(sessionId);
     return result;
   }
 
-  private async handleRequest(request: MCPRequest): Promise<MCPResponse> {
+  private async handleRequest(request: MCPRequest, transportId?: string): Promise<MCPResponse> {
     const startTime = performance.now();
     this.requestStats.total++;
 
@@ -403,7 +418,7 @@ export class MCPServer extends EventEmitter implements IMCPServer {
 
     // Rate limiting check (skip for initialize)
     if (request.method !== 'initialize') {
-      const sessionId = this.currentSession?.id;
+      const sessionId = this.sessionIdFor(transportId);
       const rateLimitResult = this.rateLimiter.check(sessionId);
       if (!rateLimitResult.allowed) {
         this.requestStats.failed++;
@@ -422,10 +437,10 @@ export class MCPServer extends EventEmitter implements IMCPServer {
 
     try {
       if (request.method === 'initialize') {
-        return await this.handleInitialize(request);
+        return await this.handleInitialize(request, transportId);
       }
 
-      const session = this.getOrCreateSession();
+      const session = this.getOrCreateSession(transportId);
 
       if (!session.isInitialized && request.method !== 'initialized') {
         return this.createErrorResponse(
@@ -437,7 +452,7 @@ export class MCPServer extends EventEmitter implements IMCPServer {
 
       this.sessionManager.updateActivity(session.id);
 
-      const response = await this.routeRequest(request);
+      const response = await this.routeRequest(request, transportId);
 
       const duration = performance.now() - startTime;
       this.requestStats.successful++;
@@ -487,7 +502,7 @@ export class MCPServer extends EventEmitter implements IMCPServer {
     }
   }
 
-  private async handleInitialize(request: MCPRequest): Promise<MCPResponse> {
+  private async handleInitialize(request: MCPRequest, transportId?: string): Promise<MCPResponse> {
     const params = request.params as unknown as MCPInitializeParams | undefined;
 
     if (!params) {
@@ -500,7 +515,11 @@ export class MCPServer extends EventEmitter implements IMCPServer {
 
     const session = this.sessionManager.createSession(this.config.transport);
     this.sessionManager.initializeSession(session.id, params);
-    this.currentSession = session;
+    if (transportId) {
+      this.sessionsByTransport.set(transportId, session);
+    } else {
+      this.defaultSession = session;
+    }
 
     const result: MCPInitializeResult = {
       protocolVersion: this.protocolVersion,
@@ -521,13 +540,13 @@ export class MCPServer extends EventEmitter implements IMCPServer {
     };
   }
 
-  private async routeRequest(request: MCPRequest): Promise<MCPResponse> {
+  private async routeRequest(request: MCPRequest, transportId?: string): Promise<MCPResponse> {
     switch (request.method) {
       // Tool methods
       case 'tools/list':
         return this.handleToolsList(request);
       case 'tools/call':
-        return this.handleToolsCall(request);
+        return this.handleToolsCall(request, transportId);
 
       // Resource methods (MCP 2025-11-25)
       case 'resources/list':
@@ -535,9 +554,9 @@ export class MCPServer extends EventEmitter implements IMCPServer {
       case 'resources/read':
         return this.handleResourcesRead(request);
       case 'resources/subscribe':
-        return this.handleResourcesSubscribe(request);
+        return this.handleResourcesSubscribe(request, transportId);
       case 'resources/unsubscribe':
-        return this.handleResourcesUnsubscribe(request);
+        return this.handleResourcesUnsubscribe(request, transportId);
 
       // Prompt methods (MCP 2025-11-25)
       case 'prompts/list':
@@ -561,7 +580,7 @@ export class MCPServer extends EventEmitter implements IMCPServer {
 
       // Sampling (MCP 2025-11-25)
       case 'sampling/createMessage':
-        return this.handleSamplingCreateMessage(request);
+        return this.handleSamplingCreateMessage(request, transportId);
 
       // Utility
       case 'ping':
@@ -574,7 +593,7 @@ export class MCPServer extends EventEmitter implements IMCPServer {
       default:
         // Check if it's a direct tool call
         if (this.toolRegistry.hasTool(request.method)) {
-          return this.handleToolExecution(request);
+          return this.handleToolExecution(request, transportId);
         }
 
         return this.createErrorResponse(
@@ -599,7 +618,7 @@ export class MCPServer extends EventEmitter implements IMCPServer {
     };
   }
 
-  private async handleToolsCall(request: MCPRequest): Promise<MCPResponse> {
+  private async handleToolsCall(request: MCPRequest, transportId?: string): Promise<MCPResponse> {
     const params = request.params as { name: string; arguments?: Record<string, unknown> };
 
     if (!params?.name) {
@@ -611,7 +630,7 @@ export class MCPServer extends EventEmitter implements IMCPServer {
     }
 
     const context: ToolContext = {
-      sessionId: this.currentSession?.id || 'unknown',
+      sessionId: this.sessionIdFor(transportId) || 'unknown',
       requestId: request.id,
       orchestrator: this.orchestrator,
       swarmCoordinator: this.swarmCoordinator,
@@ -630,9 +649,9 @@ export class MCPServer extends EventEmitter implements IMCPServer {
     };
   }
 
-  private async handleToolExecution(request: MCPRequest): Promise<MCPResponse> {
+  private async handleToolExecution(request: MCPRequest, transportId?: string): Promise<MCPResponse> {
     const context: ToolContext = {
-      sessionId: this.currentSession?.id || 'unknown',
+      sessionId: this.sessionIdFor(transportId) || 'unknown',
       requestId: request.id,
       orchestrator: this.orchestrator,
       swarmCoordinator: this.swarmCoordinator,
@@ -693,9 +712,9 @@ export class MCPServer extends EventEmitter implements IMCPServer {
     }
   }
 
-  private handleResourcesSubscribe(request: MCPRequest): MCPResponse {
+  private handleResourcesSubscribe(request: MCPRequest, transportId?: string): MCPResponse {
     const params = request.params as { uri: string } | undefined;
-    const sessionId = this.currentSession?.id;
+    const sessionId = this.sessionIdFor(transportId);
 
     if (!params?.uri) {
       return this.createErrorResponse(
@@ -714,11 +733,22 @@ export class MCPServer extends EventEmitter implements IMCPServer {
     }
 
     try {
-      // Track subscription for this session
+      // Track subscription per (session, uri) so unsubscribe can actually
+      // release the registry subscription instead of leaking it.
       let sessionSubs = this.resourceSubscriptions.get(sessionId);
       if (!sessionSubs) {
-        sessionSubs = new Set();
+        sessionSubs = new Map();
         this.resourceSubscriptions.set(sessionId, sessionSubs);
+      }
+
+      const existingSubscriptionId = sessionSubs.get(params.uri);
+      if (existingSubscriptionId !== undefined) {
+        // Already subscribed on this session — return the existing id (idempotent).
+        return {
+          jsonrpc: '2.0',
+          id: request.id,
+          result: { subscriptionId: existingSubscriptionId },
+        };
       }
 
       const subscriptionId = this.resourceRegistry.subscribe(params.uri, (uri, content) => {
@@ -726,7 +756,7 @@ export class MCPServer extends EventEmitter implements IMCPServer {
         this.sendNotification('notifications/resources/updated', { uri });
       });
 
-      sessionSubs.add(params.uri);
+      sessionSubs.set(params.uri, subscriptionId);
 
       return {
         jsonrpc: '2.0',
@@ -742,9 +772,9 @@ export class MCPServer extends EventEmitter implements IMCPServer {
     }
   }
 
-  private handleResourcesUnsubscribe(request: MCPRequest): MCPResponse {
+  private handleResourcesUnsubscribe(request: MCPRequest, transportId?: string): MCPResponse {
     const params = request.params as { uri: string } | undefined;
-    const sessionId = this.currentSession?.id;
+    const sessionId = this.sessionIdFor(transportId);
 
     if (!params?.uri) {
       return this.createErrorResponse(
@@ -756,8 +786,11 @@ export class MCPServer extends EventEmitter implements IMCPServer {
 
     if (sessionId) {
       const sessionSubs = this.resourceSubscriptions.get(sessionId);
-      if (sessionSubs) {
-        sessionSubs.delete(params.uri);
+      const subscriptionId = sessionSubs?.get(params.uri);
+      if (subscriptionId !== undefined) {
+        // Actually unsubscribe from the registry so the callback is released.
+        this.resourceRegistry.unsubscribe(subscriptionId);
+        sessionSubs!.delete(params.uri);
       }
     }
 
@@ -946,7 +979,7 @@ export class MCPServer extends EventEmitter implements IMCPServer {
   // Sampling Handler (MCP 2025-11-25)
   // ============================================================================
 
-  private async handleSamplingCreateMessage(request: MCPRequest): Promise<MCPResponse> {
+  private async handleSamplingCreateMessage(request: MCPRequest, transportId?: string): Promise<MCPResponse> {
     const params = request.params as {
       messages: Array<{ role: string; content: { type: string; text?: string } }>;
       maxTokens: number;
@@ -992,7 +1025,7 @@ export class MCPServer extends EventEmitter implements IMCPServer {
           metadata: params.metadata,
         },
         {
-          sessionId: this.currentSession?.id || 'unknown',
+          sessionId: this.sessionIdFor(transportId) || 'unknown',
           serverId: this.serverInfo.name,
         }
       );
@@ -1025,14 +1058,36 @@ export class MCPServer extends EventEmitter implements IMCPServer {
     }
   }
 
-  private getOrCreateSession(): MCPSession {
-    if (this.currentSession) {
-      return this.currentSession;
+  /**
+   * Resolve the session bound to a transport connection, creating one if needed.
+   * Transports that supply a transportId get their own session; transports that
+   * do not share a single default session (previous singleton behavior).
+   */
+  private getOrCreateSession(transportId?: string): MCPSession {
+    if (transportId) {
+      const existing = this.sessionsByTransport.get(transportId);
+      if (existing) return existing;
+
+      const session = this.sessionManager.createSession(this.config.transport);
+      this.sessionsByTransport.set(transportId, session);
+      return session;
+    }
+
+    if (this.defaultSession) {
+      return this.defaultSession;
     }
 
     const session = this.sessionManager.createSession(this.config.transport);
-    this.currentSession = session;
+    this.defaultSession = session;
     return session;
+  }
+
+  /** Get the session id for a transport connection (undefined if none yet). */
+  private sessionIdFor(transportId?: string): string | undefined {
+    if (transportId) {
+      return this.sessionsByTransport.get(transportId)?.id;
+    }
+    return this.defaultSession?.id;
   }
 
   private createErrorResponse(

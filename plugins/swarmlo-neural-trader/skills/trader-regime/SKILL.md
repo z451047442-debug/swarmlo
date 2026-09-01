@@ -1,6 +1,6 @@
 ---
 name: trader-regime
-description: Detect current market regime using npx neural-trader — bull/bear/ranging/volatile classification with recommended strategy. Use when the user asks about market conditions, wants to pick a strategy for current conditions, or before running a backtest/signal that should be regime-aware.
+description: Detect current market regime using npx --ignore-scripts -y neural-trader@2.8.11 — bull/bear/ranging/volatile classification with recommended strategy. Use when the user asks about market conditions, wants to pick a strategy for current conditions, or before running a backtest/signal that should be regime-aware.
 allowed-tools: Bash Read mcp__plugin_swarmlo-core_swarmlo__memory_store mcp__plugin_swarmlo-core_swarmlo__memory_search mcp__plugin_swarmlo-core_swarmlo__neural_predict
 argument-hint: "[--symbol SPY] [--symbols AAPL,MSFT]"
 ---
@@ -11,15 +11,15 @@ Steps:
    `npm ls neural-trader 2>/dev/null || npm install --ignore-scripts neural-trader`
 2. Run regime detection:
    ```bash
-   npx neural-trader --regime-detect --symbol TICKER
+   npx --ignore-scripts -y neural-trader@2.8.11 --regime-detect --symbol TICKER
    ```
    For multiple symbols:
    ```bash
-   npx neural-trader --regime-detect --symbols "AAPL,MSFT,GOOGL,AMZN"
+   npx --ignore-scripts -y neural-trader@2.8.11 --regime-detect --symbols "AAPL,MSFT,GOOGL,AMZN"
    ```
 3. Get technical indicators for context:
    ```bash
-   npx neural-trader --symbol TICKER --indicators rsi,macd,bollinger,adx,atr
+   npx --ignore-scripts -y neural-trader@2.8.11 --symbol TICKER --indicators rsi,macd,bollinger,adx,atr
    ```
 4. Use SONA for regime prediction:
    `mcp__plugin_swarmlo-core_swarmlo__neural_predict({ input: "indicators: RSI=X, ADX=Y, VIX=Z" })`

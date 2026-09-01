@@ -173,8 +173,10 @@ export async function generateConfigToml(options: ExtendedConfigTomlOptions = {}
   lines.push(`remote_compaction = ${features.remoteCompaction ?? true}`);
   lines.push('');
 
-  // MCP Servers
-  if (mcpServers.length > 0 || true) { // Always include claude-flow by default
+  // MCP Servers — always render the section (the default claude-flow server
+  // is included unconditionally below); the previous `length > 0 || true`
+  // condition was tautological.
+  {
     lines.push('# =============================================================================');
     lines.push('# MCP Servers');
     lines.push('# =============================================================================');

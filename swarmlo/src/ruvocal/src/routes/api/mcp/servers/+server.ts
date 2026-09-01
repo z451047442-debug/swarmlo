@@ -1,7 +1,10 @@
 import type { MCPServer } from "$lib/types/Tool";
 import { config } from "$lib/server/config";
+import { requireAuth } from "$lib/server/api/utils/requireAuth";
 
-export async function GET() {
+export async function GET({ locals }) {
+	// Server configuration is visible to signed-in users only
+	requireAuth(locals);
 	// Parse MCP_SERVERS environment variable
 	const mcpServersEnv = config.MCP_SERVERS || "[]";
 

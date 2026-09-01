@@ -24,7 +24,8 @@
  * @author Claude Flow Team
  */
 
-import { randomUUID } from 'node:crypto';
+import { createHmac, randomUUID } from 'node:crypto';
+import { timingSafeEqual } from './crypto-utils.js';
 
 /**
  * Result of checking a constitutional invariant
@@ -187,7 +188,11 @@ export interface MetaGovernanceConfig {
   amendmentWindowMs?: number;
   /** Optimizer constraints (partial allows overriding defaults) */
   optimizerConstraints?: Partial<OptimizerConstraint>;
-  /** Optional signing key for amendments */
+  /**
+   * Optional HMAC-SHA256 signing key for amendments. When set, proposed
+   * amendments carry a `metadata.signature` and enacting/vetoing an
+   * amendment verifies it — tampered amendments are rejected.
+   */
   signingKey?: string;
 }
 
@@ -378,6 +383,13 @@ export class MetaGovernor {
       ...proposal,
     };
 
+    if (this.signingKey) {
+      amendment.metadata = {
+        ...(amendment.metadata ?? {}),
+        signature: this.signAmendment(amendment),
+      };
+    }
+
     this.amendments.set(amendment.id, amendment);
     return amendment;
   }
@@ -435,6 +447,8 @@ export class MetaGovernor {
       throw new Error(`Cannot enact amendment with status: ${amendment.status}`);
     }
 
+    this.verifyAmendmentSignature(amendment);
+
     // Check if any changes would violate immutable invariants
     for (const change of amendment.changes) {
       if (change.type === 'remove-rule' || change.type === 'modify-rule') {
@@ -460,6 +474,8 @@ export class MetaGovernor {
     if (!amendment) {
       throw new Error(`Amendment not found: ${amendmentId}`);
     }
+
+    this.verifyAmendmentSignature(amendment);
 
     amendment.status = 'vetoed';
     amendment.metadata = {
@@ -562,6 +578,49 @@ export class MetaGovernor {
    */
   getPendingAmendments(): Amendment[] {
     return Array.from(this.amendments.values()).filter((a) => a.status === 'proposed');
+  }
+
+  // ===== Signing helpers =====
+
+  /**
+   * Canonical string over the amendment content (excluding votes/status and
+   * the signature itself) for HMAC signing.
+   */
+  private canonicalAmendment(amendment: Amendment): string {
+    return [
+      amendment.id,
+      amendment.description,
+      amendment.proposedBy,
+      String(amendment.timestamp),
+      amendment.changes
+        .map((c) => `${c.type}:${c.target}:${c.before ?? ''}:${c.after ?? ''}`)
+        .join(','),
+    ].join('|');
+  }
+
+  private signAmendment(amendment: Amendment): string {
+    return createHmac('sha256', this.signingKey!)
+      .update(this.canonicalAmendment(amendment))
+      .digest('hex');
+  }
+
+  /**
+   * Verify the amendment's HMAC signature when a signingKey is configured.
+   * Throws on missing or mismatched signatures (tampered amendment).
+   */
+  private verifyAmendmentSignature(amendment: Amendment): void {
+    if (!this.signingKey) return;
+
+    const signature = amendment.metadata?.signature;
+    if (typeof signature !== 'string') {
+      throw new Error(
+        `Amendment ${amendment.id} has no signature but signingKey is configured; refusing to proceed`
+      );
+    }
+    const expected = this.signAmendment(amendment);
+    if (!timingSafeEqual(signature, expected)) {
+      throw new Error(`Amendment ${amendment.id} signature verification failed (tampered amendment)`);
+    }
   }
 }
 

@@ -4,9 +4,11 @@
  * LOCAL-ONLY by design: this module performs no network I/O. Events are
  * appended to a bounded local queue only when the telemetry consent domain
  * is granted (ADR-302). Server-side ingestion (POST /v1/events, ADR-308)
- * is a separate opt-in transport that does not exist in this build — until
- * it does, the queue is simply a bounded local record the user can inspect
- * and delete.
+ * is implemented as a SEPARATE opt-in transport in `./event-transport.ts`
+ * (`flushEvents`), which this module deliberately does not call — the
+ * queue here is the bounded local record, and `flushEvents` is the
+ * explicit opt-in sink for it (wired by whatever surface chooses to flush,
+ * e.g. a periodic scheduler — see event-transport.ts).
  *
  * Constraints enforced here, permanently (ADR-309): closed event set, daily
  * timestamp buckets (never full timestamps), no raw prompts/commands/paths/

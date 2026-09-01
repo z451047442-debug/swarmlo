@@ -331,10 +331,26 @@ jobs:
           if [ -n "$ROLLBACK_TARGET" ]; then
             # Create rollback commit
             echo "Creating rollback commit..."
-            
-            # Reset to target commit but keep it as a new commit
-            git reset --hard "$ROLLBACK_TARGET"
-            
+
+            if [ "${{ github.event.inputs.emergency_mode }}" = "true" ]; then
+              # Emergency: hard-reset history to the target (fast recovery,
+              # requires the --force-with-lease push below).
+              echo "Emergency mode: hard-resetting history to $ROLLBACK_TARGET"
+              git reset --hard "$ROLLBACK_TARGET"
+            else
+              # Non-emergency: revert the commit range <target>..HEAD onto
+              # current history so the branch stays fast-forwardable and the
+              # plain push below succeeds (a hard reset would be rejected as
+              # non-fast-forward).
+              TARGET_REV="$(git rev-parse "$ROLLBACK_TARGET" 2>/dev/null || true)"
+              if [ -n "$TARGET_REV" ] && [ "$(git rev-parse HEAD)" != "$TARGET_REV" ]; then
+                echo "Non-emergency mode: reverting range $ROLLBACK_TARGET..HEAD"
+                git revert --no-commit "$ROLLBACK_TARGET"..HEAD
+              else
+                echo "Target equals current HEAD or is invalid — no range to revert"
+              fi
+            fi
+
             # Create a revert commit with metadata
             cat > ROLLBACK_INFO.md << EOF
           # Rollback Information
@@ -382,8 +398,10 @@ jobs:
         if: steps.rollback.outputs.rollback-executed == 'true'
         run: |
           echo "📤 Pushing rollback commit..."
-          
-          # Force push the rollback (use with caution)
+
+          # Emergency mode rewrote history — explicit force-with-lease.
+          # Non-emergency mode applies a revert commit, so the branch is
+          # fast-forwardable and the plain push succeeds without force.
           if [ "${{ github.event.inputs.emergency_mode }}" = "true" ]; then
             git push origin HEAD:${{ github.ref_name }} --force-with-lease
           else

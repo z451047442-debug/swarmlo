@@ -96,17 +96,17 @@ Span hierarchy for swarm operations:
 
 After completing observability tasks, train patterns:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
-npx swarmlo-cli@latest neural train --pattern-type observability --epochs 10
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 neural train --pattern-type observability --epochs 10
 ```
 
 ### Memory Learning
 
 Store telemetry patterns and anomaly signatures:
 ```bash
-npx swarmlo-cli@latest memory store --namespace observability --key "trace-TRACE_ID" --value "TRACE_SUMMARY_JSON"
-npx swarmlo-cli@latest memory store --namespace observability-patterns --key "anomaly-ANOMALY_TYPE" --value "ANOMALY_SIGNATURE_JSON"
-npx swarmlo-cli@latest memory search --query "latency spikes in authentication flow" --namespace observability
+npx swarmlo-cli@3.39.1 memory store --namespace observability --key "trace-TRACE_ID" --value "TRACE_SUMMARY_JSON"
+npx swarmlo-cli@3.39.1 memory store --namespace observability-patterns --key "anomaly-ANOMALY_TYPE" --value "ANOMALY_SIGNATURE_JSON"
+npx swarmlo-cli@3.39.1 memory search --query "latency spikes in authentication flow" --namespace observability
 ```
 
 ### Related Plugins

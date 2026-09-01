@@ -1,6 +1,6 @@
 ---
 name: trader-train
-description: Train neural models (LSTM, Transformer, N-BEATS) on market data using npx neural-trader with confidence intervals
+description: Train neural models (LSTM, Transformer, N-BEATS) on market data using npx --ignore-scripts -y neural-trader@2.8.11 with confidence intervals
 allowed-tools: Bash Read mcp__plugin_swarmlo-core_swarmlo__memory_store mcp__plugin_swarmlo-core_swarmlo__memory_search mcp__plugin_swarmlo-core_swarmlo__neural_train
 argument-hint: "<lstm|transformer|nbeats> --symbol <TICKER>"
 ---
@@ -11,18 +11,18 @@ Steps:
    `npm ls neural-trader 2>/dev/null || npm install --ignore-scripts neural-trader`
 2. Train the specified model:
    ```bash
-   npx neural-trader --model lstm --symbol TICKER --confidence 0.95
-   npx neural-trader --model transformer --symbol TICKER --predict
-   npx neural-trader --model nbeats --symbol TICKER --decompose
+   npx --ignore-scripts -y neural-trader@2.8.11 --model lstm --symbol TICKER --confidence 0.95
+   npx --ignore-scripts -y neural-trader@2.8.11 --model transformer --symbol TICKER --predict
+   npx --ignore-scripts -y neural-trader@2.8.11 --model nbeats --symbol TICKER --decompose
    ```
 3. Review training output: loss curves, validation metrics, prediction accuracy
 4. Generate predictions with confidence intervals:
    ```bash
-   npx neural-trader --model MODEL --symbol TICKER --predict --horizon 5d
+   npx --ignore-scripts -y neural-trader@2.8.11 --model MODEL --symbol TICKER --predict --horizon 5d
    ```
 5. Compare model performance across types:
    ```bash
-   npx neural-trader --model-compare --symbol TICKER --models "lstm,transformer,nbeats"
+   npx --ignore-scripts -y neural-trader@2.8.11 --model-compare --symbol TICKER --models "lstm,transformer,nbeats"
    ```
 6. Store model results (canonical `trading-analysis` namespace per ADR-126 Phase 1 — was previously stored to undeclared `trading-models`):
    `mcp__plugin_swarmlo-core_swarmlo__memory_store({ key: "model-MODEL-TICKER-DATE", value: "TRAINING_RESULTS", namespace: "trading-analysis" })`

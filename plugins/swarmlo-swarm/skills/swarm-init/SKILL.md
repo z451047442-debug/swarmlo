@@ -10,12 +10,12 @@ Via MCP: `mcp__plugin_swarmlo-core_swarmlo__swarm_init({ topology: "hierarchical
 
 Or via CLI:
 ```bash
-npx swarmlo-cli@latest swarm init --topology hierarchical --max-agents 8 --strategy specialized
+npx swarmlo-cli@3.39.1 swarm init --topology hierarchical --max-agents 8 --strategy specialized
 ```
 
 Then spawn named agents in ONE message via Claude Code's `Task` tool with `name:` (for `SendMessage` addressability) and `run_in_background: true` (for parallel execution). Use `EnterWorktree` per agent for git-safe parallel work, and `SendMessage` for inter-agent coordination.
 
 For larger teams (10+), use hierarchical-mesh topology:
 ```bash
-npx swarmlo-cli@latest swarm init --topology hierarchical-mesh --max-agents 15 --strategy specialized
+npx swarmlo-cli@3.39.1 swarm init --topology hierarchical-mesh --max-agents 15 --strategy specialized
 ```

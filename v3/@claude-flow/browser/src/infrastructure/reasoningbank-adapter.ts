@@ -3,6 +3,7 @@
  * Connects browser trajectories to agentic-flow's learning system
  */
 
+import { redactStepInput } from '../application/redaction.js';
 import type { BrowserTrajectory, BrowserTrajectoryStep, Snapshot } from '../domain/types.js';
 
 // ============================================================================
@@ -66,12 +67,17 @@ export class ReasoningBankAdapter {
     const patternId = this.generatePatternId(trajectory.goal);
     const existing = this.patterns.get(patternId);
 
-    const steps: PatternStep[] = trajectory.steps.map(step => ({
-      action: step.action,
-      selector: this.normalizeSelector(step.input.target as string),
-      value: step.input.value as string,
-      condition: step.input.waitUntil as string || step.input.text as string,
-    }));
+    const steps: PatternStep[] = trajectory.steps.map(step => {
+      // Redact sensitive values (passwords, tokens, cookies, ...) so
+      // credentials never persist into learning patterns
+      const input = redactStepInput((step.input as Record<string, unknown> | undefined) ?? {});
+      return {
+        action: step.action,
+        selector: this.normalizeSelector(input.target as string),
+        value: input.value as string,
+        condition: input.waitUntil as string || input.text as string,
+      };
+    });
 
     const avgDuration = trajectory.steps.reduce((sum, s) => sum + (s.result.duration || 0), 0) / trajectory.steps.length;
 

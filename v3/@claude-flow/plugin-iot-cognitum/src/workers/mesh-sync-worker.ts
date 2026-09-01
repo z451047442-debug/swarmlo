@@ -25,7 +25,11 @@ export class MeshSyncWorker {
 
   start(): void {
     if (this.timer) return;
-    this.timer = setInterval(() => void this.sync(), this.config.intervalMs);
+    this.timer = setInterval(() => {
+      this.sync().catch(err => {
+        console.warn('[mesh-sync-worker] tick failed:', err instanceof Error ? err.message : err);
+      });
+    }, this.config.intervalMs);
   }
 
   stop(): void {

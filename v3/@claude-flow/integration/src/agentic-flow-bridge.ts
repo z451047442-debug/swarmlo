@@ -73,11 +73,10 @@ type AgenticFlowFactory = (config: unknown) => Promise<AgenticFlowCore>;
  * This class serves as the main entry point for all agentic-flow integration,
  * providing unified access to SONA learning, Flash Attention, and AgentDB.
  *
- * Performance Targets:
- * - Flash Attention: 2.49x-7.47x speedup
- * - AgentDB Search: 150x-12,500x improvement
- * - SONA Adaptation: <0.05ms response time
- * - Memory Reduction: 50-75%
+ * Performance (inherited from upstream agentic-flow; not measured in-tree):
+ * - SONA Adaptation: <0.05ms response time target
+ * (Flash Attention "2.49x-7.47x" and AgentDB "150x-12,500x" figures were
+ * never reproduced in-tree and are withdrawn.)
  */
 export class AgenticFlowBridge extends EventEmitter {
   private config: IntegrationConfig;
@@ -213,7 +212,8 @@ export class AgenticFlowBridge extends EventEmitter {
    * When agentic-flow is available, components delegate to it for:
    * - SONA learning (eliminating duplicate pattern storage)
    * - Flash Attention (using native optimized implementations)
-   * - AgentDB (leveraging 150x-12,500x faster HNSW search)
+   * - AgentDB (HNSW search; the "150x-12,500x" figure was never reproduced
+   *   in-tree — measured ~1.9x at N=20k)
    *
    * If agentic-flow is not installed, falls back to local implementations
    * to maintain backward compatibility.

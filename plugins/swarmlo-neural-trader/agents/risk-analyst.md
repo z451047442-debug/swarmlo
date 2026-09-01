@@ -1,6 +1,6 @@
 ---
 name: risk-analyst
-description: Portfolio risk assessment and position sizing using npx neural-trader — VaR/CVaR, Kelly criterion, circuit breakers, correlation monitoring. Pipeline BLOCKING GATE — receives SignalProposal from trading-strategist, returns RiskDecision (ADR-126 Phase 5)
+description: Portfolio risk assessment and position sizing using npx --ignore-scripts -y neural-trader@2.8.11 — VaR/CVaR, Kelly criterion, circuit breakers, correlation monitoring. Pipeline BLOCKING GATE — receives SignalProposal from trading-strategist, returns RiskDecision (ADR-126 Phase 5)
 model: sonnet
 ---
 You are a risk analyst agent that uses the `neural-trader` npm package for portfolio risk management, position sizing, and circuit breaker enforcement.
@@ -11,17 +11,17 @@ You are the **BLOCKING GATE** of the neural-trader live pipeline (ADR-126 Phase 
 
 ```bash
 # Risk assessment
-npx neural-trader --risk assess --portfolio <name>
-npx neural-trader --var --symbol QQQ --investment 10000
-npx neural-trader --risk-tolerance 0.02 --symbol AAPL
+npx --ignore-scripts -y neural-trader@2.8.11 --risk assess --portfolio <name>
+npx --ignore-scripts -y neural-trader@2.8.11 --var --symbol QQQ --investment 10000
+npx --ignore-scripts -y neural-trader@2.8.11 --risk-tolerance 0.02 --symbol AAPL
 
 # Portfolio optimization
-npx neural-trader --portfolio optimize --risk-target <number>
-npx neural-trader --portfolio rebalance
+npx --ignore-scripts -y neural-trader@2.8.11 --portfolio optimize --risk-target <number>
+npx --ignore-scripts -y neural-trader@2.8.11 --portfolio rebalance
 
 # Position sizing
-npx neural-trader --position-sizing kelly --symbol <TICKER>
-npx neural-trader --position-sizing fixed-fractional --risk-per-trade 0.02
+npx --ignore-scripts -y neural-trader@2.8.11 --position-sizing kelly --symbol <TICKER>
+npx --ignore-scripts -y neural-trader@2.8.11 --position-sizing fixed-fractional --risk-per-trade 0.02
 ```
 
 ### Risk Metrics (computed by neural-trader's Rust engine)
@@ -61,15 +61,15 @@ neural-trader enforces automatic risk limits:
 
 ```bash
 # Compute rolling correlation matrix
-npx neural-trader --correlation --symbols "AAPL,MSFT,GOOGL,AMZN" --window 30d
-npx neural-trader --correlation --portfolio <name> --flag-threshold 0.8
+npx --ignore-scripts -y neural-trader@2.8.11 --correlation --symbols "AAPL,MSFT,GOOGL,AMZN" --window 30d
+npx --ignore-scripts -y neural-trader@2.8.11 --correlation --portfolio <name> --flag-threshold 0.8
 ```
 
 ### Memory Persistence
 
 ```bash
-npx swarmlo-cli@latest memory store --namespace trading-risk --key "risk-PORTFOLIO_ID" --value "RISK_METRICS_JSON"
-npx swarmlo-cli@latest memory search --query "high correlation drawdown event" --namespace trading-risk
+npx swarmlo-cli@3.39.1 memory store --namespace trading-risk --key "risk-PORTFOLIO_ID" --value "RISK_METRICS_JSON"
+npx swarmlo-cli@3.39.1 memory search --query "high correlation drawdown event" --namespace trading-risk
 ```
 
 ### Related Plugins
@@ -82,7 +82,7 @@ npx swarmlo-cli@latest memory search --query "high correlation drawdown event" -
 
 After completing tasks, store successful patterns:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
 ```
 
 ### Comms protocol (ADR-126 Phase 5 — SendMessage pipeline blocking gate)

@@ -400,9 +400,12 @@ export class TruthAnchorStore {
   /**
    * Import anchors from an external source.
    *
-   * Imported anchors are appended to the store. Duplicate IDs
-   * (anchors already in the store) are silently skipped.
-   * Capacity enforcement runs after import.
+   * SECURITY: every imported anchor's HMAC signature is verified against
+   * this store's signing key before it is accepted. Anchors with an invalid
+   * signature (forged, tampered, or signed with a different key) cause the
+   * whole import to throw — nothing is appended. Duplicate IDs (anchors
+   * already in the store) are silently skipped. Capacity enforcement runs
+   * after import.
    */
   importAnchors(anchors: TruthAnchor[]): void {
     const now = Date.now();
@@ -410,6 +413,16 @@ export class TruthAnchorStore {
     for (const anchor of anchors) {
       // Skip duplicates
       if (this.indexById.has(anchor.id)) continue;
+
+      // Force signature verification — never import unverified anchors.
+      const { signature, ...rest } = anchor;
+      const expected = sign(canonicalize(rest), this.config.signingKey);
+      if (!timingSafeEqual(signature, expected)) {
+        throw new Error(
+          `Refusing to import truth anchor ${anchor.id}: signature verification failed. ` +
+          'Anchors must be signed with this store\'s signingKey.'
+        );
+      }
 
       this.anchors.push(anchor);
       this.indexById.set(anchor.id, this.anchors.length - 1);

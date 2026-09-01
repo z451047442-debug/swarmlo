@@ -79,7 +79,7 @@ export type SettingsEditable = Omit<Settings, "welcomeModalSeenAt" | "createdAt"
 // TODO: move this to a constant file along with other constants
 export const DEFAULT_SETTINGS = {
 	shareConversationsWithModelAuthors: true,
-	activeModel: defaultModel.id,
+	activeModel: defaultModel?.id ?? "",
 	customPrompts: {},
 	multimodalOverrides: {},
 	toolsOverrides: {},

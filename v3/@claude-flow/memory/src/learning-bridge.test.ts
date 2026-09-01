@@ -176,10 +176,13 @@ describe('LearningBridge', () => {
       await bridge.onInsightRecorded(insight, 'entry-1');
 
       expect(neural.beginTask).toHaveBeenCalledWith(insight.summary, 'general');
-      expect(neural.recordStep).toHaveBeenCalledWith('traj-1', expect.objectContaining({
-        action: 'record:debugging',
-        reward: 0.95,
-      }));
+      // recordStep is positional: (trajectoryId, action, reward, stateEmbedding)
+      expect(neural.recordStep).toHaveBeenCalledWith(
+        'traj-1',
+        'record:debugging',
+        0.95,
+        expect.any(Float32Array),
+      );
       expect(bridge.getStats().totalTrajectories).toBe(1);
     });
 
@@ -223,9 +226,10 @@ describe('LearningBridge', () => {
     it('should pass hash embedding as stateEmbedding', async () => {
       await bridge.onInsightRecorded(createTestInsight(), 'entry-1');
 
-      const stepArg = neural.recordStep.mock.calls[0][1];
-      expect(stepArg.stateEmbedding).toBeInstanceOf(Float32Array);
-      expect(stepArg.stateEmbedding.length).toBe(768);
+      // Positional: args[0]=trajectoryId, args[1]=action, args[2]=reward, args[3]=embedding
+      const stepArgs = neural.recordStep.mock.calls[0];
+      expect(stepArgs[3]).toBeInstanceOf(Float32Array);
+      expect(stepArgs[3].length).toBe(768);
     });
 
     it('should create unique trajectory per entry', async () => {
@@ -319,10 +323,7 @@ describe('LearningBridge', () => {
 
       await bridge.onInsightAccessed('entry-1');
 
-      expect(neural.recordStep).toHaveBeenCalledWith('traj-1', {
-        action: 'access',
-        reward: 0.03,
-      });
+      expect(neural.recordStep).toHaveBeenCalledWith('traj-1', 'access', 0.03);
     });
 
     it('should not record neural step without trajectory', async () => {
@@ -333,7 +334,8 @@ describe('LearningBridge', () => {
 
       expect(neural.recordStep).not.toHaveBeenCalledWith(
         expect.anything(),
-        expect.objectContaining({ action: 'access' }),
+        'access',
+        expect.any(Number),
       );
     });
 

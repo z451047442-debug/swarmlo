@@ -2426,7 +2426,7 @@ const sessionRestoreCommand: Command = {
 // Intelligence subcommand (SONA, MoE, HNSW)
 const intelligenceCommand: Command = {
   name: 'intelligence',
-  description: 'RuVector intelligence system (SONA, MoE, HNSW 150x faster)',
+  description: 'RuVector intelligence system (SONA, MoE, HNSW search)',
   options: [
     {
       name: 'mode',
@@ -2450,7 +2450,7 @@ const intelligenceCommand: Command = {
     },
     {
       name: 'enable-hnsw',
-      description: 'Enable HNSW 150x faster search',
+      description: 'Enable HNSW index search',
       type: 'boolean',
       default: true
     },
@@ -2622,7 +2622,7 @@ const intelligenceCommand: Command = {
             enabled: enableHnsw,
             status: String(mcpHnsw?.status ?? (localStats.reasoningBankSize > 0 ? 'active' : 'idle')),
             indexSize: Math.max(localStats.reasoningBankSize, Number(mcpHnsw?.indexSize ?? 0)),
-            searchSpeedup: String(mcpHnsw?.searchSpeedup ?? (localStats.reasoningBankSize > 0 ? '150x' : 'N/A')),
+            searchSpeedup: String(mcpHnsw?.searchSpeedup ?? 'N/A'),
             memoryUsage: String(mcpHnsw?.memoryUsage ?? (patternsFileSize > 0 ? `${(patternsFileSize / 1024).toFixed(1)} KB` : 'N/A')),
             dimension: Number(mcpHnsw?.dimension ?? 384),
           },
@@ -2641,7 +2641,7 @@ const intelligenceCommand: Command = {
         performance: mcpPerf ?? {
           flashAttention: 'N/A',
           memoryReduction: patternsFileSize > 0 ? `${(patternsFileSize / 1024).toFixed(1)} KB on disk` : 'N/A',
-          searchImprovement: localStats.reasoningBankSize > 0 ? '150x-12,500x' : 'N/A',
+          searchImprovement: 'N/A',
           tokenReduction: 'N/A',
           sweBenchScore: 'N/A',
         },
@@ -2759,7 +2759,7 @@ const intelligenceCommand: Command = {
 
       // HNSW Component
       output.writeln();
-      output.writeln(output.bold('HNSW (150x Faster Search)'));
+      output.writeln(output.bold('HNSW Index'));
       const hnsw = result.components.hnsw;
       if (hnsw.enabled) {
         output.printTable({
@@ -4337,25 +4337,28 @@ const statuslineCommand: Command = {
     const path = await import('path');
     const { execSync } = await import('child_process');
 
-    // Get learning stats from memory database
+    // Get learning stats — real counts only. The previous implementation
+    // derived `patterns` from the DB file size in KB (`sizeKB / 2`), which
+    // fabricated numbers. Now patterns/trajectories are read from real
+    // fields in learning.json (same source the intelligence score below
+    // uses) and default to 0 when no learning data exists.
     function getLearningStats() {
-      const memoryPaths = [
-        path.join(process.cwd(), '.swarm', 'memory.db'),
-        path.join(process.cwd(), '.claude', 'memory.db'),
-      ];
-
       let patterns = 0;
       let sessions = 0;
       let trajectories = 0;
 
-      for (const dbPath of memoryPaths) {
-        if (fs.existsSync(dbPath)) {
+      const learningJsonPaths = [
+        path.join(process.cwd(), '.claude-flow', 'learning.json'),
+        path.join(process.cwd(), '.claude', '.claude-flow', 'learning.json'),
+        path.join(process.cwd(), '.swarm', 'learning.json'),
+      ];
+      for (const lPath of learningJsonPaths) {
+        if (fs.existsSync(lPath)) {
           try {
-            const stats = fs.statSync(dbPath);
-            const sizeKB = stats.size / 1024;
-            patterns = Math.floor(sizeKB / 2);
-            sessions = Math.max(1, Math.floor(patterns / 10));
-            trajectories = Math.floor(patterns / 5);
+            const data = JSON.parse(fs.readFileSync(lPath, 'utf-8'));
+            if (typeof data.patterns === 'number') patterns = data.patterns;
+            if (typeof data.trajectoriesRecorded === 'number') trajectories = data.trajectoriesRecorded;
+            if (typeof data.sessions === 'number') sessions = data.sessions;
             break;
           } catch {
             // Ignore
@@ -4623,8 +4626,10 @@ const statuslineCommand: Command = {
 
     const separator = `${c.dim}─────────────────────────────────────────────────────${c.reset}`;
 
-    // Get hooks stats
-    const hooksStats = { enabled: 0, total: 17 };
+    // Get hooks stats — enabled hooks are counted from .claude/settings.json
+    // (real); total comes from the live subcommand registry instead of a
+    // hardcoded 17 that silently went stale.
+    const hooksStats = { enabled: 0, total: hooksCommand.subcommands?.length ?? 0 };
     const settingsPath = path.join(process.cwd(), '.claude', 'settings.json');
     if (fs.existsSync(settingsPath)) {
       try {
@@ -4635,7 +4640,10 @@ const statuslineCommand: Command = {
       } catch { /* ignore */ }
     }
 
-    // Get AgentDB stats (matching statusline-generator.ts paths)
+    // Get AgentDB stats (matching statusline-generator.ts paths). Real
+    // measurements only: dbSizeKB comes from actual files. vectorCount and
+    // hasHnsw are NO LONGER derived heuristically (DB size / 2 was a
+    // fabricated number); they are read from real sources or left at 0/false.
     const agentdbStats = { vectorCount: 0, dbSizeKB: 0, hasHnsw: false };
 
     // Check for direct database files first
@@ -4653,15 +4661,13 @@ const statuslineCommand: Command = {
         try {
           const stats = fs.statSync(dbPath);
           agentdbStats.dbSizeKB = Math.round(stats.size / 1024);
-          agentdbStats.vectorCount = Math.floor(agentdbStats.dbSizeKB / 2);
-          agentdbStats.hasHnsw = agentdbStats.vectorCount > 100;
           break;
         } catch { /* ignore */ }
       }
     }
 
     // Check for AgentDB directories if no direct db found
-    if (agentdbStats.vectorCount === 0) {
+    if (agentdbStats.dbSizeKB === 0) {
       const agentdbDirs = [
         path.join(process.cwd(), '.claude-flow', 'agentdb'),
         path.join(process.cwd(), '.swarm', 'agentdb'),
@@ -4679,15 +4685,13 @@ const statuslineCommand: Command = {
                 agentdbStats.dbSizeKB += Math.round(fileStat.size / 1024);
               }
             }
-            agentdbStats.vectorCount = Math.floor(agentdbStats.dbSizeKB / 2);
-            agentdbStats.hasHnsw = agentdbStats.vectorCount > 100;
-            if (agentdbStats.vectorCount > 0) break;
+            if (agentdbStats.dbSizeKB > 0) break;
           } catch { /* ignore */ }
         }
       }
     }
 
-    // Check for HNSW index files
+    // Check for HNSW index files — real presence signal only
     const hnswPaths = [
       path.join(process.cwd(), '.claude-flow', 'hnsw'),
       path.join(process.cwd(), '.swarm', 'hnsw'),
@@ -4696,22 +4700,13 @@ const statuslineCommand: Command = {
     for (const hnswPath of hnswPaths) {
       if (fs.existsSync(hnswPath)) {
         agentdbStats.hasHnsw = true;
-        try {
-          const hnswFiles = fs.readdirSync(hnswPath);
-          const indexFile = hnswFiles.find(f => f.endsWith('.index'));
-          if (indexFile) {
-            const indexStat = fs.statSync(path.join(hnswPath, indexFile));
-            const hnswVectors = Math.floor(indexStat.size / 512);
-            agentdbStats.vectorCount = Math.max(agentdbStats.vectorCount, hnswVectors);
-          }
-        } catch { /* ignore */ }
         break;
       }
     }
 
-    // Check for vectors.json file
+    // Check for vectors.json file — real vector count
     const vectorsPath = path.join(process.cwd(), '.claude-flow', 'vectors.json');
-    if (fs.existsSync(vectorsPath) && agentdbStats.vectorCount === 0) {
+    if (fs.existsSync(vectorsPath)) {
       try {
         const data = JSON.parse(fs.readFileSync(vectorsPath, 'utf-8'));
         if (Array.isArray(data)) {
@@ -4750,11 +4745,14 @@ const statuslineCommand: Command = {
     }
 
     const domainsColor = progress.domainsCompleted >= 3 ? c.brightGreen : progress.domainsCompleted > 0 ? c.yellow : c.red;
-    // Dynamic perf indicator based on patterns/HNSW
-    let perfIndicator = `${c.dim}⚡ target: 150x-12500x${c.reset}`;
+    // Dynamic perf indicator based on real signals only. The withdrawn
+    // "150x-12,500x" marketing numbers (and their vectorCount-derived
+    // fakes) are gone — HNSW shows as indexed or not, nothing more.
+    let perfIndicator = '';
     if (agentdbStats.hasHnsw && agentdbStats.vectorCount > 0) {
-      const speedup = agentdbStats.vectorCount > 10000 ? '12500x' : agentdbStats.vectorCount > 1000 ? '150x' : '10x';
-      perfIndicator = `${c.brightGreen}⚡ HNSW ${speedup}${c.reset}`;
+      perfIndicator = `${c.brightGreen}⚡ HNSW indexed (${agentdbStats.vectorCount} vectors)${c.reset}`;
+    } else if (agentdbStats.hasHnsw) {
+      perfIndicator = `${c.brightGreen}⚡ HNSW indexed${c.reset}`;
     } else if (progress.patternsLearned > 0) {
       const patternsK = progress.patternsLearned >= 1000 ? `${(progress.patternsLearned / 1000).toFixed(1)}k` : String(progress.patternsLearned);
       perfIndicator = `${c.brightYellow}📚 ${patternsK} patterns${c.reset}`;
@@ -4882,7 +4880,7 @@ const tokenOptimizeCommand: Command = {
   description: 'Token optimization via agentic-flow Agent Booster integration',
   options: [
     { name: 'query', short: 'q', type: 'string', description: 'Query for compact context retrieval' },
-    { name: 'agents', short: 'A', type: 'number', description: 'Agent count for optimal config', default: '6' },
+    { name: 'agents', short: 'A', type: 'number', description: 'Agent count for optimal config', default: 6 },
     { name: 'report', short: 'r', type: 'boolean', description: 'Generate optimization report' },
     { name: 'stats', short: 's', type: 'boolean', description: 'Show token savings statistics' },
   ],
@@ -5721,11 +5719,8 @@ export const hooksCommand: Command = {
     output.writeln(output.bold('V3 Features:'));
     output.printList([
       '🧠 ReasoningBank adaptive learning',
-      '⚡ Flash Attention (2.49x-7.47x speedup)',
-      '🔍 AgentDB integration (150x faster search)',
-      '📊 84.8% SWE-Bench solve rate',
-      '🎯 32.3% token reduction',
-      '🚀 2.8-4.4x speed improvement',
+      '⚡ Flash Attention integration (speedup not yet benchmarked in-tree)',
+      '🔍 AgentDB integration (HNSW search measured ~1.9x-4.7x vs brute force above crossover)',
       '👥 Agent Teams integration (auto task assignment)'
     ]);
 

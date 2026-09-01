@@ -41,8 +41,8 @@ Persisted definition that pauses for human approval and resumes across sessions 
 
 Store successful workflow templates and execution patterns:
 ```bash
-npx swarmlo-cli@latest memory store --namespace workflow-patterns --key "workflow-NAME" --value "TEMPLATE_AND_METRICS"
-npx swarmlo-cli@latest memory search --query "workflow for TASK_TYPE" --namespace workflow-patterns
+npx swarmlo-cli@3.39.1 memory store --namespace workflow-patterns --key "workflow-NAME" --value "TEMPLATE_AND_METRICS"
+npx swarmlo-cli@3.39.1 memory search --query "workflow for TASK_TYPE" --namespace workflow-patterns
 ```
 
 
@@ -50,6 +50,6 @@ npx swarmlo-cli@latest memory search --query "workflow for TASK_TYPE" --namespac
 
 After completing tasks, store successful patterns:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
-npx swarmlo-cli@latest memory search --query "TASK_TYPE patterns" --namespace patterns
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 memory search --query "TASK_TYPE patterns" --namespace patterns
 ```

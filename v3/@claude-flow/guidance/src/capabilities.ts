@@ -99,6 +99,24 @@ export interface CapabilityCheckResult {
 // ============================================================================
 
 /**
+ * Whether `candidate` is an equal-or-narrower resource than `original`.
+ *
+ * A resource may only be narrowed: equal strings pass, `'*'` may be
+ * narrowed to anything, and a prefix pattern (`tools/*`) may be narrowed to
+ * a more specific path (`tools/bash`). Anything else (a different or wider
+ * resource) is rejected.
+ */
+function isNarrowingResource(original: string, candidate: string): boolean {
+  if (original === candidate) return true;
+  if (original === '*') return true;
+  if (original.endsWith('*')) {
+    const prefix = original.slice(0, -1);
+    return candidate.startsWith(prefix) && candidate.length > prefix.length;
+  }
+  return false;
+}
+
+/**
  * Capability Algebra
  *
  * Manages the lifecycle of typed capabilities: granting, restricting,
@@ -165,6 +183,11 @@ export class CapabilityAlgebra {
    * - Delegatable can only be set to false, never promoted to true
    */
   restrict(capability: Capability, restrictions: Partial<Capability>): Capability {
+    // SECURITY: never spread `restrictions` into the restricted capability.
+    // Only a whitelist of narrowing fields is honored; every other field
+    // (grantedTo, grantedBy, revoked, revokedAt, attestations, ...) is
+    // carried over from the original untouched, so a restriction can never
+    // widen or forge permissions.
     const restricted: Capability = {
       ...capability,
       id: randomUUID(),
@@ -172,6 +195,21 @@ export class CapabilityAlgebra {
       attestations: [],
       parentCapabilityId: capability.id,
     };
+
+    // Scope: only allowed when equal to the original (never widened or changed)
+    if (restrictions.scope !== undefined) {
+      if (restrictions.scope === capability.scope) {
+        restricted.scope = restrictions.scope;
+      }
+      // A differing scope is silently ignored — restriction cannot re-scope
+    }
+
+    // Resource: only allowed when equal or a narrowing of the original
+    if (restrictions.resource !== undefined) {
+      if (isNarrowingResource(capability.resource, restrictions.resource)) {
+        restricted.resource = restrictions.resource;
+      }
+    }
 
     // Actions: only allow narrowing (intersection with original)
     if (restrictions.actions) {

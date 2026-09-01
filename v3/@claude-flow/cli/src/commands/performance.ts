@@ -17,8 +17,8 @@ const benchmarkCommand: Command = {
   description: 'Run performance benchmarks',
   options: [
     { name: 'suite', short: 's', type: 'string', description: 'Benchmark suite: all, wasm, neural, memory, search', default: 'all' },
-    { name: 'iterations', short: 'i', type: 'number', description: 'Number of iterations', default: '100' },
-    { name: 'warmup', short: 'w', type: 'number', description: 'Warmup iterations', default: '10' },
+    { name: 'iterations', short: 'i', type: 'number', description: 'Number of iterations', default: 100 },
+    { name: 'warmup', short: 'w', type: 'number', description: 'Warmup iterations', default: 10 },
     { name: 'output', short: 'o', type: 'string', description: 'Output format: text, json, csv', default: 'text' },
   ],
   examples: [
@@ -157,7 +157,7 @@ const benchmarkCommand: Command = {
 
         const mean = searchTimes.reduce((a, b) => a + b, 0) / searchTimes.length;
         // Brute force baseline: ~0.5μs per vector comparison, 1000 vectors = 0.5ms
-        // HNSW should be O(log n) ~150x faster
+        // HNSW should be O(log n) vs brute-force O(n)
         const baselineBruteForce = hnswStatus.entryCount * 0.0005;
         const speedup = baselineBruteForce / (mean / 1000);
         results.push({
@@ -260,7 +260,7 @@ const profileCommand: Command = {
   description: 'Profile application performance',
   options: [
     { name: 'type', short: 't', type: 'string', description: 'Profile type: cpu, memory, io, all', default: 'all' },
-    { name: 'duration', short: 'd', type: 'number', description: 'Duration in seconds', default: '30' },
+    { name: 'duration', short: 'd', type: 'number', description: 'Duration in seconds', default: 30 },
     { name: 'output', short: 'o', type: 'string', description: 'Output file for profile data' },
   ],
   examples: [
@@ -564,7 +564,7 @@ const optimizeCommand: Command = {
       data: [
         { priority: output.error('P0'), area: 'Memory', recommendation: 'Enable HNSW index quantization', impact: '+50% reduction' },
         { priority: output.warning('P1'), area: 'CPU', recommendation: 'Enable WASM SIMD acceleration', impact: '+4x speedup' },
-        { priority: output.warning('P1'), area: 'Latency', recommendation: 'Flash Attention WASM (in progress, currently JS reference)', impact: '+2.49x target' },
+        { priority: output.warning('P1'), area: 'Latency', recommendation: 'Flash Attention WASM (in progress, currently JS reference)', impact: 'unmeasured' },
         { priority: output.info('P2'), area: 'Cache', recommendation: 'Increase pattern cache size', impact: '+15% hit rate' },
         { priority: output.info('P2'), area: 'Network', recommendation: 'Enable request batching', impact: '-30% latency' },
       ],
@@ -642,8 +642,8 @@ export const performanceCommand: Command = {
     output.writeln();
     output.writeln('Performance Targets:');
     output.printList([
-      'HNSW Search: 150x-12,500x faster than brute force',
-      'Flash Attention: 2.49x-7.47x target (in progress; ships JS reference impl)',
+      'HNSW Search: measured ~1.9x-4.7x vs brute force above crossover',
+      'Flash Attention: integration in progress (speedup not yet measured)',
       'Memory: 50-75% reduction with quantization',
     ]);
     output.writeln();

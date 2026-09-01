@@ -220,7 +220,8 @@ export class AnthropicProvider extends BaseProvider {
                 inputTokens = event.message.usage.input_tokens;
               } else if (event.type === 'message_stop') {
                 const model = request.model || this.config.model;
-                const pricing = this.capabilities.pricing[model];
+                                const pricing = this.capabilities.pricing[model]
+                        ?? { promptCostPer1k: 0, completionCostPer1k: 0, currency: 'USD' };
 
                 const promptCost = (inputTokens / 1000) * pricing.promptCostPer1k;
                 const completionCost = (totalOutputTokens / 1000) * pricing.completionCostPer1k;
@@ -384,7 +385,8 @@ export class AnthropicProvider extends BaseProvider {
 
   private transformResponse(data: AnthropicResponse, request: LLMRequest): LLMResponse {
     const model = request.model || this.config.model;
-    const pricing = this.capabilities.pricing[model];
+        const pricing = this.capabilities.pricing[model]
+            ?? { promptCostPer1k: 0, completionCostPer1k: 0, currency: 'USD' };
 
     const promptCost = (data.usage.input_tokens / 1000) * pricing.promptCostPer1k;
     const completionCost = (data.usage.output_tokens / 1000) * pricing.completionCostPer1k;

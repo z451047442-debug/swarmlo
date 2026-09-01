@@ -46,21 +46,24 @@ export const DevelopmentStep = ({
     if (status === "active" && data.length > 0) {
       setLoadingItems(new Set());
       setCompletedItems(new Set());
-      
+
+      // 记录 timer 以便卸载/状态切换时清理
+      const timers: ReturnType<typeof setTimeout>[] = [];
       data.forEach((_, idx) => {
-        setTimeout(() => {
+        timers.push(setTimeout(() => {
           setLoadingItems(prev => new Set([...prev, idx]));
-          
-          setTimeout(() => {
+
+          timers.push(setTimeout(() => {
             setLoadingItems(prev => {
               const next = new Set(prev);
               next.delete(idx);
               return next;
             });
             setCompletedItems(prev => new Set([...prev, idx]));
-          }, 1200);
-        }, idx * 200);
+          }, 1200));
+        }, idx * 200));
       });
+      return () => timers.forEach(clearTimeout);
     } else if (status === "completed") {
       setCompletedItems(new Set(data.map((_, idx) => idx)));
       setLoadingItems(new Set());

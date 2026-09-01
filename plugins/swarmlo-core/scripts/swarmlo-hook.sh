@@ -46,7 +46,7 @@ if command -v swarmlo >/dev/null 2>&1; then
 elif command -v claude-flow >/dev/null 2>&1; then
   run claude-flow hooks "$@"
 else
-  run npx --prefer-offline --yes swarmlo@latest hooks "$@"
+  run npx --prefer-offline --yes swarmlo@3.39.1 hooks "$@"
 fi
 
 exit 0

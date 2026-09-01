@@ -54,7 +54,7 @@ const insertRandomConversations = async (count: number) => {
 			_id: new ObjectId(),
 			title: "random title",
 			messages: [],
-			model: defaultModel.id,
+			model: defaultModel?.id ?? "test-model",
 			// embedding model removed in this build
 			createdAt: new Date(),
 			updatedAt: new Date(),

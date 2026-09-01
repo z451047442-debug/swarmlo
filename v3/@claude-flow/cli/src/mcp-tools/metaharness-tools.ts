@@ -49,6 +49,7 @@
 
 import type { MCPTool, getProjectCwd as _ } from './types.js';
 import { getProjectCwd } from './types.js';
+import { validatePath } from './validate-input.js';
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
@@ -676,24 +677,49 @@ export const metaharnessTools: MCPTool[] = [
         return { success: true, data: { ledgerHead: state.ledgerHead, commits: state.commits }, degraded: false, exitCode: 0 };
       }
       if (operation === 'run') {
-        const privateKeyPath = input.privateKeyPath ? resolve(String(input.privateKeyPath)) : undefined;
-        const publicKeyPath = input.publicKeyPath ? resolve(String(input.publicKeyPath)) : undefined;
-        if (!!privateKeyPath !== !!publicKeyPath) {
+        const privateKeyRaw = input.privateKeyPath ? String(input.privateKeyPath) : undefined;
+        const publicKeyRaw = input.publicKeyPath ? String(input.publicKeyPath) : undefined;
+        if (!!privateKeyRaw !== !!publicKeyRaw) {
           return { success: false, data: { reason: 'privateKeyPath and publicKeyPath must be supplied together' }, degraded: false, exitCode: 2 };
         }
-        const data = await runFlywheelWorker(projectRoot, {
-          optInOverride: true,
-          sample: Number(input.sample ?? 40),
-          proposer: String(input.proposer ?? 'auto') as 'local' | 'auto' | 'darwin',
-          receiptPrivateKeyPem: privateKeyPath ? readFileSync(privateKeyPath, 'utf8') : undefined,
-          receiptPublicKeyPem: publicKeyPath ? readFileSync(publicKeyPath, 'utf8') : undefined,
-          maxConcurrency: Number(input.maxConcurrency ?? 2),
-          evaluationTimeoutMs: Number(input.timeoutMs ?? 120_000),
-          anchorPath: input.anchorPath ? String(input.anchorPath) : undefined,
-          anchorHash: input.anchorHash ? String(input.anchorHash) : undefined,
-          anchorManifestPath: input.anchorManifestPath ? String(input.anchorManifestPath) : undefined,
-        });
-        return { success: data.ran, data, degraded: false, exitCode: data.ran ? 0 : 1 };
+        let privateKeyPath: string | undefined;
+        let publicKeyPath: string | undefined;
+        for (const [raw, label] of [
+          [privateKeyRaw, 'privateKeyPath'],
+          [publicKeyRaw, 'publicKeyPath'],
+        ] as const) {
+          if (!raw) continue;
+          const v = validatePath(raw, label);
+          if (!v.valid) {
+            return { success: false, data: { reason: v.error }, degraded: false, exitCode: 2 };
+          }
+          if (label === 'privateKeyPath') privateKeyPath = resolve(v.sanitized);
+          else publicKeyPath = resolve(v.sanitized);
+        }
+        try {
+          const receiptPrivateKeyPem = privateKeyPath ? readFileSync(privateKeyPath, 'utf8') : undefined;
+          const receiptPublicKeyPem = publicKeyPath ? readFileSync(publicKeyPath, 'utf8') : undefined;
+          const data = await runFlywheelWorker(projectRoot, {
+            optInOverride: true,
+            sample: Number(input.sample ?? 40),
+            proposer: String(input.proposer ?? 'auto') as 'local' | 'auto' | 'darwin',
+            receiptPrivateKeyPem,
+            receiptPublicKeyPem,
+            maxConcurrency: Number(input.maxConcurrency ?? 2),
+            evaluationTimeoutMs: Number(input.timeoutMs ?? 120_000),
+            anchorPath: input.anchorPath ? String(input.anchorPath) : undefined,
+            anchorHash: input.anchorHash ? String(input.anchorHash) : undefined,
+            anchorManifestPath: input.anchorManifestPath ? String(input.anchorManifestPath) : undefined,
+          });
+          return { success: data.ran, data, degraded: false, exitCode: data.ran ? 0 : 1 };
+        } catch (err) {
+          return {
+            success: false,
+            data: { reason: `flywheel run failed: ${err instanceof Error ? err.message : String(err)}` },
+            degraded: false,
+            exitCode: 1,
+          };
+        }
       }
       if (operation === 'evidence-reset') {
         // ADR-381 §2 — reopens the family-wise alpha budget; same policy
@@ -749,7 +775,21 @@ export const metaharnessTools: MCPTool[] = [
             exitCode: 1,
           };
         }
-        const publicKey = readFileSync(resolve(String(input.publicKeyPath)), 'utf8');
+        const pathCheck = validatePath(String(input.publicKeyPath), 'publicKeyPath');
+        if (!pathCheck.valid) {
+          return { success: false, data: { reason: pathCheck.error }, degraded: false, exitCode: 1 };
+        }
+        let publicKey: string;
+        try {
+          publicKey = readFileSync(resolve(pathCheck.sanitized), 'utf8');
+        } catch (err) {
+          return {
+            success: false,
+            data: { reason: `failed to read publicKeyPath: ${err instanceof Error ? err.message : String(err)}` },
+            degraded: false,
+            exitCode: 1,
+          };
+        }
         const data = await promoteFlywheelCandidate(projectRoot, String(input.receiptId), {
           confirm: input.confirm === true,
           trustedPublicKeys: new Set([publicKey]),

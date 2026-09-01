@@ -13,7 +13,7 @@
  * @module @claude-flow/guidance/persistence
  */
 
-import { mkdir, readFile, writeFile, appendFile, stat, unlink, rename } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, appendFile, stat, unlink, rename, open } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -206,37 +206,73 @@ export class EventStore {
   /**
    * Acquire a file-based lock for concurrent access prevention.
    * Throws if the lock is already held by another process.
+   *
+   * The lock is created atomically with `open(..., 'wx')` so there is no
+   * check-then-create TOCTOU window between two processes.
    */
   async acquireLock(): Promise<void> {
     await this.ensureDirectory();
 
-    // Check for stale locks
-    if (existsSync(this.lockPath)) {
+    const holder = randomUUID();
+    const lockData = { holder, timestamp: Date.now(), pid: process.pid };
+    const content = JSON.stringify(lockData);
+
+    try {
+      const fh = await open(this.lockPath, 'wx');
+      try {
+        await fh.writeFile(content, 'utf-8');
+      } finally {
+        await fh.close();
+      }
+    } catch (err) {
+      if (!(err as NodeJS.ErrnoException).code || (err as NodeJS.ErrnoException).code !== 'EEXIST') {
+        throw err;
+      }
+
+      // Lock exists — check staleness, then remove stale/corrupted locks.
+      let stale = false;
       try {
         const lockContent = await readFile(this.lockPath, 'utf-8');
-        const lockData = JSON.parse(lockContent);
-        const age = Date.now() - lockData.timestamp;
+        const existing = JSON.parse(lockContent);
+        stale = Date.now() - existing.timestamp >= LOCK_STALE_MS;
+      } catch {
+        // Corrupted lock file — treat as stale
+        stale = true;
+      }
 
-        if (age < LOCK_STALE_MS) {
+      if (!stale) {
+        let holderName = 'unknown';
+        try {
+          const lockContent = await readFile(this.lockPath, 'utf-8');
+          holderName = JSON.parse(lockContent).holder;
+        } catch { /* best effort */ }
+        throw new Error(
+          `Storage is locked by another process (holder: ${holderName}). ` +
+          `Lock file: ${this.lockPath}`
+        );
+      }
+
+      try { await unlink(this.lockPath); } catch { /* ignore */ }
+
+      // Retry once after removing the stale lock.
+      try {
+        const fh = await open(this.lockPath, 'wx');
+        try {
+          await fh.writeFile(content, 'utf-8');
+        } finally {
+          await fh.close();
+        }
+      } catch (retryErr) {
+        if ((retryErr as NodeJS.ErrnoException).code === 'EEXIST') {
           throw new Error(
-            `Storage is locked by another process (holder: ${lockData.holder}, age: ${age}ms). ` +
+            `Storage is locked by another process (contended stale-lock removal). ` +
             `Lock file: ${this.lockPath}`
           );
         }
-        // Stale lock, remove it
-        await unlink(this.lockPath);
-      } catch (err) {
-        if (err instanceof Error && err.message.startsWith('Storage is locked')) {
-          throw err;
-        }
-        // Corrupted lock file, remove it
-        try { await unlink(this.lockPath); } catch { /* ignore */ }
+        throw retryErr;
       }
     }
 
-    const holder = randomUUID();
-    const lockData = { holder, timestamp: Date.now(), pid: process.pid };
-    await writeFile(this.lockPath, JSON.stringify(lockData), 'utf-8');
     this.lockHolder = holder;
   }
 

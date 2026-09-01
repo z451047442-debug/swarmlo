@@ -38,6 +38,7 @@ import { ReviseResearchForm, type ResearchConfig } from "@/components/ReviseRese
 import { StateAssessmentCard } from "@/components/StateAssessmentCard";
 import { GOAPConfigDisplay } from "@/components/GOAPConfigDisplay";
 import { GOAPPlanner, parseGoal, type Step, type DataItem } from "@/lib/goapPlanner";
+import { hasSavedAdvancedSettings, loadAdvancedSettings } from "@/lib/agenticSettings";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/i18n";
@@ -155,17 +156,21 @@ const STEP_ICONS: Record<string, LucideIcon> = {
   "7": CheckCircle2,
 };
 
-let cachedRestoredSession: PersistedResearchSession | null | undefined;
+// 缓存按语言区分：会话内容在生成时已翻译为当时的语言，切换语言后必须
+// 丢弃缓存（持久化层也记录 lang 并按其失效），否则会恢复出旧语言的文案。
+let cachedRestoredSession: { lang: string; session: PersistedResearchSession | null } | undefined;
 
-function getRestoredSession(): PersistedResearchSession | null {
-  if (cachedRestoredSession !== undefined) return cachedRestoredSession;
+function getRestoredSession(lang: string): PersistedResearchSession | null {
+  if (cachedRestoredSession && cachedRestoredSession.lang === lang) {
+    return cachedRestoredSession.session;
+  }
   try {
     const raw = localStorage.getItem(RESEARCH_SESSION_KEY);
     if (!raw) {
-      cachedRestoredSession = null;
+      cachedRestoredSession = { lang, session: null };
       return null;
     }
-    const parsed = JSON.parse(raw) as Partial<PersistedResearchSession> & { v?: number; steps?: Step[] };
+    const parsed = JSON.parse(raw) as Partial<PersistedResearchSession> & { v?: number; steps?: Step[]; lang?: string };
     if (parsed.v !== 3 || !Array.isArray(parsed.steps) || parsed.steps.length === 0) {
       // v1 sessions predate the Chinese UI translation and would restore English
       // template copy — discard them (v1 was never released, so nothing real is lost).
@@ -176,10 +181,21 @@ function getRestoredSession(): PersistedResearchSession | null {
       } catch (cleanupErr) {
         console.warn("Failed to clear stale session:", cleanupErr);
       }
-      cachedRestoredSession = null;
+      cachedRestoredSession = { lang, session: null };
       return null;
     }
-    cachedRestoredSession = {
+    if (parsed.lang && parsed.lang !== lang) {
+      // 会话文案固化在生成时的语言里，无法重译——按 v1/v2 先例丢弃。
+      console.warn(`Research session was persisted in "${parsed.lang}" but UI is "${lang}"; discarding stale session.`);
+      try {
+        localStorage.removeItem(RESEARCH_SESSION_KEY);
+      } catch (cleanupErr) {
+        console.warn("Failed to clear stale session:", cleanupErr);
+      }
+      cachedRestoredSession = { lang, session: null };
+      return null;
+    }
+    const restored: PersistedResearchSession = {
       userGoal: parsed.userGoal ?? "",
       steps: parsed.steps.map((step) => ({
         ...step,
@@ -200,7 +216,8 @@ function getRestoredSession(): PersistedResearchSession | null {
       planGenerated: parsed.planGenerated ?? true,
       showFinalAnalysis: parsed.showFinalAnalysis ?? false,
     };
-    return cachedRestoredSession;
+    cachedRestoredSession = { lang, session: restored };
+    return restored;
   } catch (err) {
     console.warn("Failed to restore research session, starting fresh:", err);
     try {
@@ -208,12 +225,12 @@ function getRestoredSession(): PersistedResearchSession | null {
     } catch (cleanupErr) {
       console.warn("Failed to clear corrupted session:", cleanupErr);
     }
-    cachedRestoredSession = null;
+    cachedRestoredSession = { lang, session: null };
     return null;
   }
 }
 
-const Index = () => {
+const Index = ({ defaultGoal }: { defaultGoal?: string }) => {
   const { toast } = useToast();
   const { t, lang } = useI18n();
   // defaultResearchConfig.stateGaps / replanningTriggers are stored as raw
@@ -255,7 +272,7 @@ const Index = () => {
     aiModel: import.meta.env.VITE_AI_MODEL || "google/gemini-2.5-flash",
   });
   const [showCustomizer, setShowCustomizer] = useState(false);
-  const restored = getRestoredSession();
+  const restored = getRestoredSession(lang);
   const [userGoal, setUserGoal] = useState<string>(restored?.userGoal ?? "");
   const [isPlanning, setIsPlanning] = useState(false);
   const [planGenerated, setPlanGenerated] = useState(restored?.planGenerated ?? false);
@@ -265,7 +282,7 @@ const Index = () => {
   const [showFinalAnalysis, setShowFinalAnalysis] = useState(restored?.showFinalAnalysis ?? false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showReviseForm, setShowReviseForm] = useState(false);
-  const [finalRecommendations, setFinalRecommendations] = useState<any[]>(restored?.finalRecommendations ?? []);
+  const [finalRecommendations, setFinalRecommendations] = useState<Array<{ title?: string; content?: string; source?: string }>>(restored?.finalRecommendations ?? []);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const [researchConfig, setResearchConfig] = useState<ResearchConfig>(restored?.researchConfig ?? defaultResearchConfig);
   const [currentGOAPState, setCurrentGOAPState] = useState<Record<string, boolean | string | number>>(restored?.currentGOAPState ?? defaultResearchConfig.stateDefinition.currentState);
@@ -284,6 +301,7 @@ const Index = () => {
       {
         name: "analyzeGoal",
         cost: 1,
+        costBreakdown: { time: 1, resources: 1, tokens: 2 },
         preconditions: { goalDefined: true },
         effects: { goalParsed: true },
         stepGenerator: (userGoal: string) => ({
@@ -332,6 +350,7 @@ const Index = () => {
       {
         name: "assessState",
         cost: 1,
+        costBreakdown: { time: 1, resources: 2, tokens: 1 },
         preconditions: { goalParsed: true },
         effects: { stateAssessed: true },
         stepGenerator: () => ({
@@ -375,6 +394,7 @@ const Index = () => {
       {
         name: "gatherInformation",
         cost: 2,
+        costBreakdown: { time: 4, resources: 3, tokens: 5 },
         preconditions: { stateAssessed: true },
         effects: { informationGathered: true },
         stepGenerator: () => ({
@@ -417,6 +437,7 @@ const Index = () => {
       {
         name: "analyzeDocuments",
         cost: 2,
+        costBreakdown: { time: 3, resources: 4, tokens: 4 },
         preconditions: { informationGathered: true },
         effects: { documentsAnalyzed: true },
         stepGenerator: () => ({
@@ -466,6 +487,7 @@ const Index = () => {
       {
         name: "synthesizeKnowledge",
         cost: 2,
+        costBreakdown: { time: 2, resources: 2, tokens: 3 },
         preconditions: { documentsAnalyzed: true },
         effects: { knowledgeSynthesized: true },
         stepGenerator: () => ({
@@ -515,6 +537,7 @@ const Index = () => {
       {
         name: "generateInsights",
         cost: 2,
+        costBreakdown: { time: 2, resources: 1, tokens: 2 },
         preconditions: { knowledgeSynthesized: true },
         effects: { insightsGenerated: true },
         stepGenerator: () => ({
@@ -564,6 +587,7 @@ const Index = () => {
       {
         name: "verify",
         cost: 1,
+        costBreakdown: { time: 2, resources: 3, tokens: 2 },
         preconditions: { insightsGenerated: true },
         effects: { verified: true },
         stepGenerator: () => ({
@@ -626,9 +650,16 @@ const Index = () => {
     // Reset GOAP state to initial
     setCurrentGOAPState(researchConfig.stateDefinition.currentState);
 
-    // Create GOAP planner
+    // Create GOAP planner —— 读取 AdvancedSettingsModal 持久化的 goap 配置，
+    // 算法/启发式/代价方法/优化项真实参与规划（见 goapPlanner.ts 的搜索实现）
     const actions = createGOAPActions(goal);
-    const planner = new GOAPPlanner(actions);
+    const goapSettings = loadAdvancedSettings().goap;
+    const planner = new GOAPPlanner(actions, {
+      algorithm: goapSettings.algorithm,
+      heuristic: goapSettings.heuristic,
+      costMethod: goapSettings.costMethod,
+      optimization: goapSettings.optimization,
+    });
 
     // Calculate adaptive metrics based on goal complexity and GOAP config
     const goalComplexity = goal.split(' ').length;
@@ -679,11 +710,17 @@ const Index = () => {
       return;
     }
 
-    // Update Goal Analysis step with adaptive metrics
+    // Update Goal Analysis step with adaptive metrics + 规划行为统计
+    // （planCost/nodesExpanded/parallelSteps/redundantRemoved 由 planner 按所选
+    //  算法与代价方法真实计算——切换 costMethod/algorithm 后这里会变化）
     if (plan[0]) {
       plan[0].metrics = [
         { label: t("main.metricSubGoals"), value: String(adaptiveSubGoals) },
-        { label: t("main.metricActions"), value: String(adaptiveActions) }
+        { label: t("main.metricActions"), value: String(adaptiveActions) },
+        { label: t("main.metricPlanCost"), value: String(planner.lastStats.planCost) },
+        { label: t("main.metricNodesExpanded"), value: String(planner.lastStats.nodesExpanded) },
+        { label: t("main.metricParallelSteps"), value: String(planner.lastStats.parallelSteps) },
+        { label: t("main.metricRedundantRemoved"), value: String(planner.lastStats.redundantRemoved) },
       ];
     }
 
@@ -703,6 +740,9 @@ const Index = () => {
   // Execute research plan
   const executeResearch = async (stepsToExecute?: Step[], researchGoal?: string) => {
     const initialSteps = stepsToExecute || steps;
+    // modelRouter 配置（AdvancedSettingsModal 持久化）随请求传给 research-step
+    // edge function：仅在用户显式保存过设置时下发，未保存时保持 gateway 默认行为。
+    const modelRouter = hasSavedAdvancedSettings() ? loadAdvancedSettings().modelRouter : undefined;
     console.log('executeResearch started, steps:', initialSteps.length);
     console.log('GOAP Config:', {
       executionMode: researchConfig.goapConfig.executionMode,
@@ -722,7 +762,7 @@ const Index = () => {
     await new Promise(resolve => setTimeout(resolve, 4500));
 
     // Keep a working copy that we update with AI data
-    let workingSteps = [...initialSteps];
+    const workingSteps = [...initialSteps];
 
     // Process each step sequentially
     for (let i = 0; i < workingSteps.length; i++) {
@@ -762,7 +802,7 @@ const Index = () => {
           const previousStepsData = workingSteps.slice(0, i).map(step => ({
             stepTitle: step.title,
             data: step.data.map(item => {
-              const details = item.details as any;
+              const details = item.details as Record<string, unknown>;
               return {
                 id: '',
                 title: item.text,
@@ -785,6 +825,7 @@ const Index = () => {
               stepDescription: currentStep.description,
               stepType: currentStep.id,
               aiModel: widgetConfig.aiModel,
+              modelRouter,
               config: {
                 researchGuidance: researchConfig.researchGuidance,
                 prompts: researchConfig.prompts,
@@ -823,7 +864,7 @@ const Index = () => {
             console.log(`✅ Gemini returned ${data.length} items for step ${i}`);
             
             // Transform AI data into step data format
-            const aiData = data.map((item: any) => ({
+            const aiData = data.map((item: Record<string, unknown>) => ({
               text: item.title,
               icon: Sparkles,
               details: {
@@ -885,7 +926,7 @@ const Index = () => {
         const allResearchContext = workingSteps.map(step => ({
           stepTitle: step.title,
           data: step.data.map(item => {
-            const details = item.details as any;
+            const details = item.details as Record<string, unknown>;
             return {
               id: '',
               title: item.text,
@@ -905,6 +946,7 @@ const Index = () => {
             stepDescription: `Based on all research findings, provide specific, actionable recommendations that directly answer: "${researchGoal || userGoal}". Include concrete suggestions with supporting data from the research.`,
             stepType: "final-report",
             aiModel: widgetConfig.aiModel,
+            modelRouter,
             previousStepsData: allResearchContext,
           },
         });
@@ -1025,6 +1067,7 @@ const Index = () => {
     try {
       localStorage.setItem(RESEARCH_SESSION_KEY, JSON.stringify({
         v: 3,
+        lang, // 恢复时校验语言，语言不符的旧会话直接丢弃（文案无法重译）
         userGoal,
         steps,
         finalRecommendations,
@@ -1037,7 +1080,7 @@ const Index = () => {
     } catch (err) {
       console.warn("Failed to persist research session:", err);
     }
-  }, [userGoal, steps, finalRecommendations, researchConfig, currentGOAPState, visibleSteps, planGenerated, showFinalAnalysis]);
+  }, [lang, userGoal, steps, finalRecommendations, researchConfig, currentGOAPState, visibleSteps, planGenerated, showFinalAnalysis]);
 
   return (
     <div 
@@ -1135,13 +1178,9 @@ const Index = () => {
 
         {/* Goal Input */}
         {!planGenerated && (
-          <div 
-            style={{ 
-              '--card-bg': widgetConfig.backgroundColor,
-              '--border-color': `${widgetConfig.primaryColor}40`
-            } as React.CSSProperties}
-          >
+          <div>
           <GoalInput
+            initialGoal={defaultGoal}
             onSubmit={handleGoalSubmit}
             isPlanning={isPlanning}
             onAdvancedSettings={() => setShowAdvancedSettings(true)}
@@ -1251,8 +1290,9 @@ const Index = () => {
               <div className="text-xs sm:text-sm flex-1 min-w-0 text-center px-4" style={{ color: "#a3a3a3" }}>
                 <span className="font-medium" style={{ color: "#f5f5f5" }}>{t("main.objectiveLabel")}</span> <span className="break-words">{userGoal}</span>
               </div>
-              {/* Issue #1694: explicit "Start Research" gate so the plan is reviewable before execution. */}
-              {!isRunning && visibleSteps <= 1 ? (
+              {/* Issue #1694: explicit "Start Research" gate so the plan is reviewable before execution.
+                  会话恢复后（visibleSteps > 1 且未在运行）同样给出继续入口，否则没有按钮可再执行。 */}
+              {!isRunning && steps.length > 0 ? (
                 <Button
                   onClick={() => executeResearch(steps, userGoal)}
                   size="sm"
@@ -1260,7 +1300,7 @@ const Index = () => {
                   style={{ backgroundColor: widgetConfig.primaryColor, color: "#fff" }}
                 >
                   <Play className="w-4 h-4" />
-                  {t("main.startResearch")}
+                  {visibleSteps > 1 ? t("main.continueResearch") : t("main.startResearch")}
                 </Button>
               ) : (
                 <div className="w-[120px]" />
@@ -1404,7 +1444,13 @@ const Index = () => {
                         </div>
                         <div className="rounded p-3" style={{ backgroundColor: `${widgetConfig.backgroundColor}80` }}>
                           <div className="text-xs mb-1" style={{ color: "#a3a3a3" }}>{t("main.reportConfidence")}</div>
-                          <div className="text-xl font-semibold" style={{ color: widgetConfig.accentColor }}>94%</div>
+                          <div className="text-xl font-semibold" style={{ color: widgetConfig.accentColor }}>
+                            {/* 用步骤数据里 AI 返回的真实置信度均值；无数据时显示 — 而不是编造数字 */}
+                            {(() => {
+                              const confidences = steps.flatMap((s) => s.data ?? []).map((d) => (d.details as { confidence?: number } | undefined)?.confidence).filter((c): c is number => typeof c === "number" && c > 0);
+                              return confidences.length > 0 ? `${Math.round(confidences.reduce((a, b) => a + b, 0) / confidences.length)}%` : "—";
+                            })()}
+                          </div>
                         </div>
                         <div className="rounded p-3" style={{ backgroundColor: `${widgetConfig.backgroundColor}80` }}>
                           <div className="text-xs mb-1 flex items-center gap-1" style={{ color: "#a3a3a3" }}>
@@ -1509,7 +1555,7 @@ const Index = () => {
                         }}
                       >
                         <div className="space-y-4">
-                          {finalRecommendations.slice(0, 4).map((rec: any, idx: number) => (
+                          {finalRecommendations.slice(0, 4).map((rec: { title?: string; content?: string; source?: string }, idx: number) => (
                             <div key={idx} className="rounded p-4" style={{ backgroundColor: `${widgetConfig.accentColor}0d` }}>
                               <div className="font-medium mb-1" style={{ color: widgetConfig.textColor }}>{rec.title}</div>
                               <p className="text-sm" style={{ color: widgetConfig.secondaryTextColor }}>{rec.content}</p>

@@ -19,6 +19,9 @@ export async function* generateFromDefaultEndpoint({
 	try {
 		// Choose endpoint based on provided modelId, else fall back to taskModel
 		const model = modelId ? (models.find((m) => m.id === modelId) ?? taskModel) : taskModel;
+		if (!model) {
+			throw new Error("No model available");
+		}
 		const endpoint = await model.getEndpoint();
 		const tokenStream = await endpoint({ messages, preprompt, generateSettings, locals });
 

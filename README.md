@@ -24,7 +24,7 @@
 
 </div>
 
-> **Agent = Model + Harness.** The model writes; the harness gives it tools, memory, loops, sandboxes, and controls so it can actually work. **Swarmlo is the harness** — the execution layer around Claude Code and Codex that adds 100+ specialized agents, coordinated swarms, self-learning memory, federated comms across machines, and enterprise security guardrails. So agents don't just run, they collaborate.
+> **Agent = Model + Harness.** The model writes; the harness gives it tools, memory, loops, sandboxes, and controls so it can actually work. **Swarmlo is the harness** — the execution layer around Claude Code and Codex that adds 60+ specialized agents, coordinated swarms, self-learning memory, federated comms across machines, and enterprise security guardrails. So agents don't just run, they collaborate.
 
 One `npx swarmlo init` gives Claude Code a nervous system: agents self-organize into swarms, learn from every task, remember across sessions, and — with federation — securely talk to agents on other machines without leaking data. You keep writing code. Swarmlo handles the coordination.
 
@@ -54,7 +54,7 @@ There are **two different install paths** with very different surface areas. Pic
 
 | | **Claude Code Plugin** | **CLI install (`npx swarmlo init`)** |
 |---|---|---|
-| What it gives you | Slash commands + a few skills + agent definitions per-plugin | Full Swarmlo loop — 98 agents, 60+ commands, 30 skills, MCP server, hooks, daemon |
+| What it gives you | Slash commands + a few skills + agent definitions per-plugin | Full Swarmlo loop — 60+ agents, 60+ commands, 30 skills, MCP server, hooks, daemon |
 | Files in your workspace | **Zero** | `.claude/`, `.claude-flow/`, `CLAUDE.md`, helpers, settings |
 | MCP server registered | Only if `swarmlo-core` is installed (it ships its own `.mcp.json`) — most other plugins don't | Yes |
 | Hooks installed | No | Yes |
@@ -76,7 +76,7 @@ There are **two different install paths** with very different surface areas. Pic
 This adds slash commands and agent definitions. `swarmlo-core` (installed above) does register its own MCP server on install — its tools are callable as `mcp__plugin_swarmlo-core_swarmlo__*` (e.g. `mcp__plugin_swarmlo-core_swarmlo__memory_store`), not the bare `memory_store`/`swarm_init`/`agent_spawn` names the CLI-track scaffold uses. Other plugins generally don't ship their own MCP server. For the full loop with the CLI-track tool names, use Path B below.
 
 <details>
-<summary><strong>🔌 All 35 plugins</strong></summary>
+<summary><strong>🔌 All 39 plugins</strong></summary>
 
 #### Core & Orchestration
 

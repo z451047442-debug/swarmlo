@@ -16,12 +16,11 @@
 //   0  ok
 //   2  config error
 
-import { spawnSync } from 'node:child_process';
+// review fix 2026-08-31 — runSwarmloCli resolves the PINNED swarmlo-cli
+// (local install or versioned cache) instead of `npx swarmlo-cli@3.39.1`.
+import { runSwarmloCli } from './_harness.mjs';
 
 const NS = process.env.AUDIT_LIST_NAMESPACE || 'metaharness-audit';
-const CLI_PKG = process.env.CLI_CORE === '1'
-  ? '@claude-flow/cli-core@alpha'
-  : 'swarmlo-cli@latest';
 
 const ARGS = (() => {
   const a = { limit: 20, since: null, format: 'table' };
@@ -43,10 +42,7 @@ function parseDurationMs(spec) {
 }
 
 function memList() {
-  const r = spawnSync('npx', [
-    CLI_PKG, 'memory', 'list',
-    '--namespace', NS, '--format', 'json',
-  ], { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf-8', shell: process.platform === 'win32' });
+  const r = runSwarmloCli(['memory', 'list', '--namespace', NS, '--format', 'json']);
   if (r.status !== 0) return [];
   const m = /\[[\s\S]*\]/.exec(r.stdout || '');
   if (!m) return [];
@@ -54,10 +50,7 @@ function memList() {
 }
 
 function memRetrieve(key) {
-  const r = spawnSync('npx', [
-    CLI_PKG, 'memory', 'retrieve',
-    '--namespace', NS, '--key', key,
-  ], { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf-8', shell: process.platform === 'win32' });
+  const r = runSwarmloCli(['memory', 'retrieve', '--namespace', NS, '--key', key]);
   if (r.status !== 0) return null;
   const m = /\{[\s\S]*\}/.exec(r.stdout || '');
   if (!m) return null;

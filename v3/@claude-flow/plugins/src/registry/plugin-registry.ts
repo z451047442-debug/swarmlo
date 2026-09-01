@@ -344,9 +344,11 @@ export class PluginRegistry extends EventEmitter {
 
       visiting.add(name);
 
-      const deps = entry.plugin.metadata.dependencies ?? [];
+      // Parse "name@version" dependency entries so version constraints are
+      // not mistaken for plugin names (e.g. "@claude-flow/hooks@^3.0.0")
+      const deps = this.parseDependencies(entry.plugin.metadata.dependencies);
       for (const dep of deps) {
-        visit(dep);
+        visit(dep.name);
       }
 
       visiting.delete(name);
@@ -574,12 +576,39 @@ export class PluginRegistry extends EventEmitter {
   ): Promise<void> {
     const timeout = this.config.loadTimeout ?? 30000;
 
-    await Promise.race([
-      plugin.initialize(context),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Initialization timeout')), timeout)
-      ),
-    ]);
+    const initPromise = plugin.initialize(context);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error('Initialization timeout')), timeout);
+    });
+
+    try {
+      await Promise.race([initPromise, timeoutPromise]);
+    } finally {
+      if (timer) clearTimeout(timer);
+      // Swallow the loser's late rejection so a plugin that resolves/rejects
+      // after the race was already won does not raise an unhandled rejection
+      initPromise.catch(() => undefined);
+    }
+  }
+
+  /**
+   * Parse plugin dependency entries — accepts either plain names or
+   * "name@version" strings (mirrors EnhancedPluginRegistry.parseDependencies).
+   */
+  private parseDependencies(deps?: string[]): Array<{ name: string; version: string }> {
+    if (!deps) return [];
+
+    return deps.map(dep => {
+      const match = dep.match(/^([^@]+)(?:@(.+))?$/);
+      if (match) {
+        return {
+          name: match[1],
+          version: match[2] ?? '*',
+        };
+      }
+      return { name: dep, version: '*' };
+    });
   }
 }
 

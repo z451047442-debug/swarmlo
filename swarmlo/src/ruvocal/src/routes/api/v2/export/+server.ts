@@ -58,7 +58,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 					conversations.map(async (conversation) => {
 						stats.nConversations++;
 						const hashes: string[] = [];
-						conversation.messages.forEach(async (message) => {
+						conversation.messages.forEach((message) => {
 							stats.nMessages++;
 							if (message.files) {
 								message.files.forEach((file) => {
@@ -115,24 +115,19 @@ export const GET: RequestHandler = async ({ locals }) => {
 				const formattedAssistants = await Promise.all(
 					assistants.map(async (assistant) => {
 						if (assistant.avatar) {
-							const fileId = collections.bucket.find({
-								filename: assistant._id.toString(),
-							});
+							const files = await collections.bucket
+								.find({ filename: assistant._id.toString() })
+								.toArray();
 
-							const content = await fileId.next().then(async (file) => {
-								if (!file?._id) return;
+							const content = await (async () => {
+								const file = files[0];
+								if (!file?._id) return undefined;
 
-								const fileStream = collections.bucket.openDownloadStream(file?._id);
+								// RVF GridFS exposes async toArray() instead of a data/end event stream
+								const chunks = await collections.bucket.openDownloadStream(file._id).toArray();
 
-								const fileBuffer = await new Promise<Buffer>((resolve, reject) => {
-									const chunks: Uint8Array[] = [];
-									fileStream.on("data", (chunk) => chunks.push(chunk));
-									fileStream.on("error", reject);
-									fileStream.on("end", () => resolve(Buffer.concat(chunks)));
-								});
-
-								return fileBuffer;
-							});
+								return Buffer.concat(chunks);
+							})();
 
 							if (!content) return;
 

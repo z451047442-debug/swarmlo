@@ -40,6 +40,14 @@ export async function autoInstallPackage(
 ): Promise<boolean> {
   const { timeout = 60000, save = false, silent = false } = options;
 
+  // audit_2026-08-31: kill switch — SWARMLO_NO_AUTOINSTALL=1 (same
+  // SWARMLO_NO_* convention as SWARMLO_NO_SKILLS_SH) hard-disables every
+  // auto-install path so a tool call can never trigger a network npm
+  // install without explicit consent.
+  if (process.env.SWARMLO_NO_AUTOINSTALL === '1') {
+    return false;
+  }
+
   // Validate package name to prevent command injection (CVE fix)
   // Valid npm package names: @scope/name or name, alphanumeric with - . _ ~
   const validPackageName = /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*(@[a-z0-9-._~]+)?$/i;
@@ -50,7 +58,15 @@ export async function autoInstallPackage(
     return false;
   }
 
-  // Only attempt once per session
+  // audit_2026-08-31: pin known optional packages to a fixed version
+  // (OPTIONAL_PACKAGES map) instead of letting `npm install <name>` resolve
+  // `@latest` — a future breaking alpha would silently land in the user's
+  // project on the next tool call.
+  const pinned = OPTIONAL_PACKAGES[packageName as keyof typeof OPTIONAL_PACKAGES]?.version;
+  const installSpec = pinned ? `${packageName}@${pinned}` : packageName;
+
+  // Only attempt once per session (keyed on the bare name so a caller that
+  // passes a versioned spec later still hits the same guard)
   if (installAttempts.has(packageName)) {
     return false;
   }
@@ -58,11 +74,11 @@ export async function autoInstallPackage(
 
   try {
     if (!silent) {
-      console.error(`[claude-flow] Auto-installing ${packageName}...`);
+      console.error(`[claude-flow] Auto-installing ${installSpec}...`);
     }
 
     // Use spawn with array args to prevent shell injection
-    const args = ['install', packageName, save ? '--save' : '--no-save'];
+    const args = ['install', installSpec, save ? '--save' : '--no-save'];
     const result = spawnSync('npm', args, {
       stdio: silent ? 'pipe' : ['pipe', 'pipe', 'pipe'],
       timeout,
@@ -137,18 +153,26 @@ export function resetInstallAttempts(): void {
 }
 
 /**
- * Optional package dependencies and their purposes
+ * Optional package dependencies and their purposes.
+ *
+ * `version` is the PIN used by autoInstallPackage — never resolve `@latest`
+ * for an auto-installed dependency (a breaking release would land in the
+ * user's project without consent). Update the pin deliberately when a new
+ * version is verified compatible.
  */
 export const OPTIONAL_PACKAGES = {
   '@claude-flow/aidefence': {
+    version: '3.0.3',
     description: 'AI manipulation defense (prompt injection, PII detection)',
     tools: ['aidefence_scan', 'aidefence_analyze', 'aidefence_stats', 'aidefence_learn'],
   },
   '@claude-flow/embeddings': {
+    version: '3.0.0-alpha.45',
     description: 'Vector embeddings with ONNX support',
     tools: ['embeddings_generate', 'embeddings_search', 'embeddings_batch'],
   },
   'onnxruntime-node': {
+    version: '1.29.0',
     description: 'ONNX runtime for neural network inference',
     tools: ['neural_*'],
   },

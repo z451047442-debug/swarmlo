@@ -38,7 +38,7 @@ When starting a new project, exploring swarmlo capabilities, or wondering which 
 
 | Plugin | When to use | What it adds |
 |--------|-------------|-------------|
-| **swarmlo-agentdb** | Semantic search over code patterns, telemetry, decisions | AgentDB with HNSW vector search (150x-12,500x faster), RuVector embeddings |
+| **swarmlo-agentdb** | Semantic search over code patterns, telemetry, decisions | AgentDB with HNSW vector search (measured ~1.9x-4.7x vs brute force), RuVector embeddings |
 | **swarmlo-rag-memory** | Simple key-value memory with search | Store/search/recall without full AgentDB setup |
 | **swarmlo-rvf** | Portable memory export/import across machines | RVF format, session persistence, cross-platform transfer |
 | **swarmlo-ruvector** | Vector embedding operations, HNSW indexing, clustering | ONNX 384-dim embeddings, hyperbolic Poincare ball, k-means/DBSCAN clustering |

@@ -100,7 +100,7 @@ Requires `PINATA_API_JWT` configured. The `intelligence-transfer` skill walks th
 Always close the loop after a task completes:
 
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
 ```
 
 This calls `agentdb_pattern-store` (ReasoningBank — writes to `pattern` with `memory-store-fallback` if registry is unavailable) and feeds the DISTILL phase.

@@ -14,6 +14,6 @@ Checklist:
 - Tests: adequate coverage, edge cases, mocks for externals
 
 Report findings with severity (critical/warning/info). Store patterns:
-`npx swarmlo-cli@latest memory store --key "review-PATTERN" --value "DESCRIPTION" --namespace patterns`
+`npx swarmlo-cli@3.39.1 memory store --key "review-PATTERN" --value "DESCRIPTION" --namespace patterns`
 
-Use `npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true` when complete.
+Use `npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true` when complete.

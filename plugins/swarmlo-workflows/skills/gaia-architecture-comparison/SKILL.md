@@ -112,7 +112,7 @@ HAL uses a similar loop but with:
 ## Loading context from past research
 
 ```bash
-npx swarmlo-cli@latest memory search \
+npx swarmlo-cli@3.39.1 memory search \
   --namespace gaia-patterns \
   --query "architecture comparison HAL benchmark"
 ```
@@ -120,7 +120,7 @@ npx swarmlo-cli@latest memory search \
 ## Storing comparison findings
 
 ```bash
-npx swarmlo-cli@latest memory store \
+npx swarmlo-cli@3.39.1 memory store \
   --namespace gaia-patterns \
   --key "architecture-comparison-$(date +%Y%m%d)" \
   --value "HAL gap: 54pp. Primary: python_exec stub. Secondary: browser, file parsing."

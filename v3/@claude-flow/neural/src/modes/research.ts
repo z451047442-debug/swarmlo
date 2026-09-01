@@ -440,7 +440,15 @@ export class ResearchMode extends BaseModeImplementation {
   }
 
   /**
-   * Compute advantages using GAE
+   * Compute advantages as a reward-only GAE estimate.
+   *
+   * Honest note (2026-08-31): a real GAE needs a critic / value network
+   * (delta_t = r_t + γ·V(s_{t+1}) − V(s_t)), which this mode does not have —
+   * trajectories only carry rewards, not value estimates. The previous code
+   * claimed GAE but cancelled the reward term: `r_t + γ·r_{t+1} − r_t`, i.e.
+   * a pure γ·r_{t+1} bootstrap with no state value. We keep the corrected
+   * reward-only TD(λ) form below (baseline = next reward) and label it as
+   * such; wiring a real value network is tracked separately.
    */
   private computeAdvantages(rewards: number[]): number[] {
     const gamma = 0.99;
@@ -450,8 +458,10 @@ export class ResearchMode extends BaseModeImplementation {
     let lastGae = 0;
 
     for (let t = rewards.length - 1; t >= 0; t--) {
-      const nextValue = t < rewards.length - 1 ? rewards[t + 1] : 0;
-      const delta = rewards[t] + gamma * nextValue - rewards[t];
+      // Reward-only bootstrap: use the next step's reward as the baseline
+      // (the closest proxy without a value network).
+      const baseline = t < rewards.length - 1 ? rewards[t + 1] : 0;
+      const delta = rewards[t] + gamma * baseline - baseline;
       lastGae = delta + gamma * lambda * lastGae;
       advantages[t] = lastGae;
     }
@@ -464,7 +474,13 @@ export class ResearchMode extends BaseModeImplementation {
   }
 
   /**
-   * Compute EWC loss for continual learning
+   * Compute EWC loss for continual learning.
+   *
+   * Honest note (2026-08-31): this loop is currently inert. SONAManager
+   * initializes ewcState with EMPTY fisher/means maps and nothing populates
+   * them (consolidateEWC() only decays existing values). Until real Fisher
+   * information is computed per task, the penalty is always 0 and
+   * "catastrophic forgetting prevention" is not actually active.
    */
   private computeEWCLoss(ewcState: EWCState, lambda: number): number {
     let loss = 0;

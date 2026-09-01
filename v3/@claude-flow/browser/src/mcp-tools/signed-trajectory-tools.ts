@@ -13,6 +13,7 @@ import {
   planReplay,
   buildReplayDelta,
 } from '../application/signed-trajectory-service.js';
+import { assertFileToolPath } from '../infrastructure/path-guard.js';
 import { generateWitnessKey, loadWitnessKey } from '../infrastructure/witness-signer.js';
 import type { BrowserTrajectory } from '../domain/types.js';
 import type {
@@ -71,13 +72,22 @@ export const signedTrajectoryTools: MCPTool[] = [
         parentTrajectoryId: input.parentTrajectoryId as string | undefined,
       });
       if (input.outputPath) {
-        await writeSealedTrajectory(sealed.envelope, input.outputPath as string);
+        // Path-validate the write target — arbitrary file writes from MCP
+        // are not allowed
+        const outputPath = assertFileToolPath(input.outputPath as string);
+        await writeSealedTrajectory(sealed.envelope, outputPath);
+        return {
+          success: true,
+          envelope: sealed.envelope,
+          publicKey: sealed.publicKeyHex,
+          outputPath,
+        };
       }
       return {
         success: true,
         envelope: sealed.envelope,
         publicKey: sealed.publicKeyHex,
-        outputPath: input.outputPath ?? null,
+        outputPath: null,
       };
     },
   },
@@ -101,7 +111,10 @@ export const signedTrajectoryTools: MCPTool[] = [
     handler: async (input) => {
       let envelope: unknown = input.envelope;
       if (!envelope && input.path) {
-        envelope = await readSealedTrajectory(input.path as string);
+        // Path-validate the read target — arbitrary file reads from MCP
+        // are not allowed
+        const path = assertFileToolPath(input.path as string);
+        envelope = await readSealedTrajectory(path);
       }
       if (!envelope) {
         return { success: false, error: 'must provide either envelope or path' };
@@ -145,7 +158,12 @@ export const signedTrajectoryTools: MCPTool[] = [
     handler: async (input) => {
       let envelope: SignedTrajectoryEnvelope | undefined;
       if (input.envelope) envelope = input.envelope as SignedTrajectoryEnvelope;
-      else if (input.path) envelope = await readSealedTrajectory(input.path as string);
+      else if (input.path) {
+        // Path-validate the read target — arbitrary file reads from MCP
+        // are not allowed
+        const path = assertFileToolPath(input.path as string);
+        envelope = await readSealedTrajectory(path);
+      }
       if (!envelope) return { success: false, error: 'must provide either envelope or path' };
 
       const requireValid = input.requireValid !== false;
@@ -181,7 +199,12 @@ export const signedTrajectoryTools: MCPTool[] = [
     handler: async (input) => {
       let envelope: SignedTrajectoryEnvelope | undefined;
       if (input.envelope) envelope = input.envelope as SignedTrajectoryEnvelope;
-      else if (input.path) envelope = await readSealedTrajectory(input.path as string);
+      else if (input.path) {
+        // Path-validate the read target — arbitrary file reads from MCP
+        // are not allowed
+        const path = assertFileToolPath(input.path as string);
+        envelope = await readSealedTrajectory(path);
+      }
       if (!envelope) return { success: false, error: 'must provide either envelope or path' };
 
       const delta = buildReplayDelta(envelope, input.newTrajectory as BrowserTrajectory);

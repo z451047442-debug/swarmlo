@@ -228,7 +228,18 @@ export class SessionCapsuleService {
       return { success: false, reason: 'task class ' + options.taskClass + ' not in allowedTaskClasses' };
     }
 
-    // Bump replays + chain head + re-sign.
+    // Bump replays + chain head + re-sign with the key that matches the
+    // capsule's ORIGINAL public key. Signing with a different key would
+    // produce a signature that fails verify() against payload.publicKey,
+    // so when the capsule was sealed under a key we do not hold, refuse the
+    // update instead of corrupting the capsule.
+    if (envelope.payload.publicKey !== this.witnessKey.publicKeyHex) {
+      return {
+        success: false,
+        reason: 'capsule was sealed with a different witness key; re-signing requires its private key',
+      };
+    }
+
     const newReplays = envelope.payload.replays + 1;
     const newChainHead = sha256Hex(envelope.payload.witnessChainHead + ':' + new Date().toISOString());
     const newPayload: SessionCapsulePayload = {

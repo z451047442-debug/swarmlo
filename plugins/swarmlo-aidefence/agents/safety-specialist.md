@@ -24,8 +24,8 @@ Always err on the side of caution — flag uncertain content for human review.
 
 Store detected threat patterns for cross-session learning:
 ```bash
-npx swarmlo-cli@latest memory store --namespace security-patterns --key "threat-TYPE" --value "PATTERN_DATA"
-npx swarmlo-cli@latest memory search --query "similar threats" --namespace security-patterns
+npx swarmlo-cli@3.39.1 memory store --namespace security-patterns --key "threat-TYPE" --value "PATTERN_DATA"
+npx swarmlo-cli@3.39.1 memory search --query "similar threats" --namespace security-patterns
 ```
 
 ### Related Plugins
@@ -38,6 +38,6 @@ npx swarmlo-cli@latest memory search --query "similar threats" --namespace secur
 
 After completing tasks, store successful patterns:
 ```bash
-npx swarmlo-cli@latest hooks post-task --task-id "TASK_ID" --success true --train-neural true
-npx swarmlo-cli@latest memory search --query "TASK_TYPE patterns" --namespace patterns
+npx swarmlo-cli@3.39.1 hooks post-task --task-id "TASK_ID" --success true --train-neural true
+npx swarmlo-cli@3.39.1 memory search --query "TASK_TYPE patterns" --namespace patterns
 ```

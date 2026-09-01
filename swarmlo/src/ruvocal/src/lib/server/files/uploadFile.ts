@@ -16,14 +16,8 @@ export async function uploadFile(file: File, conv: Conversation): Promise<Messag
 	});
 
 	upload.write((await file.arrayBuffer()) as unknown as Buffer);
-	upload.end();
+	// RVF GridFS has no event emitter — flush via the async end() semantics
+	await upload.end();
 
-	// only return the filename when upload throws a finish event or a 20s time out occurs
-	return new Promise((resolve, reject) => {
-		upload.once("finish", () =>
-			resolve({ type: "hash", value: sha, mime: file.type, name: file.name })
-		);
-		upload.once("error", reject);
-		setTimeout(() => reject(new Error("Upload timed out")), 20_000);
-	});
+	return { type: "hash", value: sha, mime: file.type, name: file.name };
 }

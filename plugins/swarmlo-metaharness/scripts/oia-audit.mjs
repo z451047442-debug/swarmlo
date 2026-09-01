@@ -24,18 +24,16 @@
 //   1  --alert-on-worst threshold exceeded
 //   2  config error or audit failure
 
-import { spawnSync } from 'node:child_process';
 // iter 63 — SEVERITY_RANK + rankSeverity consolidated to _harness.mjs
 // (was local in iter 62; now shared with audit-trend + mcp-scan).
-import { runHarness, runMetaharness, runHarnessAsync, runMetaharnessAsync, emitDegradedJsonAndExit, parseMcpScanText, SEVERITY_RANK, rankSeverity } from './_harness.mjs';
+// review fix 2026-08-31 — runSwarmloCli resolves the PINNED swarmlo-cli
+// instead of `npx swarmlo-cli@3.39.1` (pinned + no per-call registry check).
+import { runHarness, runMetaharness, runHarnessAsync, runMetaharnessAsync, emitDegradedJsonAndExit, parseMcpScanText, SEVERITY_RANK, rankSeverity, runSwarmloCli } from './_harness.mjs';
 
 // iter 63 — SEVERITY_RANK + rankSeverity moved to _harness.mjs (single
 // source of truth). The local copy from iter 62 is gone; the imports
 // at the top of this file provide the same names.
 const NS = process.env.OIA_AUDIT_NAMESPACE || 'metaharness-audit';
-const CLI_PKG = process.env.CLI_CORE === '1'
-  ? '@claude-flow/cli-core@alpha'
-  : 'swarmlo-cli@latest';
 
 const ARGS = (() => {
   const a = { path: '.', format: 'json', dryRun: false, alertWorst: null };
@@ -97,16 +95,38 @@ async function runAllParallel(path) {
 
 function persist(payload) {
   const key = `audit-${new Date().toISOString().replace(/[:.]/g, '-')}`;
-  const r = spawnSync('npx', [
-    CLI_PKG, 'memory', 'store',
+  // review fix 2026-08-31 — the full payload travels as `--value` argv;
+  // on Windows the command line is capped at 32K chars and oversized
+  // payloads failed SILENTLY (spawnSync truncates). Strip the bulky
+  // diagnostic blobs (rawStdout / stderrTail / duplicated component json —
+  // the fingerprint already carries the structured genome+score) from the
+  // PERSISTED copy when the full payload approaches the limit. The full
+  // payload is still printed to stdout for human/artifact use.
+  let toPersist = payload;
+  if (Buffer.byteLength(JSON.stringify(payload), 'utf8') > 24_000) {
+    toPersist = {
+      ...payload,
+      components: Object.fromEntries(
+        Object.entries(payload.components).map(([k, c]) => [
+          k,
+          c && typeof c === 'object'
+            ? { label: c.label, exitCode: c.exitCode, degraded: c.degraded, reason: c.reason ?? null, durationMs: c.durationMs }
+            : c,
+        ]),
+      ),
+    };
+  }
+  const r = runSwarmloCli([
+    'memory', 'store',
     '--namespace', NS,
     '--key', key,
-    '--value', JSON.stringify(payload),
-  ], { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf-8', shell: process.platform === 'win32' });
+    '--value', JSON.stringify(toPersist),
+  ]);
   return {
     ok: r.status === 0,
     namespace: NS,
     key,
+    trimmed: toPersist !== payload,
     error: r.status === 0 ? null : (r.stderr || '').slice(0, 200),
   };
 }

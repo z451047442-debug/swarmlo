@@ -27,6 +27,10 @@ vi.mock('node:fs', () => {
     mkdirSync: vi.fn(),
     readdirSync: vi.fn(() => []),
     unlinkSync: vi.fn(),
+    renameSync: vi.fn((from: string, to: string) => {
+      const v = memStore.get(from);
+      if (v !== undefined) { memStore.set(to, v); memStore.delete(from); }
+    }),
     statSync: vi.fn(() => ({ size: 100, isFile: () => true, isDirectory: () => false })),
   };
 });
@@ -40,6 +44,10 @@ vi.mock('fs', () => {
     mkdirSync: vi.fn(),
     readdirSync: vi.fn(() => []),
     unlinkSync: vi.fn(),
+    renameSync: vi.fn((from: string, to: string) => {
+      const v = memStore.get(from);
+      if (v !== undefined) { memStore.set(to, v); memStore.delete(from); }
+    }),
     statSync: vi.fn(() => ({ size: 100, isFile: () => true, isDirectory: () => false })),
   };
 });

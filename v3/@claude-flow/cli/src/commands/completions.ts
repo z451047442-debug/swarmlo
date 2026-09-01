@@ -7,14 +7,13 @@
 
 import type { Command, CommandContext, CommandResult } from '../types.js';
 import { output } from '../output.js';
+import { commandLoaders } from './index.js';
 
-// Get all top-level commands for completions
-const TOP_LEVEL_COMMANDS = [
-  'swarm', 'agent', 'task', 'session', 'config', 'memory', 'workflow',
-  'hive-mind', 'hooks', 'daemon', 'neural', 'security', 'performance',
-  'providers', 'plugins', 'deployment', 'claims', 'embeddings',
-  'doctor', 'completions', 'help', 'version'
-];
+// Get all top-level commands for completions — generated from the live
+// commandLoaders registry so the shell scripts cannot drift from the
+// commands the CLI actually ships. `help` is handled by the CLI core
+// (not a loader entry), so it is appended explicitly.
+const TOP_LEVEL_COMMANDS = [...Object.keys(commandLoaders), 'help'].sort();
 
 // Swarm subcommands
 const SWARM_SUBCOMMANDS = ['init', 'status', 'scale', 'destroy', 'monitor', 'optimize'];
@@ -33,6 +32,15 @@ const HIVE_MIND_SUBCOMMANDS = ['init', 'spawn', 'status', 'task', 'join', 'leave
 
 // Hooks subcommands
 const HOOKS_SUBCOMMANDS = ['pre-edit', 'post-edit', 'pre-command', 'post-command', 'pre-task', 'post-task', 'route', 'explain', 'pretrain', 'build-agents', 'metrics', 'transfer', 'list', 'intelligence'];
+
+// Security subcommands (matches security.ts's subcommand registry)
+const SECURITY_SUBCOMMANDS = ['scan', 'cve', 'threats', 'audit', 'secrets', 'defend', 'composition-scan', 'channel-scan', 'scan-plan'];
+
+// Completions subcommands
+const COMPLETIONS_SUBCOMMANDS = ['bash', 'zsh', 'fish', 'powershell'];
+
+// Cleanup options (matches cleanup.ts)
+const CLEANUP_OPTIONS = ['--dry-run', '--force', '--keep-config'];
 
 // Generate bash completion script
 function generateBashCompletion(): string {
@@ -84,7 +92,15 @@ _claude_flow_completions() {
             return 0
             ;;
         security)
-            COMPREPLY=( $(compgen -W "scan cve threats audit secrets" -- "\${cur}") )
+            COMPREPLY=( $(compgen -W "${SECURITY_SUBCOMMANDS.join(' ')}" -- "\${cur}") )
+            return 0
+            ;;
+        completions)
+            COMPREPLY=( $(compgen -W "${COMPLETIONS_SUBCOMMANDS.join(' ')}" -- "\${cur}") )
+            return 0
+            ;;
+        cleanup|clean)
+            COMPREPLY=( $(compgen -W "${CLEANUP_OPTIONS.join(' ')}" -- "\${cur}") )
             return 0
             ;;
         performance)
@@ -273,6 +289,10 @@ _claude_flow() {
                         'threats:Threat modeling'
                         'audit:Security audit'
                         'secrets:Secrets scanning'
+                        'defend:AI manipulation defense'
+                        'composition-scan:Cross-tool MCP prompt-injection scan'
+                        'channel-scan:Inter-agent message injection scan'
+                        'scan-plan:Plan injection gate'
                     )
                     ;;
                 performance)
@@ -386,7 +406,7 @@ ${HOOKS_SUBCOMMANDS.map(sub => `complete -c claude-flow -n "__fish_seen_subcomma
 complete -c claude-flow -n "__fish_seen_subcommand_from neural" -a "train status patterns predict optimize"
 
 # Security subcommands
-complete -c claude-flow -n "__fish_seen_subcommand_from security" -a "scan cve threats audit secrets"
+complete -c claude-flow -n "__fish_seen_subcommand_from security" -a "${SECURITY_SUBCOMMANDS.join(' ')}"
 
 # Performance subcommands
 complete -c claude-flow -n "__fish_seen_subcommand_from performance" -a "benchmark profile metrics optimize bottleneck"
@@ -430,7 +450,7 @@ $script:SubCommands = @{
     'hive' = @('${HIVE_MIND_SUBCOMMANDS.join("', '")}')
     'hooks' = @('${HOOKS_SUBCOMMANDS.join("', '")}')
     'neural' = @('train', 'status', 'patterns', 'predict', 'optimize')
-    'security' = @('scan', 'cve', 'threats', 'audit', 'secrets')
+    'security' = @('${SECURITY_SUBCOMMANDS.join("', '")}')
     'performance' = @('benchmark', 'profile', 'metrics', 'optimize', 'bottleneck')
     'plugins' = @('list', 'install', 'uninstall', 'toggle', 'info', 'create')
     'deployment' = @('deploy', 'status', 'rollback', 'history', 'environments', 'logs')

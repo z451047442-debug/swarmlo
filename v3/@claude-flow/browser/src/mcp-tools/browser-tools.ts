@@ -4,16 +4,56 @@
  */
 
 import { AgentBrowserAdapter } from '../infrastructure/agent-browser-adapter.js';
+import { assertFileToolPath } from '../infrastructure/path-guard.js';
 import type { ActionResult, Snapshot } from '../domain/types.js';
 
-// Session registry for multi-agent coordination
+// Session registry for multi-agent coordination.
+// Capped with an LRU eviction policy + idle timeout so a long-running MCP
+// server cannot accumulate unbounded browser processes.
+const MAX_SESSIONS = 50;
+const SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 const sessions = new Map<string, AgentBrowserAdapter>();
+const sessionLastUsed = new Map<string, number>();
+
+function evictSession(id: string): void {
+  const adapter = sessions.get(id);
+  sessions.delete(id);
+  sessionLastUsed.delete(id);
+  if (adapter) {
+    adapter.close().catch(() => undefined);
+  }
+}
 
 function getAdapter(sessionId?: string): AgentBrowserAdapter {
   const id = sessionId || 'default';
+  const now = Date.now();
+
+  // Evict idle sessions beyond the timeout
+  for (const [sid, lastUsed] of sessionLastUsed) {
+    if (now - lastUsed > SESSION_IDLE_TIMEOUT_MS) {
+      evictSession(sid);
+    }
+  }
+
+  // Evict the least-recently-used session when at capacity
+  if (!sessions.has(id) && sessions.size >= MAX_SESSIONS) {
+    let oldestId: string | undefined;
+    let oldestAt = Infinity;
+    for (const [sid, lastUsed] of sessionLastUsed) {
+      if (lastUsed < oldestAt) {
+        oldestAt = lastUsed;
+        oldestId = sid;
+      }
+    }
+    if (oldestId !== undefined) {
+      evictSession(oldestId);
+    }
+  }
+
   if (!sessions.has(id)) {
     sessions.set(id, new AgentBrowserAdapter({ session: id }));
   }
+  sessionLastUsed.set(id, now);
   return sessions.get(id)!;
 }
 
@@ -124,6 +164,7 @@ const navigationTools: MCPTool[] = [
       const adapter = getAdapter(input.session as string);
       const result = await adapter.close();
       sessions.delete(input.session as string || 'default');
+      sessionLastUsed.delete(input.session as string || 'default');
       return result;
     },
   },
@@ -172,8 +213,11 @@ const snapshotTools: MCPTool[] = [
     },
     handler: async (input) => {
       const adapter = getAdapter(input.session as string);
+      // Path-validate the write target — arbitrary file writes from MCP
+      // are not allowed
+      const path = input.path ? assertFileToolPath(input.path as string) : undefined;
       return adapter.screenshot({
-        path: input.path as string,
+        path,
         fullPage: input.fullPage as boolean,
       });
     },
@@ -192,7 +236,10 @@ const snapshotTools: MCPTool[] = [
     },
     handler: async (input) => {
       const adapter = getAdapter(input.session as string);
-      return adapter.pdf(input.path as string);
+      // Path-validate the write target — arbitrary file writes from MCP
+      // are not allowed
+      const path = assertFileToolPath(input.path as string);
+      return adapter.pdf(path);
     },
   },
 ];
@@ -638,6 +685,11 @@ const DANGEROUS_EVAL_PATTERNS = [
   /\bReflect\b/,           // Reflect API (can invoke constructors)
   /\bimport\s*\(/,         // Dynamic import
   /\beval\s*\(/,           // Direct eval calls
+  /\bfetch\s*\(/,          // Network exfiltration primitive
+  /\bsendBeacon\s*\(/,     // Network exfiltration primitive
+  /\bWebSocket\s*\(/,      // Network exfiltration primitive
+  /\bdocument\s*\.\s*cookie\b/, // Cookie reads (explicit opt-in required)
+  /\blocalStorage\b/,      // Storage reads / writes
 ];
 
 const DEFAULT_MAX_EVAL_SCRIPT_LENGTH = 20_000;
@@ -1036,7 +1088,10 @@ const debugTools: MCPTool[] = [
     },
     handler: async (input) => {
       const adapter = getAdapter(input.session as string);
-      return adapter.traceStart(input.path as string);
+      // Path-validate the write target — arbitrary file writes from MCP
+      // are not allowed
+      const path = input.path ? assertFileToolPath(input.path as string) : undefined;
+      return adapter.traceStart(path);
     },
   },
   {
@@ -1052,7 +1107,10 @@ const debugTools: MCPTool[] = [
     },
     handler: async (input) => {
       const adapter = getAdapter(input.session as string);
-      return adapter.traceStop(input.path as string);
+      // Path-validate the write target — arbitrary file writes from MCP
+      // are not allowed
+      const path = input.path ? assertFileToolPath(input.path as string) : undefined;
+      return adapter.traceStop(path);
     },
   },
   {
@@ -1124,7 +1182,10 @@ const debugTools: MCPTool[] = [
     },
     handler: async (input) => {
       const adapter = getAdapter(input.session as string);
-      return adapter.saveState(input.path as string);
+      // Path-validate the write target — arbitrary file writes from MCP
+      // are not allowed
+      const path = assertFileToolPath(input.path as string);
+      return adapter.saveState(path);
     },
   },
   {
@@ -1141,7 +1202,10 @@ const debugTools: MCPTool[] = [
     },
     handler: async (input) => {
       const adapter = getAdapter(input.session as string);
-      return adapter.loadState(input.path as string);
+      // Path-validate the read target — arbitrary file reads from MCP
+      // are not allowed
+      const path = assertFileToolPath(input.path as string);
+      return adapter.loadState(path);
     },
   },
 ];

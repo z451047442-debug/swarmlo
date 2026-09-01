@@ -545,16 +545,27 @@ export class HookFactory {
           };
         }
 
-        // Clean expired entries if at max size
+        // Evict expired entries first
         if (cache.size >= maxSize) {
           for (const [k, v] of cache) {
             if (v.expires < now) {
               cache.delete(k);
             }
           }
-          // Store result with TTL
-          cache.set(key, { value: context.data, expires: now + ttlMs });
         }
+
+        // If still at capacity, evict the oldest entry (Map insertion order
+        // gives a simple LRU) so the new result can be stored
+        if (cache.size >= maxSize) {
+          const oldest = cache.keys().next().value;
+          if (oldest !== undefined) {
+            cache.delete(oldest);
+          }
+        }
+
+        // Store result with TTL — the store must happen on every miss,
+        // not only once the cache is full
+        cache.set(key, { value: context.data, expires: now + ttlMs });
 
         return { success: true };
       })

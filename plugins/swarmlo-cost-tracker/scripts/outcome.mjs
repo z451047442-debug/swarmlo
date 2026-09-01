@@ -30,8 +30,9 @@ function main() {
     console.error(`invalid outcome '${outcome}' — must be one of: success, escalated, failure`);
     process.exit(2);
   }
+  // review fix 2026-08-31 — pinned, never @latest
   const r = spawnNpxSync([
-    'swarmlo-cli@latest', 'hooks', 'model-outcome',
+    'swarmlo-cli@3.39.1', 'hooks', 'model-outcome',
     '-t', task, '-m', model, '-o', outcome,
   ], { stdio: 'inherit', shell: process.platform === 'win32' });
   if (r.status !== 0) {

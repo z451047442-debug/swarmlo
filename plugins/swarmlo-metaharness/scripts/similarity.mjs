@@ -24,13 +24,12 @@
 //   - CI-gate ready: smoke step 17y locks this contract
 
 import { readFileSync, existsSync } from 'node:fs';
-import { spawnSync } from 'node:child_process';
 import { similarity } from './_similarity.mjs';
+// review fix 2026-08-31 — runSwarmloCli resolves the PINNED swarmlo-cli
+// instead of `npx swarmlo-cli@3.39.1`.
+import { runSwarmloCli } from './_harness.mjs';
 
 const NS = process.env.HARNESS_SIMILARITY_NAMESPACE || 'metaharness-audit';
-const CLI_PKG = process.env.CLI_CORE === '1'
-  ? '@claude-flow/cli-core@alpha'
-  : 'swarmlo-cli@latest';
 
 const ARGS = (() => {
   const a = {
@@ -66,10 +65,7 @@ function emitDegradedAndExit(reason, code = 2) {
 }
 
 function memRetrieve(key) {
-  const r = spawnSync('npx', [
-    CLI_PKG, 'memory', 'retrieve',
-    '--namespace', NS, '--key', key,
-  ], { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf-8', shell: process.platform === 'win32' });
+  const r = runSwarmloCli(['memory', 'retrieve', '--namespace', NS, '--key', key]);
   if (r.status !== 0) return null;
   const m = /\{[\s\S]*\}/.exec(r.stdout || '');
   if (!m) return null;

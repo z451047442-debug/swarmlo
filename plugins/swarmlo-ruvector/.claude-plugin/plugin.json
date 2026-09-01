@@ -3,8 +3,8 @@
   "description": "Self-learning vector database via npx ruvector@0.2.25 — HNSW, adaptive LoRA embeddings, code-graph clustering, hooks routing, brain/SONA, 103 MCP tools",
   "version": "0.2.2",
   "author": {
-    "name": "ruvnet",
-    "url": "https://github.com/ruvnet"
+    "name": "z451047442-debug",
+    "url": "https://github.com/z451047442-debug"
   },
   "homepage": "https://github.com/ruvnet/ruvector",
   "license": "MIT",
