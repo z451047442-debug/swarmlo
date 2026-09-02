@@ -23,7 +23,7 @@
         "zod"
       ],
       "peerDependencies": [
-        "@claude-flow/cli"
+        "swarmlo-cli"
       ],
       "devDependencies": [
         "@types/node",
@@ -39,7 +39,7 @@
         "zod"
       ],
       "peerDependencies": [
-        "@claude-flow/cli"
+        "swarmlo-cli"
       ],
       "devDependencies": [
         "@types/node",
