@@ -14,7 +14,7 @@
  * Behaviour mirrors swarmlo-hook.sh:
  *   1. Reads hook JSON payload from stdin.
  *   2. Prefers a locally installed `swarmlo` or `claude-flow` binary.
- *   3. Falls back to `npx --prefer-offline swarmlo@latest`.
+ *   3. Falls back to `npx --prefer-offline swarmlo@3.39.1`.
  *   4. Always exits 0 — hook subcommands are best-effort telemetry.
  *   5. Swallows all stderr — nothing should surface to Claude Code.
  *
@@ -157,7 +157,7 @@ function main() {
   // a spurious failure even though the shim itself works correctly.
   // The bash version doesn't hit this because it backgrounded the work.
   if (process.env.SWARMLO_HOOK_SKIP_NPX !== '1') {
-    invokeHook('npx', ['--prefer-offline', '--yes', 'swarmlo@latest'], hookArgs, stdinData);
+    invokeHook('npx', ['--prefer-offline', '--yes', 'swarmlo@3.39.1'], hookArgs, stdinData);
   }
 
   done();
