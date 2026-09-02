@@ -124,7 +124,7 @@
     "@agntcy/slim-bindings": "2.0.0-alpha.5",
     "@claude-flow/memory": "^3.0.0-alpha.22",
     "@huggingface/transformers": "^3.8.1",
-    "@metaharness/darwin": "~0.9.0",
+    "@metaharness/darwin": "~0.10.1",
     "@metaharness/flywheel": "~0.1.10",
     "@metaharness/radio": "~0.1.0",
     "@metaharness/turn-credit": "~0.1.0",
