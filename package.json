@@ -121,7 +121,7 @@
     "qs": ">=6.15.2 <7",
     "protobufjs": ">=8.7.2 <9",
     "uuid": ">=14.0.0 <15",
-    "@opentelemetry/core": ">=2.8.0 <3",
+    "@opentelemetry/core": ">=2.8.0",
     "@opentelemetry/resources": ">=2.8.0 <3",
     "@opentelemetry/sdk-trace-base": ">=2.8.0 <3",
     "@opentelemetry/sdk-node": ">=0.220.0 <1",
