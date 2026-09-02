@@ -103,6 +103,7 @@ const KNOWN_ESCAPE_HATCHES = new Set([
   'CLAUDE_FLOW_HEADLESS',         // Set/read within same process invocation lifecycle
   'CLAUDE_FLOW_FORCE_UPDATE',     // Set by --force flag internally, then cleared — not external
   'CLAUDE_FLOW_AUTO_UPDATE',      // Auto-update cadence — env-only documented design
+  'SWARMLO_AUTO_UPDATE',          // Auto-update cadence — env-only documented design (rename alias)
 
   // ── Logging / diagnostics ───────────────────────────────────────────────────
   'CLAUDE_FLOW_LOG_LEVEL',
