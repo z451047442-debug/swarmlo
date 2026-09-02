@@ -1408,14 +1408,14 @@ import { validateUpdate, validateBulkUpdate } from '../src/update/validator.js';
 describe('Update Validator', () => {
   it('should validate compatible update', () => {
     const result = validateUpdate(
-      '@claude-flow/cli', '3.0.0-alpha.50', '3.0.0-alpha.55', {}
+      'swarmlo-cli', '3.0.0-alpha.50', '3.0.0-alpha.55', {}
     );
     expect(result.valid).toBe(true);
   });
 
   it('should warn about major version bumps', () => {
     const result = validateUpdate(
-      '@claude-flow/cli', '2.0.0', '3.0.0', {}
+      'swarmlo-cli', '2.0.0', '3.0.0', {}
     );
     expect(result.warnings.length).toBeGreaterThan(0);
     expect(result.warnings.some(w => w.includes('Major version'))).toBe(true);
@@ -1423,7 +1423,7 @@ describe('Update Validator', () => {
 
   it('should detect incompatible peer dependency', () => {
     const result = validateUpdate(
-      '@claude-flow/cli', '3.0.0-alpha.50', '3.0.0-alpha.55',
+      'swarmlo-cli', '3.0.0-alpha.50', '3.0.0-alpha.55',
       { '@claude-flow/embeddings': '2.0.0' }
     );
     // CLI requires embeddings >= 3.0.0-alpha.1
@@ -1439,10 +1439,10 @@ describe('Update Validator', () => {
   it('validateBulkUpdate checks all updates', () => {
     const result = validateBulkUpdate(
       [
-        { package: '@claude-flow/cli', from: '3.0.0-alpha.50', to: '3.0.0-alpha.55' },
+        { package: 'swarmlo-cli', from: '3.0.0-alpha.50', to: '3.0.0-alpha.55' },
         { package: '@claude-flow/embeddings', from: '3.0.0-alpha.1', to: '3.0.0-alpha.5' },
       ],
-      { '@claude-flow/cli': '3.0.0-alpha.50', '@claude-flow/embeddings': '3.0.0-alpha.1' }
+      { 'swarmlo-cli': '3.0.0-alpha.50', '@claude-flow/embeddings': '3.0.0-alpha.1' }
     );
     expect(result.valid).toBe(true);
   });
