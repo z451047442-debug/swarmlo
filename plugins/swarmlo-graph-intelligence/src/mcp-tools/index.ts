@@ -81,6 +81,13 @@ export const graphIntelligenceTools: MCPTool[] = [
         const result = runPageRank(matrix, query);
         return { success: true, result };
       } catch (err) {
+        // Preserve structured domain errors (complexity-budget-exceeded,
+        // coherence-rejected, graph-not-found, …) so callers can branch on the
+        // specific kind; only fall back to handler-error for unexpected throws
+        // (ZodError, adapter export failure, etc.).
+        if (err && typeof err === 'object' && 'kind' in err && 'message' in err) {
+          return { success: false, error: err };
+        }
         return {
           success: false,
           error: {
@@ -120,6 +127,13 @@ export const graphIntelligenceTools: MCPTool[] = [
         const result = runSolve(matrix, query);
         return { success: true, result };
       } catch (err) {
+        // Preserve structured domain errors (complexity-budget-exceeded,
+        // coherence-rejected, graph-not-found, …) so callers can branch on the
+        // specific kind; only fall back to handler-error for unexpected throws
+        // (ZodError, adapter export failure, etc.).
+        if (err && typeof err === 'object' && 'kind' in err && 'message' in err) {
+          return { success: false, error: err };
+        }
         return {
           success: false,
           error: {
@@ -165,6 +179,13 @@ export const graphIntelligenceTools: MCPTool[] = [
         const result = runSolveOnChange(matrix, query);
         return { success: true, result };
       } catch (err) {
+        // Preserve structured domain errors (complexity-budget-exceeded,
+        // coherence-rejected, graph-not-found, …) so callers can branch on the
+        // specific kind; only fall back to handler-error for unexpected throws
+        // (ZodError, adapter export failure, etc.).
+        if (err && typeof err === 'object' && 'kind' in err && 'message' in err) {
+          return { success: false, error: err };
+        }
         return {
           success: false,
           error: {
@@ -212,6 +233,13 @@ export const graphIntelligenceTools: MCPTool[] = [
           },
         };
       } catch (err) {
+        // Preserve structured domain errors (complexity-budget-exceeded,
+        // coherence-rejected, graph-not-found, …) so callers can branch on the
+        // specific kind; only fall back to handler-error for unexpected throws
+        // (ZodError, adapter export failure, etc.).
+        if (err && typeof err === 'object' && 'kind' in err && 'message' in err) {
+          return { success: false, error: err };
+        }
         return {
           success: false,
           error: {
@@ -312,6 +340,13 @@ export const graphIntelligenceTools: MCPTool[] = [
           },
         };
       } catch (err) {
+        // Preserve structured domain errors (complexity-budget-exceeded,
+        // coherence-rejected, graph-not-found, …) so callers can branch on the
+        // specific kind; only fall back to handler-error for unexpected throws
+        // (ZodError, adapter export failure, etc.).
+        if (err && typeof err === 'object' && 'kind' in err && 'message' in err) {
+          return { success: false, error: err };
+        }
         return {
           success: false,
           error: {
