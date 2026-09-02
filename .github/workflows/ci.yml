@@ -11,6 +11,7 @@ on:
 
 env:
   NODE_VERSION: '20'
+  PNPM_VERSION: '8'
 
 jobs:
   # Code quality and security checks
@@ -96,37 +97,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: 'pnpm'
+          cache-dependency-path: v3/pnpm-lock.yaml
 
       - name: Install dependencies
-        run: |
-          # Retries absorb the transient sharp/libvips "socket hang up" /
-          # 503 download flake (see .github/actions/npm-ci-retry) — this
-          # step predates that composite action and can't call it directly
-          # since it needs the OS-conditional --omit=optional fallback too.
-          for attempt in 1 2 3; do
-            if [ "${{ runner.os }}" == "Linux" ]; then
-              npm ci --legacy-peer-deps && exit 0
-            else
-              (npm ci --legacy-peer-deps --omit=optional || npm ci --legacy-peer-deps --force) && exit 0
-            fi
-            echo "npm ci failed (attempt $attempt/3) — retrying in 15s"
-            sleep 15
-          done
-          echo "npm ci failed after 3 attempts"
-          exit 1
+        working-directory: v3
+        run: pnpm install --frozen-lockfile
         shell: bash
 
       - name: Build project
-        # Inline the real build — the root `build:ts` script appends `|| true`
-        # and can never fail (see review finding ci.yml:131-132).
-        run: |
-          echo "Building project for ${{ matrix.platform }}..."
-          cd v3/@claude-flow/cli && npm run build
+        working-directory: v3
+        run: pnpm build
+        shell: bash
 
       - name: Test CLI binary (Unix)
         if: runner.os != 'Windows'
