@@ -7,7 +7,7 @@ argument-hint: "[--portfolio-id ID] [--tolerance 1e-6]"
 Solve the mean-variance optimization `Σ · x = μ` via Conjugate Gradient instead of the legacy Neumann series.
 
 **Why CG instead of Neumann (ADR-123 Wedge 8):**
-- Neumann series: ~50 µs at n=256 (legacy `npx --ignore-scripts -y neural-trader@2.8.11 --portfolio optimize`)
+- Neumann series: ~50 µs at n=256 (legacy `npx neural-trader --portfolio optimize` route; reproducible pin: `npx --ignore-scripts -y neural-trader@2.8.11 --portfolio optimize`)
 - Conjugate Gradient: ~816 ns at n=256 (this skill)
 - Measured speedup: 40-60×; parity within 1e-4 on a fixed seed.
 
