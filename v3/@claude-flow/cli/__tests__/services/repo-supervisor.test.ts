@@ -133,7 +133,9 @@ describe('#2661 root-fix — RepoSupervisorRegistry', () => {
     expect(registry.getRecord('repo-1')).toBeNull();
   });
 
-  it('rejects a symlinked supervisor file (invariant 9) and fails closed (not supervisor)', async () => {
+  // Windows requires developer mode / elevated privileges to create symlinks
+  // (EPERM otherwise); this invariant runs on ubuntu in CI.
+  it.skipIf(process.platform === 'win32')('rejects a symlinked supervisor file (invariant 9) and fails closed (not supervisor)', async () => {
     const registry = makeRegistry();
     const supDir = join(dir, 'supervisors');
     mkdirSync(supDir, { recursive: true });

@@ -120,7 +120,9 @@ describe('#2661 — GlobalAiBudget', () => {
       expect(p.allowed).toBe(true);
     });
 
-    it('fails CLOSED when the ledger is a symlink (invariant 9)', async () => {
+    // Windows requires developer mode / elevated privileges to create symlinks
+    // (EPERM otherwise); this invariant runs on ubuntu in CI.
+    it.skipIf(process.platform === 'win32')('fails CLOSED when the ledger is a symlink (invariant 9)', async () => {
       const budget = makeBudget();
       writeFileSync(join(dir, 'evil-target.json'), '{}');
       symlinkSync(join(dir, 'evil-target.json'), join(dir, 'ai-budget.json'));

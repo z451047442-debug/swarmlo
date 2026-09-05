@@ -111,7 +111,9 @@ describe('#2661 root-fix — WorkspaceLeaseRegistry', () => {
     expect(registry.isLeaseActive('repo-1', '/tmp/wt-dead')).toBe(false);
   });
 
-  it('rejects a symlinked lease file (invariant 9)', async () => {
+  // Windows requires developer mode / elevated privileges to create symlinks
+  // (EPERM otherwise); this invariant runs on ubuntu in CI.
+  it.skipIf(process.platform === 'win32')('rejects a symlinked lease file (invariant 9)', async () => {
     const registry = makeRegistry();
     const { mkdirSync } = await import('fs');
     const leasesDir = join(dir, 'leases');

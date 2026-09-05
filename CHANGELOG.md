@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Windows 本地 `vitest` 环境性失败 — 4 个 `symlinkSync` 测试用例（workspace-lease / global-ai-budget / repo-supervisor 的 #2661 invariant 9 + policy-runtime 的 trust-anchor 路径）在 Windows 上需开发者模式/提权才能建符号链接（否则 `EPERM`），改为 `it.skipIf(process.platform === 'win32')`；CI 的 `Test V3 Packages` 门禁跑 ubuntu，这些用例在生产门禁上不受影响、继续全量执行。
 - Windows `spawnSync npm.cmd EINVAL` in publish preflight scripts (`scripts/prepare-root-publish.mjs`, `scripts/stage-internal-runtime-bundles.mjs`) — added `shell: true` for `.cmd` spawning.
 - Invalid JSON in shipped `.claude/settings.json` (unescaped inner quotes around `$CLAUDE_PROJECT_DIR` hook commands).
 - Restored executable bit on 437 shebang scripts lost when the fork snapshot was created on Windows (CI "executable + syntax-clean" smoke checks).

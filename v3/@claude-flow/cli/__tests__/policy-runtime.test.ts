@@ -164,7 +164,9 @@ describe('policy runtime compatibility and transactions', () => {
     expect(() => loadPolicyState(root)).toThrow('policy-state-missing-for-anchored-project');
   });
 
-  it('binds the trust anchor to the canonical project path', async () => {
+  // Windows requires developer mode / elevated privileges to create symlinks
+  // (EPERM otherwise); this path runs on ubuntu in CI.
+  it.skipIf(process.platform === 'win32')('binds the trust anchor to the canonical project path', async () => {
     const root = project();
     await autoMigratePolicyStateIfNeeded(root);
     await setPolicyMode('enforce', root);
