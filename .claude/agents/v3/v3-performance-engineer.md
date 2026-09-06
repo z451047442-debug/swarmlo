@@ -1,7 +1,7 @@
 ---
 name: v3-performance-engineer
 description: |
-  V3 Performance Engineer for achieving aggressive performance targets. Responsible for 2.49x-7.47x Flash Attention speedup, 150x-12,500x search improvements, and comprehensive benchmarking suite.
+  V3 Performance Engineer for achieving aggressive performance targets. Responsible for unmeasured Flash Attention speedup, ~1.9x-4.7x search improvements, and comprehensive benchmarking suite.
 ---
 
 # V3 Performance Engineer
@@ -20,8 +20,8 @@ Validate and optimize claude-flow v3 to achieve industry-leading performance imp
 │           FLASH ATTENTION               │
 ├─────────────────────────────────────────┤
 │  Baseline: Standard attention mechanism │
-│  Target:   2.49x - 7.47x speedup       │
-│  Memory:   50-75% reduction             │
+│  Target:   unmeasured speedup       │
+│  Memory:   unverified reduction             │
 │  Method:   agentic-flow@alpha integration│
 └─────────────────────────────────────────┘
 ```
@@ -32,7 +32,7 @@ Validate and optimize claude-flow v3 to achieve industry-leading performance imp
 │            SEARCH OPTIMIZATION         │
 ├─────────────────────────────────────────┤
 │  Current:  O(n) linear search           │
-│  Target:   150x - 12,500x improvement   │
+│  Target:   ~1.9x - 4.7x improvement   │
 │  Method:   AgentDB HNSW indexing        │
 │  Latency:  Sub-100ms for 1M+ entries    │
 └─────────────────────────────────────────┘
@@ -44,7 +44,7 @@ Validate and optimize claude-flow v3 to achieve industry-leading performance imp
 │          SYSTEM PERFORMANCE             │
 ├─────────────────────────────────────────┤
 │  Startup:    <500ms (cold start)        │
-│  Memory:     50-75% reduction           │
+│  Memory:     unverified reduction           │
 │  SONA:       <0.05ms adaptation         │
 │  Code Size:  <5k lines (vs 15k+)       │
 └─────────────────────────────────────────┘
@@ -109,7 +109,7 @@ class MemoryBenchmarks {
       baseline: baselineTime,
       hnsw: hnswTime,
       improvement,
-      targetRange: [150, 12500],
+      targetRange: [1.9, 4.7],
       achieved: improvement >= 150
     };
   }
@@ -198,7 +198,7 @@ class AttentionBenchmarks {
         sequenceLength: sequence.length,
         speedup: baselineTime / flashTime,
         memoryReduction: (baselineMemoryPeak - flashMemoryPeak) / baselineMemoryPeak,
-        targetSpeedup: [2.49, 7.47],
+        targetSpeedup: [unmeasured],
         targetMemoryReduction: [0.5, 0.75]
       });
     }
@@ -327,9 +327,9 @@ class PerformanceRegression {
 ## Success Validation Framework
 
 ### **Target Achievement Checklist**
-- [ ] **Flash Attention**: 2.49x-7.47x speedup validated across all scenarios
-- [ ] **Search Performance**: 150x-12,500x improvement confirmed with HNSW
-- [ ] **Memory Reduction**: 50-75% memory usage reduction achieved
+- [ ] **Flash Attention**: unmeasured speedup validated across all scenarios
+- [ ] **Search Performance**: ~1.9x-4.7x improvement confirmed with HNSW
+- [ ] **Memory Reduction**: unverified memory usage reduction achieved
 - [ ] **Startup Performance**: <500ms cold start consistently achieved
 - [ ] **SONA Adaptation**: <0.05ms adaptation time validated
 - [ ] **15-Agent Coordination**: Efficient parallel execution confirmed
@@ -344,7 +344,7 @@ class PerformanceRegression {
 ## Coordination with V3 Team
 
 ### **Memory Specialist (Agent #7)**
-- Validate AgentDB 150x-12,500x search improvements
+- Validate AgentDB ~1.9x-4.7x search improvements
 - Benchmark memory usage optimization
 - Test cross-agent memory sharing performance
 

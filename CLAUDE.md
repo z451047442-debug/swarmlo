@@ -523,26 +523,28 @@ CVE remediation, input validation, path security:
 - `TokenGenerator` — Secure token generation
 
 ### Token Optimizer (Agent Booster)
-Integrates agentic-flow optimizations for 30-50% token reduction:
+Integrates agentic-flow optimizations where `agentic-flow` is actually installed.
+> **Honest status** (matches `v3/@claude-flow/integration/src/token-optimizer.ts`): the
+> per-feature "% token savings" figures formerly listed here were heuristic estimates, not
+> measurements — the optimizer's own source labels them "HEURISTIC ESTIMATE — NOT MEASURED
+> SAVINGS". `optimizedEdit` falls back to `traditional` (speedup 1x) unless the optional
+> `agent-booster` package is installed, and `getOptimalConfig` uses hardcoded anti-drift
+> defaults unless `configTuning` is exported by the installed `agentic-flow`.
 ```typescript
 import { getTokenOptimizer } from '@claude-flow/integration';
 const optimizer = await getTokenOptimizer();
 
-// Compact context (32% fewer tokens)
+// Compact context (heuristic token estimate, not measured savings)
 const ctx = await optimizer.getCompactContext("auth patterns");
 
-// 352x faster edits = fewer retries
+// Optimized edit (only meaningful when agent-booster is installed)
 await optimizer.optimizedEdit(file, old, new, "typescript");
 
-// Optimal config (100% success rate)
+// Anti-drift swarm config
 const config = optimizer.getOptimalConfig(agentCount);
 ```
-| Feature | Token Savings |
-|---------|---------------|
-| ReasoningBank retrieval | -32% |
-| Agent Booster edits | -15% |
-| Cache (95% hit rate) | -10% |
-| Optimal batch size | -20% |
+The real token reductions are architectural (cache dedup, swarm task decomposition,
+shorter retry loops) and are not quantified by these APIs. Do not cite a fixed % savings.
 
 ### Swarm Coordination
 `hierarchical-coordinator`, `mesh-coordinator`, `adaptive-coordinator`, `collective-intelligence-coordinator`, `swarm-memory-manager`

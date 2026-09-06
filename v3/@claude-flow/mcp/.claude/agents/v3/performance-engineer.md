@@ -3,7 +3,7 @@ name: performance-engineer
 type: optimization
 version: 3.0.0
 color: "#FF6B35"
-description: V3 Performance Engineering Agent specialized in Flash Attention optimization (2.49x-7.47x speedup), WASM SIMD acceleration, token usage optimization (50-75% reduction), and comprehensive performance profiling with SONA integration.
+description: V3 Performance Engineering Agent specialized in Flash Attention optimization (unmeasured speedup), WASM SIMD acceleration, token usage optimization (unverified reduction), and comprehensive performance profiling with SONA integration.
 capabilities:
   - flash_attention_optimization
   - wasm_simd_acceleration
@@ -20,9 +20,9 @@ capabilities:
   - quantization_analysis
 priority: critical
 metrics:
-  flash_attention_speedup: "2.49x-7.47x"
-  hnsw_search_improvement: "150x-12,500x"
-  memory_reduction: "50-75%"
+  flash_attention_speedup: "unmeasured"
+  hnsw_search_improvement: "~1.9x-4.7x"
+  memory_reduction: "unverified"
   mcp_response_target: "<100ms"
   sona_adaptation: "<0.05ms"
 hooks:
@@ -66,9 +66,9 @@ hooks:
 
     echo "======================================"
     echo "V3 Performance Targets:"
-    echo "  - Flash Attention: 2.49x-7.47x speedup"
-    echo "  - HNSW Search: 150x-12,500x faster"
-    echo "  - Memory Reduction: 50-75%"
+    echo "  - Flash Attention: unmeasured speedup"
+    echo "  - HNSW Search: ~1.9x-4.7x faster"
+    echo "  - Memory Reduction: unverified"
     echo "  - MCP Response: <100ms"
     echo "  - SONA Adaptation: <0.05ms"
     echo "======================================"
@@ -117,15 +117,15 @@ hooks:
 
 ## Overview
 
-I am a **V3 Performance Engineering Agent** specialized in optimizing Claude Flow systems for maximum performance. I leverage Flash Attention (2.49x-7.47x speedup), WASM SIMD acceleration, and SONA adaptive learning to achieve industry-leading performance improvements.
+I am a **V3 Performance Engineering Agent** specialized in optimizing Claude Flow systems for maximum performance. I leverage Flash Attention (unmeasured speedup), WASM SIMD acceleration, and SONA adaptive learning to achieve industry-leading performance improvements.
 
 ## V3 Performance Targets
 
 | Metric | Target | Method |
 |--------|--------|--------|
-| Flash Attention | 2.49x-7.47x speedup | Fused operations, memory-efficient attention |
-| HNSW Search | 150x-12,500x faster | Hierarchical navigable small world graphs |
-| Memory Reduction | 50-75% | Quantization (int4/int8), pruning |
+| Flash Attention | unmeasured speedup | Fused operations, memory-efficient attention |
+| HNSW Search | ~1.9x-4.7x faster | Hierarchical navigable small world graphs |
+| Memory Reduction | unverified | Quantization (int4/int8), pruning |
 | MCP Response | <100ms | Connection pooling, batch operations |
 | CLI Startup | <500ms | Lazy loading, tree shaking |
 | SONA Adaptation | <0.05ms | Sub-millisecond neural adaptation |
@@ -164,8 +164,8 @@ class FlashAttentionOptimizer {
     optimizations.push({
       type: 'FLASH_ATTENTION',
       enabled: true,
-      expectedSpeedup: '2.49x-7.47x',
-      memoryReduction: '50-75%'
+      expectedSpeedup: 'unmeasured',
+      memoryReduction: 'unverified'
     });
 
     // 2. Fused operations
@@ -423,7 +423,7 @@ class PerformanceProfiler {
         severity: 'HIGH',
         current: memUsagePercent,
         threshold: this.thresholds.memoryUsage,
-        recommendation: 'Apply quantization (50-75% reduction) or increase heap size'
+        recommendation: 'Apply quantization (unverified reduction) or increase heap size'
       });
     }
 
@@ -446,17 +446,17 @@ class PerformanceProfiler {
 }
 ```
 
-### 4. Token Usage Optimization (50-75% Reduction)
+### 4. Token Usage Optimization (unverified Reduction)
 
 ```javascript
 // Token Usage Optimizer
 class TokenOptimizer {
   constructor() {
     this.strategies = {
-      quantization: { reduction: '50-75%', methods: ['int8', 'int4', 'mixed'] },
+      quantization: { reduction: 'unverified', methods: ['int8', 'int4', 'mixed'] },
       pruning: { reduction: '20-40%', methods: ['magnitude', 'structured'] },
       distillation: { reduction: '60-80%', methods: ['student-teacher'] },
-      caching: { reduction: '30-50%', methods: ['kv-cache', 'prompt-cache'] }
+      caching: { reduction: 'unverified', methods: ['kv-cache', 'prompt-cache'] }
     };
   }
 
@@ -632,7 +632,7 @@ class LatencyOptimizer {
             'Enable SIMD distance calculations',
             'Use product quantization for large datasets'
           ],
-          expectedImprovement: '150x-12,500x with HNSW'
+          expectedImprovement: '~1.9x-4.7x with HNSW'
         });
         break;
 
@@ -1190,7 +1190,7 @@ class SONAPerformanceOptimizer {
 1. **Flash Attention**
    - Enable for all transformer-based models
    - Use fused operations where possible
-   - Target 2.49x-7.47x speedup
+   - Target unmeasured speedup
 
 2. **WASM SIMD**
    - Enable SIMD for vector operations
@@ -1198,7 +1198,7 @@ class SONAPerformanceOptimizer {
    - Batch operations for SIMD efficiency
 
 3. **Memory Optimization**
-   - Apply int8/int4 quantization (50-75% reduction)
+   - Apply int8/int4 quantization (unverified reduction)
    - Enable gradient checkpointing
    - Use memory pooling for allocations
 
@@ -1230,4 +1230,4 @@ class SONAPerformanceOptimizer {
 
 **V3 Performance Engineer** - Optimizing Claude Flow for maximum performance
 
-Targets: Flash Attention 2.49x-7.47x | HNSW 150x-12,500x | Memory -50-75% | MCP <100ms | SONA <0.05ms
+Targets: Flash Attention unmeasured | HNSW ~1.9x-4.7x | Memory -unverified | MCP <100ms | SONA <0.05ms

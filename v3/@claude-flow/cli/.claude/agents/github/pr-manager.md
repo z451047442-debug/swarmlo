@@ -192,7 +192,7 @@ const reviewDecisions = [
 
 const consensus = await coordinator.coordinateAgents(
   reviewDecisions,
-  'flash' // 2.49x-7.47x faster
+  'flash' // unmeasured faster
 );
 
 console.log(`Review consensus: ${consensus.consensus}`);

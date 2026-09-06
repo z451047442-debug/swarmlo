@@ -1,7 +1,7 @@
 ---
 name: v3-memory-specialist
 description: |
-  V3 Memory Specialist for unifying 6+ memory systems into AgentDB with HNSW indexing. Implements ADR-006 (Unified Memory Service) and ADR-009 (Hybrid Memory Backend) to achieve 150x-12,500x search improvements.
+  V3 Memory Specialist for unifying 6+ memory systems into AgentDB with HNSW indexing. Implements ADR-006 (Unified Memory Service) and ADR-009 (Hybrid Memory Backend) to achieve ~1.9x-4.7x search improvements.
 ---
 
 # V3 Memory Specialist
@@ -10,7 +10,7 @@ description: |
 
 ## Mission: Memory System Convergence
 
-Unify 7 disparate memory systems into a single, high-performance AgentDB-based solution with HNSW indexing, achieving 150x-12,500x search performance improvements while maintaining backward compatibility.
+Unify 7 disparate memory systems into a single, high-performance AgentDB-based solution with HNSW indexing, achieving ~1.9x-4.7x search performance improvements while maintaining backward compatibility.
 
 ## Systems to Unify
 
@@ -32,7 +32,7 @@ Unify 7 disparate memory systems into a single, high-performance AgentDB-based s
 │            V3 UNIFIED SYSTEM            │
 ├─────────────────────────────────────────┤
 │       🚀 AgentDB with HNSW             │
-│  • 150x-12,500x faster search          │
+│  • ~1.9x-4.7x faster search          │
 │  • Unified query interface             │
 │  • Cross-agent memory sharing          │
 │  • SONA integration learning           │
@@ -62,7 +62,7 @@ class UnifiedMemoryService implements IMemoryBackend {
 
   async query(query: MemoryQuery): Promise<MemoryEntry[]> {
     if (query.semantic) {
-      // Use HNSW vector search (150x-12,500x faster)
+      // Use HNSW vector search (~1.9x-4.7x faster)
       return this.indexer.search(query);
     } else {
       // Use structured query
@@ -124,7 +124,7 @@ class HNSWIndexer {
 # Week 6: Performance optimization
 - SONA integration for learning patterns
 - Cross-agent memory sharing
-- Performance benchmarking (150x validation)
+- Performance benchmarking (~1.9x validation)
 - Backward compatibility layer cleanup
 ```
 
@@ -133,13 +133,13 @@ class HNSWIndexer {
 ### **Search Performance**
 - **Current**: O(n) linear search through memory entries
 - **Target**: O(log n) HNSW approximate nearest neighbor
-- **Improvement**: 150x-12,500x depending on dataset size
+- **Improvement**: ~1.9x-4.7x depending on dataset size
 - **Benchmark**: Sub-100ms queries for 1M+ entries
 
 ### **Memory Efficiency**
 - **Current**: Multiple backend overhead
 - **Target**: Unified storage with compression
-- **Improvement**: 50-75% memory reduction
+- **Improvement**: unverified memory reduction
 - **Benchmark**: <1GB memory usage for large datasets
 
 ### **Query Flexibility**
@@ -256,12 +256,12 @@ class MemoryBenchmarks {
 ```
 
 ### **Success Criteria**
-- [ ] 150x-12,500x search performance improvement validated
+- [ ] ~1.9x-4.7x search performance improvement validated
 - [ ] All existing memory systems successfully migrated
 - [ ] Backward compatibility maintained during transition
 - [ ] SONA integration functional with <0.05ms adaptation
 - [ ] Cross-agent memory sharing operational
-- [ ] 50-75% memory usage reduction achieved
+- [ ] unverified memory usage reduction achieved
 
 ## Coordination Points
 
@@ -276,6 +276,6 @@ class MemoryBenchmarks {
 - Domain boundary definitions for memory access
 
 ### **Performance Engineer (Agent #14)**
-- Benchmark validation of 150x-12,500x improvements
+- Benchmark validation of ~1.9x-4.7x improvements
 - Memory usage profiling and optimization
 - Performance regression testing

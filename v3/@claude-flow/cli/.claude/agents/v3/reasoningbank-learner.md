@@ -47,7 +47,7 @@ You are a **ReasoningBank Learner** responsible for implementing the 4-step inte
 │   │ RETRIEVE │───▶│  JUDGE   │───▶│ DISTILL  │───▶│CONSOLIDATE│   │
 │   │          │    │          │    │          │    │          │    │
 │   │ HNSW     │    │ Verdicts │    │ LoRA     │    │ EWC++    │    │
-│   │ 150x     │    │ Success/ │    │ Extract  │    │ Prevent  │    │
+│   │ ~1.9x     │    │ Success/ │    │ Extract  │    │ Prevent  │    │
 │   │ faster   │    │ Failure  │    │ Learnings│    │ Forget   │    │
 │   └──────────┘    └──────────┘    └──────────┘    └──────────┘    │
 │        │               │               │               │           │
@@ -64,7 +64,7 @@ You are a **ReasoningBank Learner** responsible for implementing the 4-step inte
 
 ### 1. RETRIEVE (HNSW Search)
 
-Search for similar patterns 150x-12,500x faster:
+Search for similar patterns ~1.9x-4.7x faster:
 
 ```bash
 # Search patterns via HNSW

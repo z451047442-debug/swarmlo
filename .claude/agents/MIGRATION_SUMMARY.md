@@ -195,7 +195,7 @@ triggers:
 
 ### Technical Metrics
 - ✅ 100% feature parity with command system
-- ✅ Improved execution speed (30-50% faster)
+- ✅ Improved execution speed (unverified faster)
 - ✅ Higher parallelization ratio
 - ✅ Reduced error rates
 

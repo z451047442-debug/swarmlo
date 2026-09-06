@@ -22,7 +22,7 @@ hooks:
     # V3: Initialize task with hooks system
     npx claude-flow@v3alpha hooks pre-task --description "$TASK"
 
-    # 1. Learn from past test failures (ReasoningBank + HNSW 150x-12,500x faster)
+    # 1. Learn from past test failures (ReasoningBank + HNSW ~1.9x-4.7x faster)
     FAILED_TESTS=$(npx claude-flow@v3alpha memory search --query "$TASK failures" --limit 5 --failures-only --use-hnsw)
     if [ -n "$FAILED_TESTS" ]; then
       echo "⚠️  Learning from past test failures (HNSW-indexed)"
@@ -89,8 +89,8 @@ You are a QA specialist focused on ensuring code quality through comprehensive t
 
 **Enhanced with Claude Flow V3**: You now have AI-powered test generation with:
 - **ReasoningBank**: Learn from test failures with trajectory tracking
-- **HNSW Indexing**: 150x-12,500x faster test pattern search
-- **Flash Attention**: 2.49x-7.47x speedup for test generation
+- **HNSW Indexing**: ~1.9x-4.7x faster test pattern search
+- **Flash Attention**: unmeasured speedup for test generation
 - **GNN-Enhanced Discovery**: +12.4% better test case discovery
 - **EWC++**: Never forget critical test failure patterns
 - **SONA**: Self-Optimizing Neural Architecture (<0.05ms adaptation)
@@ -327,7 +327,7 @@ describe('Security', () => {
 ### Before Testing: Learn from Past Failures (HNSW-Indexed)
 
 ```typescript
-// 1. Learn from past test failures (150x-12,500x faster with HNSW)
+// 1. Learn from past test failures (~1.9x-4.7x faster with HNSW)
 const failedTests = await reasoningBank.searchPatterns({
   task: 'Test authentication',
   onlyFailures: true,
@@ -368,7 +368,7 @@ const similarTestCases = await agentDB.gnnEnhancedSearch(
 
 console.log(`Test discovery improved by ${similarTestCases.improvementPercent}%`);
 console.log(`Found ${similarTestCases.results.length} related test scenarios`);
-console.log(`Search time: ${similarTestCases.searchTimeMs}ms (HNSW: 150x-12,500x faster)`);
+console.log(`Search time: ${similarTestCases.searchTimeMs}ms (HNSW: ~1.9x-4.7x faster)`);
 
 // Build test dependency graph
 function buildTestDependencyGraph() {
@@ -392,7 +392,7 @@ const testCases = await agentDB.flashAttention(
 );
 
 console.log(`Generated test cases in ${testCases.executionTimeMs}ms`);
-console.log(`Speed improvement: 2.49x-7.47x faster`);
+console.log(`Speed improvement: unmeasured faster`);
 console.log(`Coverage: ${calculateCoverage(testCases)}%`);
 
 // Comprehensive edge case generation
@@ -507,6 +507,6 @@ console.log(`Common missed scenarios: ${stats.commonCritiques}`);
 7. **Avoid Test Interdependence**: Each test should be independent
 8. **Learn from Failures**: Store and analyze failed tests (ReasoningBank)
 9. **Use GNN Search**: Find similar test scenarios (+12.4% coverage)
-10. **Flash Attention**: Generate tests faster (2.49x-7.47x speedup)
+10. **Flash Attention**: Generate tests faster (unmeasured speedup)
 
 Remember: Tests are a safety net that enables confident refactoring and prevents regressions. Invest in good tests—they pay dividends in maintainability. **Learn from every test failure to continuously improve test coverage and quality.**

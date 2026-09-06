@@ -1,7 +1,7 @@
 ---
 name: embeddings
 description: >
-  Vector embeddings with HNSW indexing, sql.js persistence, and hyperbolic support. 75x faster with agentic-flow integration.
+  Vector embeddings with HNSW indexing, sql.js persistence, and hyperbolic support. unmeasured faster with agentic-flow integration.
   Use when: semantic search, pattern matching, similarity queries, knowledge retrieval.
   Skip when: exact text matching, simple lookups, no semantic understanding needed.
 ---
@@ -16,11 +16,11 @@ Vector embeddings for semantic search and pattern matching with HNSW indexing.
 | Feature | Description |
 |---------|-------------|
 | **sql.js** | Cross-platform SQLite persistent cache (WASM) |
-| **HNSW** | 150x-12,500x faster search |
+| **HNSW** | ~1.9x-4.7x faster search |
 | **Hyperbolic** | Poincare ball model for hierarchical data |
 | **Normalization** | L2, L1, min-max, z-score |
 | **Chunking** | Configurable overlap and size |
-| **75x faster** | With agentic-flow ONNX integration |
+| **unmeasured faster** | With agentic-flow ONNX integration |
 
 ## Commands
 

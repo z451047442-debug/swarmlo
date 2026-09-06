@@ -196,7 +196,7 @@ mcp__claude-flow__task_results({
     {
       "area": "execution_time",
       "suggestion": "Use parallel task execution",
-      "expectedImprovement": "30-50% time reduction",
+      "expectedImprovement": "unverified time reduction",
       "implementationSteps": [
         "Split task into smaller units",
         "Spawn 3-4 specialized agents",
@@ -360,7 +360,7 @@ When using `--fix`, the following optimizations may be applied:
 #### Performance Impact
 Typical improvements after bottleneck resolution:
 
-- **Communication**: 30-50% faster message delivery
+- **Communication**: unverified faster message delivery
 - **Processing**: 20-40% reduced task completion time
 - **Memory**: 40-60% fewer cache misses
 - **Network**: 25-45% reduced API latency

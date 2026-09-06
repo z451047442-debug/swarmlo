@@ -73,12 +73,12 @@ class ClaudeFlowSONAAdapter {
 
 ### **Flash Attention Integration**
 ```typescript
-// Target: 2.49x-7.47x speedup
+// Target: unmeasured speedup
 class FlashAttentionIntegration {
   async optimizeAttention(): Promise<AttentionResult> {
     return this.agenticFlow.attention.flashAttention({
-      speedupTarget: '2.49x-7.47x',
-      memoryReduction: '50-75%',
+      speedupTarget: 'unmeasured',
+      memoryReduction: 'unverified',
       mechanisms: ['multi-head', 'linear', 'local', 'global']
     });
   }
@@ -87,13 +87,13 @@ class FlashAttentionIntegration {
 
 ### **AgentDB Coordination**
 ```typescript
-// 150x-12,500x faster search via HNSW
+// ~1.9x-4.7x faster search via HNSW
 class AgentDBIntegration {
   async setupCrossAgentMemory(): Promise<void> {
     await this.agentdb.enableCrossAgentSharing({
       indexType: 'HNSW',
       dimensions: 1536,
-      speedupTarget: '150x-12500x'
+      speedupTarget: '~1.9x-4.7x'
     });
   }
 }
@@ -206,21 +206,21 @@ class CompatibilityCleanup {
 
 ### **Flash Attention Optimization**
 ```typescript
-// Target: 2.49x-7.47x speedup
+// Target: unmeasured speedup
 const attentionBenchmark = {
   baseline: 'current attention mechanism',
-  target: '2.49x-7.47x improvement',
-  memoryReduction: '50-75%',
+  target: 'unmeasured improvement',
+  memoryReduction: 'unverified',
   implementation: 'agentic-flow@alpha Flash Attention'
 };
 ```
 
 ### **AgentDB Search Performance**
 ```typescript
-// Target: 150x-12,500x improvement
+// Target: ~1.9x-4.7x improvement
 const searchBenchmark = {
   baseline: 'linear search in current memory systems',
-  target: '150x-12,500x via HNSW indexing',
+  target: '~1.9x-4.7x via HNSW indexing',
   implementation: 'agentic-flow@alpha AgentDB'
 };
 ```
@@ -274,9 +274,9 @@ class BackwardCompatibility {
 - [ ] **Duplicate Logic**: <5% remaining
 
 ### **Performance Targets**
-- [ ] **Flash Attention**: 2.49x-7.47x speedup validated
-- [ ] **Search Performance**: 150x-12,500x improvement
-- [ ] **Memory Usage**: 50-75% reduction
+- [ ] **Flash Attention**: unmeasured speedup validated
+- [ ] **Search Performance**: ~1.9x-4.7x improvement
+- [ ] **Memory Usage**: unverified reduction
 - [ ] **SONA Adaptation**: <0.05ms response time
 
 ### **Feature Parity**
