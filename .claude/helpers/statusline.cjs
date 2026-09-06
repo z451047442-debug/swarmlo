@@ -832,14 +832,21 @@ function getPkgVersion() {
   // version (see generateStatuslineScript()'s doc comment) — correct even
   // when this renders via a pure npx invocation with no local install for
   // the candidate scan below to find.
-  let ver = "3.32.8";
+  let ver = "3.39.3";
   try {
     const home = os.homedir();
+    // Claude Code launches the statusline with cwd = the session working dir,
+    // which can drift from the project root (subdirectory session, worktree,
+    // shell launched elsewhere). It also exports CLAUDE_PROJECT_DIR (the real
+    // project root) to the subprocess — prefer it for the project-relative
+    // probes so the installed version still resolves instead of falling back
+    // to the baked-in default; fall back to process.cwd() when it's absent.
+    const projectDir = process.env.CLAUDE_PROJECT_DIR || CWD;
     const pkgPaths = [
       path.join(home, '.claude', 'plugins', 'marketplaces', 'swarmlo', 'package.json'),
-      path.join(CWD, 'node_modules', '@claude-flow', 'cli', 'package.json'),
-      path.join(CWD, 'node_modules', 'swarmlo', 'package.json'),
-      path.join(CWD, 'v3', '@claude-flow', 'cli', 'package.json'),
+      path.join(projectDir, 'node_modules', '@claude-flow', 'cli', 'package.json'),
+      path.join(projectDir, 'node_modules', 'swarmlo', 'package.json'),
+      path.join(projectDir, 'v3', '@claude-flow', 'cli', 'package.json'),
     ];
     // #2742: CWD is a linked git worktree with no node_modules of its own —
     // probe the main repo's install too, so a worktree session shows the

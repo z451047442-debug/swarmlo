@@ -259,3 +259,38 @@ describe('getPkgVersion() — highest candidate wins, not first-found', () => {
     }
   });
 });
+
+describe('getPkgVersion() — prefers CLAUDE_PROJECT_DIR over a drifted cwd', () => {
+  // Regression: getPkgVersion() probed project-relative paths off process.cwd(),
+  // but .claude/settings.json locates the script via CLAUDE_PROJECT_DIR. When a
+  // session's cwd drifted from the project root, every project-relative probe
+  // missed and the header silently fell back to the baked-in default version.
+  // CLAUDE_PROJECT_DIR must win for the project-relative probes.
+  it('resolves the project version when cwd points elsewhere', () => {
+    const parent = mkdtempSync(path.join(tmpdir(), 'swarmlo-statusline-projectdir-'));
+    const projectDir = path.join(parent, 'project');
+    const elsewhere = path.join(parent, 'elsewhere');
+    mkdirSync(path.join(projectDir, 'v3', '@claude-flow', 'cli'), { recursive: true });
+    writeFileSync(
+      path.join(projectDir, 'v3', '@claude-flow', 'cli', 'package.json'),
+      JSON.stringify({ name: '@claude-flow/cli', version: '9.9.9-projectdir-test' }),
+    );
+    // Empty cwd: no v3/, no node_modules, no .git — so only the
+    // CLAUDE_PROJECT_DIR probe can resolve the version above.
+    mkdirSync(elsewhere, { recursive: true });
+    const scriptPath = path.join(parent, 'statusline.cjs');
+    writeFileSync(scriptPath, SCRIPT, 'utf-8');
+    try {
+      const out = execFileSync(process.execPath, [scriptPath], {
+        cwd: elsewhere,
+        input: JSON.stringify({ model: { display_name: 'Opus 4.8' } }),
+        encoding: 'utf-8',
+        env: { PATH: '/nonexistent', HOME: parent, CLAUDE_PROJECT_DIR: projectDir },
+        timeout: 15000,
+      });
+      expect(stripAnsi(out)).toContain('9.9.9-projectdir-test');
+    } finally {
+      rmSync(parent, { recursive: true, force: true });
+    }
+  });
+});
